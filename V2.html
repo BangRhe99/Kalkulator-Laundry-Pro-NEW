@@ -433,6 +433,128 @@
   }
 </style>
 
+<style id="zett-kapasitas-premium-overrides">
+  #view-kapasitas {
+    --omni-bg: #020816;
+    --omni-surface: rgba(10, 16, 34, 0.92);
+    --omni-surface-solid: rgba(7, 12, 26, 0.98);
+    --omni-border: rgba(56, 189, 248, 0.18);
+    --omni-border-glow: rgba(56, 189, 248, 0.32);
+    --omni-navy: #e2e8f0;
+    --omni-navy-muted: #94a3b8;
+    --omni-navy-light: #cbd5e1;
+    --omni-emerald: #22d3ee;
+    --omni-emerald-bg: rgba(56, 189, 248, 0.12);
+    --omni-shadow-base: 0 18px 50px -24px rgba(0, 0, 0, 0.42);
+    --omni-shadow-hover: 0 26px 70px -28px rgba(0, 0, 0, 0.46);
+  }
+
+  #view-kapasitas .bento-card {
+    background: rgba(8, 14, 32, 0.94);
+    border-color: rgba(56, 189, 248, 0.18);
+    box-shadow: var(--omni-shadow-base), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  #view-kapasitas .bento-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--omni-shadow-hover), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  #view-kapasitas .omni-title {
+    color: #f8fafc;
+  }
+
+  #view-kapasitas .omni-subtitle {
+    color: rgba(203, 213, 225, 0.84);
+  }
+
+  #view-kapasitas .omni-label {
+    color: rgba(148, 163, 184, 0.88);
+  }
+
+  #view-kapasitas .omni-input {
+    background: rgba(15, 23, 42, 0.92);
+    border-color: rgba(148, 163, 184, 0.22);
+    color: #e2e8f0;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.04);
+  }
+
+  #view-kapasitas .omni-input::placeholder {
+    color: rgba(203, 213, 225, 0.5);
+  }
+
+  #view-kapasitas .omni-input:focus,
+  #view-kapasitas input:focus,
+  #view-kapasitas select:focus {
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18), inset 0 1px 2px rgba(255,255,255,0.06);
+    border-color: rgba(56, 189, 248, 0.36);
+  }
+
+  #view-kapasitas .omni-btn-primary {
+    background: linear-gradient(135deg, #22d3ee, #6366f1) !important;
+    color: #ffffff !important;
+    box-shadow: 0 14px 38px rgba(37, 99, 235, 0.22) !important;
+  }
+
+  #view-kapasitas .omni-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 44px rgba(37, 99, 235, 0.28) !important;
+  }
+
+  #view-kapasitas .omni-btn-ghost {
+    background: rgba(15, 23, 42, 0.82) !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(148, 163, 184, 0.18) !important;
+  }
+
+  #view-kapasitas .omni-btn-ghost:hover {
+    background: rgba(255,255,255,0.06) !important;
+    color: #f8fafc !important;
+  }
+
+  #view-kapasitas .omni-toggle {
+    background: rgba(15, 23, 42, 0.92);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+
+  #view-kapasitas .omni-toggle-track {
+    background: rgba(148, 163, 184, 0.12);
+  }
+
+  #view-kapasitas .omni-toggle-input:checked + .omni-toggle-track {
+    background: rgba(56, 189, 248, 0.24) !important;
+  }
+
+  #view-kapasitas .omni-toggle-input:checked + .omni-toggle-track .omni-toggle-thumb {
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+  }
+
+  #view-kapasitas #tableDaftarOutlet {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+  }
+
+  #view-kapasitas .bento-grid {
+    gap: 1rem;
+  }
+
+  #view-kapasitas .bento-card.bento-col-4 {
+    border-radius: 1.5rem;
+  }
+
+  #view-kapasitas #kapasitas-dashboard {
+    border-radius: 1.75rem;
+  }
+
+  @media (max-width: 768px) {
+    #view-kapasitas .bento-grid {
+      gap: 0.85rem;
+    }
+  }
+</style>
+
 <div id="view-kapasitas" class="main-view hidden">
   <form id="laundryForm" class="bento-layout">
     

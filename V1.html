@@ -386,6 +386,144 @@
   }
 </style>
 
+<style id="zett-dashboard-premium-overrides">
+  #view-dashboard {
+    color: #e2e8f0;
+  }
+
+  #view-dashboard .fin-dashboard {
+    gap: 1.15rem;
+  }
+
+  #view-dashboard .fin-panel {
+    background: rgba(7, 11, 28, 0.94);
+    border-color: rgba(56, 189, 248, 0.18);
+    box-shadow: 0 28px 84px -30px rgba(0,0,0,0.52);
+    color: #e2e8f0;
+    border-radius: 1.75rem;
+  }
+
+  #view-dashboard .fin-panel:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 36px 102px -28px rgba(0,0,0,0.56);
+  }
+
+  #view-dashboard .fin-scorecards {
+    gap: 1.1rem;
+  }
+
+  #view-dashboard .fin-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.05);
+    padding: 1.35rem;
+    border-radius: 1.5rem;
+    min-height: 160px;
+  }
+
+  #view-dashboard .fin-card-label {
+    color: rgba(203, 213, 225, 0.86);
+  }
+
+  #view-dashboard .fin-card-value {
+    color: #f8fafc;
+    text-shadow: 0 8px 24px rgba(16, 185, 248, 0.15);
+  }
+
+  #view-dashboard .fin-card-sub {
+    background: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    letter-spacing: 0.08em;
+  }
+
+  #view-dashboard .c-margin .fin-card-sub { background: rgba(56, 189, 248, 0.12); color: #7dd3fc; }
+  #view-dashboard .c-bep .fin-card-sub { background: rgba(167, 139, 250, 0.12); color: #a78bfa; }
+  #view-dashboard .c-profit .fin-card-sub { background: rgba(251, 191, 36, 0.14); color: #fbbf24; }
+
+  #view-dashboard .fin-visual-box {
+    background: rgba(6, 8, 28, 0.94);
+    border-color: rgba(148, 163, 184, 0.16);
+    box-shadow: 0 30px 90px -34px rgba(0,0,0,0.56);
+    padding: 2rem 1.5rem;
+  }
+
+  #view-dashboard .fin-visual-title {
+    color: #e2e8f0;
+  }
+
+  #view-dashboard .gauge-bg {
+    stroke: rgba(148, 163, 184, 0.24);
+  }
+
+  #view-dashboard .gauge-val {
+    stroke: #38bdf8;
+  }
+
+  #view-dashboard .gauge-percent,
+  #view-dashboard .gauge-label {
+    color: #f8fafc;
+  }
+
+  #view-dashboard .fin-donut {
+    background: conic-gradient(
+      #38bdf8 0% var(--val-var),
+      #f472b6 var(--val-var) calc(var(--val-var) + 0.1%),
+      #a855f7 calc(var(--val-var) + 0.1%) 100%
+    );
+    filter: drop-shadow(0 0 24px rgba(56, 189, 248, 0.22));
+  }
+
+  #view-dashboard .donut-center-text {
+    color: #e2e8f0;
+  }
+
+  #view-dashboard .donut-center-text > div:first-child {
+    color: rgba(203, 213, 225, 0.88);
+    font-size: 0.8rem;
+  }
+
+  #view-dashboard .donut-legend {
+    gap: 1rem;
+  }
+
+  #view-dashboard .legend-item {
+    color: rgba(203, 213, 225, 0.88);
+  }
+
+  #view-dashboard .legend-dot {
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.04);
+  }
+
+  #view-dashboard .fin-table-card {
+    background: rgba(6, 8, 28, 0.94);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+  }
+
+  #view-dashboard .fin-table-header {
+    background: rgba(15, 23, 42, 0.72);
+    border-color: rgba(148, 163, 184, 0.16);
+  }
+
+  #view-dashboard .fin-table-header h3 {
+    color: #f8fafc;
+  }
+
+  #view-dashboard .fin-table th {
+    background: rgba(15, 23, 42, 0.76);
+    color: rgba(148, 163, 184, 0.9);
+  }
+
+  #view-dashboard .fin-table td {
+    background: rgba(8, 13, 34, 0.7);
+    color: #e2e8f0;
+  }
+
+  #view-dashboard .fin-tr-main:hover {
+    background: rgba(56, 189, 248, 0.08);
+  }
+</style>
+
 <div id="view-dashboard" class="main-view block">
   <div id="v1-vanilla-dashboard" class="fin-dashboard">
     
