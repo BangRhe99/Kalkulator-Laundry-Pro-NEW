@@ -262,6 +262,13 @@
   #view-hpp #dash-card-bahan { color: var(--hpp-emerald) !important; }
   #view-hpp #dash-card-nota { color: var(--hpp-slate) !important; }
 
+  #view-hpp #dash-card-gas-pct { color: var(--hpp-rose) !important; }
+  #view-hpp #dash-card-listrik-pct { color: var(--hpp-amber) !important; }
+  #view-hpp #dash-card-air-pct { color: var(--hpp-cyan) !important; }
+  #view-hpp #dash-card-packing-pct { color: var(--hpp-indigo) !important; }
+  #view-hpp #dash-card-bahan-pct { color: var(--hpp-emerald) !important; }
+  #view-hpp #dash-card-nota-pct { color: var(--hpp-slate) !important; }
+
   #view-hpp [id^="dash-card-"] {
     font-size: clamp(1.15rem, 2.65vw, 1.7rem) !important;
     line-height: 1 !important;
@@ -275,14 +282,14 @@
   }
 
   #view-hpp .hpp-donut {
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
     transition: background 680ms var(--hpp-ease), transform 360ms var(--hpp-ease) !important;
     will-change: background, transform;
     transform: translate3d(0,0,0);
   }
 
   #view-hpp .hpp-donut-wrap:hover .hpp-donut {
-    transform: translate3d(0,0,0) rotate(0.001deg) scale(1.018);
+    transform: translate3d(0,0,0) rotate(0.001deg) scale(1.015);
   }
 
   #view-hpp #hpp-form-view {
@@ -290,6 +297,36 @@
     margin-inline: auto;
     transform: translate3d(0,0,0);
     will-change: opacity, transform;
+  }
+
+  #view-hpp #hpp-form-expandable {
+    display: none;
+    grid-template-columns: 1fr;
+    margin-top: 2rem;
+    gap: 1.5rem;
+    opacity: 0;
+    transform: translateY(-1rem);
+    transition: opacity 400ms var(--hpp-ease), transform 400ms var(--hpp-ease);
+  }
+
+  #view-hpp #hpp-form-expandable.hpp-form-expandable-show {
+    display: grid !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+
+  #view-hpp #hpp-expandable-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  #view-hpp #hpp-expandable-content .bento-card {
+    border-color: var(--hpp-border-soft) !important;
+    background: var(--hpp-surface-strong) !important;
+    box-shadow: var(--hpp-shadow-card) !important;
+    backdrop-filter: blur(12px) saturate(1.08);
+    -webkit-backdrop-filter: blur(12px) saturate(1.08);
   }
 
   #view-hpp #hpp-form-view .bento-card,
@@ -366,6 +403,10 @@
     #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      flex-direction: row;
+      align-items: flex-start;
+    }
   }
 
   @media (max-width: 767px) {
@@ -373,39 +414,43 @@
       margin-top: 0 !important;
     }
     #view-hpp #hpp-dashboard-view {
-      gap: 1.05rem;
+      gap: 1.25rem;
       max-width: 100%;
     }
     #view-hpp #hpp-dashboard-view > .bg-white\/95 {
-      padding: 1.35rem !important;
-      gap: 1.35rem !important;
-      border-radius: 1.55rem !important;
+      padding: 1.5rem !important;
+      gap: 1.5rem !important;
+      border-radius: 1.5rem !important;
+      flex-direction: column;
     }
     #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      gap: 0.9rem !important;
+      gap: 0.85rem !important;
     }
     #view-hpp .hpp-card-dash {
-      min-height: 7.15rem;
-      padding: 1rem !important;
+      min-height: 6.5rem;
+      padding: 0.9rem !important;
       border-radius: 1.25rem !important;
     }
     #view-hpp .hpp-card-dash .w-12 {
-      width: 2.45rem !important;
-      height: 2.45rem !important;
+      width: 2.25rem !important;
+      height: 2.25rem !important;
     }
     #view-hpp .hpp-card-dash h3 {
-      font-size: 0.56rem !important;
-      letter-spacing: 0.14em !important;
+      font-size: 0.55rem !important;
+      letter-spacing: 0.12em !important;
     }
     #view-hpp [id^="dash-card-"] {
-      font-size: clamp(1.02rem, 5.2vw, 1.35rem) !important;
+      font-size: clamp(0.95rem, 4.5vw, 1.2rem) !important;
+    }
+    #view-hpp [id^="dash-card-"][id$="-pct"] {
+      font-size: 0.65rem !important;
     }
     #view-hpp #dash-hpp-total {
-      font-size: clamp(2.65rem, 13vw, 3.8rem) !important;
+      font-size: clamp(2rem, 10vw, 3rem) !important;
     }
     #view-hpp .hpp-donut-wrap {
-      width: min(52vw, 12.5rem) !important;
-      height: min(52vw, 12.5rem) !important;
+      width: min(48vw, 11rem) !important;
+      height: min(48vw, 11rem) !important;
     }
   }
 
@@ -429,39 +474,40 @@
   <div id="hpp-dashboard-view" class="animate-fade-in space-y-8">
     
     <!-- Hero Banner & Chart (Clean, High-Trust Design) -->
-    <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.02),0_2px_10px_rgba(0,0,0,0.01)] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transform-gpu transition-all">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.02),0_2px_10px_rgba(0,0,0,0.01)] p-8 md:p-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-10 md:gap-16 transform-gpu transition-all">
       
-      <!-- Hero Text -->
-      <div class="flex-1 text-center md:text-left space-y-5 z-10 w-full">
-        <!-- Badge -->
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50/80 border border-emerald-100 text-emerald-600 font-extrabold text-[10px] uppercase tracking-widest mx-auto md:mx-0">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Real-time Sync
-        </div>
+      <!-- Hero Text & Donut Container -->
+      <div class="flex-1 w-full flex flex-col items-center md:items-start gap-8">
         
-        <div class="space-y-1">
-          <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Total HPP Variabel</h2>
-          <div class="flex items-baseline justify-center md:justify-start gap-1.5 pt-1">
-            <span class="text-[clamp(3rem,6vw,4.5rem)] leading-none font-black text-slate-900 tracking-tighter tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-hpp-total">Rp 0</span>
-            <span class="text-xl md:text-2xl font-bold text-slate-400">/Kg</span>
+        <!-- Hero Text Section -->
+        <div class="w-full text-center md:text-left space-y-3 z-10">
+          <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Struktur Biaya (HPP)</h2>
+          <p class="text-xs md:text-sm font-medium text-slate-500 leading-relaxed md:max-w-sm">Simulasi struktur biaya untuk menjaga margin tetap sehat.</p>
+        </div>
+
+        <!-- Total HPP Value -->
+        <div class="w-full space-y-2">
+          <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Total HPP Variabel</h3>
+          <div class="flex items-baseline justify-center md:justify-start gap-2 pt-1">
+            <span class="text-[clamp(2.5rem,8vw,4rem)] leading-none font-black text-slate-900 tracking-tighter tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-hpp-total">Rp 0</span>
+            <span class="text-lg md:text-xl font-bold text-slate-400">/Kg</span>
           </div>
         </div>
-        
-        <p class="text-sm font-medium text-slate-500 max-w-md mx-auto md:mx-0 leading-relaxed pt-2">Simulasi struktur biaya untuk menjaga margin tetap sehat.</p>
-      </div>
 
-      <!-- Donut Chart -->
-      <div class="shrink-0 relative">
-        <div class="hpp-donut-wrap relative">
-          <!-- Main CSS Donut Gradient -->
-          <div class="hpp-donut" id="hpp-donut-chart" style="--p-gas: 0%; --p-listrik: 0%; --p-air: 0%; --p-packing: 0%; --p-bahan: 0%;"></div>
-          
-          <!-- Absolute Layer Khusus Render Teks Persentase Trigonometri -->
-          <div id="hpp-donut-labels" class="absolute inset-0 pointer-events-none z-20"></div>
+        <!-- Donut Chart (Mobile & Desktop) -->
+        <div class="w-full flex justify-center md:justify-start">
+          <div class="hpp-donut-wrap relative">
+            <!-- Main CSS Donut Gradient -->
+            <div class="hpp-donut" id="hpp-donut-chart" style="--p-gas: 0%; --p-listrik: 0%; --p-air: 0%; --p-packing: 0%; --p-bahan: 0%;"></div>
+            
+            <!-- Absolute Layer Khusus Render Teks Persentase Trigonometri -->
+            <div id="hpp-donut-labels" class="absolute inset-0 pointer-events-none z-20"></div>
 
-          <!-- Bagian Tengah (Hole) -->
-          <div class="hpp-donut-center z-10">
-            <i class="ph ph-chart-pie-slice text-slate-300/80 text-[2.5rem] mb-1.5"></i>
-            <span class="text-slate-400 font-black text-[9px] uppercase tracking-[0.2em]">Komposisi</span>
+            <!-- Bagian Tengah (Hole) -->
+            <div class="hpp-donut-center z-10">
+              <i class="ph ph-chart-pie-slice text-slate-300/80 text-[2rem] md:text-[2.5rem] mb-1"></i>
+              <span class="text-slate-400 font-black text-[8px] md:text-[9px] uppercase tracking-[0.2em]">Komposisi</span>
+            </div>
           </div>
         </div>
       </div>
@@ -471,71 +517,109 @@
     <div class="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
       
       <!-- Card: Gas -->
-      <div onclick="openHPPForm('gas', 'Analisa Biaya Gas')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+      <div onclick="openHPPFormExpandable('gas', 'Analisa Biaya Gas')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
         <div class="w-12 h-12 bg-rose-50 rounded-[1rem] flex items-center justify-center text-rose-500 transition-transform duration-500 group-hover:scale-110">
           <i class="ph ph-fire text-2xl drop-shadow-sm"></i>
         </div>
-        <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Gas LPG</h3>
-          <p class="text-xl md:text-2xl font-black text-rose-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-gas">Rp 0</p>
+        <div class="w-full">
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Gas LPG</h3>
+          <p class="text-lg md:text-xl font-black text-rose-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-gas">Rp 0</p>
+          <p class="text-xs font-bold text-rose-400 mt-1" id="dash-card-gas-pct">0%</p>
         </div>
       </div>
 
       <!-- Card: Listrik -->
-      <div onclick="openHPPForm('listrik', 'Analisa Biaya Listrik')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+      <div onclick="openHPPFormExpandable('listrik', 'Analisa Biaya Listrik')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
         <div class="w-12 h-12 bg-amber-50 rounded-[1rem] flex items-center justify-center text-amber-500 transition-transform duration-500 group-hover:scale-110">
           <i class="ph ph-lightning text-2xl drop-shadow-sm"></i>
         </div>
-        <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Listrik</h3>
-          <p class="text-xl md:text-2xl font-black text-amber-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-listrik">Rp 0</p>
+        <div class="w-full">
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Listrik</h3>
+          <p class="text-lg md:text-xl font-black text-amber-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-listrik">Rp 0</p>
+          <p class="text-xs font-bold text-amber-400 mt-1" id="dash-card-listrik-pct">0%</p>
         </div>
       </div>
 
       <!-- Card: Air -->
-      <div onclick="openHPPForm('air', 'Analisa Biaya Air')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+      <div onclick="openHPPFormExpandable('air', 'Analisa Biaya Air')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
         <div class="w-12 h-12 bg-cyan-50 rounded-[1rem] flex items-center justify-center text-cyan-500 transition-transform duration-500 group-hover:scale-110">
           <i class="ph ph-drop text-2xl drop-shadow-sm"></i>
         </div>
-        <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Air PDAM</h3>
-          <p class="text-xl md:text-2xl font-black text-cyan-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-air">Rp 0</p>
+        <div class="w-full">
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Air</h3>
+          <p class="text-lg md:text-xl font-black text-cyan-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-air">Rp 0</p>
+          <p class="text-xs font-bold text-cyan-400 mt-1" id="dash-card-air-pct">0%</p>
         </div>
       </div>
 
       <!-- Card: Packing -->
-      <div onclick="openHPPForm('packing', 'Analisa Biaya Packing')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+      <div onclick="openHPPFormExpandable('packing', 'Analisa Biaya Packing')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
         <div class="w-12 h-12 bg-indigo-50 rounded-[1rem] flex items-center justify-center text-indigo-500 transition-transform duration-500 group-hover:scale-110">
           <i class="ph ph-package text-2xl drop-shadow-sm"></i>
         </div>
-        <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Packing</h3>
-          <p class="text-xl md:text-2xl font-black text-indigo-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-packing">Rp 0</p>
+        <div class="w-full">
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Packing</h3>
+          <p class="text-lg md:text-xl font-black text-indigo-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-packing">Rp 0</p>
+          <p class="text-xs font-bold text-indigo-400 mt-1" id="dash-card-packing-pct">0%</p>
         </div>
       </div>
 
       <!-- Card: Bahan -->
-      <div onclick="openHPPForm('bahan', 'Analisa Biaya Chemical')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+      <div onclick="openHPPFormExpandable('bahan', 'Analisa Biaya Chemical')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
         <div class="w-12 h-12 bg-emerald-50 rounded-[1rem] flex items-center justify-center text-emerald-500 transition-transform duration-500 group-hover:scale-110">
           <i class="ph ph-flask text-2xl drop-shadow-sm"></i>
         </div>
-        <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Chemical</h3>
-          <p class="text-xl md:text-2xl font-black text-emerald-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-bahan">Rp 0</p>
+        <div class="w-full">
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Chemical</h3>
+          <p class="text-lg md:text-xl font-black text-emerald-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-bahan">Rp 0</p>
+          <p class="text-xs font-bold text-emerald-400 mt-1" id="dash-card-bahan-pct">0%</p>
         </div>
       </div>
 
       <!-- Card: Nota -->
-      <div onclick="openHPPForm('nota', 'Analisa Biaya Nota & Kasir')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+      <div onclick="openHPPFormExpandable('nota', 'Analisa Biaya Nota & Kasir')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
         <div class="w-12 h-12 bg-slate-50 rounded-[1rem] flex items-center justify-center text-slate-500 transition-transform duration-500 group-hover:scale-110">
           <i class="ph ph-receipt text-2xl drop-shadow-sm"></i>
         </div>
-        <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Admin/Nota</h3>
-          <p class="text-xl md:text-2xl font-black text-slate-600 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-nota">Rp 0</p>
+        <div class="w-full">
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Admin/Nota</h3>
+          <p class="text-lg md:text-xl font-black text-slate-600 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-nota">Rp 0</p>
+          <p class="text-xs font-bold text-slate-400 mt-1" id="dash-card-nota-pct">0%</p>
         </div>
       </div>
 
+    </div>
+
+    <!-- Expandable Form Area (Below Cards) -->
+    <div id="hpp-form-expandable" class="hidden opacity-0 transform -translate-y-4 transition-all duration-400 ease-out animate-fade-in max-w-4xl mx-auto w-full">
+      <div class="bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/60 backdrop-blur-xl rounded-[2rem] border border-emerald-200/60 shadow-[0_12px_40px_rgba(16,185,129,0.12)] p-8 md:p-10">
+        
+        <!-- Form Header with Close -->
+        <div class="flex items-center justify-between mb-8 pb-6 border-b border-slate-200/60">
+          <div>
+            <h3 id="hpp-form-expandable-title" class="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">Analisa Biaya</h3>
+            <p id="hpp-form-expandable-subtitle" class="text-sm text-slate-500 mt-1">Kelola parameter dan struktur biaya dengan detail</p>
+          </div>
+          <button onclick="closeHPPFormExpandable()" class="p-2.5 rounded-[1rem] bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/60 transition-all active:scale-95 shadow-sm">
+            <i class="ph ph-x text-lg"></i>
+          </button>
+        </div>
+
+        <!-- Dynamic Form Content -->
+        <div id="hpp-expandable-content" class="space-y-6">
+          <!-- Content will be dynamically injected -->
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-3 mt-8 pt-6 border-t border-slate-200/60 justify-end">
+          <button onclick="closeHPPFormExpandable()" class="px-5 py-2.5 rounded-[1rem] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all active:scale-95">
+            Batal
+          </button>
+          <button onclick="saveHPPData()" class="px-6 py-2.5 rounded-[1rem] bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold shadow-lg shadow-emerald-500/30 transition-all active:scale-95">
+            <i class="ph ph-check-circle mr-2"></i>Simpan
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1498,6 +1582,14 @@
         let pctBahan = (bahan / t) * 100;
         let pctNota = (nota / t) * 100;
 
+        // Update percentage display on cards
+        if(document.getElementById('dash-card-gas-pct')) document.getElementById('dash-card-gas-pct').innerText = Math.round(pctGas) + '%';
+        if(document.getElementById('dash-card-listrik-pct')) document.getElementById('dash-card-listrik-pct').innerText = Math.round(pctListrik) + '%';
+        if(document.getElementById('dash-card-air-pct')) document.getElementById('dash-card-air-pct').innerText = Math.round(pctAir) + '%';
+        if(document.getElementById('dash-card-packing-pct')) document.getElementById('dash-card-packing-pct').innerText = Math.round(pctPacking) + '%';
+        if(document.getElementById('dash-card-bahan-pct')) document.getElementById('dash-card-bahan-pct').innerText = Math.round(pctBahan) + '%';
+        if(document.getElementById('dash-card-nota-pct')) document.getElementById('dash-card-nota-pct').innerText = Math.round(pctNota) + '%';
+
         let cGas = pctGas;
         let cListrik = cGas + pctListrik;
         let cAir = cListrik + pctAir;
@@ -1542,6 +1634,15 @@
         donut.style.setProperty('--p-air', `0%`);
         donut.style.setProperty('--p-packing', `0%`);
         donut.style.setProperty('--p-bahan', `0%`);
+        
+        // Reset percentage display
+        if(document.getElementById('dash-card-gas-pct')) document.getElementById('dash-card-gas-pct').innerText = '0%';
+        if(document.getElementById('dash-card-listrik-pct')) document.getElementById('dash-card-listrik-pct').innerText = '0%';
+        if(document.getElementById('dash-card-air-pct')) document.getElementById('dash-card-air-pct').innerText = '0%';
+        if(document.getElementById('dash-card-packing-pct')) document.getElementById('dash-card-packing-pct').innerText = '0%';
+        if(document.getElementById('dash-card-bahan-pct')) document.getElementById('dash-card-bahan-pct').innerText = '0%';
+        if(document.getElementById('dash-card-nota-pct')) document.getElementById('dash-card-nota-pct').innerText = '0%';
+        
         if (labelsContainer) labelsContainer.innerHTML = '';
       }
     }
@@ -1733,6 +1834,16 @@
         void targetTab.offsetWidth;
         targetTab.classList.add('hpp-form-enter-final');
       }
+
+      // Also populate expandable content with the tab
+      const expandableContent = byId('hpp-expandable-content');
+      if (expandableContent && targetTab) {
+        expandableContent.innerHTML = '';
+        const clonedTab = targetTab.cloneNode(true);
+        clonedTab.classList.remove('hidden');
+        clonedTab.style.display = 'grid';
+        expandableContent.appendChild(clonedTab);
+      }
     }
 
     window.openHPPForm = function(type, title) {
@@ -1775,6 +1886,60 @@
       dashboard.classList.add('hpp-dashboard-return-final');
 
       try { if (typeof checkHPPLock === 'function') checkHPPLock(); } catch(e) { console.error(e); }
+    };
+
+    window.closeHPPFormExpandable = function() {
+      const expandable = byId('hpp-form-expandable');
+      if (!expandable) return;
+      
+      expandable.classList.remove('hpp-form-expandable-show');
+      expandable.style.display = 'none';
+      expandable.style.opacity = '0';
+      expandable.style.transform = 'translateY(-1rem)';
+      
+      setTimeout(() => {
+        expandable.classList.add('hidden');
+      }, 400);
+    };
+
+    window.openHPPFormExpandable = function(type, title) {
+      const expandable = byId('hpp-form-expandable');
+      const titleEl = byId('hpp-form-expandable-title');
+      const subtitleEl = byId('hpp-form-expandable-subtitle');
+      
+      if (!expandable) return;
+
+      if (titleEl) titleEl.textContent = title || 'Analisa Biaya';
+      if (subtitleEl) subtitleEl.textContent = 'Kelola parameter dan struktur biaya dengan detail';
+
+      expandable.classList.remove('hidden');
+      void expandable.offsetWidth;
+      expandable.classList.add('hpp-form-expandable-show');
+      expandable.style.display = 'grid';
+      expandable.style.opacity = '1';
+      expandable.style.transform = 'translateY(0)';
+
+      revealHppTab(type);
+      restoreOldHppData();
+
+      const scroller = byId('mainViewScroller') || document.querySelector('.custom-scroll');
+      if (scroller && typeof scroller.scrollTo === 'function') {
+        requestAnimationFrame(() => scroller.scrollTo({ top: expandable.offsetTop - 100, behavior: 'smooth' }));
+      }
+    };
+
+    window.saveHPPData = function() {
+      try {
+        if (typeof prosesSimpanHPP === 'function') {
+          prosesSimpanHPP();
+        }
+        // Close form after saving
+        setTimeout(() => {
+          closeHPPFormExpandable();
+        }, 500);
+      } catch (e) {
+        console.error('saveHPPData error:', e);
+      }
     };
   })();
 </script>
