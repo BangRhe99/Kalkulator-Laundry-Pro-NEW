@@ -64,55 +64,58 @@
    * Tujuan: memperkaya UI HPP tanpa mengubah struktur HTML/CSS dasar.
    * ====================================================================== */
   #view-hpp {
-    --hpp-bg: #f8fafc;
-    --hpp-surface: rgba(255, 255, 255, 0.88);
-    --hpp-surface-strong: rgba(255, 255, 255, 0.96);
-    --hpp-border: rgba(203, 213, 225, 0.46);
-    --hpp-border-soft: rgba(226, 232, 240, 0.72);
+    --hpp-bg: #ffffff;
+    --hpp-surface: rgba(255, 255, 255, 0.98);
+    --hpp-surface-strong: rgba(255, 255, 255, 1);
+    --hpp-border: rgba(226, 232, 240, 0.8);
+    --hpp-border-soft: rgba(241, 245, 249, 0.9);
     --hpp-text: #0f172a;
-    --hpp-muted: #475569;
-    --hpp-soft: #64748b;
-    --hpp-emerald: #047857;
-    --hpp-rose: #be123c;
-    --hpp-amber: #b45309;
-    --hpp-cyan: #0e7490;
-    --hpp-indigo: #4f46e5;
-    --hpp-slate: #334155;
+    --hpp-muted: #64748b;
+    --hpp-soft: #94a3b8;
+    --hpp-emerald: #10b981;
+    --hpp-rose: #f43f5e;
+    --hpp-amber: #f59e0b;
+    --hpp-cyan: #06b6d4;
+    --hpp-indigo: #6366f1;
+    --hpp-slate: #475569;
     --hpp-radius-xl: clamp(1.15rem, 2vw, 1.5rem);
     --hpp-radius-2xl: clamp(1.55rem, 2.6vw, 2rem);
     --hpp-gap: clamp(1.1rem, 2vw, 1.55rem);
     --hpp-pad: clamp(1.2rem, 2.8vw, 2rem);
     --hpp-hero-pad: clamp(1.65rem, 4vw, 3rem);
-    --hpp-shadow-ambient: 0 22px 60px -36px rgba(15, 23, 42, 0.36), 0 12px 28px -24px rgba(15, 23, 42, 0.22);
-    --hpp-shadow-card: 0 18px 50px -34px rgba(15, 23, 42, 0.34), 0 2px 14px -10px rgba(15, 23, 42, 0.16);
-    --hpp-shadow-hover: 0 30px 72px -34px rgba(15, 23, 42, 0.42), 0 12px 28px -20px rgba(15, 23, 42, 0.28);
+    --hpp-shadow-ambient: 0 8px 32px rgba(15, 23, 42, 0.08), 0 2px 16px rgba(15, 23, 42, 0.04);
+    --hpp-shadow-card: 0 6px 24px rgba(15, 23, 42, 0.06), 0 1px 8px rgba(15, 23, 42, 0.03);
+    --hpp-shadow-hover: 0 12px 40px rgba(15, 23, 42, 0.12), 0 4px 16px rgba(15, 23, 42, 0.08);
     --hpp-ease: cubic-bezier(0.16, 1, 0.3, 1);
     color: var(--hpp-text);
     transform: translate3d(0, 0, 0);
     will-change: transform, opacity;
     backface-visibility: hidden;
     contain: layout paint;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%);
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
   }
 
   @media (prefers-color-scheme: dark) {
     #view-hpp {
-      --hpp-bg: #020617;
-      --hpp-surface: rgba(15, 23, 42, 0.82);
-      --hpp-surface-strong: rgba(15, 23, 42, 0.94);
-      --hpp-border: rgba(148, 163, 184, 0.24);
-      --hpp-border-soft: rgba(71, 85, 105, 0.55);
-      --hpp-text: #f8fafc;
-      --hpp-muted: #cbd5e1;
+      --hpp-bg: #ffffff;
+      --hpp-surface: rgba(255, 255, 255, 0.98);
+      --hpp-surface-strong: rgba(255, 255, 255, 1);
+      --hpp-border: rgba(226, 232, 240, 0.8);
+      --hpp-border-soft: rgba(241, 245, 249, 0.9);
+      --hpp-text: #0f172a;
+      --hpp-muted: #64748b;
       --hpp-soft: #94a3b8;
-      --hpp-emerald: #34d399;
-      --hpp-rose: #fb7185;
-      --hpp-amber: #fbbf24;
-      --hpp-cyan: #22d3ee;
-      --hpp-indigo: #a5b4fc;
-      --hpp-slate: #e2e8f0;
-      --hpp-shadow-ambient: 0 26px 70px -34px rgba(0, 0, 0, 0.82);
-      --hpp-shadow-card: 0 24px 60px -34px rgba(0, 0, 0, 0.72);
-      --hpp-shadow-hover: 0 34px 90px -38px rgba(0, 0, 0, 0.86);
+      --hpp-emerald: #10b981;
+      --hpp-rose: #f43f5e;
+      --hpp-amber: #f59e0b;
+      --hpp-cyan: #06b6d4;
+      --hpp-indigo: #6366f1;
+      --hpp-slate: #475569;
+      --hpp-shadow-ambient: 0 8px 32px rgba(15, 23, 42, 0.08), 0 2px 16px rgba(15, 23, 42, 0.04);
+      --hpp-shadow-card: 0 6px 24px rgba(15, 23, 42, 0.06), 0 1px 8px rgba(15, 23, 42, 0.03);
+      --hpp-shadow-hover: 0 12px 40px rgba(15, 23, 42, 0.12), 0 4px 16px rgba(15, 23, 42, 0.08);
     }
   }
 
@@ -198,9 +201,9 @@
   }
 
   #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(1rem, 2vw, 1.5rem) !important;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.8rem, 1.5vw, 1.2rem) !important;
     align-items: stretch;
   }
 
@@ -216,20 +219,25 @@
   }
 
   #view-hpp .hpp-card-dash {
-    min-height: clamp(7.4rem, 14vw, 8.9rem);
+    min-height: clamp(4rem, 6vw, 5rem);
     border-radius: var(--hpp-radius-xl) !important;
     border-color: var(--hpp-border-soft) !important;
     background:
-      linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.78)) !important;
+      linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.98)) !important;
     box-shadow: var(--hpp-shadow-card) !important;
-    backdrop-filter: blur(14px) saturate(1.12);
-    -webkit-backdrop-filter: blur(14px) saturate(1.12);
-    padding: clamp(1.05rem, 2.35vw, 1.55rem) !important;
-    gap: clamp(0.68rem, 1.4vw, 1rem) !important;
+    backdrop-filter: blur(12px) saturate(1.08);
+    -webkit-backdrop-filter: blur(12px) saturate(1.08);
+    padding: clamp(1rem, 2vw, 1.5rem) !important;
+    gap: clamp(0.8rem, 1.5vw, 1.2rem) !important;
     transform: translate3d(0, 0, 0);
     will-change: transform, box-shadow, filter;
     transition: transform 280ms var(--hpp-ease), box-shadow 280ms var(--hpp-ease), border-color 280ms var(--hpp-ease), filter 280ms ease !important;
     contain: layout paint;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    width: 100%;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -513,78 +521,234 @@
       </div>
     </div>
 
-    <!-- 6 Cards Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
+    <!-- Premium Balok List -->
+    <div class="space-y-3">
       
-      <!-- Card: Gas -->
-      <div onclick="openHPPFormExpandable('gas', 'Analisa Biaya Gas')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
-        <div class="w-12 h-12 bg-rose-50 rounded-[1rem] flex items-center justify-center text-rose-500 transition-transform duration-500 group-hover:scale-110">
-          <i class="ph ph-fire text-2xl drop-shadow-sm"></i>
+      <!-- Balok: Gas -->
+      <div class="hpp-balok-container">
+        <div onclick="toggleHPPBalok('gas')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 transition-transform duration-300 group-hover:scale-110">
+              <i class="ph ph-fire text-xl drop-shadow-sm"></i>
+            </div>
+            <span class="text-base font-bold text-slate-800">Gas LPG</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-lg font-black text-rose-500 tabular-nums" id="dash-card-gas">Rp 0</span>
+            <span class="text-sm font-bold text-rose-400 bg-rose-50 px-2 py-1 rounded-full" id="dash-card-gas-pct">0%</span>
+            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
+          </div>
         </div>
-        <div class="w-full">
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Gas LPG</h3>
-          <p class="text-lg md:text-xl font-black text-rose-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-gas">Rp 0</p>
-          <p class="text-xs font-bold text-rose-400 mt-1" id="dash-card-gas-pct">0%</p>
-        </div>
-      </div>
-
-      <!-- Card: Listrik -->
-      <div onclick="openHPPFormExpandable('listrik', 'Analisa Biaya Listrik')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
-        <div class="w-12 h-12 bg-amber-50 rounded-[1rem] flex items-center justify-center text-amber-500 transition-transform duration-500 group-hover:scale-110">
-          <i class="ph ph-lightning text-2xl drop-shadow-sm"></i>
-        </div>
-        <div class="w-full">
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Listrik</h3>
-          <p class="text-lg md:text-xl font-black text-amber-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-listrik">Rp 0</p>
-          <p class="text-xs font-bold text-amber-400 mt-1" id="dash-card-listrik-pct">0%</p>
-        </div>
-      </div>
-
-      <!-- Card: Air -->
-      <div onclick="openHPPFormExpandable('air', 'Analisa Biaya Air')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
-        <div class="w-12 h-12 bg-cyan-50 rounded-[1rem] flex items-center justify-center text-cyan-500 transition-transform duration-500 group-hover:scale-110">
-          <i class="ph ph-drop text-2xl drop-shadow-sm"></i>
-        </div>
-        <div class="w-full">
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Air</h3>
-          <p class="text-lg md:text-xl font-black text-cyan-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-air">Rp 0</p>
-          <p class="text-xs font-bold text-cyan-400 mt-1" id="dash-card-air-pct">0%</p>
-        </div>
-      </div>
-
-      <!-- Card: Packing -->
-      <div onclick="openHPPFormExpandable('packing', 'Analisa Biaya Packing')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
-        <div class="w-12 h-12 bg-indigo-50 rounded-[1rem] flex items-center justify-center text-indigo-500 transition-transform duration-500 group-hover:scale-110">
-          <i class="ph ph-package text-2xl drop-shadow-sm"></i>
-        </div>
-        <div class="w-full">
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Packing</h3>
-          <p class="text-lg md:text-xl font-black text-indigo-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-packing">Rp 0</p>
-          <p class="text-xs font-bold text-indigo-400 mt-1" id="dash-card-packing-pct">0%</p>
+        <div id="hpp-balok-gas" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-rose-50/50 to-white border border-rose-100 rounded-[1rem] p-5 shadow-sm">
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya Gas per Hari</span>
+              <span class="text-sm font-bold text-rose-600" id="gas-hari">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya Gas per Bulan</span>
+              <span class="text-sm font-bold text-rose-600" id="gas-bulan">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Konsumsi Gas</span>
+              <span class="text-sm font-bold text-rose-600" id="gas-konsumsi">0 Kg</span>
+            </div>
+            <div class="pt-3 border-t border-rose-100">
+              <button onclick="openHPPFormExpandable('gas', 'Analisa Biaya Gas')" class="w-full bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
+                <i class="ph ph-pencil-simple mr-2"></i>Edit
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Card: Bahan -->
-      <div onclick="openHPPFormExpandable('bahan', 'Analisa Biaya Chemical')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
-        <div class="w-12 h-12 bg-emerald-50 rounded-[1rem] flex items-center justify-center text-emerald-500 transition-transform duration-500 group-hover:scale-110">
-          <i class="ph ph-flask text-2xl drop-shadow-sm"></i>
+      <!-- Balok: Listrik -->
+      <div class="hpp-balok-container">
+        <div onclick="toggleHPPBalok('listrik')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 transition-transform duration-300 group-hover:scale-110">
+              <i class="ph ph-lightning text-xl drop-shadow-sm"></i>
+            </div>
+            <span class="text-base font-bold text-slate-800">Listrik</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-lg font-black text-amber-500 tabular-nums" id="dash-card-listrik">Rp 0</span>
+            <span class="text-sm font-bold text-amber-400 bg-amber-50 px-2 py-1 rounded-full" id="dash-card-listrik-pct">0%</span>
+            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
+          </div>
         </div>
-        <div class="w-full">
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Chemical</h3>
-          <p class="text-lg md:text-xl font-black text-emerald-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-bahan">Rp 0</p>
-          <p class="text-xs font-bold text-emerald-400 mt-1" id="dash-card-bahan-pct">0%</p>
+        <div id="hpp-balok-listrik" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-amber-50/50 to-white border border-amber-100 rounded-[1rem] p-5 shadow-sm">
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya Listrik per Load</span>
+              <span class="text-sm font-bold text-amber-600" id="listrik-load">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya Listrik per Kg</span>
+              <span class="text-sm font-bold text-amber-600" id="listrik-kg">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Total Konsumsi</span>
+              <span class="text-sm font-bold text-amber-600" id="listrik-total">0 kWh</span>
+            </div>
+            <div class="pt-3 border-t border-amber-100">
+              <button onclick="openHPPFormExpandable('listrik', 'Analisa Biaya Listrik')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
+                <i class="ph ph-pencil-simple mr-2"></i>Edit
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Card: Nota -->
-      <div onclick="openHPPFormExpandable('nota', 'Analisa Biaya Nota & Kasir')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-3 group cursor-pointer">
-        <div class="w-12 h-12 bg-slate-50 rounded-[1rem] flex items-center justify-center text-slate-500 transition-transform duration-500 group-hover:scale-110">
-          <i class="ph ph-receipt text-2xl drop-shadow-sm"></i>
+      <!-- Balok: Air -->
+      <div class="hpp-balok-container">
+        <div onclick="toggleHPPBalok('air')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-cyan-50 rounded-xl flex items-center justify-center text-cyan-500 transition-transform duration-300 group-hover:scale-110">
+              <i class="ph ph-drop text-xl drop-shadow-sm"></i>
+            </div>
+            <span class="text-base font-bold text-slate-800">Air</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-lg font-black text-cyan-500 tabular-nums" id="dash-card-air">Rp 0</span>
+            <span class="text-sm font-bold text-cyan-400 bg-cyan-50 px-2 py-1 rounded-full" id="dash-card-air-pct">0%</span>
+            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
+          </div>
         </div>
-        <div class="w-full">
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-2">Admin/Nota</h3>
-          <p class="text-lg md:text-xl font-black text-slate-600 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-nota">Rp 0</p>
-          <p class="text-xs font-bold text-slate-400 mt-1" id="dash-card-nota-pct">0%</p>
+        <div id="hpp-balok-air" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-cyan-50/50 to-white border border-cyan-100 rounded-[1rem] p-5 shadow-sm">
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya Air per Load</span>
+              <span class="text-sm font-bold text-cyan-600" id="air-load">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya Air per Kg</span>
+              <span class="text-sm font-bold text-cyan-600" id="air-kg">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Konsumsi Air</span>
+              <span class="text-sm font-bold text-cyan-600" id="air-konsumsi">0 Liter</span>
+            </div>
+            <div class="pt-3 border-t border-cyan-100">
+              <button onclick="openHPPFormExpandable('air', 'Analisa Biaya Air')" class="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
+                <i class="ph ph-pencil-simple mr-2"></i>Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balok: Packing -->
+      <div class="hpp-balok-container">
+        <div onclick="toggleHPPBalok('packing')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 transition-transform duration-300 group-hover:scale-110">
+              <i class="ph ph-package text-xl drop-shadow-sm"></i>
+            </div>
+            <span class="text-base font-bold text-slate-800">Packing</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-lg font-black text-indigo-500 tabular-nums" id="dash-card-packing">Rp 0</span>
+            <span class="text-sm font-bold text-indigo-400 bg-indigo-50 px-2 py-1 rounded-full" id="dash-card-packing-pct">0%</span>
+            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
+          </div>
+        </div>
+        <div id="hpp-balok-packing" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-indigo-50/50 to-white border border-indigo-100 rounded-[1rem] p-5 shadow-sm">
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya per Lembar</span>
+              <span class="text-sm font-bold text-indigo-600" id="packing-lembar">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya per Kg</span>
+              <span class="text-sm font-bold text-indigo-600" id="packing-kg">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Kapasitas per Lembar</span>
+              <span class="text-sm font-bold text-indigo-600" id="packing-kapasitas">0 Kg</span>
+            </div>
+            <div class="pt-3 border-t border-indigo-100">
+              <button onclick="openHPPFormExpandable('packing', 'Analisa Biaya Packing')" class="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
+                <i class="ph ph-pencil-simple mr-2"></i>Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balok: Chemical -->
+      <div class="hpp-balok-container">
+        <div onclick="toggleHPPBalok('bahan')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 transition-transform duration-300 group-hover:scale-110">
+              <i class="ph ph-flask text-xl drop-shadow-sm"></i>
+            </div>
+            <span class="text-base font-bold text-slate-800">Chemical</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-lg font-black text-emerald-500 tabular-nums" id="dash-card-bahan">Rp 0</span>
+            <span class="text-sm font-bold text-emerald-400 bg-emerald-50 px-2 py-1 rounded-full" id="dash-card-bahan-pct">0%</span>
+            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
+          </div>
+        </div>
+        <div id="hpp-balok-bahan" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-emerald-50/50 to-white border border-emerald-100 rounded-[1rem] p-5 shadow-sm">
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya Deterjen per Kg</span>
+              <span class="text-sm font-bold text-emerald-600" id="bahan-det">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya Softener per Kg</span>
+              <span class="text-sm font-bold text-emerald-600" id="bahan-sof">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya Parfum per Kg</span>
+              <span class="text-sm font-bold text-emerald-600" id="bahan-par">Rp 0</span>
+            </div>
+            <div class="pt-3 border-t border-emerald-100">
+              <button onclick="openHPPFormExpandable('bahan', 'Analisa Biaya Chemical')" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
+                <i class="ph ph-pencil-simple mr-2"></i>Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balok: Admin/Nota -->
+      <div class="hpp-balok-container">
+        <div onclick="toggleHPPBalok('nota')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500 transition-transform duration-300 group-hover:scale-110">
+              <i class="ph ph-receipt text-xl drop-shadow-sm"></i>
+            </div>
+            <span class="text-base font-bold text-slate-800">Admin/Nota</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-lg font-black text-slate-600 tabular-nums" id="dash-card-nota">Rp 0</span>
+            <span class="text-sm font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-full" id="dash-card-nota-pct">0%</span>
+            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
+          </div>
+        </div>
+        <div id="hpp-balok-nota" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-slate-50/50 to-white border border-slate-100 rounded-[1rem] p-5 shadow-sm">
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya per Transaksi</span>
+              <span class="text-sm font-bold text-slate-600" id="nota-trx">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Biaya per Kg</span>
+              <span class="text-sm font-bold text-slate-600" id="nota-kg">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-semibold text-slate-700">Rata-rata Cucian</span>
+              <span class="text-sm font-bold text-slate-600" id="nota-rata">0 Kg</span>
+            </div>
+            <div class="pt-3 border-t border-slate-100">
+              <button onclick="openHPPFormExpandable('nota', 'Analisa Biaya Nota & Kasir')" class="w-full bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
+                <i class="ph ph-pencil-simple mr-2"></i>Edit
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2403,15 +2567,18 @@
     touch-action: manipulation !important;
   }
 
-  #view-hpp .hpp-card-dash::after {
-    content: "";
-    position: absolute;
-    inset: -45%;
-    background: radial-gradient(circle at center, rgba(99,102,241,0.17), transparent 56%);
+  #view-hpp .hpp-balok-detail {
+    max-height: 0;
     opacity: 0;
-    transform: scale(0.6);
-    pointer-events: none;
-    transition: opacity 0.32s ease, transform 0.42s cubic-bezier(0.16,1,0.3,1);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(-10px);
+  }
+
+  #view-hpp .hpp-balok-detail:not(.hidden) {
+    max-height: 500px;
+    opacity: 1;
+    transform: translateY(0);
   }
 
   #view-hpp .hpp-card-dash:hover {
@@ -2555,145 +2722,7 @@
   }
 </style>
 
-<style id="zett-hpp-dark-premium-overrides">
-  /* Dark premium polish for Struktur Biaya HPP */
-  #view-hpp {
-    background: radial-gradient(circle at 14% 10%, rgba(56, 189, 248, 0.14), transparent 16%),
-                radial-gradient(circle at 92% 12%, rgba(236, 72, 153, 0.08), transparent 12%),
-                #020617 !important;
-    color: #f8fafc !important;
-  }
 
-  #view-hpp #hpp-dashboard-view > .bg-white\/95 {
-    background: linear-gradient(155deg, rgba(8, 16, 36, 0.94), rgba(10, 20, 45, 0.82)) !important;
-    border-color: rgba(96, 165, 250, 0.20) !important;
-    box-shadow: 0 28px 80px -32px rgba(0,0,0,0.55) !important;
-    backdrop-filter: blur(22px) saturate(1.22) !important;
-  }
-
-  #view-hpp #hpp-dashboard-view > .bg-white\/95::after {
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.16), transparent 60%) !important;
-    filter: blur(3px) !important;
-  }
-
-  #view-hpp #dash-hpp-total {
-    color: #ffffff !important;
-    text-shadow: 0 14px 32px rgba(0,0,0,0.45) !important;
-  }
-
-  #view-hpp #dash-hpp-total + span,
-  #view-hpp #hpp-dashboard-view h2,
-  #view-hpp #hpp-dashboard-view p {
-    color: #cbd5e1 !important;
-  }
-
-  #view-hpp .hpp-card-dash {
-    position: relative !important;
-    background: rgba(8, 15, 32, 0.92) !important;
-    border-color: rgba(56, 189, 248, 0.14) !important;
-    box-shadow: 0 24px 60px -28px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.05) !important;
-    border-radius: 1.5rem !important;
-  }
-
-  #view-hpp .hpp-card-dash::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 58%);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.35s var(--hpp-ease);
-  }
-
-  #view-hpp .hpp-card-dash:hover::before {
-    opacity: 1;
-  }
-
-  #view-hpp .hpp-card-dash:hover {
-    transform: translate3d(0, -6px, 0) scale(1.004) !important;
-    box-shadow: var(--hpp-shadow-hover) !important;
-    border-color: rgba(96, 165, 250, 0.32) !important;
-  }
-
-  #view-hpp .hpp-card-dash h3 {
-    color: #a5b4fc !important;
-  }
-
-  #view-hpp [id^="dash-card-"] {
-    color: #f8fafc !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.12);
-  }
-
-  #view-hpp .hpp-card-percent {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-width: 3rem !important;
-    padding: 0.32rem 0.78rem !important;
-    margin-top: 0.45rem !important;
-    border-radius: 999px !important;
-    color: #e2e8f0 !important;
-    background: rgba(12, 18, 36, 0.78) !important;
-    border: 1px solid rgba(148, 163, 184, 0.16) !important;
-    box-shadow: 0 10px 26px rgba(0,0,0,0.18) !important;
-    font-size: 0.78rem !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.08em !important;
-  }
-
-  #view-hpp .hpp-donut-wrap {
-    background: rgba(10, 17, 32, 0.62) !important;
-    border: 1px solid rgba(56, 189, 248, 0.16) !important;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 26px 70px rgba(8, 15, 37, 0.42) !important;
-  }
-
-  #view-hpp .hpp-donut {
-    background: conic-gradient(
-      #38bdf8 0% var(--p-gas, 0%),
-      #f472b6 var(--p-gas, 0%) var(--p-listrik, 0%),
-      #22d3ee var(--p-listrik, 0%) var(--p-air, 0%),
-      #a78bfa var(--p-air, 0%) var(--p-packing, 0%),
-      #34d399 var(--p-packing, 0%) var(--p-bahan, 0%),
-      rgba(148, 163, 184, 0.22) var(--p-bahan, 0%) 100%
-    ) !important;
-    filter: drop-shadow(0 0 24px rgba(56, 189, 248, 0.22)) !important;
-  }
-
-  #view-hpp .hpp-donut-center {
-    background: rgba(7, 12, 26, 0.92) !important;
-    border: 1px solid rgba(255,255,255,0.10) !important;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08) !important;
-    padding: 1.35rem !important;
-    border-radius: 999px !important;
-  }
-
-  #view-hpp .hpp-donut-center i {
-    color: #67e8f9 !important;
-    text-shadow: 0 0 20px rgba(56, 189, 248, 0.35) !important;
-  }
-
-  #view-hpp #hpp-donut-labels > div {
-    color: #f8fafc !important;
-    background: rgba(8, 15, 32, 0.87) !important;
-    border: 1px solid rgba(148, 163, 184, 0.18) !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.24) !important;
-  }
-
-  #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-    gap: clamp(0.85rem, 1.5vw, 1.1rem) !important;
-  }
-
-  #view-hpp .hpp-card-dash {
-    padding: clamp(0.95rem, 1.9vw, 1.3rem) !important;
-    gap: 0.75rem !important;
-  }
-
-  @media (max-width: 768px) {
-    #view-hpp #hpp-dashboard-view { padding-inline: 0.25rem !important; }
-    #view-hpp #hpp-dashboard-view > .bg-white\/95 { padding: clamp(1.2rem, 3vw, 1.5rem) !important; }
-  }
-</style>
 
 <script id="zett-hpp-final-click-and-percent-fix-20260506">
   /**
@@ -2804,10 +2833,47 @@
       }
     }
 
-    function inferTypeFromCard(card) {
-      const valueEl = card.querySelector('[id^="dash-card-"]');
-      if (!valueEl || !valueEl.id) return '';
-      return valueEl.id.replace('dash-card-', '');
+    function toggleHPPBalok(type) {
+      const detail = document.getElementById('hpp-balok-' + type);
+      const icon = detail.previousElementSibling.querySelector('.ph-caret-down');
+      
+      if (detail.classList.contains('hidden')) {
+        // Close other baloks first
+        document.querySelectorAll('.hpp-balok-detail').forEach(el => {
+          if (el !== detail) {
+            el.classList.add('hidden');
+            el.style.maxHeight = '0';
+            el.style.opacity = '0';
+            const otherIcon = el.previousElementSibling.querySelector('.ph-caret-down');
+            if (otherIcon) otherIcon.style.transform = 'rotate(0deg)';
+          }
+        });
+        
+        // Open this balok
+        detail.classList.remove('hidden');
+        detail.style.maxHeight = detail.scrollHeight + 'px';
+        detail.style.opacity = '1';
+        if (icon) icon.style.transform = 'rotate(180deg)';
+        
+        // Update data
+        updateBalokDetail(type);
+      } else {
+        // Close this balok
+        detail.style.maxHeight = '0';
+        detail.style.opacity = '0';
+        if (icon) icon.style.transform = 'rotate(0deg)';
+        setTimeout(() => detail.classList.add('hidden'), 300);
+      }
+    }
+
+    function updateBalokDetail(type) {
+      // This will be populated with actual calculation data
+      // For now, just show placeholder data
+      if (typeof APP_STATE !== 'undefined' && APP_STATE.data && APP_STATE.data.hpp) {
+        const hpp = APP_STATE.data.hpp;
+        // Update specific balok details based on type
+        // Implementation will depend on available calculation functions
+      }
     }
 
     function attachCardClickHandlers() {
