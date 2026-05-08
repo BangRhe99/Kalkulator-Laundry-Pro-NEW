@@ -2119,7 +2119,7 @@
         const pct = document.createElement('p');
         pct.id = id;
         pct.className = 'hpp-card-percent';
-        pct.textContent = '0% dari HPP';
+        pct.textContent = '0%';
         valueEl.insertAdjacentElement('afterend', pct);
       });
     }
@@ -2135,7 +2135,7 @@
           if (!pctEl) return;
           const value = Number(hpp[key] || 0);
           const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-          pctEl.textContent = pct + '% dari HPP';
+          pctEl.textContent = pct + '%';
         });
       } catch (error) {
         console.error('Gagal update persentase card HPP:', error);
@@ -2387,6 +2387,146 @@
       min-height: 88px !important;
       padding: 9px 7px !important;
     }
+  }
+</style>
+
+<style id="zett-hpp-dark-premium-overrides">
+  /* Dark premium polish for Struktur Biaya HPP */
+  #view-hpp {
+    background: radial-gradient(circle at 14% 10%, rgba(56, 189, 248, 0.14), transparent 16%),
+                radial-gradient(circle at 92% 12%, rgba(236, 72, 153, 0.08), transparent 12%),
+                #020617 !important;
+    color: #f8fafc !important;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+    background: linear-gradient(155deg, rgba(8, 16, 36, 0.94), rgba(10, 20, 45, 0.82)) !important;
+    border-color: rgba(96, 165, 250, 0.20) !important;
+    box-shadow: 0 28px 80px -32px rgba(0,0,0,0.55) !important;
+    backdrop-filter: blur(22px) saturate(1.22) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95::after {
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.16), transparent 60%) !important;
+    filter: blur(3px) !important;
+  }
+
+  #view-hpp #dash-hpp-total {
+    color: #ffffff !important;
+    text-shadow: 0 14px 32px rgba(0,0,0,0.45) !important;
+  }
+
+  #view-hpp #dash-hpp-total + span,
+  #view-hpp #hpp-dashboard-view h2,
+  #view-hpp #hpp-dashboard-view p {
+    color: #cbd5e1 !important;
+  }
+
+  #view-hpp .hpp-card-dash {
+    position: relative !important;
+    background: rgba(8, 15, 32, 0.92) !important;
+    border-color: rgba(56, 189, 248, 0.14) !important;
+    box-shadow: 0 24px 60px -28px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+    border-radius: 1.5rem !important;
+  }
+
+  #view-hpp .hpp-card-dash::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 58%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s var(--hpp-ease);
+  }
+
+  #view-hpp .hpp-card-dash:hover::before {
+    opacity: 1;
+  }
+
+  #view-hpp .hpp-card-dash:hover {
+    transform: translate3d(0, -6px, 0) scale(1.004) !important;
+    box-shadow: var(--hpp-shadow-hover) !important;
+    border-color: rgba(96, 165, 250, 0.32) !important;
+  }
+
+  #view-hpp .hpp-card-dash h3 {
+    color: #a5b4fc !important;
+  }
+
+  #view-hpp [id^="dash-card-"] {
+    color: #f8fafc !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.12);
+  }
+
+  #view-hpp .hpp-card-percent {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 3rem !important;
+    padding: 0.32rem 0.78rem !important;
+    margin-top: 0.45rem !important;
+    border-radius: 999px !important;
+    color: #e2e8f0 !important;
+    background: rgba(12, 18, 36, 0.78) !important;
+    border: 1px solid rgba(148, 163, 184, 0.16) !important;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.18) !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  #view-hpp .hpp-donut-wrap {
+    background: rgba(10, 17, 32, 0.62) !important;
+    border: 1px solid rgba(56, 189, 248, 0.16) !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 26px 70px rgba(8, 15, 37, 0.42) !important;
+  }
+
+  #view-hpp .hpp-donut {
+    background: conic-gradient(
+      #38bdf8 0% var(--p-gas, 0%),
+      #f472b6 var(--p-gas, 0%) var(--p-listrik, 0%),
+      #22d3ee var(--p-listrik, 0%) var(--p-air, 0%),
+      #a78bfa var(--p-air, 0%) var(--p-packing, 0%),
+      #34d399 var(--p-packing, 0%) var(--p-bahan, 0%),
+      rgba(148, 163, 184, 0.22) var(--p-bahan, 0%) 100%
+    ) !important;
+    filter: drop-shadow(0 0 24px rgba(56, 189, 248, 0.22)) !important;
+  }
+
+  #view-hpp .hpp-donut-center {
+    background: rgba(7, 12, 26, 0.92) !important;
+    border: 1px solid rgba(255,255,255,0.10) !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08) !important;
+    padding: 1.35rem !important;
+    border-radius: 999px !important;
+  }
+
+  #view-hpp .hpp-donut-center i {
+    color: #67e8f9 !important;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.35) !important;
+  }
+
+  #view-hpp #hpp-donut-labels > div {
+    color: #f8fafc !important;
+    background: rgba(8, 15, 32, 0.87) !important;
+    border: 1px solid rgba(148, 163, 184, 0.18) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.24) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+    gap: clamp(0.85rem, 1.5vw, 1.1rem) !important;
+  }
+
+  #view-hpp .hpp-card-dash {
+    padding: clamp(0.95rem, 1.9vw, 1.3rem) !important;
+    gap: 0.75rem !important;
+  }
+
+  @media (max-width: 768px) {
+    #view-hpp #hpp-dashboard-view { padding-inline: 0.25rem !important; }
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 { padding: clamp(1.2rem, 3vw, 1.5rem) !important; }
   }
 </style>
 
