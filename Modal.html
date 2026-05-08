@@ -1,0 +1,2771 @@
+<!-- ========================================================================= -->
+<!-- VIEW STRUKTUR BIAYA HPP (HYPER-PREMIUM SAAS ARCHITECTURE - CREATOR EDITION) -->
+<!-- ========================================================================= -->
+
+<style>
+  /* PURE CSS CONIC DONUT CHART - SAAS REFINED EDITION */
+  .hpp-donut-wrap {
+    width: 240px;
+    height: 240px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+  
+  .hpp-donut {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    /* Gradient Warna Vibrant (Dikembalikan agar tajam saat screen recording) */
+    background: conic-gradient(
+      #f43f5e 0% var(--p-gas, 0%),         /* Rose 500 */
+      #f59e0b var(--p-gas, 0%) var(--p-listrik, 0%), /* Amber 500 */
+      #06b6d4 var(--p-listrik, 0%) var(--p-air, 0%), /* Cyan 500 */
+      #6366f1 var(--p-air, 0%) var(--p-packing, 0%), /* Indigo 500 */
+      #10b981 var(--p-packing, 0%) var(--p-bahan, 0%), /* Emerald 500 */
+      #94a3b8 var(--p-bahan, 0%) 100%      /* Slate 400 */
+    );
+    /* Ring dikembalikan sedikit lebih tebal (65%) agar jelas di HP, namun tetap elegan */
+    -webkit-mask-image: radial-gradient(circle, transparent 65%, black 66%);
+    mask-image: radial-gradient(circle, transparent 65%, black 66%);
+    transition: background 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .hpp-donut-center {
+    position: absolute;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Micro-interactions: Smooth Hover & Click */
+  .hpp-card-dash {
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    cursor: pointer;
+    will-change: transform, box-shadow;
+  }
+  .hpp-card-dash:hover {
+    transform: translateY(-6px);
+  }
+  .hpp-card-dash:active {
+    transform: scale(0.96) translateY(-2px);
+  }
+</style>
+
+
+<style id="zett-hpp-spatial-minimalist-overrides">
+  /* ======================================================================
+   * ZETTBOT EXECUTION LAYER: SPATIAL MINIMALIST FINTECH POLISH
+   * Scope: #view-hpp only
+   * Tujuan: memperkaya UI HPP tanpa mengubah struktur HTML/CSS dasar.
+   * ====================================================================== */
+  #view-hpp {
+    --hpp-bg: #f8fafc;
+    --hpp-surface: rgba(255, 255, 255, 0.88);
+    --hpp-surface-strong: rgba(255, 255, 255, 0.96);
+    --hpp-border: rgba(203, 213, 225, 0.46);
+    --hpp-border-soft: rgba(226, 232, 240, 0.72);
+    --hpp-text: #0f172a;
+    --hpp-muted: #475569;
+    --hpp-soft: #64748b;
+    --hpp-emerald: #047857;
+    --hpp-rose: #be123c;
+    --hpp-amber: #b45309;
+    --hpp-cyan: #0e7490;
+    --hpp-indigo: #4f46e5;
+    --hpp-slate: #334155;
+    --hpp-radius-xl: clamp(1.15rem, 2vw, 1.5rem);
+    --hpp-radius-2xl: clamp(1.55rem, 2.6vw, 2rem);
+    --hpp-gap: clamp(1.1rem, 2vw, 1.55rem);
+    --hpp-pad: clamp(1.2rem, 2.8vw, 2rem);
+    --hpp-hero-pad: clamp(1.65rem, 4vw, 3rem);
+    --hpp-shadow-ambient: 0 22px 60px -36px rgba(15, 23, 42, 0.36), 0 12px 28px -24px rgba(15, 23, 42, 0.22);
+    --hpp-shadow-card: 0 18px 50px -34px rgba(15, 23, 42, 0.34), 0 2px 14px -10px rgba(15, 23, 42, 0.16);
+    --hpp-shadow-hover: 0 30px 72px -34px rgba(15, 23, 42, 0.42), 0 12px 28px -20px rgba(15, 23, 42, 0.28);
+    --hpp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    color: var(--hpp-text);
+    transform: translate3d(0, 0, 0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    contain: layout paint;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #view-hpp {
+      --hpp-bg: #020617;
+      --hpp-surface: rgba(15, 23, 42, 0.82);
+      --hpp-surface-strong: rgba(15, 23, 42, 0.94);
+      --hpp-border: rgba(148, 163, 184, 0.24);
+      --hpp-border-soft: rgba(71, 85, 105, 0.55);
+      --hpp-text: #f8fafc;
+      --hpp-muted: #cbd5e1;
+      --hpp-soft: #94a3b8;
+      --hpp-emerald: #34d399;
+      --hpp-rose: #fb7185;
+      --hpp-amber: #fbbf24;
+      --hpp-cyan: #22d3ee;
+      --hpp-indigo: #a5b4fc;
+      --hpp-slate: #e2e8f0;
+      --hpp-shadow-ambient: 0 26px 70px -34px rgba(0, 0, 0, 0.82);
+      --hpp-shadow-card: 0 24px 60px -34px rgba(0, 0, 0, 0.72);
+      --hpp-shadow-hover: 0 34px 90px -38px rgba(0, 0, 0, 0.86);
+    }
+  }
+
+  #view-hpp, #view-hpp * {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  #view-hpp .tabular-nums,
+  #view-hpp [id^="dash-card-"],
+  #view-hpp #dash-hpp-total,
+  #view-hpp input,
+  #view-hpp select {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1, "kern" 1;
+  }
+
+  #view-hpp #hpp-dashboard-view {
+    display: grid;
+    gap: clamp(1.35rem, 2.25vw, 2rem);
+    max-width: min(100%, 1120px);
+    margin-inline: auto;
+    transform: translate3d(0, 0, 0);
+    will-change: opacity, transform;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--hpp-radius-2xl) !important;
+    border-color: var(--hpp-border) !important;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(99, 102, 241, 0.09), transparent 30%),
+      radial-gradient(circle at 92% 18%, rgba(16, 185, 129, 0.11), transparent 32%),
+      linear-gradient(145deg, var(--hpp-surface-strong), var(--hpp-surface)) !important;
+    box-shadow: var(--hpp-shadow-ambient) !important;
+    backdrop-filter: blur(18px) saturate(1.18) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.18) !important;
+    padding: var(--hpp-hero-pad) !important;
+    gap: clamp(1.5rem, 4vw, 3.25rem) !important;
+    transform: translate3d(0, 0, 0);
+    transition: transform 360ms var(--hpp-ease), box-shadow 360ms var(--hpp-ease), border-color 360ms var(--hpp-ease);
+    will-change: transform, box-shadow;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: calc(var(--hpp-radius-2xl) - 1px);
+    border: 1px solid rgba(255, 255, 255, 0.62);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95::after {
+    content: "";
+    position: absolute;
+    width: min(22rem, 52vw);
+    height: min(22rem, 52vw);
+    right: -8rem;
+    top: -11rem;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.14), transparent 62%);
+    filter: blur(2px);
+    pointer-events: none;
+    z-index: -2;
+  }
+
+  #view-hpp #dash-hpp-total {
+    color: var(--hpp-text) !important;
+    font-size: clamp(2.85rem, 8.5vw, 4.7rem) !important;
+    line-height: 0.94 !important;
+    letter-spacing: -0.065em !important;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.28);
+  }
+
+  #view-hpp #dash-hpp-total + span,
+  #view-hpp #hpp-dashboard-view h2,
+  #view-hpp #hpp-dashboard-view p {
+    color: var(--hpp-muted) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1rem, 2vw, 1.5rem) !important;
+    align-items: stretch;
+  }
+
+  @supports (grid-template-rows: subgrid) {
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      grid-auto-rows: 1fr;
+    }
+    #view-hpp .hpp-card-dash {
+      display: grid !important;
+      grid-template-rows: subgrid;
+      grid-row: span 3;
+    }
+  }
+
+  #view-hpp .hpp-card-dash {
+    min-height: clamp(7.4rem, 14vw, 8.9rem);
+    border-radius: var(--hpp-radius-xl) !important;
+    border-color: var(--hpp-border-soft) !important;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.78)) !important;
+    box-shadow: var(--hpp-shadow-card) !important;
+    backdrop-filter: blur(14px) saturate(1.12);
+    -webkit-backdrop-filter: blur(14px) saturate(1.12);
+    padding: clamp(1.05rem, 2.35vw, 1.55rem) !important;
+    gap: clamp(0.68rem, 1.4vw, 1rem) !important;
+    transform: translate3d(0, 0, 0);
+    will-change: transform, box-shadow, filter;
+    transition: transform 280ms var(--hpp-ease), box-shadow 280ms var(--hpp-ease), border-color 280ms var(--hpp-ease), filter 280ms ease !important;
+    contain: layout paint;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #view-hpp .hpp-card-dash {
+      background: linear-gradient(180deg, rgba(30,41,59,0.92), rgba(15,23,42,0.84)) !important;
+    }
+  }
+
+  #view-hpp .hpp-card-dash:hover {
+    transform: translate3d(0, -5px, 0) scale(1.006) !important;
+    box-shadow: var(--hpp-shadow-hover) !important;
+    border-color: rgba(148, 163, 184, 0.42) !important;
+    filter: saturate(1.08);
+  }
+
+  #view-hpp .hpp-card-dash:active {
+    transform: translate3d(0, -1px, 0) scale(0.982) !important;
+    transition-duration: 120ms !important;
+  }
+
+  #view-hpp .hpp-card-dash h3 {
+    color: var(--hpp-soft) !important;
+    letter-spacing: 0.18em !important;
+  }
+
+  #view-hpp #dash-card-gas { color: var(--hpp-rose) !important; }
+  #view-hpp #dash-card-listrik { color: var(--hpp-amber) !important; }
+  #view-hpp #dash-card-air { color: var(--hpp-cyan) !important; }
+  #view-hpp #dash-card-packing { color: var(--hpp-indigo) !important; }
+  #view-hpp #dash-card-bahan { color: var(--hpp-emerald) !important; }
+  #view-hpp #dash-card-nota { color: var(--hpp-slate) !important; }
+
+  #view-hpp [id^="dash-card-"] {
+    font-size: clamp(1.15rem, 2.65vw, 1.7rem) !important;
+    line-height: 1 !important;
+  }
+
+  #view-hpp .hpp-donut-wrap {
+    width: clamp(10.5rem, 22vw, 15rem) !important;
+    height: clamp(10.5rem, 22vw, 15rem) !important;
+    transform: translate3d(0,0,0);
+    will-change: transform;
+  }
+
+  #view-hpp .hpp-donut {
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
+    transition: background 680ms var(--hpp-ease), transform 360ms var(--hpp-ease) !important;
+    will-change: background, transform;
+    transform: translate3d(0,0,0);
+  }
+
+  #view-hpp .hpp-donut-wrap:hover .hpp-donut {
+    transform: translate3d(0,0,0) rotate(0.001deg) scale(1.018);
+  }
+
+  #view-hpp #hpp-form-view {
+    max-width: min(100%, 1120px);
+    margin-inline: auto;
+    transform: translate3d(0,0,0);
+    will-change: opacity, transform;
+  }
+
+  #view-hpp #hpp-form-view .bento-card,
+  #view-hpp .tab-content .bento-card {
+    border-color: var(--hpp-border-soft) !important;
+    background: var(--hpp-surface-strong) !important;
+    box-shadow: var(--hpp-shadow-card) !important;
+    backdrop-filter: blur(16px) saturate(1.12);
+    -webkit-backdrop-filter: blur(16px) saturate(1.12);
+    transform: translate3d(0,0,0);
+    will-change: transform, box-shadow;
+  }
+
+  #view-hpp .omni-input,
+  #view-hpp input,
+  #view-hpp select {
+    color: var(--hpp-text) !important;
+    border-color: var(--hpp-border-soft) !important;
+    transition: border-color 220ms var(--hpp-ease), box-shadow 220ms var(--hpp-ease), transform 220ms var(--hpp-ease), background 220ms var(--hpp-ease) !important;
+  }
+
+  #view-hpp .omni-input:focus,
+  #view-hpp input:focus,
+  #view-hpp select:focus {
+    outline: none !important;
+    transform: translate3d(0, -1px, 0);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.13), 0 12px 28px -22px rgba(15, 23, 42, 0.34) !important;
+  }
+
+  #view-hpp button {
+    transform: translate3d(0,0,0);
+    will-change: transform, box-shadow;
+  }
+
+  #view-hpp button:focus-visible,
+  #view-hpp .hpp-card-dash:focus-visible {
+    outline: 3px solid rgba(99, 102, 241, 0.62) !important;
+    outline-offset: 4px !important;
+  }
+
+  #view-hpp .hpp-skeleton-pulse {
+    position: relative;
+    color: transparent !important;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    background: linear-gradient(90deg, rgba(226,232,240,0.72), rgba(248,250,252,0.95), rgba(226,232,240,0.72));
+    background-size: 220% 100%;
+    animation: hppSkeletonShimmer 1.05s linear infinite;
+  }
+
+  @keyframes hppSkeletonShimmer {
+    0% { background-position: 220% 0; }
+    100% { background-position: -220% 0; }
+  }
+
+  .hpp-view-enter-premium {
+    animation: hppViewEnterPremium 460ms var(--hpp-ease) both;
+  }
+
+  @keyframes hppViewEnterPremium {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 18px, 0) scale(0.988);
+      filter: blur(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  @media (min-width: 768px) {
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp {
+      margin-top: 0 !important;
+    }
+    #view-hpp #hpp-dashboard-view {
+      gap: 1.05rem;
+      max-width: 100%;
+    }
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      padding: 1.35rem !important;
+      gap: 1.35rem !important;
+      border-radius: 1.55rem !important;
+    }
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      gap: 0.9rem !important;
+    }
+    #view-hpp .hpp-card-dash {
+      min-height: 7.15rem;
+      padding: 1rem !important;
+      border-radius: 1.25rem !important;
+    }
+    #view-hpp .hpp-card-dash .w-12 {
+      width: 2.45rem !important;
+      height: 2.45rem !important;
+    }
+    #view-hpp .hpp-card-dash h3 {
+      font-size: 0.56rem !important;
+      letter-spacing: 0.14em !important;
+    }
+    #view-hpp [id^="dash-card-"] {
+      font-size: clamp(1.02rem, 5.2vw, 1.35rem) !important;
+    }
+    #view-hpp #dash-hpp-total {
+      font-size: clamp(2.65rem, 13vw, 3.8rem) !important;
+    }
+    #view-hpp .hpp-donut-wrap {
+      width: min(52vw, 12.5rem) !important;
+      height: min(52vw, 12.5rem) !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #view-hpp,
+    #view-hpp *,
+    #view-hpp *::before,
+    #view-hpp *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 1ms !important;
+    }
+  }
+</style>
+
+
+<div id="view-hpp" class="main-view hidden bento-layout" style="margin-top: -1rem;">
+  
+  <!-- ================= L1: HYPER PREMIUM DASHBOARD VIEW ================= -->
+  <div id="hpp-dashboard-view" class="animate-fade-in space-y-8">
+    
+    <!-- Hero Banner & Chart (Clean, High-Trust Design) -->
+    <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.02),0_2px_10px_rgba(0,0,0,0.01)] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transform-gpu transition-all">
+      
+      <!-- Hero Text -->
+      <div class="flex-1 text-center md:text-left space-y-5 z-10 w-full">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50/80 border border-emerald-100 text-emerald-600 font-extrabold text-[10px] uppercase tracking-widest mx-auto md:mx-0">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Real-time Sync
+        </div>
+        
+        <div class="space-y-1">
+          <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Total HPP Variabel</h2>
+          <div class="flex items-baseline justify-center md:justify-start gap-1.5 pt-1">
+            <span class="text-[clamp(3rem,6vw,4.5rem)] leading-none font-black text-slate-900 tracking-tighter tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-hpp-total">Rp 0</span>
+            <span class="text-xl md:text-2xl font-bold text-slate-400">/Kg</span>
+          </div>
+        </div>
+        
+        <p class="text-sm font-medium text-slate-500 max-w-md mx-auto md:mx-0 leading-relaxed pt-2">Simulasi struktur biaya untuk menjaga margin tetap sehat.</p>
+      </div>
+
+      <!-- Donut Chart -->
+      <div class="shrink-0 relative">
+        <div class="hpp-donut-wrap relative">
+          <!-- Main CSS Donut Gradient -->
+          <div class="hpp-donut" id="hpp-donut-chart" style="--p-gas: 0%; --p-listrik: 0%; --p-air: 0%; --p-packing: 0%; --p-bahan: 0%;"></div>
+          
+          <!-- Absolute Layer Khusus Render Teks Persentase Trigonometri -->
+          <div id="hpp-donut-labels" class="absolute inset-0 pointer-events-none z-20"></div>
+
+          <!-- Bagian Tengah (Hole) -->
+          <div class="hpp-donut-center z-10">
+            <i class="ph ph-chart-pie-slice text-slate-300/80 text-[2.5rem] mb-1.5"></i>
+            <span class="text-slate-400 font-black text-[9px] uppercase tracking-[0.2em]">Komposisi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 Cards Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
+      
+      <!-- Card: Gas -->
+      <div onclick="openHPPForm('gas', 'Analisa Biaya Gas')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+        <div class="w-12 h-12 bg-rose-50 rounded-[1rem] flex items-center justify-center text-rose-500 transition-transform duration-500 group-hover:scale-110">
+          <i class="ph ph-fire text-2xl drop-shadow-sm"></i>
+        </div>
+        <div>
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Gas LPG</h3>
+          <p class="text-xl md:text-2xl font-black text-rose-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-gas">Rp 0</p>
+        </div>
+      </div>
+
+      <!-- Card: Listrik -->
+      <div onclick="openHPPForm('listrik', 'Analisa Biaya Listrik')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+        <div class="w-12 h-12 bg-amber-50 rounded-[1rem] flex items-center justify-center text-amber-500 transition-transform duration-500 group-hover:scale-110">
+          <i class="ph ph-lightning text-2xl drop-shadow-sm"></i>
+        </div>
+        <div>
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Listrik</h3>
+          <p class="text-xl md:text-2xl font-black text-amber-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-listrik">Rp 0</p>
+        </div>
+      </div>
+
+      <!-- Card: Air -->
+      <div onclick="openHPPForm('air', 'Analisa Biaya Air')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+        <div class="w-12 h-12 bg-cyan-50 rounded-[1rem] flex items-center justify-center text-cyan-500 transition-transform duration-500 group-hover:scale-110">
+          <i class="ph ph-drop text-2xl drop-shadow-sm"></i>
+        </div>
+        <div>
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Air PDAM</h3>
+          <p class="text-xl md:text-2xl font-black text-cyan-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-air">Rp 0</p>
+        </div>
+      </div>
+
+      <!-- Card: Packing -->
+      <div onclick="openHPPForm('packing', 'Analisa Biaya Packing')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+        <div class="w-12 h-12 bg-indigo-50 rounded-[1rem] flex items-center justify-center text-indigo-500 transition-transform duration-500 group-hover:scale-110">
+          <i class="ph ph-package text-2xl drop-shadow-sm"></i>
+        </div>
+        <div>
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Packing</h3>
+          <p class="text-xl md:text-2xl font-black text-indigo-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-packing">Rp 0</p>
+        </div>
+      </div>
+
+      <!-- Card: Bahan -->
+      <div onclick="openHPPForm('bahan', 'Analisa Biaya Chemical')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+        <div class="w-12 h-12 bg-emerald-50 rounded-[1rem] flex items-center justify-center text-emerald-500 transition-transform duration-500 group-hover:scale-110">
+          <i class="ph ph-flask text-2xl drop-shadow-sm"></i>
+        </div>
+        <div>
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Chemical</h3>
+          <p class="text-xl md:text-2xl font-black text-emerald-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-bahan">Rp 0</p>
+        </div>
+      </div>
+
+      <!-- Card: Nota -->
+      <div onclick="openHPPForm('nota', 'Analisa Biaya Nota & Kasir')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
+        <div class="w-12 h-12 bg-slate-50 rounded-[1rem] flex items-center justify-center text-slate-500 transition-transform duration-500 group-hover:scale-110">
+          <i class="ph ph-receipt text-2xl drop-shadow-sm"></i>
+        </div>
+        <div>
+          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Admin/Nota</h3>
+          <p class="text-xl md:text-2xl font-black text-slate-600 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-nota">Rp 0</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= L2: PROGRESSIVE DISCLOSURE FORMS ================= -->
+  <div id="hpp-form-view" class="hidden animate-fade-in">
+    
+    <!-- Dynamic Header -->
+    <div class="flex items-center gap-5 mb-10">
+      <button onclick="closeHPPForm()" class="bg-white border border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-50 w-12 h-12 rounded-[1rem] flex items-center justify-center shadow-sm transition-all active:scale-95">
+        <i class="ph ph-arrow-left text-xl"></i>
+      </button>
+      <h2 id="hpp-form-title-text" class="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight leading-none">Analisa Biaya</h2>
+    </div>
+
+    <!-- ================= TAB 1: GAS ================= -->
+    <div id="tab-gas" class="tab-content hidden animate-fade-in bento-grid">
+      <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
+        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-fire text-rose-500 text-2xl"></i> Parameter Gas Lpg</h3>
+        
+        <div class="bento-grid">
+          <!-- Kapasitas LPG -->
+          <div class="bento-col-6">
+            <label class="omni-label">Kapasitas Gas Lpg</label>
+            <div class="omni-input-wrapper">
+              <select id="inputGasKapasitas" class="omni-input" onchange="updateGasDefault(); calculateGas()">
+                <option value="">-- Pilih --</option>
+                <option value="3">3 Kg</option>
+                <option value="5.5">5,5 Kg</option>
+                <option value="12">12 Kg</option>
+                <option value="50">50 Kg</option>
+              </select>
+              <i class="ph ph-caret-down omni-caret"></i>
+            </div>
+          </div>
+          <!-- Harga -->
+          <div class="bento-col-6">
+            <label class="omni-label">Harga Per Tabung (Rp)</label>
+            <div class="omni-input-wrapper">
+              <input type="text" id="inputGasHarga" inputmode="numeric" class="omni-input" placeholder="Misal: 20.000" oninput="formatRupiahInput(this); calculateGas()">
+            </div>
+          </div>
+          <!-- Estimasi Jam (Editable) -->
+          <div class="bento-col-6">
+            <label class="omni-label">Estimasi Pemakaian (Jam)</label>
+            <div class="omni-input-wrapper">
+              <input type="number" id="inputGasJam" step="0.1" class="omni-input" style="background: rgba(16, 185, 129, 0.05); border-color: var(--omni-emerald-border);" placeholder="Otomatis / Edit manual" oninput="calculateGas()">
+            </div>
+          </div>
+          <!-- Konversi Menit (Readonly) -->
+          <div class="bento-col-6">
+            <label class="omni-label">Konversi Waktu (Otomatis)</label>
+            <div class="omni-input-wrapper">
+              <input type="text" id="inputGasMenit" readonly class="omni-input" style="background: var(--omni-bg); color: var(--omni-navy-light); cursor: not-allowed;" placeholder="0 Menit">
+            </div>
+          </div>
+        </div>
+
+        <!-- Central Gas Toggle -->
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--omni-border); display: flex; justify-content: space-between; align-items: center;">
+          <label class="omni-toggle" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div style="position: relative;">
+                <input type="checkbox" id="inputCentralGas" class="omni-toggle-input sr-only" style="display: none;" onchange="calculateGas()">
+                <div class="omni-toggle-track"><div class="omni-toggle-thumb"></div></div>
+              </div>
+              <span style="font-weight: 800; color: var(--omni-navy); font-size: 0.95rem;">Menggunakan Central Gas</span>
+            </div>
+          </label>
+          <div class="text-xs px-4 py-2 rounded-full border font-bold shadow-sm" id="displayCentralGasStatus" style="background: var(--omni-surface-solid); border-color: var(--omni-border); color: var(--omni-navy-light);">
+            Tidak
+          </div>
+        </div>
+
+        <!-- Display Hasil Kalkulasi -->
+        <div style="margin-top: 1.5rem; background: var(--omni-emerald-bg); border: 1px solid var(--omni-emerald-border); border-radius: var(--rad-xl); padding: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 0.9rem; font-weight: 800; color: var(--omni-navy);">Analisa Biaya Gas</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--omni-emerald); margin-top: 0.25rem;">Per Menit Pemakaian</span>
+          </div>
+          <span class="omni-metric-huge tracking-tighter" style="font-size: 2rem; color: var(--omni-emerald);" id="displayBiayaGasMenit">Rp 0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 2: LISTRIK ================= -->
+    <div id="tab-listrik" class="tab-content hidden animate-fade-in bento-grid">
+      <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
+        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-lightning text-amber-500 text-2xl"></i> Parameter Beban Listrik</h3>
+        
+        <!-- TDL -->
+        <div style="background: var(--omni-bg); border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; margin-bottom: 1.5rem;">
+          <label class="omni-label">Tarif Dasar Listrik (TDL) per kWh (Rp)</label>
+          <input type="text" id="inputTDL" inputmode="numeric" class="omni-input" style="font-size: 1.25rem;" value="1.700" oninput="formatRupiahInput(this); calculateListrik()">
+          <p style="font-size: 0.7rem; color: var(--omni-navy-light); margin-top: 0.5rem; font-weight: 600;">*Bisa diubah menyesuaikan golongan daya listrik laundry Anda.</p>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Mesin Cuci -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+            <div style="position: absolute; top: 0; right: 0; background: rgba(59, 130, 246, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-drop text-blue-500 text-xl"></i></div>
+            <h4 style="font-size: 0.9rem; font-weight: 800; color: #3b82f6; margin-bottom: 1rem;">Mesin Cuci</h4>
+            <label class="omni-label" style="font-size: 0.7rem;">Daya / Mesin (Watt)</label>
+            <input type="number" id="inputListrikCuciWatt" class="omni-input" style="padding: 0.75rem 1.25rem; margin-bottom: 1.25rem;" value="450" oninput="calculateListrik()">
+            <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                <span>Estimasi / Load:</span> <span id="dispListrikCuciLoad" style="color: var(--omni-navy);">Rp 0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(59, 130, 246, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #2563eb;">
+                <span>Estimasi / Kg:</span> <span id="dispListrikCuciKg">Rp 0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mesin Pengering -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+            <div style="position: absolute; top: 0; right: 0; background: rgba(249, 115, 22, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-wind text-orange-500 text-xl"></i></div>
+            <h4 style="font-size: 0.9rem; font-weight: 800; color: #f97316; margin-bottom: 1rem;">Mesin Pengering</h4>
+            <label class="omni-label" style="font-size: 0.7rem;">Daya / Mesin (Watt)</label>
+            <input type="number" id="inputListrikPengeringWatt" class="omni-input" style="padding: 0.75rem 1.25rem; margin-bottom: 1.25rem;" value="450" oninput="calculateListrik()">
+            <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                <span>Estimasi / Load:</span> <span id="dispListrikPengeringLoad" style="color: var(--omni-navy);">Rp 0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(249, 115, 22, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #c2410c;">
+                <span>Estimasi / Kg:</span> <span id="dispListrikPengeringKg">Rp 0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pompa Air -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+            <div style="position: absolute; top: 0; right: 0; background: rgba(6, 182, 212, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-waves text-cyan-500 text-xl"></i></div>
+            <h4 style="font-size: 0.9rem; font-weight: 800; color: #0891b2; margin-bottom: 1rem;">Pompa Air</h4>
+            <label class="omni-label" style="font-size: 0.7rem;">Daya Total (Watt)</label>
+            <input type="number" id="inputListrikPompaWatt" class="omni-input" style="padding: 0.75rem 1.25rem; margin-bottom: 1.25rem;" value="280" oninput="calculateListrik()">
+            <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                <span>Beban / Mesin Cuci:</span> <span id="dispListrikPompaLoad" style="color: var(--omni-navy);">Rp 0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(6, 182, 212, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #0e7490;">
+                <span>Estimasi / Kg:</span> <span id="dispListrikPompaKg">Rp 0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Setrika Listrik -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+            <div style="position: absolute; top: 0; right: 0; background: rgba(168, 85, 247, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-thermometer-hot text-purple-500 text-xl"></i></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; position: relative; z-index: 10;">
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #9333ea; margin: 0;">Setrika Listrik</h4>
+              <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
+                <div style="position: relative;">
+                  <input type="checkbox" id="toggleSetrikaListrik" class="omni-toggle-input sr-only" style="display: none;" onchange="calculateListrik(); toggleSetrikaInputs()">
+                  <div class="omni-toggle-track" style="width: 2rem; height: 1.1rem; background: #cbd5e1;"><div class="omni-toggle-thumb" style="width: 0.8rem; height: 0.8rem; top: 0.15rem; left: 0.15rem;"></div></div>
+                </div>
+              </label>
+            </div>
+            
+            <div id="wrapSetrikaInputs" style="opacity: 0.4; pointer-events: none; transition: all 0.3s ease;">
+              <div style="margin-bottom: 1.25rem;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Daya (Watt)</label>
+                  <input type="number" id="inputListrikSetrikaWatt" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="300" oninput="calculateListrik()">
+                  <p style="font-size: 0.65rem; color: var(--omni-navy-light); margin-top: 0.5rem; font-weight: 600;">*Kapasitas kecepatan setrika diambil otomatis dari Master Profil Operasional.</p>
+              </div>
+              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                  <span>Estimasi / Jam:</span> <span id="dispListrikSetrikaJam" style="color: var(--omni-navy);">Rp 0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(168, 85, 247, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #7e22ce;">
+                  <span>Estimasi / Kg:</span> <span id="dispListrikSetrikaKg">Rp 0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:none;" id="displayBiayaListrikTotalKg">Rp 0</div> 
+      </div>
+    </div>
+
+    <!-- ================= TAB 3: AIR ================= -->
+    <div id="tab-air" class="tab-content hidden animate-fade-in bento-grid">
+      <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
+        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-drop text-cyan-500 text-2xl"></i> Parameter Sumber Air</h3>
+
+        <!-- Sumber Air Utama -->
+        <div style="background: var(--omni-bg); border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.5rem; margin-bottom: 1.5rem;">
+          <label class="omni-label" style="font-size: 0.85rem; color: var(--omni-navy);">1. Sumber Air Utama</label>
+          <div class="omni-input-wrapper" style="margin-bottom: 1.25rem;">
+            <select id="inputAirSumber" class="omni-input" onchange="toggleAirInputs(); calculateAir()">
+              <option value="pdam">PDAM / Meteran (Per M³)</option>
+              <option value="tangki">Air Tangki / Toren (Per Tangki)</option>
+              <option value="sumur">Air Sumur Bor (Gratis Airnya)</option>
+            </select>
+            <i class="ph ph-caret-down omni-caret"></i>
+          </div>
+          
+          <div id="wrapAirPdam" class="animate-fade-in">
+             <label class="omni-label">Harga Air Per M³ (Rp)</label>
+             <input type="text" id="inputAirHargaM3" inputmode="numeric" class="omni-input" value="6.000" oninput="formatRupiahInput(this); calculateAir()">
+          </div>
+
+          <div id="wrapAirTangki" class="hidden animate-fade-in" style="display: flex; gap: 1.25rem;">
+             <div style="flex: 1;">
+               <label class="omni-label">Harga Per Tangki (Rp)</label>
+               <input type="text" id="inputAirHargaTangki" inputmode="numeric" class="omni-input" value="50.000" oninput="formatRupiahInput(this); calculateAir()">
+             </div>
+             <div style="flex: 1;">
+               <label class="omni-label">Kapasitas (Liter)</label>
+               <input type="number" id="inputAirLiterTangki" class="omni-input" value="1000" oninput="calculateAir()">
+             </div>
+          </div>
+          
+          <div id="wrapAirSumur" class="hidden animate-fade-in" style="background: rgba(6, 182, 212, 0.05); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(6, 182, 212, 0.2); font-size: 0.8rem; color: #0891b2; font-weight: 700; display: flex; align-items: flex-start; gap: 0.75rem;">
+             <i class="ph ph-info text-2xl"></i> 
+             <p style="margin: 0;">Biaya air ditetapkan Rp 0. Beban operasional sumur sudah dihitung otomatis pada konsumsi listrik Pompa Air di Tab Listrik.</p>
+          </div>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Pencucian Mesin Cuci -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+            <div style="position: absolute; top: 0; right: 0; background: rgba(59, 130, 246, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-washing-machine text-blue-500 text-xl"></i></div>
+            <h4 style="font-size: 0.9rem; font-weight: 800; color: #3b82f6; margin-bottom: 1rem;">Pencucian (Mesin Cuci)</h4>
+            
+            <label class="omni-label" style="font-size: 0.7rem;">Kebutuhan Air / Load (Liter)</label>
+            <input type="number" id="inputAirCuciLiter" class="omni-input" style="padding: 0.75rem 1.25rem; margin-bottom: 0.75rem;" value="50" oninput="calculateAir()">
+            
+            <div style="font-size: 0.7rem; color: var(--omni-navy-light); margin-bottom: 1.25rem; font-weight: 700;">Konversi Volume: <span id="dispAirCuciM3" style="color: var(--omni-navy); font-weight: 900;">0.050</span> M³</div>
+
+            <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                <span>Estimasi / Load:</span> <span id="dispAirCuciLoad" style="color: var(--omni-navy);">Rp 0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(59, 130, 246, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #2563eb;">
+                <span>Estimasi / Kg:</span> <span id="dispAirCuciKg">Rp 0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Setrika Uap Boiler -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+            <div style="position: absolute; top: 0; right: 0; background: rgba(168, 85, 247, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-wind text-purple-500 text-xl"></i></div>
+            <h4 style="font-size: 0.9rem; font-weight: 800; color: #9333ea; margin-bottom: 1rem;">Setrika Uap (Boiler)</h4>
+            
+            <label class="omni-label" style="font-size: 0.7rem;">Sumber Air Boiler</label>
+            <div class="omni-input-wrapper" style="margin-bottom: 0.75rem;">
+              <select id="inputAirBoilerSumber" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.8rem;" onchange="toggleAirInputs(); calculateAir()">
+                <option value="sama">Sama dengan Pencucian</option>
+                <option value="galon">Air Galon Kemasan</option>
+              </select>
+              <i class="ph ph-caret-down omni-caret" style="font-size: 0.9rem; right: 1rem;"></i>
+            </div>
+
+            <div id="wrapAirGalon" class="hidden animate-fade-in" style="background: rgba(168, 85, 247, 0.05); padding: 0.75rem; border-radius: 0.75rem; margin-bottom: 0.75rem; display: flex; gap: 0.75rem;">
+               <div style="flex: 1;">
+                 <label class="omni-label" style="font-size: 0.6rem;">Harga Galon</label>
+                 <input type="text" id="inputAirHargaGalon" inputmode="numeric" class="omni-input" style="padding: 0.5rem; font-size: 0.8rem;" value="5.000" oninput="formatRupiahInput(this); calculateAir()">
+               </div>
+               <div style="flex: 1;">
+                 <label class="omni-label" style="font-size: 0.6rem;">Vol (Liter)</label>
+                 <input type="number" id="inputAirLiterGalon" class="omni-input" style="padding: 0.5rem; font-size: 0.8rem;" value="19" oninput="calculateAir()">
+               </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem;">
+              <div style="flex: 1;">
+                <label class="omni-label" style="font-size: 0.6rem;">Isi (L)</label>
+                <input type="number" id="inputAirBoilerLiter" class="omni-input" style="padding: 0.5rem; font-size: 0.8rem;" value="25" oninput="calculateAir()">
+              </div>
+              <div style="flex: 1;">
+                <label class="omni-label" style="font-size: 0.6rem;">Habis (Jam)</label>
+                <input type="number" id="inputAirBoilerJam" class="omni-input" style="padding: 0.5rem; font-size: 0.8rem;" value="4" oninput="calculateAir()">
+              </div>
+              <div style="flex: 1;">
+                <label class="omni-label" style="font-size: 0.6rem;">Tgt(Kg/J)</label>
+                <input type="number" id="inputAirBoilerKgJam" class="omni-input" style="padding: 0.5rem; font-size: 0.8rem;" value="10" oninput="calculateAir()">
+              </div>
+            </div>
+
+            <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                <span>Estimasi / Jam:</span> <span id="dispAirBoilerJam" style="color: var(--omni-navy);">Rp 0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(168, 85, 247, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #7e22ce;">
+                <span>Estimasi / Kg:</span> <span id="dispAirBoilerKg">Rp 0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:none;" id="displayBiayaAirTotalKg">Rp 0</div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 4: PACKING ================= -->
+    <div id="tab-packing" class="tab-content hidden animate-fade-in bento-grid">
+      <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
+        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-package text-indigo-500 text-2xl"></i> Parameter Biaya Packing</h3>
+
+        <div class="bento-grid">
+          <!-- Plastik PP Bening -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #e11d48; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-envelope-simple text-lg"></i> Plastik PP Bening</h4>
+              <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
+                <div style="position: relative;">
+                  <input type="checkbox" id="togglePackingPP" class="omni-toggle-input sr-only" style="display: none;" onchange="calculatePacking()" checked>
+                  <div class="omni-toggle-track" style="width: 2.5rem; height: 1.4rem; background: #cbd5e1;"><div class="omni-toggle-thumb" style="width: 1rem; height: 1rem; top: 0.2rem; left: 0.2rem;"></div></div>
+                </div>
+              </label>
+            </div>
+            <div id="wrapPackingPP" style="transition: opacity 0.3s;">
+              <div style="margin-bottom: 1rem;">
+                <label class="omni-label" style="font-size: 0.7rem;">Ukuran (Referensi)</label>
+                <input type="text" id="inputPackingPPUkuran" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" placeholder="Misal: 35x50 cm" oninput="saveHPPDraftToLocal && saveHPPDraftToLocal()">
+              </div>
+              <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
+                  <input type="text" id="inputPackingPPHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="25.000" oninput="formatRupiahInput(this); calculatePacking()">
+                </div>
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Isi (Lembar)</label>
+                  <input type="number" id="inputPackingPPIsi" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="100" oninput="calculatePacking()">
+                </div>
+              </div>
+              <div style="margin-bottom: 1.25rem;">
+                <label class="omni-label" style="font-size: 0.7rem;">Kapasitas (Kg/Lembar)</label>
+                <input type="number" id="inputPackingPPKg" step="0.1" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="3" oninput="calculatePacking()">
+              </div>
+              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                  <span>Harga / Lembar:</span> <span id="dispPackingPPLembar" style="color: var(--omni-navy);">Rp 0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(225, 29, 72, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #be123c;">
+                  <span>Biaya Packing / Kg:</span> <span id="dispPackingPPKg">Rp 0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plastik HD -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #10b981; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-shopping-bag text-lg"></i> Plastik HD (Kresek)</h4>
+              <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
+                <div style="position: relative;">
+                  <input type="checkbox" id="togglePackingHD" class="omni-toggle-input sr-only" style="display: none;" onchange="calculatePacking()" checked>
+                  <div class="omni-toggle-track" style="width: 2.5rem; height: 1.4rem; background: #cbd5e1;"><div class="omni-toggle-thumb" style="width: 1rem; height: 1rem; top: 0.2rem; left: 0.2rem;"></div></div>
+                </div>
+              </label>
+            </div>
+            <div id="wrapPackingHD" style="transition: opacity 0.3s; display: flex; flex-direction: column; height: calc(100% - 3rem);">
+              <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
+                  <input type="text" id="inputPackingHDHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="15.000" oninput="formatRupiahInput(this); calculatePacking()">
+                </div>
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Isi (Lembar)</label>
+                  <input type="number" id="inputPackingHDIsi" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="50" oninput="calculatePacking()">
+                </div>
+              </div>
+              <div style="margin-bottom: 1.25rem;">
+                <label class="omni-label" style="font-size: 0.7rem;">Kapasitas (Kg/Lembar)</label>
+                <input type="number" id="inputPackingHDKg" step="0.1" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="5" oninput="calculatePacking()">
+              </div>
+              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; margin-top: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                  <span>Harga / Lembar:</span> <span id="dispPackingHDLembar" style="color: var(--omni-navy);">Rp 0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(16, 185, 129, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #047857;">
+                  <span>Biaya Kresek / Kg:</span> <span id="dispPackingHDKg">Rp 0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plastik Jinjing -->
+          <div class="bento-col-12" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #8b5cf6; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-bag text-lg"></i> Plastik Jinjing (Premium)</h4>
+              <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
+                <div style="position: relative;">
+                  <input type="checkbox" id="togglePackingJinjing" class="omni-toggle-input sr-only" style="display: none;" onchange="calculatePacking()">
+                  <div class="omni-toggle-track" style="width: 2.5rem; height: 1.4rem; background: #cbd5e1;"><div class="omni-toggle-thumb" style="width: 1rem; height: 1rem; top: 0.2rem; left: 0.2rem;"></div></div>
+                </div>
+              </label>
+            </div>
+            <div id="wrapPackingJinjing" style="opacity: 0.4; pointer-events: none; transition: opacity 0.3s;">
+              <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <div style="flex: 1; min-width: 120px;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Ukuran</label>
+                  <input type="text" id="inputPackingJinjingUkuran" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" placeholder="Misal: 40x60" oninput="saveHPPDraftToLocal && saveHPPDraftToLocal()">
+                </div>
+                <div style="flex: 1; min-width: 120px;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
+                  <input type="text" id="inputPackingJinjingHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="35.000" oninput="formatRupiahInput(this); calculatePacking()">
+                </div>
+                <div style="flex: 1; min-width: 90px;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Isi (Lbr)</label>
+                  <input type="number" id="inputPackingJinjingIsi" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="100" oninput="calculatePacking()">
+                </div>
+                <div style="flex: 1; min-width: 90px;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Kap. (Kg)</label>
+                  <input type="number" id="inputPackingJinjingKg" step="0.1" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="4" oninput="calculatePacking()">
+                </div>
+              </div>
+              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-wrap: wrap; gap: 1.25rem;">
+                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                  <span>Harga / Lembar:</span> <span id="dispPackingJinjingLembar" style="color: var(--omni-navy);">Rp 0</span>
+                </div>
+                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 800; background: rgba(139, 92, 246, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #6d28d9;">
+                  <span>Biaya Jinjing / Kg:</span> <span id="dispPackingJinjingKg">Rp 0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:none;" id="displayBiayaPackingTotalKg">Rp 0</div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 5: BAHAN BAKU (CHEMICAL) ================= -->
+    <div id="tab-bahan" class="tab-content hidden animate-fade-in bento-grid">
+      <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
+        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-flask text-emerald-500 text-2xl"></i> Parameter Chemical</h3>
+
+        <div class="bento-grid">
+          
+          <!-- 1. DETERJEN -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+            <div style="position: absolute; top: 0; right: 0; background: rgba(16, 185, 129, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-bubbles text-emerald-500 text-xl"></i></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; position: relative; z-index: 10;">
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #10b981; margin: 0;">1. Deterjen</h4>
+              <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
+                <div style="position: relative;">
+                  <input type="checkbox" id="toggleBahanDet" class="omni-toggle-input sr-only" style="display: none;" onchange="toggleBahanActive(); calculateBahanBaku()" checked>
+                  <div class="omni-toggle-track" style="width: 2.5rem; height: 1.4rem; background: #cbd5e1;"><div class="omni-toggle-thumb" style="width: 1rem; height: 1rem; top: 0.2rem; left: 0.2rem;"></div></div>
+                </div>
+              </label>
+            </div>
+            
+            <div id="wrapDetMain" style="transition: opacity 0.3s;">
+              <label class="omni-label" style="font-size: 0.7rem;">Tipe Deterjen</label>
+              <div class="omni-input-wrapper" style="margin-bottom: 1rem;">
+                <select id="bahanDetType" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" onchange="toggleBahanInputs(); calculateBahanBaku()">
+                  <option value="cair">Cair (Jerigen)</option>
+                  <option value="bubuk">Bubuk (Karung/Kardus)</option>
+                  <option value="sachet">Kemasan Sachet</option>
+                </select>
+                <i class="ph ph-caret-down omni-caret" style="font-size: 0.9rem; right: 1rem;"></i>
+              </div>
+
+              <div id="wrapDetBulk" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; gap: 0.75rem;">
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Harga Total (Rp)</label>
+                    <input type="text" id="bahanDetHargaBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="100.000" oninput="formatRupiahInput(this); calculateBahanBaku()">
+                  </div>
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Kap. (<span id="lblDetKap1">L</span>)</label>
+                    <input type="number" id="bahanDetKapasitasBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Hrga/<span id="lblDetKap2">L</span></label>
+                    <input type="text" id="dispDetHargaBesar" readonly class="omni-input" style="padding: 0.75rem; font-size: 0.8rem; background: var(--omni-bg); cursor: not-allowed;" value="Rp 0">
+                  </div>
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Hrga/<span id="lblDetSatuan">ml</span></label>
+                    <input type="text" id="dispDetHargaKecil" readonly class="omni-input" style="padding: 0.75rem; font-size: 0.8rem; background: var(--omni-bg); cursor: not-allowed;" value="Rp 0">
+                  </div>
+                </div>
+                <div>
+                  <label class="omni-label" style="font-size: 0.7rem;">Pemakaian per Kg Pakaian (<span id="lblDetPakai">ml</span>)</label>
+                  <input type="number" id="bahanDetPemakaian" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" value="10" oninput="calculateBahanBaku()">
+                </div>
+              </div>
+
+              <div id="wrapDetSachet" class="hidden" style="display: flex; gap: 0.75rem;">
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Harga 1 Sachet (Rp)</label>
+                  <input type="text" id="bahanDetHargaSachet" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="1.000" oninput="formatRupiahInput(this); calculateBahanBaku()">
+                </div>
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Untuk (Kg)</label>
+                  <input type="number" id="bahanDetKapasitasSachet" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
+                </div>
+              </div>
+
+              <div style="margin-top: 1.25rem; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(16, 185, 129, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #047857; border: 1px dashed rgba(16, 185, 129, 0.3);">
+                <span>Biaya Deterjen / Kg:</span> <span id="dispDetCostKg">Rp 0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. SOFTENER -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+            <div style="position: absolute; top: 0; right: 0; background: rgba(99, 102, 241, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-drop text-indigo-500 text-xl"></i></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; position: relative; z-index: 10;">
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #4f46e5; margin: 0;">2. Softener</h4>
+              <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
+                <div style="position: relative;">
+                  <input type="checkbox" id="toggleBahanSof" class="omni-toggle-input sr-only" style="display: none;" onchange="toggleBahanActive(); calculateBahanBaku()" checked>
+                  <div class="omni-toggle-track" style="width: 2.5rem; height: 1.4rem; background: #cbd5e1;"><div class="omni-toggle-thumb" style="width: 1rem; height: 1rem; top: 0.2rem; left: 0.2rem;"></div></div>
+                </div>
+              </label>
+            </div>
+            
+            <div id="wrapSofMain" style="transition: opacity 0.3s;">
+              <label class="omni-label" style="font-size: 0.7rem;">Tipe Softener</label>
+              <div class="omni-input-wrapper" style="margin-bottom: 1rem;">
+                <select id="bahanSofType" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" onchange="toggleBahanInputs(); calculateBahanBaku()">
+                  <option value="cair">Cair (Jerigen)</option>
+                  <option value="sachet">Kemasan Sachet</option>
+                </select>
+                <i class="ph ph-caret-down omni-caret" style="font-size: 0.9rem; right: 1rem;"></i>
+              </div>
+
+              <div id="wrapSofBulk" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; gap: 0.75rem;">
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Harga Total (Rp)</label>
+                    <input type="text" id="bahanSofHargaBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="80.000" oninput="formatRupiahInput(this); calculateBahanBaku()">
+                  </div>
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Kap. (Liter)</label>
+                    <input type="number" id="bahanSofKapasitasBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Hrga/Liter</label>
+                    <input type="text" id="dispSofHargaBesar" readonly class="omni-input" style="padding: 0.75rem; font-size: 0.8rem; background: var(--omni-bg); cursor: not-allowed;" value="Rp 0">
+                  </div>
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Hrga/ml</label>
+                    <input type="text" id="dispSofHargaKecil" readonly class="omni-input" style="padding: 0.75rem; font-size: 0.8rem; background: var(--omni-bg); cursor: not-allowed;" value="Rp 0">
+                  </div>
+                </div>
+                <div>
+                  <label class="omni-label" style="font-size: 0.7rem;">Pemakaian per Kg Pakaian (ml)</label>
+                  <input type="number" id="bahanSofPemakaian" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" value="10" oninput="calculateBahanBaku()">
+                </div>
+              </div>
+
+              <div id="wrapSofSachet" class="hidden" style="display: flex; gap: 0.75rem;">
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Harga 1 Sachet</label>
+                  <input type="text" id="bahanSofHargaSachet" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="500" oninput="formatRupiahInput(this); calculateBahanBaku()">
+                </div>
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Untuk (Kg)</label>
+                  <input type="number" id="bahanSofKapasitasSachet" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
+                </div>
+              </div>
+
+              <div style="margin-top: 1.25rem; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(99, 102, 241, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #4338ca; border: 1px dashed rgba(99, 102, 241, 0.3);">
+                <span>Biaya Softener / Kg:</span> <span id="dispSofCostKg">Rp 0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. PARFUM -->
+          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative; display: flex; flex-direction: column;">
+            <div style="position: absolute; top: 0; right: 0; background: rgba(245, 158, 11, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-sparkle text-amber-500 text-xl"></i></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; position: relative; z-index: 10;">
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #d97706; margin: 0;">3. Parfum Laundry</h4>
+              <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
+                <div style="position: relative;">
+                  <input type="checkbox" id="toggleBahanPar" class="omni-toggle-input sr-only" style="display: none;" onchange="toggleBahanActive(); calculateBahanBaku()" checked>
+                  <div class="omni-toggle-track" style="width: 2.5rem; height: 1.4rem; background: #cbd5e1;"><div class="omni-toggle-thumb" style="width: 1rem; height: 1rem; top: 0.2rem; left: 0.2rem;"></div></div>
+                </div>
+              </label>
+            </div>
+            
+            <div id="wrapParMain" style="transition: opacity 0.3s; flex: 1; display: flex; flex-direction: column; gap: 0.75rem;">
+              <div style="display: flex; gap: 0.75rem;">
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Harga Jerigen (Rp)</label>
+                  <input type="text" id="bahanParHargaBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="150.000" oninput="formatRupiahInput(this); calculateBahanBaku()">
+                </div>
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Kap. (Liter)</label>
+                  <input type="number" id="bahanParKapasitasBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.75rem;">
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Hrga/Liter</label>
+                  <input type="text" id="dispParHargaBesar" readonly class="omni-input" style="padding: 0.75rem; font-size: 0.8rem; background: var(--omni-bg); cursor: not-allowed;" value="Rp 0">
+                </div>
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Hrga/ml</label>
+                  <input type="text" id="dispParHargaKecil" readonly class="omni-input" style="padding: 0.75rem; font-size: 0.8rem; background: var(--omni-bg); cursor: not-allowed;" value="Rp 0">
+                </div>
+              </div>
+              <div>
+                <label class="omni-label" style="font-size: 0.7rem;">Pemakaian per Kg Pakaian (ml)</label>
+                <input type="number" id="bahanParPemakaian" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
+              </div>
+
+              <div style="margin-top: auto; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(245, 158, 11, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #b45309; border: 1px dashed rgba(245, 158, 11, 0.3);">
+                <span>Biaya Parfum / Kg:</span> <span id="dispParCostKg">Rp 0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. PELICIN -->
+          <div id="wrapBahanPelicin" class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative; display: none;">
+            <div style="position: absolute; top: 0; right: 0; background: rgba(168, 85, 247, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-thermometer-hot text-purple-500 text-xl"></i></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; position: relative; z-index: 10;">
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #9333ea; margin: 0;">4. Pelicin Setrika</h4>
+              <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
+                <div style="position: relative;">
+                  <input type="checkbox" id="toggleBahanPel" class="omni-toggle-input sr-only" style="display: none;" onchange="toggleBahanActive(); calculateBahanBaku()" checked>
+                  <div class="omni-toggle-track" style="width: 2.5rem; height: 1.4rem; background: #cbd5e1;"><div class="omni-toggle-thumb" style="width: 1rem; height: 1rem; top: 0.2rem; left: 0.2rem;"></div></div>
+                </div>
+              </label>
+            </div>
+            
+            <div id="wrapPelMain" style="transition: opacity 0.3s;">
+              <p style="font-size: 0.65rem; color: var(--omni-navy-light); margin-bottom: 0.75rem; font-weight: 600;">*Tampil otomatis karena Anda menggunakan Setrika Listrik/Uap.</p>
+              
+              <label class="omni-label" style="font-size: 0.7rem;">Tipe Pelicin</label>
+              <div class="omni-input-wrapper" style="margin-bottom: 1rem;">
+                <select id="bahanPelType" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" onchange="toggleBahanInputs(); calculateBahanBaku()">
+                  <option value="cair">Cair (Jerigen)</option>
+                  <option value="sachet">Kemasan Sachet</option>
+                </select>
+                <i class="ph ph-caret-down omni-caret" style="font-size: 0.9rem; right: 1rem;"></i>
+              </div>
+
+              <div id="wrapPelBulk" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; gap: 0.75rem;">
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Harga Total (Rp)</label>
+                    <input type="text" id="bahanPelHargaBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="50.000" oninput="formatRupiahInput(this); calculateBahanBaku()">
+                  </div>
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Kap. (Liter)</label>
+                    <input type="number" id="bahanPelKapasitasBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Hrga/Liter</label>
+                    <input type="text" id="dispPelHargaBesar" readonly class="omni-input" style="padding: 0.75rem; font-size: 0.8rem; background: var(--omni-bg); cursor: not-allowed;" value="Rp 0">
+                  </div>
+                  <div style="flex: 1;">
+                    <label class="omni-label" style="font-size: 0.7rem;">Hrga/ml</label>
+                    <input type="text" id="dispPelHargaKecil" readonly class="omni-input" style="padding: 0.75rem; font-size: 0.8rem; background: var(--omni-bg); cursor: not-allowed;" value="Rp 0">
+                  </div>
+                </div>
+                <div>
+                  <label class="omni-label" style="font-size: 0.7rem;">Pemakaian per Kg Pakaian (ml)</label>
+                  <input type="number" id="bahanPelPemakaian" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
+                </div>
+              </div>
+
+              <div id="wrapPelSachet" class="hidden" style="display: flex; gap: 0.75rem;">
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Harga 1 Sachet</label>
+                  <input type="text" id="bahanPelHargaSachet" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="500" oninput="formatRupiahInput(this); calculateBahanBaku()">
+                </div>
+                <div style="flex: 1;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Untuk (Kg)</label>
+                  <input type="number" id="bahanPelKapasitasSachet" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
+                </div>
+              </div>
+
+              <div style="margin-top: 1.25rem; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(168, 85, 247, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #7e22ce; border: 1px dashed rgba(168, 85, 247, 0.3);">
+                <span>Biaya Pelicin / Kg:</span> <span id="dispPelCostKg">Rp 0</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="display:none;" id="displayBiayaBahanTotalKg">Rp 0</div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 6: NOTA & KASIR ================= -->
+    <div id="tab-nota" class="tab-content hidden animate-fade-in bento-grid">
+      <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
+        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-receipt text-sky-500 text-2xl"></i> Parameter Admin & Nota</h3>
+
+        <div style="background: var(--omni-bg); border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.5rem; margin-bottom: 1.5rem;">
+           <label class="omni-label">Pilih Sistem Kasir / Nota</label>
+           <div class="omni-input-wrapper">
+             <select id="notaType" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.9rem;" onchange="toggleNotaInputs(); calculateNota()">
+                <option value="digital">Aplikasi Kasir (Digital + Kertas Thermal)</option>
+                <option value="manual">Nota Manual (Buku NCR)</option>
+             </select>
+             <i class="ph ph-caret-down omni-caret" style="right: 1.25rem;"></i>
+           </div>
+        </div>
+
+        <div class="bento-grid">
+           <!-- Panel Digital -->
+           <div id="panelNotaDigital" class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+              <div style="position: absolute; top: 0; right: 0; background: rgba(14, 165, 233, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-device-mobile text-sky-500 text-xl"></i></div>
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #0284c7; margin-bottom: 1.25rem;">Aplikasi Kasir & Thermal</h4>
+              
+              <label class="omni-label" style="font-size: 0.7rem;">Metode Biaya Aplikasi</label>
+              <div class="omni-input-wrapper" style="margin-bottom: 1rem;">
+                <select id="notaAppFeeType" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" onchange="toggleNotaInputs(); calculateNota()">
+                   <option value="bulan">Berlangganan Per Bulan</option>
+                   <option value="trx">Biaya Langsung Per Transaksi</option>
+                   <option value="gratis">Gratis (Tanpa Biaya Langganan)</option>
+                </select>
+                <i class="ph ph-caret-down omni-caret" style="font-size: 0.9rem; right: 1rem;"></i>
+              </div>
+
+              <!-- Wrap App Bulan -->
+              <div id="wrapNotaAppBulan" style="margin-bottom: 1rem;">
+                 <div style="display: flex; gap: 0.75rem;">
+                    <div style="flex: 1;">
+                       <label class="omni-label" style="font-size: 0.7rem;">Biaya / Bulan (Rp)</label>
+                       <input type="text" id="notaAppHargaBulan" inputmode="numeric" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="50.000" oninput="formatRupiahInput(this); calculateNota()">
+                    </div>
+                    <div style="flex: 1;">
+                       <label class="omni-label" style="font-size: 0.7rem;">Estimasi Trx/Bln</label>
+                       <input type="number" id="notaAppTrxBulan" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="500" oninput="calculateNota()">
+                    </div>
+                 </div>
+              </div>
+
+              <!-- Wrap App Trx -->
+              <div id="wrapNotaAppTrx" class="hidden" style="margin-bottom: 1rem;">
+                 <label class="omni-label" style="font-size: 0.7rem;">Biaya App Per Trx (Rp)</label>
+                 <input type="text" id="notaAppHargaTrx" inputmode="numeric" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" value="100" oninput="formatRupiahInput(this); calculateNota()">
+              </div>
+
+              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem;">
+                 <label class="omni-label" style="font-size: 0.7rem;">Biaya Thermal / Trx (Rp)</label>
+                 <input type="text" id="notaThermalHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" value="35" oninput="formatRupiahInput(this); calculateNota()">
+              </div>
+           </div>
+
+           <!-- Panel Manual -->
+           <div id="panelNotaManual" class="hidden bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+              <div style="position: absolute; top: 0; right: 0; background: rgba(245, 158, 11, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-notebook text-amber-500 text-xl"></i></div>
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #d97706; margin-bottom: 1.25rem;">Nota Manual (Buku)</h4>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                 <div>
+                    <label class="omni-label" style="font-size: 0.7rem;">Harga 1 Buku (Rp)</label>
+                    <input type="text" id="notaManualHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" value="10.000" oninput="formatRupiahInput(this); calculateNota()">
+                 </div>
+                 <div style="display: flex; gap: 0.75rem;">
+                    <div style="flex: 1;">
+                       <label class="omni-label" style="font-size: 0.7rem;">Total Isi (Lbr)</label>
+                       <input type="number" id="notaManualLembarTotal" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="100" oninput="calculateNota()">
+                    </div>
+                    <div style="flex: 1;">
+                       <label class="omni-label" style="font-size: 0.7rem;">Dipakai/Trx (Lbr)</label>
+                       <input type="number" id="notaManualLembarTrx" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="2" oninput="calculateNota()">
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           <!-- Panel Konversi Kg -->
+           <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative; display: flex; flex-direction: column;">
+              <div style="position: absolute; top: 0; right: 0; background: rgba(16, 185, 129, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-scales text-emerald-500 text-xl"></i></div>
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #047857; margin-bottom: 0.75rem;">Konversi Beban (HPP)</h4>
+              
+              <p style="font-size: 0.65rem; color: var(--omni-navy-light); margin-bottom: 1.25rem; font-weight: 600;">Untuk mendapatkan HPP per Kg, masukkan rata-rata berat cucian per nota pelanggan.</p>
+
+              <div>
+                 <label class="omni-label" style="font-size: 0.7rem;">Rata-rata Cucian / Trx (Kg)</label>
+                 <input type="number" step="0.1" id="notaRataKg" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" value="4" oninput="calculateNota()">
+              </div>
+
+              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; margin-top: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                  <span>Biaya Nota / Trx:</span> <span id="dispNotaCostTrx" style="color: var(--omni-navy);">Rp 0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(16, 185, 129, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #047857;">
+                  <span>Biaya Nota / Kg:</span> <span id="dispNotaCostKg">Rp 0</span>
+                </div>
+              </div>
+           </div>
+        </div>
+
+        <div style="display:none;" id="displayBiayaNotaTotalKg">Rp 0</div>
+      </div>
+    </div>
+
+  </div> <!-- End Form View -->
+  
+  <!-- STICKY ACTION BAR HPP DENGAN TOMBOL SAAS PREMIUM -->
+  <div class="flex flex-col sm:flex-row justify-between items-center gap-5 mt-10 pt-8 border-t border-slate-100/80" id="actionAreaHPP">
+    <button type="button" onclick="switchMainTab('kapasitas')" class="text-slate-500 hover:text-slate-800 font-extrabold text-sm px-4 py-2 transition-colors flex items-center gap-2 mr-auto active:scale-95">
+      <i class="ph ph-arrow-left"></i> Kembali ke Profil Ops
+    </button>
+    
+    <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+      <button type="button" id="btnUpdateHPP" class="hidden w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3.5 rounded-[1.25rem] font-bold shadow-[0_8px_20px_rgba(16,185,129,0.2)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 active:scale-95" onclick="simpanDataHPP()">
+        <i class="ph ph-check-circle text-lg"></i> Perbarui Data HPP
+      </button>
+      
+      <!-- SaaS Style Dark Button -->
+      <button type="button" id="btnSimpanHPP" class="w-full sm:w-auto bg-gradient-to-b from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white px-10 py-4 rounded-[1.25rem] font-extrabold shadow-[0_8px_20px_rgba(15,23,42,0.15)] hover:shadow-[0_12px_24px_rgba(15,23,42,0.25)] border border-slate-700 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 active:scale-95" onclick="simpanDataHPP()">
+        <i class="ph ph-floppy-disk text-xl"></i> Simpan Perubahan HPP
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================================= -->
+<!-- EXECUTION LAYER RE-ARCHITECTURE: PURE SPA JAVASCRIPT STATE MANAGER        -->
+<!-- ========================================================================= -->
+<script>
+  /**
+   * ZETTBOT APP_STATE: GLOBAL STATE STORE
+   * Re-architected for near-instant SPA Performance & Anti-Race Condition
+   * ==========================================
+   */
+  var HPP_MODAL_APP_STATE = {
+    data: {
+      master: null,
+      currentCabang: null,
+      hpp: {
+        gas: 0,
+        listrik: 0,
+        air: 0,
+        packing: 0,
+        bahan: 0,
+        nota: 0,
+        total: 0
+      }
+    },
+    cache: {
+      key: 'ZETT_MASTER_CACHE_V2',
+      ttl: 300000 // 5 menit TTL
+    },
+    loading: false,
+    locks: {}
+  };
+
+  // State Machine for ultra-fast, unblocking DOM updates
+  var HPP_MODAL_STATE_MACHINE = {
+    
+    // 6. LOCK SYSTEM (ANTI DOUBLE CLICK)
+    acquireLock: function(action) {
+      if (APP_STATE.locks[action]) {
+        console.warn(`[LOCKED] Action ${action} is currently running.`);
+        return false;
+      }
+      APP_STATE.locks[action] = true;
+      return true;
+    },
+
+    releaseLock: function(action) {
+      APP_STATE.locks[action] = false;
+    },
+
+    // 1 & 2. MULTI-LAYER CACHING & SINGLE INITIAL FETCH
+    fetchMasterPayload: async function(serverFunction) {
+      if (!this.acquireLock('fetchMaster')) return APP_STATE.data.master;
+      
+      try {
+        // Layer 1: Memory Cache (Instant)
+        if (APP_STATE.data.master) return APP_STATE.data.master;
+
+        // Layer 2: LocalStorage Cache with TTL (< 5ms)
+        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
+        if (cachedStr) {
+          try {
+            const parsed = JSON.parse(cachedStr);
+            if (Date.now() < parsed.expiry) {
+              APP_STATE.data.master = parsed.data;
+              return parsed.data;
+            }
+          } catch(e) { localStorage.removeItem(APP_STATE.cache.key); }
+        }
+
+        // Layer 3: Network Fetch (ONLY IF CACHE EXPIRED)
+        APP_STATE.loading = true;
+        const data = await new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            [serverFunction]();
+        });
+
+        // Save to caches
+        APP_STATE.data.master = data;
+        localStorage.setItem(APP_STATE.cache.key, JSON.stringify({
+          data: data,
+          expiry: Date.now() + APP_STATE.cache.ttl
+        }));
+        
+        return data;
+      } finally {
+        APP_STATE.loading = false;
+        this.releaseLock('fetchMaster');
+      }
+    },
+
+    invalidateClientCache: function() {
+      APP_STATE.data.master = null;
+      localStorage.removeItem(APP_STATE.cache.key);
+    },
+
+    // 7. INSTANT UI RESPONSE & STATE MANAGER
+    updateMetric: function(key, value) {
+      if (!this.acquireLock('calcHPP')) return;
+      APP_STATE.data.hpp[key] = value;
+      this.calculateTotal();
+      this.releaseLock('calcHPP');
+    },
+    
+    calculateTotal: function() {
+      const { gas, listrik, air, packing, bahan, nota } = APP_STATE.data.hpp;
+      APP_STATE.data.hpp.total = gas + listrik + air + packing + bahan + nota;
+      
+      // Hardware accelerated UI rendering untuk 60fps frame rate
+      window.requestAnimationFrame(() => {
+        this.renderDashboard();
+      });
+    },
+    
+    renderDashboard: function() {
+      const t = APP_STATE.data.hpp.total;
+      const { gas, listrik, air, packing, bahan, nota } = APP_STATE.data.hpp;
+      
+      const totalEl = document.getElementById('dash-hpp-total');
+      if(totalEl && typeof formatRupiah === 'function') {
+        totalEl.innerText = formatRupiah(t);
+        
+        if(document.getElementById('dash-card-gas')) document.getElementById('dash-card-gas').innerText = formatRupiah(gas);
+        if(document.getElementById('dash-card-listrik')) document.getElementById('dash-card-listrik').innerText = formatRupiah(listrik);
+        if(document.getElementById('dash-card-air')) document.getElementById('dash-card-air').innerText = formatRupiah(air);
+        if(document.getElementById('dash-card-packing')) document.getElementById('dash-card-packing').innerText = formatRupiah(packing);
+        if(document.getElementById('dash-card-bahan')) document.getElementById('dash-card-bahan').innerText = formatRupiah(bahan);
+        if(document.getElementById('dash-card-nota')) document.getElementById('dash-card-nota').innerText = formatRupiah(nota);
+      }
+      
+      const donut = document.getElementById('hpp-donut-chart');
+      const labelsContainer = document.getElementById('hpp-donut-labels');
+
+      if (donut && t > 0) {
+        let pctGas = (gas / t) * 100;
+        let pctListrik = (listrik / t) * 100;
+        let pctAir = (air / t) * 100;
+        let pctPacking = (packing / t) * 100;
+        let pctBahan = (bahan / t) * 100;
+        let pctNota = (nota / t) * 100;
+
+        let cGas = pctGas;
+        let cListrik = cGas + pctListrik;
+        let cAir = cListrik + pctAir;
+        let cPacking = cAir + pctPacking;
+        let cBahan = cPacking + pctBahan;
+
+        donut.style.setProperty('--p-gas', `${cGas}%`);
+        donut.style.setProperty('--p-listrik', `${cListrik}%`);
+        donut.style.setProperty('--p-air', `${cAir}%`);
+        donut.style.setProperty('--p-packing', `${cPacking}%`);
+        donut.style.setProperty('--p-bahan', `${cBahan}%`);
+
+        if (labelsContainer) {
+            labelsContainer.innerHTML = '';
+            let currentAnglePct = 0;
+            const slices = [pctGas, pctListrik, pctAir, pctPacking, pctBahan, pctNota];
+            
+            slices.forEach(slicePct => {
+                if (slicePct >= 4) { 
+                    let midPct = currentAnglePct + (slicePct / 2);
+                    let angleDeg = (midPct * 3.6) - 90;
+                    let rad = angleDeg * Math.PI / 180;
+                    let r = 98; 
+                    let x = 120 + r * Math.cos(rad);
+                    let y = 120 + r * Math.sin(rad);
+                    
+                    let label = document.createElement('div');
+                    label.className = 'absolute text-[11px] font-black text-white tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-20';
+                    label.style.left = x + 'px';
+                    label.style.top = y + 'px';
+                    label.style.transform = 'translate(-50%, -50%)';
+                    label.innerText = Math.round(slicePct) + '%';
+                    labelsContainer.appendChild(label);
+                }
+                currentAnglePct += slicePct;
+            });
+        }
+
+      } else if (donut) {
+        donut.style.setProperty('--p-gas', `0%`);
+        donut.style.setProperty('--p-listrik', `0%`);
+        donut.style.setProperty('--p-air', `0%`);
+        donut.style.setProperty('--p-packing', `0%`);
+        donut.style.setProperty('--p-bahan', `0%`);
+        if (labelsContainer) labelsContainer.innerHTML = '';
+      }
+    }
+  };
+</script>
+
+
+
+<style id="zett-hpp-final-spacing-and-contrast-fix">
+  /* ======================================================================
+   * ZETTBOT FINAL FIX: HPP SPACING, DONUT LABEL CONTRAST, FORM RESTORE
+   * Scope: #view-hpp only. Tidak mengubah struktur HTML/database/backend.
+   * ====================================================================== */
+
+  /* Jarak atas dari header global: menghapus kesan mepet dari inline margin-top:-1rem */
+  #view-hpp {
+    margin-top: clamp(1.15rem, 2.4vw, 1.85rem) !important;
+  }
+
+  /* Mengunci jarak antar section agar presisi dan tidak ditambah oleh Tailwind space-y-8 */
+  #view-hpp #hpp-dashboard-view {
+    gap: clamp(1.15rem, 1.9vw, 1.55rem) !important;
+    padding-inline: clamp(0rem, 1vw, 0.35rem);
+  }
+
+  #view-hpp #hpp-dashboard-view > * + * {
+    margin-top: 0 !important;
+  }
+
+  /* Hero sedikit lebih lapang di atas, tetapi tidak membuat jarak ke card terlalu jauh */
+  #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+    margin-top: 0 !important;
+    padding-block: clamp(1.65rem, 3.35vw, 2.65rem) !important;
+    padding-inline: clamp(1.45rem, 4.2vw, 3rem) !important;
+  }
+
+  /* Grid card didekatkan secara elegan ke hero, tetap lega untuk screen recording */
+  #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+    gap: clamp(1rem, 1.75vw, 1.35rem) !important;
+  }
+
+  #view-hpp .hpp-card-dash {
+    min-height: clamp(7.25rem, 12vw, 8.45rem) !important;
+    padding: clamp(1rem, 2.2vw, 1.5rem) !important;
+  }
+
+  /* Label persen donut: tidak lagi putih polos, dibuat seperti chip premium agar selalu terbaca */
+  #view-hpp #hpp-donut-labels > div {
+    color: #0f172a !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    border-radius: 999px !important;
+    padding: 0.16rem 0.42rem !important;
+    min-width: 2rem !important;
+    text-align: center !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.02em !important;
+    text-shadow: none !important;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255,255,255,0.85) !important;
+    backdrop-filter: blur(10px) saturate(1.2) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(1.2) !important;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #view-hpp #hpp-donut-labels > div {
+      color: #f8fafc !important;
+      background: rgba(15, 23, 42, 0.88) !important;
+      border-color: rgba(148, 163, 184, 0.38) !important;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    }
+  }
+
+  /* Transisi form HPP cepat, premium, satu langkah, tanpa kedip */
+  #view-hpp .hpp-form-enter-final {
+    animation: hppFormEnterFinal 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: opacity, transform, filter;
+    transform-origin: top center;
+    backface-visibility: hidden;
+  }
+
+  @keyframes hppFormEnterFinal {
+    0% {
+      opacity: 0;
+      transform: translate3d(0, 18px, 0) scale(0.988);
+      filter: blur(8px);
+    }
+    100% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  #view-hpp .hpp-dashboard-return-final {
+    animation: hppDashboardReturnFinal 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: opacity, transform;
+  }
+
+  @keyframes hppDashboardReturnFinal {
+    0% { opacity: 0; transform: translate3d(0, 12px, 0); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp {
+      margin-top: clamp(0.85rem, 3vw, 1.25rem) !important;
+    }
+
+    #view-hpp #hpp-dashboard-view {
+      gap: clamp(0.95rem, 3.5vw, 1.25rem) !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      padding: clamp(1.25rem, 5vw, 1.75rem) !important;
+      gap: clamp(1rem, 4vw, 1.35rem) !important;
+    }
+
+    #view-hpp .hpp-donut-wrap {
+      width: clamp(160px, 56vw, 210px) !important;
+      height: clamp(160px, 56vw, 210px) !important;
+    }
+  }
+</style>
+
+<script id="zett-hpp-form-controller-restore">
+  /**
+   * ======================================================================
+   * ZETTBOT FIX: HPP FORM CONTROLLER RESTORE
+   * Mengembalikan fungsi klik card HPP -> form input + tombol CRUD/update.
+   * Tidak menyentuh backend, spreadsheet, database, atau struktur HTML.
+   * ====================================================================== */
+  (function zettHppFormControllerRestore() {
+    function byId(id) { return document.getElementById(id); }
+
+    function showEl(el, displayValue) {
+      if (!el) return;
+      el.classList.remove('hidden');
+      el.style.display = displayValue || '';
+      el.style.pointerEvents = 'auto';
+      el.style.opacity = '1';
+      el.style.filter = 'none';
+    }
+
+    function hideEl(el) {
+      if (!el) return;
+      el.classList.add('hidden');
+      el.style.display = 'none';
+    }
+
+    function runHppCalculators() {
+      try { if (typeof toggleAirInputs === 'function') toggleAirInputs(); } catch(e) { console.error(e); }
+      try { if (typeof toggleBahanActive === 'function') toggleBahanActive(); } catch(e) { console.error(e); }
+      try { if (typeof toggleBahanInputs === 'function') toggleBahanInputs(); } catch(e) { console.error(e); }
+      try { if (typeof toggleNotaInputs === 'function') toggleNotaInputs(); } catch(e) { console.error(e); }
+      try { if (typeof calculateGas === 'function') calculateGas(); } catch(e) { console.error(e); }
+      try { if (typeof calculateListrik === 'function') calculateListrik(); } catch(e) { console.error(e); }
+      try { if (typeof calculateAir === 'function') calculateAir(); } catch(e) { console.error(e); }
+      try { if (typeof calculatePacking === 'function') calculatePacking(); } catch(e) { console.error(e); }
+      try { if (typeof calculateBahanBaku === 'function') calculateBahanBaku(); } catch(e) { console.error(e); }
+      try { if (typeof calculateNota === 'function') calculateNota(); } catch(e) { console.error(e); }
+      try { if (typeof StateMachine !== 'undefined' && StateMachine.calculateTotal) StateMachine.calculateTotal(); } catch(e) { console.error(e); }
+    }
+
+    function restoreOldHppData() {
+      const selectHPP = byId('inputNamaHPP');
+      const namaCabang = selectHPP ? selectHPP.value : '';
+
+      if (namaCabang && typeof populateFormHPP === 'function') {
+        try { populateFormHPP(namaCabang); } catch(e) { console.error('populateFormHPP error:', e); }
+      } else if (!namaCabang && typeof loadHPPFromLocal === 'function') {
+        try { loadHPPFromLocal(); } catch(e) { console.error('loadHPPFromLocal error:', e); }
+      }
+
+      try { if (typeof toggleActionButtons === 'function') toggleActionButtons(); } catch(e) { console.error(e); }
+      try { if (typeof checkHPPLock === 'function') checkHPPLock(); } catch(e) { console.error(e); }
+      runHppCalculators();
+    }
+
+    function revealHppTab(type) {
+      document.querySelectorAll('#view-hpp .tab-content').forEach(tab => {
+        hideEl(tab);
+        tab.classList.remove('hpp-form-enter-final', 'hpp-view-enter-premium');
+      });
+
+      const targetTab = byId('tab-' + type);
+      if (targetTab) {
+        showEl(targetTab, 'grid');
+        void targetTab.offsetWidth;
+        targetTab.classList.add('hpp-form-enter-final');
+      }
+    }
+
+    window.openHPPForm = function(type, title) {
+      const dashboard = byId('hpp-dashboard-view');
+      const formView = byId('hpp-form-view');
+      const titleEl = byId('hpp-form-title-text');
+
+      if (titleEl) titleEl.textContent = title || 'Analisa Biaya';
+
+      hideEl(dashboard);
+      showEl(formView, 'block');
+      formView.classList.remove('hpp-form-enter-final', 'hpp-view-enter-premium');
+      void formView.offsetWidth;
+      formView.classList.add('hpp-form-enter-final');
+
+      revealHppTab(type);
+      restoreOldHppData();
+
+      const btnSimpan = byId('btnSimpanHPP');
+      const btnUpdate = byId('btnUpdateHPP');
+      if (btnSimpan) btnSimpan.style.display = btnSimpan.classList.contains('hidden') ? 'none' : '';
+      if (btnUpdate) btnUpdate.style.display = btnUpdate.classList.contains('hidden') ? 'none' : '';
+
+      const scroller = byId('mainViewScroller') || document.querySelector('.custom-scroll');
+      if (scroller && typeof scroller.scrollTo === 'function') {
+        requestAnimationFrame(() => scroller.scrollTo({ top: 0, behavior: 'smooth' }));
+      }
+    };
+
+    window.closeHPPForm = function() {
+      const dashboard = byId('hpp-dashboard-view');
+      const formView = byId('hpp-form-view');
+
+      hideEl(formView);
+      document.querySelectorAll('#view-hpp .tab-content').forEach(tab => hideEl(tab));
+
+      showEl(dashboard, 'grid');
+      dashboard.classList.remove('hpp-dashboard-return-final', 'hpp-view-enter-premium');
+      void dashboard.offsetWidth;
+      dashboard.classList.add('hpp-dashboard-return-final');
+
+      try { if (typeof checkHPPLock === 'function') checkHPPLock(); } catch(e) { console.error(e); }
+    };
+  })();
+</script>
+
+<script id="zett-hpp-spatial-performance-bridge">
+  /**
+   * ======================================================================
+   * ZETTBOT HPP SPATIAL PERFORMANCE BRIDGE
+   * Native Vanilla JS, non-blocking, tidak mengubah backend/database.
+   * ====================================================================== */
+  (function zettHppSpatialPerformanceBridge() {
+    const ready = (fn) => {
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
+      else fn();
+    };
+
+    function markInteractiveCards() {
+      document.querySelectorAll('#view-hpp .hpp-card-dash').forEach((card) => {
+        if (!card.hasAttribute('tabindex')) card.setAttribute('tabindex', '0');
+        if (!card.hasAttribute('role')) card.setAttribute('role', 'button');
+        card.addEventListener('keydown', function(event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            card.click();
+          }
+        }, { passive: false });
+      });
+    }
+
+    function applyInitialSkeleton() {
+      const targets = ['dash-hpp-total', 'dash-card-gas', 'dash-card-listrik', 'dash-card-air', 'dash-card-packing', 'dash-card-bahan', 'dash-card-nota'];
+      targets.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el && /^Rp\s?0$/i.test(el.textContent.trim())) el.classList.add('hpp-skeleton-pulse');
+      });
+      window.setTimeout(() => {
+        targets.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.classList.remove('hpp-skeleton-pulse');
+        });
+      }, 650);
+    }
+
+    function singleViewEnter(target) {
+      if (!target) return;
+      target.classList.remove('hpp-view-enter-premium');
+      void target.offsetWidth;
+      target.classList.add('hpp-view-enter-premium');
+    }
+
+    function bridgeHppFormTransition() {
+      const originalOpen = window.openHPPForm;
+      if (typeof originalOpen === 'function' && !originalOpen.__zettSpatialWrapped) {
+        const wrapped = function(type, title) {
+          const result = originalOpen.apply(this, arguments);
+          window.requestAnimationFrame(() => {
+            singleViewEnter(document.getElementById('hpp-form-view'));
+            const activeTab = document.getElementById('tab-' + type);
+            singleViewEnter(activeTab);
+            const scroller = document.getElementById('mainViewScroller') || document.querySelector('.custom-scroll');
+            if (scroller && typeof scroller.scrollTo === 'function') scroller.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+          return result;
+        };
+        wrapped.__zettSpatialWrapped = true;
+        window.openHPPForm = wrapped;
+      }
+
+      const originalClose = window.closeHPPForm;
+      if (typeof originalClose === 'function' && !originalClose.__zettSpatialWrapped) {
+        const wrappedClose = function() {
+          const result = originalClose.apply(this, arguments);
+          window.requestAnimationFrame(() => singleViewEnter(document.getElementById('hpp-dashboard-view')));
+          return result;
+        };
+        wrappedClose.__zettSpatialWrapped = true;
+        window.closeHPPForm = wrappedClose;
+      }
+    }
+
+    function bridgeRenderDashboard() {
+      if (!window.StateMachine || typeof window.StateMachine.renderDashboard !== 'function' || window.StateMachine.renderDashboard.__zettSpatialWrapped) return;
+      const originalRender = window.StateMachine.renderDashboard.bind(window.StateMachine);
+      const wrappedRender = function() {
+        window.requestAnimationFrame(() => {
+          originalRender();
+          document.querySelectorAll('#view-hpp .hpp-skeleton-pulse').forEach(el => el.classList.remove('hpp-skeleton-pulse'));
+        });
+      };
+      wrappedRender.__zettSpatialWrapped = true;
+      window.StateMachine.renderDashboard = wrappedRender;
+    }
+
+    ready(() => {
+      markInteractiveCards();
+      applyInitialSkeleton();
+      bridgeHppFormTransition();
+      bridgeRenderDashboard();
+      singleViewEnter(document.getElementById('hpp-dashboard-view'));
+    });
+  })();
+</script>
+
+<style id="zett-hpp-umkm-compact-polish-final">
+  /* ======================================================================
+   * ZETTBOT UMKM FRIENDLY COMPACT POLISH
+   * Scope: Struktur Biaya (HPP) saja.
+   * Fokus: spacing lebih rapat, mobile/TikTok friendly, tetap premium.
+   * ====================================================================== */
+  #view-hpp {
+    margin-top: clamp(0.95rem, 1.8vw, 1.35rem) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view {
+    gap: clamp(1rem, 1.45vw, 1.25rem) !important;
+    max-width: min(100%, 1080px) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+    min-height: auto !important;
+    padding-block: clamp(1.35rem, 2.6vw, 2.2rem) !important;
+    padding-inline: clamp(1.35rem, 3.4vw, 2.65rem) !important;
+    gap: clamp(1.15rem, 2.5vw, 2.25rem) !important;
+    border-radius: clamp(1.4rem, 2.4vw, 1.8rem) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95 .space-y-5 {
+    gap: clamp(0.75rem, 1.35vw, 1.05rem) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95 p {
+    max-width: 34rem !important;
+    font-size: clamp(0.82rem, 1vw, 0.92rem) !important;
+    line-height: 1.55 !important;
+    padding-top: 0.2rem !important;
+  }
+
+  #view-hpp #dash-hpp-total {
+    font-size: clamp(3rem, 6.1vw, 4.25rem) !important;
+    letter-spacing: -0.06em !important;
+  }
+
+  #view-hpp .hpp-donut-wrap {
+    width: clamp(10rem, 19vw, 13.2rem) !important;
+    height: clamp(10rem, 19vw, 13.2rem) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+    gap: clamp(0.85rem, 1.25vw, 1.15rem) !important;
+  }
+
+  #view-hpp .hpp-card-dash {
+    min-height: clamp(6.15rem, 9.2vw, 7.35rem) !important;
+    padding: clamp(0.85rem, 1.65vw, 1.15rem) !important;
+    gap: clamp(0.45rem, 0.9vw, 0.68rem) !important;
+    border-radius: clamp(1.15rem, 1.9vw, 1.45rem) !important;
+  }
+
+  #view-hpp .hpp-card-dash .w-12 {
+    width: clamp(2.25rem, 3.4vw, 2.65rem) !important;
+    height: clamp(2.25rem, 3.4vw, 2.65rem) !important;
+    border-radius: 0.95rem !important;
+  }
+
+  #view-hpp .hpp-card-dash .w-12 i {
+    font-size: clamp(1.1rem, 2.2vw, 1.35rem) !important;
+  }
+
+  #view-hpp .hpp-card-dash h3 {
+    margin-bottom: 0.25rem !important;
+    font-size: clamp(0.55rem, 0.78vw, 0.64rem) !important;
+    letter-spacing: 0.16em !important;
+  }
+
+  #view-hpp [id^="dash-card-"] {
+    font-size: clamp(1.15rem, 2.1vw, 1.55rem) !important;
+    line-height: 1.05 !important;
+  }
+
+  #view-hpp .hpp-card-percent {
+    margin-top: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    max-width: 100%;
+    align-self: center;
+    padding: 0.28rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(248, 250, 252, 0.86);
+    border: 1px solid rgba(226, 232, 240, 0.72);
+    color: #64748b;
+    font-size: clamp(0.6rem, 0.85vw, 0.7rem);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.86);
+  }
+
+  #view-hpp #hpp-donut-labels > div {
+    color: #0f172a !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    border: 1px solid rgba(203, 213, 225, 0.92) !important;
+    font-size: 10px !important;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+  }
+
+  @media (max-width: 1024px) {
+    #view-hpp #hpp-dashboard-view {
+      max-width: min(100%, 860px) !important;
+      gap: 1rem !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      padding: 1.45rem !important;
+      gap: 1.25rem !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    #mainViewScroller {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+      padding-top: 12px !important;
+    }
+
+    #view-hpp {
+      margin-top: 0.35rem !important;
+    }
+
+    #view-hpp #hpp-dashboard-view {
+      gap: 12px !important;
+      width: 100% !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      padding: 20px !important;
+      gap: 16px !important;
+      border-radius: 22px !important;
+      align-items: center !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 .flex-1 {
+      width: 100% !important;
+    }
+
+    #view-hpp #dash-hpp-total {
+      font-size: clamp(2.8rem, 12.5vw, 3.55rem) !important;
+    }
+
+    #view-hpp #dash-hpp-total + span {
+      font-size: clamp(1rem, 5vw, 1.25rem) !important;
+    }
+
+    #view-hpp .hpp-donut-wrap {
+      width: clamp(140px, 43vw, 176px) !important;
+      height: clamp(140px, 43vw, 176px) !important;
+    }
+
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+    }
+
+    #view-hpp .hpp-card-dash {
+      min-height: 112px !important;
+      padding: 13px 10px !important;
+      gap: 7px !important;
+      border-radius: 20px !important;
+    }
+
+    #view-hpp .hpp-card-dash .w-12 {
+      width: 38px !important;
+      height: 38px !important;
+      border-radius: 14px !important;
+    }
+
+    #view-hpp .hpp-card-dash h3 {
+      font-size: 8.8px !important;
+      letter-spacing: 0.14em !important;
+    }
+
+    #view-hpp [id^="dash-card-"] {
+      font-size: clamp(1.05rem, 5vw, 1.28rem) !important;
+    }
+
+    #view-hpp .hpp-card-percent {
+      font-size: 9.5px;
+      padding: 0.25rem 0.45rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      padding: 18px !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 p {
+      font-size: 0.78rem !important;
+      line-height: 1.45 !important;
+    }
+
+    #view-hpp .hpp-donut-wrap {
+      width: clamp(128px, 40vw, 158px) !important;
+      height: clamp(128px, 40vw, 158px) !important;
+    }
+
+    #view-hpp .hpp-card-dash {
+      min-height: 104px !important;
+      padding: 12px 8px !important;
+    }
+
+    #view-hpp .hpp-card-percent {
+      font-size: 8.8px;
+      letter-spacing: -0.02em;
+    }
+  }
+</style>
+
+<script id="zett-hpp-umkm-compact-percent-bridge">
+  /**
+   * Menambah informasi kontribusi per komponen tanpa mengubah logic kalkulasi.
+   * Data tetap berasal dari APP_STATE.data.hpp yang sudah dipakai dashboard HPP.
+   */
+  (function zettHppUmkmCompactPercentBridge() {
+    const map = {
+      gas: 'dash-card-gas',
+      listrik: 'dash-card-listrik',
+      air: 'dash-card-air',
+      packing: 'dash-card-packing',
+      bahan: 'dash-card-bahan',
+      nota: 'dash-card-nota'
+    };
+
+    function ensurePercentNodes() {
+      Object.keys(map).forEach((key) => {
+        const valueEl = document.getElementById(map[key]);
+        if (!valueEl) return;
+        const id = map[key] + '-pct';
+        if (document.getElementById(id)) return;
+        const pct = document.createElement('p');
+        pct.id = id;
+        pct.className = 'hpp-card-percent';
+        pct.textContent = '0% dari HPP';
+        valueEl.insertAdjacentElement('afterend', pct);
+      });
+    }
+
+    function updatePercentNodes() {
+      ensurePercentNodes();
+      try {
+        if (typeof APP_STATE === 'undefined' || !APP_STATE.data || !APP_STATE.data.hpp) return;
+        const hpp = APP_STATE.data.hpp;
+        const total = Number(hpp.total || 0);
+        Object.keys(map).forEach((key) => {
+          const pctEl = document.getElementById(map[key] + '-pct');
+          if (!pctEl) return;
+          const value = Number(hpp[key] || 0);
+          const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+          pctEl.textContent = pct + '% dari HPP';
+        });
+      } catch (error) {
+        console.error('Gagal update persentase card HPP:', error);
+      }
+    }
+
+    function wrapRenderDashboard() {
+      try {
+        if (typeof StateMachine === 'undefined' || !StateMachine.renderDashboard || StateMachine.renderDashboard.__zettUmkmPctWrapped) return;
+        const originalRender = StateMachine.renderDashboard.bind(StateMachine);
+        const wrappedRender = function() {
+          const result = originalRender.apply(this, arguments);
+          window.requestAnimationFrame(updatePercentNodes);
+          return result;
+        };
+        wrappedRender.__zettUmkmPctWrapped = true;
+        StateMachine.renderDashboard = wrappedRender;
+      } catch (error) {
+        console.error('Gagal wrap render dashboard HPP:', error);
+      }
+    }
+
+    function boot() {
+      ensurePercentNodes();
+      updatePercentNodes();
+      wrapRenderDashboard();
+      window.setTimeout(updatePercentNodes, 450);
+      window.setTimeout(updatePercentNodes, 1200);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+    else boot();
+  })();
+</script>
+
+
+<style id="zett-hpp-final-client-polish-20260506">
+  /* ======================================================================
+   * FINAL CLIENT POLISH — HPP ONLY
+   * 1) Chip persentase dibuat ringkas: 36% saja.
+   * 2) Spacing dashboard HPP dipadatkan tanpa mengubah struktur HTML.
+   * 3) Card HPP diberi affordance klik + transisi masuk form yang smooth.
+   * ====================================================================== */
+  #view-hpp {
+    margin-top: clamp(0.35rem, 0.85vw, 0.7rem) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view {
+    gap: clamp(0.65rem, 1vw, 0.95rem) !important;
+    max-width: min(100%, 980px) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view > * + * {
+    margin-top: clamp(0.65rem, 1vw, 0.95rem) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+    padding-block: clamp(1.05rem, 2vw, 1.65rem) !important;
+    padding-inline: clamp(1.2rem, 2.8vw, 2.2rem) !important;
+    gap: clamp(0.9rem, 1.8vw, 1.65rem) !important;
+    border-radius: clamp(1.35rem, 2vw, 1.75rem) !important;
+    box-shadow: 0 18px 46px rgba(15, 23, 42, 0.08), 0 4px 14px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95 .space-y-5,
+  #view-hpp #hpp-dashboard-view > .bg-white\/95 .space-y-1 {
+    gap: clamp(0.45rem, 0.8vw, 0.75rem) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view > .bg-white\/95 p {
+    padding-top: 0 !important;
+    margin-top: 0.15rem !important;
+  }
+
+  #view-hpp #dash-hpp-total {
+    font-size: clamp(2.85rem, 5.55vw, 4.05rem) !important;
+  }
+
+  #view-hpp .hpp-donut-wrap {
+    width: clamp(9.6rem, 17vw, 12.3rem) !important;
+    height: clamp(9.6rem, 17vw, 12.3rem) !important;
+  }
+
+  #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+    gap: clamp(0.62rem, 0.95vw, 0.85rem) !important;
+  }
+
+  #view-hpp .hpp-card-dash {
+    min-height: clamp(5.7rem, 8.2vw, 6.6rem) !important;
+    padding: clamp(0.68rem, 1.15vw, 0.92rem) !important;
+    gap: clamp(0.35rem, 0.65vw, 0.52rem) !important;
+    border-radius: clamp(1rem, 1.55vw, 1.28rem) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transform: translate3d(0,0,0) !important;
+    transition: transform 0.28s cubic-bezier(0.16,1,0.3,1), box-shadow 0.28s cubic-bezier(0.16,1,0.3,1), border-color 0.28s ease, filter 0.28s ease !important;
+    will-change: transform, box-shadow, filter !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+  }
+
+  #view-hpp .hpp-card-dash::after {
+    content: "";
+    position: absolute;
+    inset: -45%;
+    background: radial-gradient(circle at center, rgba(99,102,241,0.17), transparent 56%);
+    opacity: 0;
+    transform: scale(0.6);
+    pointer-events: none;
+    transition: opacity 0.32s ease, transform 0.42s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  #view-hpp .hpp-card-dash:hover {
+    transform: translate3d(0,-3px,0) !important;
+    border-color: rgba(203,213,225,0.88) !important;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  #view-hpp .hpp-card-dash:active,
+  #view-hpp .hpp-card-dash.zett-hpp-card-pressed {
+    transform: translate3d(0,-1px,0) scale(0.975) !important;
+    filter: saturate(1.12) !important;
+    box-shadow: 0 22px 48px rgba(79, 70, 229, 0.16), 0 0 0 1px rgba(99,102,241,0.18) !important;
+  }
+
+  #view-hpp .hpp-card-dash.zett-hpp-card-pressed::after {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+
+  #view-hpp .hpp-card-dash .w-12 {
+    width: clamp(2rem, 3vw, 2.35rem) !important;
+    height: clamp(2rem, 3vw, 2.35rem) !important;
+    border-radius: 0.86rem !important;
+  }
+
+  #view-hpp .hpp-card-dash .w-12 i {
+    font-size: clamp(1rem, 1.85vw, 1.2rem) !important;
+  }
+
+  #view-hpp .hpp-card-dash h3 {
+    margin-bottom: 0.12rem !important;
+    font-size: clamp(0.5rem, 0.72vw, 0.6rem) !important;
+    letter-spacing: 0.15em !important;
+  }
+
+  #view-hpp [id^="dash-card-"] {
+    font-size: clamp(1.05rem, 1.85vw, 1.42rem) !important;
+    line-height: 1.02 !important;
+  }
+
+  #view-hpp .hpp-card-percent {
+    margin-top: 0.25rem !important;
+    padding: 0.22rem 0.52rem !important;
+    min-width: 2.8rem;
+    font-size: clamp(0.68rem, 1.12vw, 0.86rem) !important;
+    font-weight: 950 !important;
+    color: #475569 !important;
+    background: rgba(248,250,252,0.92) !important;
+    border: 1px solid rgba(226,232,240,0.95) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 7px rgba(15,23,42,0.04) !important;
+  }
+
+  #view-hpp .hpp-card-percent::after {
+    content: none !important;
+  }
+
+  #view-hpp #hpp-form-view.zett-hpp-form-smooth-open {
+    animation: zettHppSmoothOpen 0.48s cubic-bezier(0.16,1,0.3,1) both !important;
+    will-change: opacity, transform, filter !important;
+    transform-origin: top center !important;
+  }
+
+  #view-hpp .tab-content.zett-hpp-tab-smooth-open {
+    animation: zettHppTabSmoothOpen 0.42s cubic-bezier(0.16,1,0.3,1) both !important;
+    will-change: opacity, transform, filter !important;
+  }
+
+  @keyframes zettHppSmoothOpen {
+    0% { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.986); filter: blur(8px); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+  }
+
+  @keyframes zettHppTabSmoothOpen {
+    0% { opacity: 0; transform: translate3d(0, 14px, 0); filter: blur(6px); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+  }
+
+  @media (max-width: 1024px) {
+    #view-hpp #hpp-dashboard-view {
+      max-width: min(100%, 820px) !important;
+      gap: 0.78rem !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      padding: 1.15rem 1.25rem !important;
+      gap: 1rem !important;
+    }
+
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      gap: 0.72rem !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp {
+      margin-top: 0.15rem !important;
+    }
+
+    #view-hpp #hpp-dashboard-view {
+      gap: 10px !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      padding: 17px !important;
+      gap: 12px !important;
+      border-radius: 20px !important;
+    }
+
+    #view-hpp .hpp-donut-wrap {
+      width: clamp(124px, 39vw, 150px) !important;
+      height: clamp(124px, 39vw, 150px) !important;
+    }
+
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      gap: 10px !important;
+    }
+
+    #view-hpp .hpp-card-dash {
+      min-height: 94px !important;
+      padding: 10px 8px !important;
+      gap: 5px !important;
+      border-radius: 18px !important;
+    }
+
+    #view-hpp .hpp-card-percent {
+      font-size: 12px !important;
+      padding: 0.2rem 0.46rem !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      padding: 15px !important;
+    }
+
+    #view-hpp .hpp-card-dash {
+      min-height: 88px !important;
+      padding: 9px 7px !important;
+    }
+  }
+</style>
+
+<script id="zett-hpp-final-click-and-percent-fix-20260506">
+  /**
+   * FINAL HPP FIX
+   * Scope: Modal.html / Struktur Biaya saja.
+   * Tidak mengubah rumus, backend, database, atau penyimpanan spreadsheet.
+   */
+  (function zettHppFinalClickAndPercentFix() {
+    const cardMap = {
+      gas: { id: 'dash-card-gas', title: 'Analisa Biaya Gas' },
+      listrik: { id: 'dash-card-listrik', title: 'Analisa Biaya Listrik' },
+      air: { id: 'dash-card-air', title: 'Analisa Biaya Air' },
+      packing: { id: 'dash-card-packing', title: 'Analisa Biaya Packing' },
+      bahan: { id: 'dash-card-bahan', title: 'Analisa Biaya Chemical' },
+      nota: { id: 'dash-card-nota', title: 'Analisa Biaya Nota & Kasir' }
+    };
+
+    function byId(id) { return document.getElementById(id); }
+
+    function showEl(el, displayValue) {
+      if (!el) return;
+      el.classList.remove('hidden');
+      el.style.display = displayValue || '';
+      el.style.opacity = '1';
+      el.style.pointerEvents = 'auto';
+      el.style.filter = 'none';
+    }
+
+    function hideEl(el) {
+      if (!el) return;
+      el.classList.add('hidden');
+      el.style.display = 'none';
+    }
+
+    function getCurrentHppOutlet() {
+      const select = byId('inputNamaHPP');
+      return select ? select.value : '';
+    }
+
+    function restoreHppDataForSelectedOutlet() {
+      const outlet = getCurrentHppOutlet();
+      if (outlet && typeof populateFormHPP === 'function') {
+        try { populateFormHPP(outlet); } catch (error) { console.error('populateFormHPP error:', error); }
+      } else if (typeof loadHPPFromLocal === 'function') {
+        try { loadHPPFromLocal(); } catch (error) { console.error('loadHPPFromLocal error:', error); }
+      }
+
+      try { if (typeof toggleActionButtons === 'function') toggleActionButtons(); } catch (error) { console.error(error); }
+      try { if (typeof checkHPPLock === 'function') checkHPPLock(); } catch (error) { console.error(error); }
+      try { if (typeof updateGasDefault === 'function') updateGasDefault(); } catch (error) { console.error(error); }
+      try { if (typeof toggleAirInputs === 'function') toggleAirInputs(); } catch (error) { console.error(error); }
+      try { if (typeof toggleBahanActive === 'function') toggleBahanActive(); } catch (error) { console.error(error); }
+      try { if (typeof toggleBahanInputs === 'function') toggleBahanInputs(); } catch (error) { console.error(error); }
+      try { if (typeof toggleNotaInputs === 'function') toggleNotaInputs(); } catch (error) { console.error(error); }
+      try { if (typeof calculateGas === 'function') calculateGas(); } catch (error) { console.error(error); }
+      try { if (typeof calculateListrik === 'function') calculateListrik(); } catch (error) { console.error(error); }
+      try { if (typeof calculateAir === 'function') calculateAir(); } catch (error) { console.error(error); }
+      try { if (typeof calculatePacking === 'function') calculatePacking(); } catch (error) { console.error(error); }
+      try { if (typeof calculateBahanBaku === 'function') calculateBahanBaku(); } catch (error) { console.error(error); }
+      try { if (typeof calculateNota === 'function') calculateNota(); } catch (error) { console.error(error); }
+      try { if (window.StateMachine && typeof window.StateMachine.calculateTotal === 'function') window.StateMachine.calculateTotal(); } catch (error) { console.error(error); }
+    }
+
+    function openFormSmooth(type, title) {
+      const dashboard = byId('hpp-dashboard-view');
+      const formView = byId('hpp-form-view');
+      const titleEl = byId('hpp-form-title-text');
+      if (!formView) return;
+
+      if (titleEl) titleEl.textContent = title || 'Analisa Biaya';
+
+      hideEl(dashboard);
+      showEl(formView, 'block');
+      formView.classList.remove('hpp-form-enter-final', 'hpp-view-enter-premium', 'zett-hpp-form-smooth-open');
+      void formView.offsetWidth;
+      formView.classList.add('zett-hpp-form-smooth-open');
+
+      document.querySelectorAll('#view-hpp .tab-content').forEach(tab => {
+        hideEl(tab);
+        tab.classList.remove('hpp-form-enter-final', 'hpp-view-enter-premium', 'zett-hpp-tab-smooth-open');
+      });
+
+      const targetTab = byId('tab-' + type);
+      if (targetTab) {
+        showEl(targetTab, 'grid');
+        void targetTab.offsetWidth;
+        targetTab.classList.add('zett-hpp-tab-smooth-open');
+      }
+
+      restoreHppDataForSelectedOutlet();
+
+      const scroller = byId('mainViewScroller') || document.querySelector('.custom-scroll');
+      if (scroller && typeof scroller.scrollTo === 'function') {
+        requestAnimationFrame(() => scroller.scrollTo({ top: 0, behavior: 'smooth' }));
+      }
+    }
+
+    function closeFormSmooth() {
+      const dashboard = byId('hpp-dashboard-view');
+      const formView = byId('hpp-form-view');
+      hideEl(formView);
+      document.querySelectorAll('#view-hpp .tab-content').forEach(tab => hideEl(tab));
+      showEl(dashboard, 'block');
+      if (dashboard) {
+        dashboard.classList.remove('hpp-dashboard-return-final', 'hpp-view-enter-premium');
+        void dashboard.offsetWidth;
+        dashboard.classList.add('hpp-dashboard-return-final');
+      }
+    }
+
+    function inferTypeFromCard(card) {
+      const valueEl = card.querySelector('[id^="dash-card-"]');
+      if (!valueEl || !valueEl.id) return '';
+      return valueEl.id.replace('dash-card-', '');
+    }
+
+    function attachCardClickHandlers() {
+      Object.keys(cardMap).forEach(type => {
+        const valueEl = byId(cardMap[type].id);
+        if (!valueEl) return;
+        const card = valueEl.closest('.hpp-card-dash');
+        if (!card) return;
+        card.dataset.hppType = type;
+        card.dataset.hppTitle = cardMap[type].title;
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', 'Buka ' + cardMap[type].title);
+        card.onclick = function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          const activeType = card.dataset.hppType || inferTypeFromCard(card);
+          const activeTitle = card.dataset.hppTitle || (cardMap[activeType] ? cardMap[activeType].title : 'Analisa Biaya');
+          card.classList.add('zett-hpp-card-pressed');
+          window.setTimeout(() => {
+            card.classList.remove('zett-hpp-card-pressed');
+            openFormSmooth(activeType, activeTitle);
+          }, 115);
+        };
+        card.onkeydown = function(event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            card.click();
+          }
+        };
+      });
+    }
+
+    function ensurePercentNodes() {
+      Object.keys(cardMap).forEach(type => {
+        const valueEl = byId(cardMap[type].id);
+        if (!valueEl) return;
+        const id = cardMap[type].id + '-pct';
+        let pct = byId(id);
+        if (!pct) {
+          pct = document.createElement('p');
+          pct.id = id;
+          pct.className = 'hpp-card-percent';
+          valueEl.insertAdjacentElement('afterend', pct);
+        }
+        pct.title = 'Persentase kontribusi biaya ini terhadap total HPP variabel.';
+        pct.setAttribute('aria-label', 'Persentase kontribusi terhadap total HPP');
+      });
+    }
+
+    function updateCompactPercent() {
+      ensurePercentNodes();
+      const hpp = window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.hpp ? window.APP_STATE.data.hpp : null;
+      const total = hpp ? Number(hpp.total || 0) : 0;
+      Object.keys(cardMap).forEach(type => {
+        const pctEl = byId(cardMap[type].id + '-pct');
+        if (!pctEl) return;
+        const value = hpp ? Number(hpp[type] || 0) : 0;
+        const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+        pctEl.textContent = pct + '%';
+      });
+    }
+
+    function wrapRenderDashboard() {
+      if (!window.StateMachine || typeof window.StateMachine.renderDashboard !== 'function' || window.StateMachine.renderDashboard.__zettFinalPctWrapped) return;
+      const originalRender = window.StateMachine.renderDashboard.bind(window.StateMachine);
+      window.StateMachine.renderDashboard = function() {
+        const result = originalRender.apply(this, arguments);
+        requestAnimationFrame(updateCompactPercent);
+        setTimeout(updateCompactPercent, 60);
+        return result;
+      };
+      window.StateMachine.renderDashboard.__zettFinalPctWrapped = true;
+    }
+
+    function boot() {
+      attachCardClickHandlers();
+      updateCompactPercent();
+      wrapRenderDashboard();
+      window.openHPPForm = openFormSmooth;
+      window.closeHPPForm = closeFormSmooth;
+      setTimeout(attachCardClickHandlers, 250);
+      setTimeout(updateCompactPercent, 250);
+      setTimeout(updateCompactPercent, 900);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+    else boot();
+  })();
+</script>
+
+<!-- ========================================================================= -->
+<!-- ZETTBOT PATCH: HPP ACTION BUTTON VISIBILITY & SAVE-BAR SAFETY              -->
+<!-- ========================================================================= -->
+<style id="zett-hpp-action-button-final-css">
+  #actionAreaHPP {
+    position: sticky;
+    bottom: 0;
+    z-index: 80;
+    margin-top: clamp(1.25rem, 2vw, 2rem) !important;
+    padding: 1rem clamp(0.75rem, 2vw, 1.25rem) !important;
+    border-top: 1px solid rgba(226, 232, 240, 0.85) !important;
+    background: rgba(248, 250, 252, 0.88);
+    backdrop-filter: blur(22px) saturate(1.12);
+    -webkit-backdrop-filter: blur(22px) saturate(1.12);
+    box-shadow: 0 -18px 45px rgba(15, 23, 42, 0.06);
+    border-radius: 1.5rem 1.5rem 0 0;
+    transform: translate3d(0,0,0);
+    will-change: transform, opacity;
+  }
+
+  #actionAreaHPP .zett-hpp-actions-final {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  #btnUpdateHPP,
+  #btnSimpanHPP {
+    min-height: 3.25rem;
+    border-radius: 1.15rem !important;
+    transform: translate3d(0,0,0);
+    will-change: transform, box-shadow;
+  }
+
+  #btnUpdateHPP:not(.hidden),
+  #btnSimpanHPP.zett-force-show {
+    display: flex !important;
+  }
+
+  #btnSimpanHPP.zett-save-new-mode {
+    background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
+    border: 1px solid rgba(15, 23, 42, 0.95) !important;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+  }
+
+  #btnUpdateHPP.zett-update-mode {
+    box-shadow: 0 14px 32px rgba(16, 185, 129, 0.18), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+  }
+
+  @media (max-width: 767px) {
+    #actionAreaHPP {
+      left: 0;
+      right: 0;
+      padding: 0.85rem 0.85rem calc(0.85rem + env(safe-area-inset-bottom)) !important;
+      border-radius: 1.25rem 1.25rem 0 0;
+    }
+
+    #actionAreaHPP .zett-hpp-actions-final {
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    #btnUpdateHPP,
+    #btnSimpanHPP {
+      width: 100% !important;
+      justify-content: center !important;
+      padding: 0.95rem 1rem !important;
+      font-size: 0.9rem !important;
+    }
+  }
+</style>
+
+<script id="zett-hpp-action-button-final-js">
+  (function zettHppActionButtonFinalPatch(){
+    function byId(id) { return document.getElementById(id); }
+
+    function forceShowHppButtons() {
+      const area = byId('actionAreaHPP');
+      const btnUpdate = byId('btnUpdateHPP');
+      const btnSimpan = byId('btnSimpanHPP');
+      if (!area || !btnSimpan) return;
+
+      const actions = btnSimpan.parentElement;
+      if (actions) actions.classList.add('zett-hpp-actions-final');
+
+      btnSimpan.classList.add('zett-force-show', 'zett-save-new-mode');
+      btnSimpan.classList.remove('hidden');
+      btnSimpan.style.display = 'flex';
+      btnSimpan.innerHTML = '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru';
+      btnSimpan.onclick = function(event) {
+        event.preventDefault();
+        return window.zettSimpanHPPBaru(event);
+      };
+
+      if (btnUpdate) {
+        btnUpdate.classList.add('zett-update-mode');
+        btnUpdate.innerHTML = '<i class="ph ph-check-circle text-lg"></i> Perbarui Data HPP';
+        if (!btnUpdate.classList.contains('hidden')) {
+          btnUpdate.style.display = 'flex';
+        }
+      }
+    }
+
+    window.zettSimpanHPPBaru = function(event) {
+      if (event) event.preventDefault();
+
+      const btnUpdate = byId('btnUpdateHPP');
+      const btnSimpan = byId('btnSimpanHPP');
+      const updateWasHidden = !btnUpdate || btnUpdate.classList.contains('hidden');
+
+      /*
+       * simpanDataHPP() menentukan mode dari class hidden pada btnUpdateHPP.
+       * Untuk tombol "Simpan Data Baru", btnUpdateHPP disembunyikan sementara
+       * hanya selama pembacaan mode agar sistem lama tetap aman dan tidak perlu
+       * mengubah backend/database.
+       */
+      if (btnUpdate) {
+        btnUpdate.classList.add('hidden');
+        btnUpdate.style.display = 'none';
+      }
+
+      if (typeof window.simpanDataHPP === 'function') {
+        window.simpanDataHPP(event);
+      }
+
+      setTimeout(function(){
+        if (btnUpdate && !updateWasHidden) {
+          btnUpdate.classList.remove('hidden');
+          btnUpdate.style.display = 'flex';
+        }
+        if (btnSimpan) {
+          btnSimpan.classList.add('zett-force-show', 'zett-save-new-mode');
+          btnSimpan.classList.remove('hidden');
+          btnSimpan.style.display = 'flex';
+          btnSimpan.innerHTML = '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru';
+        }
+      }, 80);
+    };
+
+    const originalOpenHPPForm = window.openHPPForm;
+    if (typeof originalOpenHPPForm === 'function' && !originalOpenHPPForm.__zettActionButtonPatched) {
+      const patchedOpen = function(type, title) {
+        const result = originalOpenHPPForm.apply(this, arguments);
+        requestAnimationFrame(function(){
+          forceShowHppButtons();
+          setTimeout(forceShowHppButtons, 120);
+        });
+        return result;
+      };
+      patchedOpen.__zettActionButtonPatched = true;
+      window.openHPPForm = patchedOpen;
+    }
+
+    const originalToggleActionButtons = window.toggleActionButtons;
+    if (typeof originalToggleActionButtons === 'function' && !originalToggleActionButtons.__zettActionButtonPatched) {
+      const patchedToggle = function() {
+        const result = originalToggleActionButtons.apply(this, arguments);
+        requestAnimationFrame(forceShowHppButtons);
+        return result;
+      };
+      patchedToggle.__zettActionButtonPatched = true;
+      window.toggleActionButtons = patchedToggle;
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function(){
+        setTimeout(forceShowHppButtons, 250);
+      });
+    } else {
+      setTimeout(forceShowHppButtons, 250);
+    }
+  })();
+</script>

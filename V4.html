@@ -1,0 +1,271 @@
+<!-- ================= VIEW TARGET BEP (HYPER-PREMIUM FINTECH EDITION) ================= -->
+  <div id="view-bep" class="main-view hidden animate-fade-in space-y-8">
+    
+    <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.03),0_2px_12px_rgba(0,0,0,0.01)] border border-slate-100/80 p-6 md:p-12 transform-gpu will-change-transform transition-all duration-500 ease-out hover:shadow-[0_12px_48px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.02)] animate-fade-in">
+      
+      <!-- [ZETTBOT UX Update: Title-Subtitle Duo] -->
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-100/60 pb-8 shrink-0 gap-6">
+        <div class="flex items-start gap-5">
+          <div class="bg-rose-50/60 p-4 rounded-[1.25rem] text-rose-600 shrink-0 border border-rose-100/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)]">
+            <i class="ph ph-target text-3xl"></i>
+          </div>
+          <div>
+            <h2 class="text-[clamp(1.5rem,3.5vw,2rem)] font-extrabold text-slate-800 tracking-tight leading-tight">Analisis Titik Impas (BEP)</h2>
+            <p class="text-sm text-slate-500 mt-2 font-medium leading-relaxed max-w-xl">Ketahui target minimal volume cucian yang wajib dicapai agar bisnis tidak menanggung defisit operasional.</p>
+          </div>
+        </div>
+        
+        <button type="button" onclick="switchMainTab('harga')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 px-6 py-3.5 rounded-[1.25rem] font-extrabold flex items-center gap-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 transform-gpu hover:-translate-y-1 shrink-0 active:scale-95">
+          <i class="ph ph-tag text-xl text-blue-600"></i> Cek Harga Jual
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 border-b border-slate-100/60 pb-10 mt-10">
+        
+        <!-- Biaya Sewa Tahunan -->
+        <div class="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-[1.5rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] p-6 md:p-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] transition-all duration-500 transform-gpu hover:-translate-y-1 space-y-5">
+          <label class="block text-sm font-extrabold text-slate-700 flex items-center gap-3 tracking-tight"><i class="ph ph-house text-blue-500 text-xl"></i> Biaya Sewa Tahunan</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+            <input type="text" id="inputSewaTahun" inputmode="numeric" class="w-full pl-12 pr-5 py-4 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-blue-500/15 focus:border-blue-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="Misal: 30.000.000" oninput="formatRupiahInput(this); calculateAll()">
+          </div>
+          <div class="grid grid-cols-2 gap-4 text-xs mt-2">
+            <div class="bg-slate-50/80 p-4 rounded-xl border border-slate-100 text-center shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+              <span class="text-slate-400 block mb-1.5 font-bold uppercase tracking-widest text-[9px]">Per Bulan</span>
+              <span class="font-black text-slate-700 tabular-nums [font-feature-settings:'tnum'] text-sm" id="displaySewaBulan">Rp 0</span>
+            </div>
+            <div class="bg-slate-50/80 p-4 rounded-xl border border-slate-100 text-center shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+              <span class="text-slate-400 block mb-1.5 font-bold uppercase tracking-widest text-[9px]">Per Hari</span>
+              <span class="font-black text-slate-700 tabular-nums [font-feature-settings:'tnum'] text-sm" id="displaySewaHari">Rp 0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gaji Karyawan -->
+        <div class="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-[1.5rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] p-6 md:p-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] transition-all duration-500 transform-gpu hover:-translate-y-1 space-y-5 flex flex-col">
+          <div class="flex justify-between items-center">
+            <label class="block text-sm font-extrabold text-slate-700 flex items-center gap-3 tracking-tight"><i class="ph ph-users text-blue-500 text-xl"></i> Gaji Karyawan</label>
+            <button type="button" onclick="addKaryawan()" class="text-[10px] bg-blue-50 border border-blue-200/80 text-blue-700 px-4 py-2 rounded-xl font-black hover:bg-blue-100 transition-colors active:scale-95 uppercase tracking-widest flex items-center gap-1"><i class="ph ph-plus"></i> Tambah</button>
+          </div>
+          <div id="containerKaryawan" class="flex-1 space-y-3 max-h-48 overflow-y-auto custom-scroll pr-2"></div>
+          <div class="bg-slate-50/80 p-5 rounded-xl border border-slate-100 flex justify-between items-center text-sm shadow-[0_2px_8px_rgba(0,0,0,0.02)] mt-auto shrink-0">
+            <span class="text-slate-500 font-extrabold text-xs uppercase tracking-widest">Total Gaji/Bulan:</span>
+            <span class="font-black text-slate-800 text-lg tabular-nums [font-feature-settings:'tnum']" id="displayTotalGaji">Rp 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6 border-t border-slate-100/60 pt-10">
+        <label class="block text-[clamp(1rem,2vw,1.25rem)] font-extrabold text-slate-800 flex items-center gap-3 tracking-tight"><i class="ph ph-coins text-emerald-500 text-2xl"></i> Setup Biaya Produksi</label>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          
+          <div class="bg-white/80 backdrop-blur-xl p-6 md:p-8 rounded-[1.5rem] border border-slate-200/80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] transition-all duration-500 transform-gpu hover:-translate-y-1 flex flex-col justify-center space-y-4">
+            <label class="block text-xs font-extrabold text-slate-600 uppercase tracking-widest">Biaya Tetap Lainnya / Bulan (Rp)</label>
+            <div class="relative flex items-center">
+              <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+              <input type="text" id="inputBiayaTetapLain" class="w-full pl-12 pr-5 py-4 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-blue-500/15 focus:border-blue-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="0" oninput="formatRupiahInput(this); calculateAll()">
+            </div>
+          </div>
+          
+          <div class="bg-indigo-50/60 backdrop-blur-xl p-6 md:p-8 rounded-[1.5rem] border border-indigo-200/60 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)] hover:shadow-[0_12px_40px_rgba(79,70,229,0.1)] transition-all duration-500 transform-gpu hover:-translate-y-1 relative overflow-hidden flex flex-col justify-center space-y-4">
+            <div class="absolute right-0 top-0 opacity-[0.05] pointer-events-none transform translate-x-4 -translate-y-4"><i class="ph ph-chart-line text-[10rem]"></i></div>
+            <div class="relative z-10">
+              <label class="block text-xs font-extrabold text-indigo-900 uppercase tracking-widest">Total Biaya Variabel / Kg</label>
+              <p class="text-[10px] text-indigo-600/80 mt-1.5 font-bold leading-tight max-w-[80%]">Otomatis terisi dari tab Master Biaya HPP. Anda masih bisa mengeditnya manual.</p>
+            </div>
+            <div class="relative z-10 flex items-center">
+              <span class="absolute left-5 text-base font-black text-indigo-500">Rp</span>
+              <input type="text" id="inputBiayaVariabel" class="w-full pl-14 pr-5 py-4 rounded-[1rem] border border-indigo-300/80 font-black text-indigo-900 bg-white/90 focus:ring-[4px] focus:ring-indigo-500/20 focus:border-indigo-500 text-xl shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="0" oninput="formatRupiahInput(this); calculateAll()">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="mt-12 border-t border-slate-100/60 pt-10">
+        <h3 class="font-extrabold text-slate-800 text-[clamp(1.25rem,2vw,1.5rem)] flex items-center gap-3 mb-8 tracking-tight">
+          <div class="bg-rose-100/60 p-2 rounded-[1rem] text-rose-500 border border-rose-200/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)]"><i class="ph ph-target"></i></div>
+          Target BEP Bulanan
+        </h3>
+        
+        <input type="hidden" id="hiddenTotalBiayaTetap" value="0">
+        <input type="hidden" id="hiddenTotalKapasitasBulan" value="0">
+        <input type="hidden" id="hiddenHargaJualAcuan" value="0">
+
+        <!-- Glassmorphism Dark Panel for High-Impact Metric -->
+        <div class="bg-[#0f172a] bg-gradient-to-br from-[#0f172a] to-[#1e293b] p-8 md:p-10 rounded-[2rem] shadow-[0_20px_60px_rgba(15,23,42,0.4)] grid grid-cols-1 md:grid-cols-12 gap-10 items-center mb-10 relative overflow-hidden border border-slate-700/50">
+          <div class="absolute -top-32 -right-32 w-96 h-96 bg-blue-500/20 rounded-full blur-[80px] pointer-events-none"></div>
+          <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-rose-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+
+          <div class="md:col-span-5 space-y-4 z-10">
+            <label class="text-[10px] font-black text-slate-400 block tracking-[0.2em] uppercase">Pilih Acuan Harga Tertinggi:</label>
+            <div class="relative">
+              <select id="bepReference" class="w-full pl-5 pr-10 py-4 text-sm border border-slate-600/80 rounded-[1.25rem] font-bold text-slate-100 bg-slate-800/50 backdrop-blur-md focus:ring-[4px] focus:ring-blue-500/30 focus:border-blue-400 shadow-[inset_0_2px_6px_rgba(0,0,0,0.2)] transition-all duration-300 outline-none appearance-none cursor-pointer" onchange="calculateAll()">
+                <option value="cs_price_1">Cuci Setrika - Pilihan 1</option>
+                <option value="cs_price_2">Cuci Setrika - Pilihan 2</option>
+                <option value="cl_price_1">Cuci Lipat - Pilihan 1</option>
+                <option value="c_price_1">Cuci Saja - Pilihan 1</option>
+              </select>
+              <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                <i class="ph ph-caret-down text-slate-400 font-bold"></i>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 font-bold leading-relaxed tracking-wide bg-slate-800/40 p-3 rounded-xl border border-slate-700/50" id="displayStatusMargin">*BEP dihitung berdasarkan Harga Acuan yang Anda pilih.</p>
+          </div>
+
+          <div class="md:col-span-7 grid grid-cols-2 gap-6 z-10">
+            <div class="bg-white/5 backdrop-blur-xl p-6 rounded-[1.5rem] border border-white/10 text-center shadow-[0_8px_32px_rgba(0,0,0,0.2)] transform-gpu transition-transform hover:-translate-y-1 duration-300">
+              <p class="text-[10px] text-blue-300 font-black mb-3 tracking-[0.2em] uppercase">Target Min (Kg)</p>
+              <h3 class="text-[clamp(1.75rem,4vw,2.5rem)] font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] tracking-tighter tabular-nums [font-feature-settings:'tnum']" id="displayBEPKg">0 Kg</h3>
+            </div>
+            <div class="bg-white/5 backdrop-blur-xl p-6 rounded-[1.5rem] border border-white/10 text-center shadow-[0_8px_32px_rgba(0,0,0,0.2)] transform-gpu transition-transform hover:-translate-y-1 duration-300">
+              <p class="text-[10px] text-emerald-300 font-black mb-3 tracking-[0.2em] uppercase">Target Rupiah</p>
+              <h3 class="text-[clamp(1.75rem,4vw,2.5rem)] font-black text-emerald-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] tracking-tighter tabular-nums [font-feature-settings:'tnum']" id="displayBEPRupiah">Rp 0</h3>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.02)] mt-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.05)] transition-all duration-500">
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+             <h4 class="font-extrabold text-slate-800 text-lg flex items-center gap-3 tracking-tight">
+                <div class="bg-blue-50/80 p-2 rounded-xl text-blue-600 border border-blue-100/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)]"><i class="ph ph-chart-line-up text-xl"></i></div> 
+                Visualisasi Grafik BEP
+             </h4>
+             <span class="text-[9px] text-blue-600 bg-blue-50 px-4 py-1.5 rounded-full border border-blue-200 font-black uppercase tracking-[0.2em] shadow-sm">Real-time Render</span>
+          </div>
+          <div class="relative w-full h-72 md:h-96">
+            <canvas id="bepChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.02)] mt-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.05)] transition-all duration-500">
+          <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6 border-b border-slate-100/60 pb-6">
+            <div>
+              <h4 class="font-extrabold text-slate-800 text-lg flex items-center gap-3 tracking-tight">
+                <div class="bg-indigo-50/80 p-2 rounded-xl text-indigo-600 border border-indigo-100/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)]"><i class="ph ph-table text-xl"></i></div>
+                Analisis Target Penjualan
+              </h4>
+              <p class="text-xs text-slate-500 mt-2 font-medium">Target per layanan agar tidak rugi menanggung biaya operasional.</p>
+            </div>
+            <div class="bg-indigo-50/60 px-5 py-3 rounded-[1.25rem] border border-indigo-100/80 flex items-center gap-4 shrink-0 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)] w-full xl:w-auto justify-between">
+              <label class="text-[10px] font-black text-indigo-800 uppercase tracking-[0.1em]">Tipe Laundry:</label>
+              <div class="relative w-full xl:w-48">
+                <select id="bepTipeLaundry" class="w-full text-sm px-4 py-2.5 rounded-xl border border-indigo-200 focus:ring-[4px] focus:ring-indigo-500/20 focus:border-indigo-400 bg-white font-extrabold text-indigo-900 shadow-sm transition-all cursor-pointer outline-none appearance-none" onchange="calculateAll()">
+                  <option value="kg">Kiloan / Drop Off (Kg)</option>
+                  <option value="load">Self Service (Load)</option>
+                </select>
+                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                  <i class="ph ph-caret-down text-indigo-500 font-bold"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto custom-scroll pb-4">
+            <table class="w-full text-left border-collapse min-w-max tabular-nums [font-feature-settings:'tnum']">
+              <thead>
+                <tr class="bg-slate-50/80 text-slate-500 text-[10px] font-black uppercase tracking-[0.15em] border-b border-slate-200/70">
+                  <th class="p-5 rounded-tl-[1.5rem]">Layanan</th>
+                  <th class="p-5 text-right">Omset Minimal (BEP)</th>
+                  <th class="p-5 text-right">Target / Bulan</th>
+                  <th class="p-5 text-right">Target / Minggu</th>
+                  <th class="p-5 text-right rounded-tr-[1.5rem] text-indigo-600 bg-indigo-50/80 border-l border-indigo-100/50">Target / Hari</th>
+                </tr>
+              </thead>
+              <tbody id="tableTargetBEP" class="text-sm divide-y divide-slate-100/80 bg-white/40">
+                <tr>
+                  <td colspan="5" class="p-10 text-center text-slate-400 text-sm font-bold tracking-wide">
+                    <i class="ph ph-spinner-gap animate-spin text-3xl mb-3 text-blue-500"></i><br>
+                    Memuat matriks analitik...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Footer -->
+      <div class="mt-12 flex flex-col sm:flex-row justify-between items-center border-t border-slate-100/80 pt-8 gap-5">
+        <button type="button" onclick="switchMainTab('harga')" class="text-slate-500 hover:text-slate-800 font-extrabold text-sm px-4 py-2 flex items-center gap-2 transition-colors active:scale-95 w-full sm:w-auto justify-center">
+          <i class="ph ph-arrow-left"></i> Kembali ke Harga Jual
+        </button>
+        <button type="button" onclick="switchMainTab('roi')" class="w-full sm:w-auto bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white px-10 py-4 rounded-[1.25rem] font-black flex items-center justify-center gap-3 shadow-[0_8px_20px_rgba(15,23,42,0.2)] hover:shadow-[0_12px_30px_rgba(15,23,42,0.3)] transition-all duration-500 transform-gpu hover:-translate-y-1 active:scale-[0.96] tracking-wide">
+          Lanjut ke Proyeksi ROI <i class="ph ph-arrow-right text-xl"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+<!-- ================= VIEW ANALISIS ROI (HYPER-PREMIUM FINTECH EDITION) ================= -->
+  <div id="view-roi" class="main-view hidden animate-fade-in space-y-8">
+    <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.03),0_2px_12px_rgba(0,0,0,0.01)] border border-slate-100/80 p-6 md:p-12 transform-gpu will-change-transform transition-all duration-500 ease-out hover:shadow-[0_12px_48px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.02)] animate-fade-in">
+      
+      <!-- [ZETTBOT UX Update: Title-Subtitle Duo] -->
+      <div class="border-b border-slate-100/60 pb-8 shrink-0 flex items-start md:items-center gap-5">
+        <div class="bg-emerald-50/60 p-4 rounded-[1.25rem] text-emerald-600 hidden md:block border border-emerald-100/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)] shrink-0">
+          <i class="ph ph-chart-pie-slice text-3xl"></i>
+        </div>
+        <div>
+          <h2 class="text-[clamp(1.5rem,3.5vw,2rem)] font-extrabold text-slate-800 tracking-tight leading-tight">
+            Proyeksi Return on Investment (ROI)
+          </h2>
+          <p class="text-sm text-slate-500 mt-2 font-medium leading-relaxed max-w-xl">Kalkulasikan estimasi durasi pengembalian modal awal (Payback Period) berdasarkan tingkat okupansi outlet Anda.</p>
+        </div>
+      </div>
+      
+      <!-- Input Modal Awal (Crucial for ROI) -->
+      <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[1.5rem] border border-slate-200/80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-500 transform-gpu hover:-translate-y-1 mt-10">
+         <label class="block text-sm font-extrabold text-slate-700 flex items-center gap-3 tracking-tight mb-5">
+           <div class="bg-emerald-50 p-2 rounded-xl text-emerald-600"><i class="ph ph-money text-xl"></i></div> 
+           Modal / Investasi Awal (Rp)
+         </label>
+         <div class="relative flex items-center w-full md:w-2/3">
+           <span class="absolute left-5 text-lg font-black text-slate-400">Rp</span>
+           <input type="text" id="inputModalAwal" inputmode="numeric" class="w-full pl-14 pr-6 py-5 rounded-[1.25rem] border border-slate-300/80 focus:bg-white focus:ring-[4px] focus:ring-emerald-500/15 focus:border-emerald-500 font-black text-slate-800 text-[clamp(1.5rem,2.5vw,2rem)] tracking-tight tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] outline-none" placeholder="150.000.000" oninput="formatRupiahInput(this); calculateAll()">
+         </div>
+         <p class="text-[11px] text-slate-400 font-bold mt-4 tracking-wide">*(Opsional) Masukkan total modal awal untuk menghitung *Payback Period*.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-6 tabular-nums [font-feature-settings:'tnum']">
+        <!-- Card 1 -->
+        <div class="bg-slate-50/60 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/80 shadow-sm text-center flex flex-col justify-center transition-all duration-500 transform-gpu hover:-translate-y-1.5 hover:shadow-[0_12px_40px_rgba(0,0,0,0.05)]">
+          <div class="bg-white w-14 h-14 mx-auto rounded-[1.25rem] flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.04)] mb-5 text-slate-500 border border-slate-100"><i class="ph ph-wallet text-2xl"></i></div>
+          <p class="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em]">Total Investasi Awal</p>
+          <h3 class="text-2xl lg:text-3xl font-black text-slate-800 tracking-tighter" id="dispRoiModal">Rp 0</h3>
+        </div>
+        
+        <!-- Card 2 -->
+        <div class="bg-indigo-50/40 backdrop-blur-xl p-8 rounded-[2rem] border border-indigo-100/80 shadow-sm text-center flex flex-col justify-center transition-all duration-500 transform-gpu hover:-translate-y-1.5 hover:shadow-[0_12px_40px_rgba(79,70,229,0.08)]">
+          <div class="bg-white w-14 h-14 mx-auto rounded-[1.25rem] flex items-center justify-center shadow-[0_4px_12px_rgba(79,70,229,0.15)] mb-5 text-indigo-500 border border-indigo-50"><i class="ph ph-trend-up text-2xl"></i></div>
+          <p class="text-[10px] font-black text-indigo-500 mb-2 uppercase tracking-[0.2em]">Proyeksi Laba / Bulan</p>
+          <h3 class="text-2xl lg:text-3xl font-black text-indigo-800 tracking-tighter" id="dispRoiLaba">Rp 0</h3>
+          <div class="mt-4"><span class="text-[9px] text-indigo-600 font-black bg-indigo-100/60 rounded-full py-1.5 px-4 uppercase tracking-widest border border-indigo-200/50">Sesuai target okupansi</span></div>
+        </div>
+        
+        <!-- Card 3 -->
+        <div class="bg-[#047857] bg-gradient-to-br from-emerald-600 to-teal-700 p-8 rounded-[2rem] shadow-[0_12px_30px_rgba(16,185,129,0.25)] text-center flex flex-col justify-center transition-all duration-500 transform-gpu hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(16,185,129,0.35)] relative overflow-hidden">
+          <div class="absolute -right-6 -top-6 text-white/10 pointer-events-none transform rotate-12"><i class="ph ph-clock text-[10rem]"></i></div>
+          <div class="relative z-10">
+            <p class="text-[10px] font-black text-emerald-100 mb-4 uppercase tracking-[0.2em] opacity-90">Estimasi Balik Modal</p>
+            <h3 class="text-[clamp(2.5rem,5vw,3.5rem)] font-black text-white mb-3 drop-shadow-md tracking-tighter leading-none" id="dispRoiWaktu">- Bulan</h3>
+            <div class="mt-4"><span class="text-xs font-black text-emerald-900 bg-emerald-100/90 py-2 px-5 rounded-[1rem] inline-block mx-auto shadow-inner border border-white/20 tracking-wide" id="dispRoiTahun">-</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="mt-14 flex flex-col sm:flex-row gap-5 items-center justify-between border-t border-slate-100/80 pt-10">
+        <button type="button" onclick="switchMainTab('bep')" class="text-slate-500 hover:text-slate-800 font-extrabold text-sm px-4 py-2 flex items-center gap-2 transition-colors active:scale-95 w-full sm:w-auto justify-center">
+          <i class="ph ph-arrow-left"></i> Kembali ke Target Titik Impas
+        </button>
+        <button type="button" id="btnSubmit" onclick="prosesSimpanBEP()" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black py-4 px-10 rounded-[1.25rem] transition-all duration-500 transform-gpu hover:-translate-y-1 shadow-[0_12px_30px_rgba(37,99,235,0.25)] hover:shadow-[0_16px_40px_rgba(37,99,235,0.35)] flex items-center justify-center gap-3 tracking-wide active:scale-[0.96]">
+          <i class="ph ph-cloud-arrow-up text-2xl"></i> Simpan Data ke Cloud
+        </button>
+      </div>
+    </div>
+  </div>

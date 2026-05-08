@@ -1,0 +1,803 @@
+<script>
+    /**
+     * ==========================================
+     * FRONT-END LOGIC: KALKULATOR MASTER BIAYA
+     * Fase: HPP Dashboard Aggregation & Performance (Debounce)
+     * ==========================================
+     */
+
+    function zettDebounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    window.hppDataState = { gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 };
+
+    function saveHPPDraftToLocal() {
+      const inputs = document.querySelectorAll('#view-hpp input, #view-hpp select');
+      const draft = {};
+      inputs.forEach(el => {
+        if(el.id) {
+          if(el.type === 'checkbox' || el.type === 'radio') draft[el.id] = el.checked;
+          else draft[el.id] = el.value;
+        }
+      });
+      localStorage.setItem('zett_hpp_draft_state', JSON.stringify(draft));
+    }
+
+    function loadHPPFromLocal() {
+      const savedState = localStorage.getItem('zett_hpp_draft_state');
+      if (savedState) {
+        try {
+          const draft = JSON.parse(savedState);
+          for(let key in draft) {
+            const el = document.getElementById(key);
+            if(el) {
+              if(el.type === 'checkbox' || el.type === 'radio') el.checked = draft[key];
+              else el.value = draft[key];
+            }
+          }
+          if(typeof updateGasDefault === 'function') updateGasDefault();
+          if(typeof calculateGas === 'function') calculateGas();
+          if(typeof toggleSetrikaInputs === 'function') toggleSetrikaInputs();
+          if(typeof calculateListrik === 'function') calculateListrik();
+          if(typeof toggleAirInputs === 'function') toggleAirInputs();
+          if(typeof calculateAir === 'function') calculateAir();
+          if(typeof calculatePacking === 'function') calculatePacking();
+          if(typeof toggleBahanActive === 'function') toggleBahanActive();
+          if(typeof toggleBahanInputs === 'function') toggleBahanInputs();
+          if(typeof calculateBahanBaku === 'function') calculateBahanBaku();
+          if(typeof toggleNotaInputs === 'function') toggleNotaInputs();
+          if(typeof calculateNota === 'function') calculateNota();
+        } catch(e) {
+          console.error('Gagal memuat memori lokal HPP', e);
+        }
+      }
+      if(typeof StateMachine !== 'undefined') StateMachine.calculateTotal();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadHPPFromLocal();
+      const hppView = document.getElementById('view-hpp');
+      if(hppView) {
+        hppView.addEventListener('input', zettDebounce(saveHPPDraftToLocal, 500));
+        hppView.addEventListener('change', zettDebounce(saveHPPDraftToLocal, 500));
+      }
+    });
+
+    // --- FUNGSI TAB GAS ---
+    function updateGasDefault() {
+      const kapasitas = document.getElementById('inputGasKapasitas').value;
+      const jamInput = document.getElementById('inputGasJam');
+      
+      if (kapasitas === '3') {
+        jamInput.value = 8;
+      } else if (kapasitas === '5.5') {
+        jamInput.value = 14.4;
+      } else if (kapasitas === '12') {
+        jamInput.value = 32;
+      } else if (kapasitas === '50') {
+        jamInput.value = 132;
+      } else {
+        jamInput.value = '';
+      }
+    }
+
+    let gasTimeout;
+    function calculateGas() {
+      clearTimeout(gasTimeout);
+      gasTimeout = setTimeout(() => {
+        const isCentral = document.getElementById('inputCentralGas').checked;
+        const statusCentral = document.getElementById('displayCentralGasStatus');
+        
+        if (isCentral) {
+          statusCentral.innerText = "Ya (Aktif)";
+          statusCentral.style.background = 'var(--omni-emerald-bg)';
+          statusCentral.style.color = 'var(--omni-emerald)';
+          statusCentral.style.borderColor = 'var(--omni-emerald-border)';
+        } else {
+          statusCentral.innerText = "Tidak";
+          statusCentral.style.background = 'var(--omni-surface-solid)';
+          statusCentral.style.color = 'var(--omni-navy-light)';
+          statusCentral.style.borderColor = 'var(--omni-border)';
+        }
+
+        const jamRaw = parseFloat(document.getElementById('inputGasJam').value) || 0;
+        const hargaRaw = document.getElementById('inputGasHarga').value.replace(/\./g, '');
+        const harga = parseFloat(hargaRaw) || 0;
+
+        const menit = jamRaw * 60;
+        document.getElementById('inputGasMenit').value = menit > 0 ? menit.toFixed(1) + ' Menit' : '0 Menit';
+
+        let costPerMenit = 0;
+        if (menit > 0 && harga > 0) {
+          costPerMenit = harga / menit;
+        }
+
+        let totalDryerUnits = 0;
+        let dryerDurasi = 60; 
+        
+        document.querySelectorAll('.input-mesin-pengering').forEach((el, index) => {
+          const u = parseFloat(el.querySelector('.m-unit').value) || 0;
+          totalDryerUnits += u;
+          if(index === 0) {
+            const d = parseFloat(el.querySelector('.m-durasi').value);
+            if(!isNaN(d) && d > 0) dryerDurasi = d;
+          }
+        });
+        
+        if(totalDryerUnits === 0) totalDryerUnits = 1;
+
+        let gasPerLoad = costPerMenit * dryerDurasi;
+
+        const displayEl = document.getElementById('displayBiayaGasMenit');
+        if (displayEl) {
+           displayEl.innerText = formatRupiah(gasPerLoad);
+           const parentDiv = displayEl.previousElementSibling;
+           if(parentDiv && parentDiv.children.length > 1) {
+              parentDiv.children[1].innerText = "Estimasi Biaya Gas / Load";
+           }
+        }
+
+        const kategori = document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : 'Drop Off/Kiloan';
+        let gasPerKg = 0;
+        if (kategori !== 'Self Service') {
+           let dryerKg = 1;
+           const firstDryer = document.querySelector('.input-mesin-pengering');
+           if(firstDryer) {
+               dryerKg = parseFloat(firstDryer.querySelector('.m-kg').value) || 1;
+           }
+           gasPerKg = gasPerLoad / dryerKg;
+        }
+        
+        if(typeof StateMachine !== 'undefined') StateMachine.updateMetric('gas', gasPerKg);
+        else { window.hppDataState.gas = gasPerKg; if(typeof updateHPPDashboard === 'function') updateHPPDashboard(); }
+      }, 50);
+    }
+    
+    // --- FUNGSI TAB LISTRIK ---
+    function toggleSetrikaInputs() {
+      const wrap = document.getElementById('wrapSetrikaInputs');
+      const isActive = document.getElementById('toggleSetrikaListrik').checked;
+      if(isActive) {
+        wrap.style.opacity = '1';
+        wrap.style.pointerEvents = 'auto';
+      } else {
+        wrap.style.opacity = '0.4';
+        wrap.style.pointerEvents = 'none';
+      }
+      togglePelicinVisibility(); 
+      calculateBahanBaku();
+    }
+
+    function togglePelicinVisibility() {
+      const isSetrikaActive = document.getElementById('toggleSetrikaListrik').checked;
+      const wrapPelicin = document.getElementById('wrapBahanPelicin');
+      if (wrapPelicin) {
+        if (isSetrikaActive) {
+          wrapPelicin.style.display = 'block';
+        } else {
+          wrapPelicin.style.display = 'none';
+        }
+      }
+    }
+
+    let listrikTimeout;
+    function calculateListrik() {
+      clearTimeout(listrikTimeout);
+      listrikTimeout = setTimeout(() => {
+        const tdlRaw = document.getElementById('inputTDL').value.replace(/\./g, '');
+        const tdl = parseFloat(tdlRaw) || 0;
+
+        let washerDurasi = 60; 
+        let washerKg = 1;
+        let totalWasherUnits = 0;
+        
+        document.querySelectorAll('.input-mesin-cuci').forEach((el, index) => {
+          const u = parseFloat(el.querySelector('.m-unit').value) || 0;
+          totalWasherUnits += u;
+          if(index === 0) { 
+            washerDurasi = parseFloat(el.querySelector('.m-durasi').value) || 0;
+            washerKg = parseFloat(el.querySelector('.m-kg').value) || 1;
+          }
+        });
+        if(totalWasherUnits === 0) totalWasherUnits = 1; 
+        if(washerKg <= 0) washerKg = 1;
+
+        let dryerDurasi = 60;
+        let dryerKg = 1;
+        const firstDryer = document.querySelector('.input-mesin-pengering');
+        if(firstDryer) {
+          dryerDurasi = parseFloat(firstDryer.querySelector('.m-durasi').value) || 0;
+          dryerKg = parseFloat(firstDryer.querySelector('.m-kg').value) || 1;
+        }
+        if(dryerKg <= 0) dryerKg = 1;
+
+        const cuciWatt = parseFloat(document.getElementById('inputListrikCuciWatt').value) || 0;
+        const cuciKw = cuciWatt / 1000;
+        const cuciJam = washerDurasi / 60;
+        const cuciCostLoad = cuciKw * tdl * cuciJam;
+        const cuciCostKg = cuciCostLoad / washerKg;
+
+        document.getElementById('dispListrikCuciLoad').innerText = formatRupiah(cuciCostLoad);
+        document.getElementById('dispListrikCuciKg').innerText = formatRupiah(cuciCostKg);
+
+        const dryerWatt = parseFloat(document.getElementById('inputListrikPengeringWatt').value) || 0;
+        const dryerKw = dryerWatt / 1000;
+        const dryerJam = dryerDurasi / 60;
+        const dryerCostLoad = dryerKw * tdl * dryerJam;
+        const dryerCostKg = dryerCostLoad / dryerKg;
+
+        document.getElementById('dispListrikPengeringLoad').innerText = formatRupiah(dryerCostLoad);
+        document.getElementById('dispListrikPengeringKg').innerText = formatRupiah(dryerCostKg);
+
+        const pompaWatt = parseFloat(document.getElementById('inputListrikPompaWatt').value) || 0;
+        const pompaKw = pompaWatt / 1000;
+        const pompaJam = washerDurasi / 60; 
+        const pompaCostTotalLoad = pompaKw * tdl * pompaJam; 
+        const pompaCostLoadPerMesin = pompaCostTotalLoad / totalWasherUnits; 
+        const pompaCostKg = pompaCostLoadPerMesin / washerKg;
+
+        document.getElementById('dispListrikPompaLoad').innerText = formatRupiah(pompaCostLoadPerMesin);
+        document.getElementById('dispListrikPompaKg').innerText = formatRupiah(pompaCostKg);
+
+        let setrikaCostKg = 0;
+        const isSetrikaActive = document.getElementById('toggleSetrikaListrik').checked;
+        const kategori = document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : 'Drop Off/Kiloan';
+
+        if(isSetrikaActive && kategori !== 'Self Service') {
+          const setrikaWatt = parseFloat(document.getElementById('inputListrikSetrikaWatt').value) || 0;
+          
+          let setrikaKgJam = 1;
+          const firstSetrika = document.querySelector('.input-mesin-setrika');
+          if(firstSetrika) {
+              const setDur = parseFloat(firstSetrika.querySelector('.m-durasi').value) || 0;
+              const setKg = parseFloat(firstSetrika.querySelector('.m-kg').value) || 1;
+              if (setDur > 0) setrikaKgJam = (60 / setDur) * setKg;
+          }
+          if(setrikaKgJam <= 0) setrikaKgJam = 1;
+
+          const setrikaKw = setrikaWatt / 1000;
+          const setrikaCostJam = setrikaKw * tdl * 1; 
+          setrikaCostKg = setrikaCostJam / setrikaKgJam; 
+
+          document.getElementById('dispListrikSetrikaJam').innerText = formatRupiah(setrikaCostJam);
+          document.getElementById('dispListrikSetrikaKg').innerText = formatRupiah(setrikaCostKg);
+        } else {
+          document.getElementById('dispListrikSetrikaJam').innerText = 'Rp 0';
+          document.getElementById('dispListrikSetrikaKg').innerText = 'Rp 0';
+        }
+
+        let totalListrikKg = 0;
+        if (kategori !== 'Self Service') {
+            totalListrikKg = cuciCostKg + dryerCostKg + pompaCostKg + setrikaCostKg;
+        } else {
+            totalListrikKg = cuciCostLoad + dryerCostLoad + pompaCostLoadPerMesin;
+        }
+        
+        const elBiayaTotal = document.getElementById('displayBiayaListrikTotalKg');
+        if (elBiayaTotal) elBiayaTotal.innerText = formatRupiah(totalListrikKg);
+        
+        if(typeof StateMachine !== 'undefined') StateMachine.updateMetric('listrik', totalListrikKg);
+        else { window.hppDataState.listrik = totalListrikKg; if(typeof updateHPPDashboard === 'function') updateHPPDashboard(); }
+      }, 50);
+    }
+
+    // --- FUNGSI TAB AIR ---
+    function toggleAirInputs() {
+      const sumberEl = document.getElementById('inputAirSumber');
+      if (!sumberEl) return;
+      const sumber = sumberEl.value;
+      
+      const wrapPdam = document.getElementById('wrapAirPdam');
+      const wrapTangki = document.getElementById('wrapAirTangki');
+      const wrapSumur = document.getElementById('wrapAirSumur');
+
+      // [ZETTBOT REVISI: Mutlak Sembunyikan & Tampilkan via inline display untuk mencegah tabrakan specificity CSS]
+      if (wrapPdam) wrapPdam.style.display = 'none';
+      if (wrapTangki) wrapTangki.style.display = 'none';
+      if (wrapSumur) wrapSumur.style.display = 'none';
+
+      if (sumber === 'pdam' && wrapPdam) wrapPdam.style.display = 'block';
+      else if (sumber === 'tangki' && wrapTangki) wrapTangki.style.display = 'flex';
+      else if (sumber === 'sumur' && wrapSumur) wrapSumur.style.display = 'flex';
+
+      const boilerSumberEl = document.getElementById('inputAirBoilerSumber');
+      const wrapGalon = document.getElementById('wrapAirGalon');
+      
+      if (wrapGalon && boilerSumberEl) {
+          if (boilerSumberEl.value === 'galon') wrapGalon.style.display = 'flex';
+          else wrapGalon.style.display = 'none';
+      }
+
+      // [ZETTBOT REVISI: LOCK SETRIKA BOILER JIKA PROFIL OPS = LISTRIK]
+      let panelBoiler = document.getElementById('panelAirSetrikaBoiler');
+      if (!panelBoiler) {
+          const boilerHeading = Array.from(document.querySelectorAll('h4')).find(el => el.innerText.includes('Setrika Uap (Boiler)'));
+          if(boilerHeading) panelBoiler = boilerHeading.closest('.bento-col-6');
+      }
+      
+      if (panelBoiler) {
+          const tipeSetrika = document.getElementById('jenisSetrikaUtama') ? document.getElementById('jenisSetrikaUtama').value : 'uap';
+          
+          if (tipeSetrika === 'listrik' || tipeSetrika === 'Listrik') {
+              panelBoiler.style.opacity = '0.4';
+              panelBoiler.style.pointerEvents = 'none';
+              
+              if (!panelBoiler.querySelector('.lock-warning')) {
+                  const warn = document.createElement('div');
+                  warn.className = 'lock-warning';
+                  warn.style.cssText = 'position:absolute; top:0; left:0; right:0; bottom:0; z-index:20; display:flex; align-items:center; justify-content:center; flex-direction:column; background:rgba(255,255,255,0.6); backdrop-filter:blur(4px); border-radius:1.25rem; font-weight:800; color:#9333ea; text-align:center; padding:1rem;';
+                  warn.innerHTML = '<i class="ph ph-lock-key text-3xl mb-2"></i><span>Terkunci</span><span style="font-size:0.65rem; color:#6b7280; font-weight:600; margin-top:0.25rem;">Hanya berlaku untuk Setrika Uap</span>';
+                  panelBoiler.appendChild(warn);
+              }
+          } else {
+              panelBoiler.style.opacity = '1';
+              panelBoiler.style.pointerEvents = 'auto';
+              const warn = panelBoiler.querySelector('.lock-warning');
+              if(warn) warn.remove();
+          }
+      }
+    }
+
+    let airTimeout;
+    function calculateAir() {
+      clearTimeout(airTimeout);
+      airTimeout = setTimeout(() => {
+        let pricePerM3 = 0;
+        let pricePerLiter = 0;
+        const sumber = document.getElementById('inputAirSumber').value;
+
+        if (sumber === 'pdam') {
+          const raw = document.getElementById('inputAirHargaM3').value.replace(/\./g, '');
+          pricePerM3 = parseFloat(raw) || 0;
+          pricePerLiter = pricePerM3 / 1000;
+        } else if (sumber === 'tangki') {
+          const raw = document.getElementById('inputAirHargaTangki').value.replace(/\./g, '');
+          const hargaTangki = parseFloat(raw) || 0;
+          const literTangki = parseFloat(document.getElementById('inputAirLiterTangki').value) || 1;
+          pricePerLiter = hargaTangki / literTangki;
+          pricePerM3 = pricePerLiter * 1000;
+        } else if (sumber === 'sumur') {
+          pricePerM3 = 0;
+          pricePerLiter = 0;
+        }
+
+        const cuciLiter = parseFloat(document.getElementById('inputAirCuciLiter').value) || 0;
+        const cuciM3 = cuciLiter / 1000;
+        document.getElementById('dispAirCuciM3').innerText = cuciM3.toFixed(3);
+
+        const cuciCostLoad = cuciLiter * pricePerLiter; 
+        
+        let washerKg = 1;
+        document.querySelectorAll('.input-mesin-cuci').forEach((el, index) => {
+          if(index === 0) washerKg = parseFloat(el.querySelector('.m-kg').value) || 1;
+        });
+        if(washerKg <= 0) washerKg = 1;
+
+        const cuciCostKg = cuciCostLoad / washerKg;
+
+        document.getElementById('dispAirCuciLoad').innerText = formatRupiah(cuciCostLoad);
+        document.getElementById('dispAirCuciKg').innerText = formatRupiah(cuciCostKg);
+
+        let boilerCostKg = 0;
+        const kategori = document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : 'Drop Off/Kiloan';
+
+        if (kategori !== 'Self Service') {
+            let boilerPricePerLiter = 0;
+            const boilerSumber = document.getElementById('inputAirBoilerSumber').value;
+            
+            if (boilerSumber === 'sama') {
+              boilerPricePerLiter = pricePerLiter; 
+            } else if (boilerSumber === 'galon') {
+              const rawGalon = document.getElementById('inputAirHargaGalon').value.replace(/\./g, '');
+              const hargaGalon = parseFloat(rawGalon) || 0;
+              const literGalon = parseFloat(document.getElementById('inputAirLiterGalon').value) || 1;
+              boilerPricePerLiter = hargaGalon / literGalon;
+            }
+
+            const boilerLiter = parseFloat(document.getElementById('inputAirBoilerLiter').value) || 0;
+            const boilerJam = parseFloat(document.getElementById('inputAirBoilerJam').value) || 1;
+            const boilerKgJam = parseFloat(document.getElementById('inputAirBoilerKgJam').value) || 1;
+
+            const boilerCostIsi = boilerLiter * boilerPricePerLiter; 
+            const boilerCostJam = boilerCostIsi / boilerJam;         
+            boilerCostKg = boilerCostJam / boilerKgJam;        
+
+            document.getElementById('dispAirBoilerJam').innerText = formatRupiah(boilerCostJam);
+            document.getElementById('dispAirBoilerKg').innerText = formatRupiah(boilerCostKg);
+        } else {
+            document.getElementById('dispAirBoilerJam').innerText = 'Rp 0';
+            document.getElementById('dispAirBoilerKg').innerText = 'Rp 0';
+        }
+
+        let totalAirKg = 0;
+        if (kategori !== 'Self Service') totalAirKg = cuciCostKg + boilerCostKg;
+        else totalAirKg = cuciCostLoad;
+        
+        const elBiayaTotal = document.getElementById('displayBiayaAirTotalKg');
+        if (elBiayaTotal) elBiayaTotal.innerText = formatRupiah(totalAirKg);
+
+        if(typeof StateMachine !== 'undefined') StateMachine.updateMetric('air', totalAirKg);
+        else { window.hppDataState.air = totalAirKg; if(typeof updateHPPDashboard === 'function') updateHPPDashboard(); }
+      }, 50);
+    }
+
+    // --- FUNGSI TAB PACKING ---
+    let packingTimeout;
+    function calculatePacking() {
+      clearTimeout(packingTimeout);
+      packingTimeout = setTimeout(() => {
+        // 1. PP Bening
+        let costKgPP = 0;
+        const isPPActive = document.getElementById('togglePackingPP').checked;
+        const wrapPP = document.getElementById('wrapPackingPP');
+        
+        if (isPPActive) {
+          wrapPP.style.opacity = '1';
+          wrapPP.style.pointerEvents = 'auto';
+          
+          const rawHarga = document.getElementById('inputPackingPPHarga').value.replace(/\./g, '');
+          const hargaPack = parseFloat(rawHarga) || 0;
+          const isiPack = parseFloat(document.getElementById('inputPackingPPIsi').value) || 1;
+          const kapasitasKg = parseFloat(document.getElementById('inputPackingPPKg').value) || 1;
+          
+          const hargaLembar = hargaPack / isiPack;
+          costKgPP = hargaLembar / kapasitasKg;
+          
+          document.getElementById('dispPackingPPLembar').innerText = formatRupiah(hargaLembar);
+          document.getElementById('dispPackingPPKg').innerText = formatRupiah(costKgPP);
+        } else {
+          wrapPP.style.opacity = '0.4';
+          wrapPP.style.pointerEvents = 'none';
+          document.getElementById('dispPackingPPLembar').innerText = 'Rp 0';
+          document.getElementById('dispPackingPPKg').innerText = 'Rp 0';
+        }
+
+        // 2. Plastik HD
+        let costKgHD = 0;
+        const isHDActive = document.getElementById('togglePackingHD').checked;
+        const wrapHD = document.getElementById('wrapPackingHD');
+        
+        if (isHDActive) {
+          wrapHD.style.opacity = '1';
+          wrapHD.style.pointerEvents = 'auto';
+          
+          const rawHarga = document.getElementById('inputPackingHDHarga').value.replace(/\./g, '');
+          const hargaPack = parseFloat(rawHarga) || 0;
+          const isiPack = parseFloat(document.getElementById('inputPackingHDIsi').value) || 1;
+          const kapasitasKg = parseFloat(document.getElementById('inputPackingHDKg').value) || 1;
+          
+          const hargaLembar = hargaPack / isiPack;
+          costKgHD = hargaLembar / kapasitasKg;
+          
+          document.getElementById('dispPackingHDLembar').innerText = formatRupiah(hargaLembar);
+          document.getElementById('dispPackingHDKg').innerText = formatRupiah(costKgHD);
+        } else {
+          wrapHD.style.opacity = '0.4';
+          wrapHD.style.pointerEvents = 'none';
+          document.getElementById('dispPackingHDLembar').innerText = 'Rp 0';
+          document.getElementById('dispPackingHDKg').innerText = 'Rp 0';
+        }
+
+        // 3. Plastik Jinjing
+        let costKgJinjing = 0;
+        const isJinjingActive = document.getElementById('togglePackingJinjing').checked;
+        const wrapJinjing = document.getElementById('wrapPackingJinjing');
+        
+        if (isJinjingActive) {
+          wrapJinjing.style.opacity = '1';
+          wrapJinjing.style.pointerEvents = 'auto';
+          
+          const rawHarga = document.getElementById('inputPackingJinjingHarga').value.replace(/\./g, '');
+          const hargaPack = parseFloat(rawHarga) || 0;
+          const isiPack = parseFloat(document.getElementById('inputPackingJinjingIsi').value) || 1;
+          const kapasitasKg = parseFloat(document.getElementById('inputPackingJinjingKg').value) || 1;
+          
+          const hargaLembar = hargaPack / isiPack;
+          costKgJinjing = hargaLembar / kapasitasKg;
+          
+          document.getElementById('dispPackingJinjingLembar').innerText = formatRupiah(hargaLembar);
+          document.getElementById('dispPackingJinjingKg').innerText = formatRupiah(costKgJinjing);
+        } else {
+          wrapJinjing.style.opacity = '0.4';
+          wrapJinjing.style.pointerEvents = 'none';
+          document.getElementById('dispPackingJinjingLembar').innerText = 'Rp 0';
+          document.getElementById('dispPackingJinjingKg').innerText = 'Rp 0';
+        }
+
+        const kategori = document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : 'Drop Off/Kiloan';
+        const totalPackingKg = kategori === 'Self Service' ? 0 : (costKgPP + costKgHD + costKgJinjing);
+        
+        const elBiayaTotal = document.getElementById('displayBiayaPackingTotalKg');
+        if(elBiayaTotal) elBiayaTotal.innerText = formatRupiah(totalPackingKg);
+
+        if(typeof StateMachine !== 'undefined') StateMachine.updateMetric('packing', totalPackingKg);
+        else { window.hppDataState.packing = totalPackingKg; if(typeof updateHPPDashboard === 'function') updateHPPDashboard(); }
+      }, 50);
+    }
+
+    // --- FUNGSI TAB BAHAN BAKU ---
+    
+    function toggleBahanActive() {
+      const toggles = [
+        { id: 'toggleBahanDet', wrap: 'wrapDetMain' },
+        { id: 'toggleBahanSof', wrap: 'wrapSofMain' },
+        { id: 'toggleBahanPar', wrap: 'wrapParMain' },
+        { id: 'toggleBahanPel', wrap: 'wrapPelMain' }
+      ];
+      
+      toggles.forEach(t => {
+        const toggleEl = document.getElementById(t.id);
+        const wrapEl = document.getElementById(t.wrap);
+        if (toggleEl && wrapEl) {
+          if (toggleEl.checked) {
+            wrapEl.style.opacity = '1';
+            wrapEl.style.pointerEvents = 'auto';
+          } else {
+            wrapEl.style.opacity = '0.4';
+            wrapEl.style.pointerEvents = 'none';
+          }
+        }
+      });
+    }
+
+    function toggleBahanInputs() {
+      // [ZETTBOT REVISI: Mutlak Sembunyikan & Tampilkan via inline display untuk mencegah tabrakan specificity CSS]
+      const detType = document.getElementById('bahanDetType').value;
+      const wrapDetBulk = document.getElementById('wrapDetBulk');
+      const wrapDetSachet = document.getElementById('wrapDetSachet');
+      
+      if(wrapDetBulk) wrapDetBulk.style.display = 'none';
+      if(wrapDetSachet) wrapDetSachet.style.display = 'none';
+
+      if(detType === 'cair' || detType === 'bubuk') {
+        if(wrapDetBulk) wrapDetBulk.style.display = 'flex';
+        if(detType === 'cair') {
+          document.getElementById('lblDetKap1').innerText = 'Liter';
+          document.getElementById('lblDetKap2').innerText = 'Liter';
+          document.getElementById('lblDetSatuan').innerText = 'ml';
+          document.getElementById('lblDetPakai').innerText = 'ml';
+        } else {
+          document.getElementById('lblDetKap1').innerText = 'Kg';
+          document.getElementById('lblDetKap2').innerText = 'Kg';
+          document.getElementById('lblDetSatuan').innerText = 'gram';
+          document.getElementById('lblDetPakai').innerText = 'gram';
+        }
+      } else {
+        if(wrapDetSachet) wrapDetSachet.style.display = 'flex';
+      }
+
+      const sofType = document.getElementById('bahanSofType').value;
+      const wrapSofBulk = document.getElementById('wrapSofBulk');
+      const wrapSofSachet = document.getElementById('wrapSofSachet');
+      
+      if(wrapSofBulk) wrapSofBulk.style.display = 'none';
+      if(wrapSofSachet) wrapSofSachet.style.display = 'none';
+      
+      if(sofType === 'cair') {
+        if(wrapSofBulk) wrapSofBulk.style.display = 'flex';
+      } else {
+        if(wrapSofSachet) wrapSofSachet.style.display = 'flex';
+      }
+
+      const pelType = document.getElementById('bahanPelType').value;
+      const wrapPelBulk = document.getElementById('wrapPelBulk');
+      const wrapPelSachet = document.getElementById('wrapPelSachet');
+      
+      if(wrapPelBulk) wrapPelBulk.style.display = 'none';
+      if(wrapPelSachet) wrapPelSachet.style.display = 'none';
+      
+      if(pelType === 'cair') {
+        if(wrapPelBulk) wrapPelBulk.style.display = 'flex';
+      } else {
+        if(wrapPelSachet) wrapPelSachet.style.display = 'flex';
+      }
+    }
+
+    let bahanTimeout;
+    function calculateBahanBaku() {
+      clearTimeout(bahanTimeout);
+      bahanTimeout = setTimeout(() => {
+        const kategori = document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : 'Drop Off/Kiloan';
+        
+        // 1. Deterjen
+        let detCostKg = 0;
+        const isDetActive = document.getElementById('toggleBahanDet') ? document.getElementById('toggleBahanDet').checked : true;
+        
+        const detType = document.getElementById('bahanDetType').value;
+        if(detType === 'cair' || detType === 'bubuk') {
+          const rawHarga = document.getElementById('bahanDetHargaBulk').value.replace(/\./g, '');
+          const harga = parseFloat(rawHarga) || 0;
+          const kapasitas = parseFloat(document.getElementById('bahanDetKapasitasBulk').value) || 1; 
+          
+          const hargaSatuanBesar = harga / kapasitas; 
+          const hargaSatuanKecil = hargaSatuanBesar / 1000; 
+          
+          document.getElementById('dispDetHargaBesar').value = formatRupiah(hargaSatuanBesar);
+          document.getElementById('dispDetHargaKecil').value = formatRupiah(hargaSatuanKecil);
+
+          const pemakaian = parseFloat(document.getElementById('bahanDetPemakaian').value) || 0;
+          
+          if(isDetActive) detCostKg = hargaSatuanKecil * pemakaian;
+        } else {
+          const rawHarga = document.getElementById('bahanDetHargaSachet').value.replace(/\./g, '');
+          const harga = parseFloat(rawHarga) || 0;
+          const kapasitasKg = parseFloat(document.getElementById('bahanDetKapasitasSachet').value) || 1;
+          
+          if(isDetActive) detCostKg = harga / kapasitasKg;
+        }
+        document.getElementById('dispDetCostKg').innerText = formatRupiah(detCostKg);
+
+        // 2. Softener
+        let sofCostKg = 0;
+        const isSofActive = document.getElementById('toggleBahanSof') ? document.getElementById('toggleBahanSof').checked : true;
+        
+        const sofType = document.getElementById('bahanSofType').value;
+        if(sofType === 'cair') {
+          const rawHarga = document.getElementById('bahanSofHargaBulk').value.replace(/\./g, '');
+          const harga = parseFloat(rawHarga) || 0;
+          const kapasitas = parseFloat(document.getElementById('bahanSofKapasitasBulk').value) || 1;
+          
+          const hargaSatuanBesar = harga / kapasitas; 
+          const hargaSatuanKecil = hargaSatuanBesar / 1000; 
+          
+          document.getElementById('dispSofHargaBesar').value = formatRupiah(hargaSatuanBesar);
+          document.getElementById('dispSofHargaKecil').value = formatRupiah(hargaSatuanKecil);
+
+          const pemakaian = parseFloat(document.getElementById('bahanSofPemakaian').value) || 0;
+          
+          if(isSofActive) sofCostKg = hargaSatuanKecil * pemakaian;
+        } else {
+          const rawHarga = document.getElementById('bahanSofHargaSachet').value.replace(/\./g, '');
+          const harga = parseFloat(rawHarga) || 0;
+          const kapasitasKg = parseFloat(document.getElementById('bahanSofKapasitasSachet').value) || 1;
+          
+          if(isSofActive) sofCostKg = harga / kapasitasKg;
+        }
+        document.getElementById('dispSofCostKg').innerText = formatRupiah(sofCostKg);
+
+        // 3. Parfum
+        let parCostKg = 0;
+        const isParActive = document.getElementById('toggleBahanPar') ? document.getElementById('toggleBahanPar').checked : true;
+        
+        const rawHargaPar = document.getElementById('bahanParHargaBulk').value.replace(/\./g, '');
+        const hargaPar = parseFloat(rawHargaPar) || 0;
+        const kapasitasPar = parseFloat(document.getElementById('bahanParKapasitasBulk').value) || 1;
+        
+        const hargaParBesar = hargaPar / kapasitasPar;
+        const hargaParKecil = hargaParBesar / 1000;
+        
+        document.getElementById('dispParHargaBesar').value = formatRupiah(hargaParBesar);
+        document.getElementById('dispParHargaKecil').value = formatRupiah(hargaParKecil);
+
+        const pemakaianPar = parseFloat(document.getElementById('bahanParPemakaian').value) || 0;
+        
+        if(isParActive) parCostKg = hargaParKecil * pemakaianPar;
+        document.getElementById('dispParCostKg').innerText = formatRupiah(parCostKg);
+
+        // 4. Pelicin
+        let pelCostKg = 0;
+        const isSetrikaActive = document.getElementById('toggleSetrikaListrik') ? document.getElementById('toggleSetrikaListrik').checked : false;
+        const isPelActive = document.getElementById('toggleBahanPel') ? document.getElementById('toggleBahanPel').checked : true;
+
+        if(isSetrikaActive && kategori !== 'Self Service') {
+          const pelType = document.getElementById('bahanPelType').value;
+          if(pelType === 'cair') {
+            const rawHarga = document.getElementById('bahanPelHargaBulk').value.replace(/\./g, '');
+            const harga = parseFloat(rawHarga) || 0;
+            const kapasitas = parseFloat(document.getElementById('bahanPelKapasitasBulk').value) || 1;
+            
+            const hargaSatuanBesar = harga / kapasitas; 
+            const hargaSatuanKecil = hargaSatuanBesar / 1000; 
+            
+            document.getElementById('dispPelHargaBesar').value = formatRupiah(hargaSatuanBesar);
+            document.getElementById('dispPelHargaKecil').value = formatRupiah(hargaSatuanKecil);
+
+            const pemakaian = parseFloat(document.getElementById('bahanPelPemakaian').value) || 0;
+            
+            if(isPelActive) pelCostKg = hargaSatuanKecil * pemakaian;
+          } else {
+            const rawHarga = document.getElementById('bahanPelHargaSachet').value.replace(/\./g, '');
+            const harga = parseFloat(rawHarga) || 0;
+            const kapasitasKg = parseFloat(document.getElementById('bahanPelKapasitasSachet').value) || 1;
+            
+            if(isPelActive) pelCostKg = harga / kapasitasKg;
+          }
+        }
+        document.getElementById('dispPelCostKg').innerText = formatRupiah(pelCostKg);
+
+        // TOTAL BAHAN BAKU
+        let totalBahanKg = detCostKg + sofCostKg + parCostKg + pelCostKg;
+        if (kategori === 'Self Service') totalBahanKg = detCostKg + sofCostKg; // SS biasanya tak pakai parfum/pelicin
+        
+        const elBiayaTotal = document.getElementById('displayBiayaBahanTotalKg');
+        if(elBiayaTotal) elBiayaTotal.innerText = formatRupiah(totalBahanKg);
+
+        if(typeof StateMachine !== 'undefined') StateMachine.updateMetric('bahan', totalBahanKg);
+        else { window.hppDataState.bahan = totalBahanKg; if(typeof updateHPPDashboard === 'function') updateHPPDashboard(); }
+      }, 50);
+    }
+
+    // --- FUNGSI TAB NOTA ---
+    function toggleNotaInputs() {
+      const type = document.getElementById('notaType').value;
+      const pDigital = document.getElementById('panelNotaDigital');
+      const pManual = document.getElementById('panelNotaManual');
+
+      // [ZETTBOT REVISI: Override inline flex styles untuk memastikan hide/show berjalan sempurna]
+      if (pDigital) pDigital.style.display = 'none';
+      if (pManual) pManual.style.display = 'none';
+
+      if (type === 'digital') {
+        if(pDigital) pDigital.style.display = 'block';
+        
+        const feeType = document.getElementById('notaAppFeeType').value;
+        const wBulan = document.getElementById('wrapNotaAppBulan');
+        const wTrx = document.getElementById('wrapNotaAppTrx');
+        
+        if (wBulan) wBulan.style.display = 'none';
+        if (wTrx) wTrx.style.display = 'none';
+
+        if (feeType === 'bulan') {
+          if (wBulan) wBulan.style.display = 'block';
+        } else if (feeType === 'trx') {
+          if (wTrx) wTrx.style.display = 'block';
+        }
+      } else {
+        if (pManual) pManual.style.display = 'block';
+      }
+    }
+
+    let notaTimeout;
+    function calculateNota() {
+      clearTimeout(notaTimeout);
+      notaTimeout = setTimeout(() => {
+        const type = document.getElementById('notaType').value;
+        let costPerTrx = 0;
+
+        if (type === 'digital') {
+          const feeType = document.getElementById('notaAppFeeType').value;
+          let appCost = 0;
+
+          if (feeType === 'bulan') {
+            const rawHarga = document.getElementById('notaAppHargaBulan').value.replace(/\./g, '');
+            const hargaBulan = parseFloat(rawHarga) || 0;
+            const trxBulan = parseFloat(document.getElementById('notaAppTrxBulan').value) || 1;
+            appCost = hargaBulan / trxBulan;
+          } else if (feeType === 'trx') {
+            const rawHarga = document.getElementById('notaAppHargaTrx').value.replace(/\./g, '');
+            appCost = parseFloat(rawHarga) || 0;
+          }
+
+          const rawThermal = document.getElementById('notaThermalHarga').value.replace(/\./g, '');
+          const thermalCost = parseFloat(rawThermal) || 0;
+
+          costPerTrx = appCost + thermalCost;
+        } else {
+          const rawHarga = document.getElementById('notaManualHarga').value.replace(/\./g, '');
+          const hargaBuku = parseFloat(rawHarga) || 0;
+          const lembarTotal = parseFloat(document.getElementById('notaManualLembarTotal').value) || 1;
+          const lembarTrx = parseFloat(document.getElementById('notaManualLembarTrx').value) || 1;
+
+          const hargaPerLembar = hargaBuku / lembarTotal;
+          costPerTrx = hargaPerLembar * lembarTrx;
+        }
+
+        const rataKg = parseFloat(document.getElementById('notaRataKg').value) || 1;
+        const costPerKg = costPerTrx / rataKg;
+
+        document.getElementById('dispNotaCostTrx').innerText = formatRupiah(costPerTrx);
+        document.getElementById('dispNotaCostKg').innerText = formatRupiah(costPerKg);
+        
+        const elBiayaTotal = document.getElementById('displayBiayaNotaTotalKg');
+        if (elBiayaTotal) elBiayaTotal.innerText = formatRupiah(costPerKg);
+
+        if(typeof StateMachine !== 'undefined') StateMachine.updateMetric('nota', costPerKg);
+        else { window.hppDataState.nota = costPerKg; if(typeof updateHPPDashboard === 'function') updateHPPDashboard(); }
+      }, 50);
+    }
+</script>

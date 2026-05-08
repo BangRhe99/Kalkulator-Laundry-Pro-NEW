@@ -1,0 +1,1014 @@
+<script>
+/* ========================================================================
+ * [ZETTBOT EMERGENCY PATCH - DASHBOARD DATA & SIDEBAR CLICK]
+ * Scope: Client-side only. Tidak mengubah struktur HTML/CSS/database.
+ * ======================================================================== */
+(function () {
+  'use strict';
+
+  var CACHE_KEY = 'ZETT_MASTER_CACHE_V5';
+  var patchState = {
+    payload: null,
+    loading: false,
+    booted: false
+  };
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  function cleanNumber(value) {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'number') return isFinite(value) ? value : 0;
+    var s = String(value).replace(/[^0-9,.-]/g, '').replace(/\./g, '').replace(',', '.');
+    var n = parseFloat(s);
+    return isFinite(n) ? n : 0;
+  }
+
+  function money(value) {
+    if (typeof formatRupiah === 'function') return formatRupiah(cleanNumber(value));
+    return 'Rp ' + Math.round(cleanNumber(value)).toLocaleString('id-ID');
+  }
+
+  function setText(id, value) {
+    var el = $(id);
+    if (el) el.innerText = value;
+  }
+
+  function getPayloadFromMemory() {
+    if (patchState.payload && patchState.payload.status === 'success') return patchState.payload;
+
+    try {
+      if (typeof APP_STATE !== 'undefined' && APP_STATE && APP_STATE.data && APP_STATE.data.master && APP_STATE.data.master.status === 'success') {
+        patchState.payload = APP_STATE.data.master;
+        return patchState.payload;
+      }
+    } catch (e1) {}
+
+    try {
+      var cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        var parsed = JSON.parse(cached);
+        if (parsed && parsed.data && parsed.data.status === 'success') {
+          patchState.payload = parsed.data;
+          return patchState.payload;
+        }
+      }
+    } catch (e2) {
+      console.warn('[ZETTBOT PATCH] Cache lokal tidak valid:', e2);
+    }
+
+    return null;
+  }
+
+  function commitPayload(data) {
+    if (!data || data.status !== 'success') return false;
+
+    patchState.payload = data;
+
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        data: data,
+        expiry: Date.now() + 300000
+      }));
+    } catch (e) {
+      console.warn('[ZETTBOT PATCH] Gagal menulis cache:', e);
+    }
+
+    try {
+      if (typeof APP_STATE !== 'undefined' && APP_STATE && APP_STATE.data) APP_STATE.data.master = data;
+    } catch (e0) {}
+
+    try {
+      if (typeof masterDataCabang !== 'undefined') {
+        masterDataCabang = (data.kapasitas || []).map(function (item) {
+          item.namaOutlet = item.namaOutlet || item.namaLaundry || item['Nama Outlet'] || item['Nama Cabang/Outlet'] || 'Unknown';
+          return item;
+        });
+      }
+    } catch (e1) {}
+
+    try {
+      if (typeof masterDataHPP !== 'undefined') masterDataHPP = data.hpp || [];
+    } catch (e2) {}
+
+    try {
+      if (typeof dashboardRawData !== 'undefined') dashboardRawData = data.transactions || [];
+    } catch (e3) {}
+
+    try {
+      if (typeof hasLoadedInitialData !== 'undefined') hasLoadedInitialData = true;
+    } catch (e4) {}
+
+    return true;
+  }
+
+  function getOutlets() {
+    var payload = getPayloadFromMemory();
+    var list = [];
+
+    if (payload && Array.isArray(payload.kapasitas)) {
+      list = payload.kapasitas.map(function (item) {
+        var clone = {};
+        for (var key in item) clone[key] = item[key];
+        clone.namaOutlet = clone.namaOutlet || clone.namaLaundry || clone['Nama Outlet'] || clone['Nama Cabang/Outlet'] || 'Unknown';
+        return clone;
+      });
+    }
+
+    if (list.length === 0) {
+      try {
+        if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) {
+          list = masterDataCabang.map(function (item) {
+            item.namaOutlet = item.namaOutlet || item.namaLaundry || item['Nama Outlet'] || item['Nama Cabang/Outlet'] || 'Unknown';
+            return item;
+          });
+        }
+      } catch (e) {}
+    }
+
+    return list;
+  }
+
+  function getTransactions() {
+    var payload = getPayloadFromMemory();
+    if (payload && Array.isArray(payload.transactions)) return payload.transactions;
+    try {
+      if (typeof dashboardRawData !== 'undefined' && Array.isArray(dashboardRawData)) return dashboardRawData;
+    } catch (e) {}
+    return [];
+  }
+
+  function getSelectedOutletName() {
+    var v1 = $('v1-global-outlet');
+    var global = $('inputNamaHPP');
+    if (v1 && v1.value) return v1.value;
+    if (global && global.value) return global.value;
+    var outlets = getOutlets();
+    return outlets.length ? outlets[0].namaOutlet : '';
+  }
+
+  function syncSelectors(selectedName) {
+    var outlets = getOutlets();
+    var html = '';
+
+    if (outlets.length === 0) {
+      html = '<option value="">Belum ada data outlet</option>';
+    } else {
+      html = '<option value="">Pilih Cabang...</option>';
+      outlets.forEach(function (outlet) {
+        var name = outlet.namaOutlet || 'Unknown';
+        html += '<option value="' + String(name).replace(/"/g, '&quot;') + '">' + name + '</option>';
+      });
+    }
+
+    var selectIds = ['inputNamaHPP', 'v1-global-outlet'];
+    selectIds.forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      var current = selectedName || el.value || '';
+      el.innerHTML = html;
+      if (current) el.value = current;
+      if (!el.value && outlets.length > 0) el.value = outlets[0].namaOutlet;
+    });
+  }
+
+  function renderEmptyDashboard(message) {
+    setText('v1-val-margin', 'Rp 0');
+    setText('v1-sub-margin', message || 'Data belum tersedia');
+    setText('v1-val-vol', '0%');
+    setText('v1-sub-vol', 'Pencapaian target belum tersedia');
+    setText('v1-val-profit', 'Rp 0');
+    setText('v1-sub-profit', 'Estimasi belum tersedia');
+    setText('v1-gauge-pct', '0%');
+    setText('v1-donut-total', 'Rp 0');
+
+    var gauge = $('v1-gauge-path');
+    if (gauge) gauge.style.strokeDashoffset = '141.37';
+
+    var donut = $('v1-donut-el');
+    if (donut) donut.style.setProperty('--val-var', '0%');
+
+    var tbody = $('v1-table-body');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="4" style="padding:1rem; text-align:center; color:#64748b; font-weight:700;">' + (message || 'Data belum tersedia') + '</td></tr>';
+    }
+  }
+
+  window.renderSingleOutletDashboard = function () {
+    try {
+      var selected = getSelectedOutletName();
+      syncSelectors(selected);
+
+      if (!selected) {
+        renderEmptyDashboard('Silakan pilih outlet.');
+        return;
+      }
+
+      var transactions = getTransactions();
+      var row = null;
+      for (var i = 0; i < transactions.length; i++) {
+        var itemName = transactions[i].nama || transactions[i].namaOutlet || transactions[i].Nama_Outlet || transactions[i]['Nama Outlet'];
+        if (String(itemName || '').trim().toLowerCase() === String(selected).trim().toLowerCase()) {
+          row = transactions[i];
+          break;
+        }
+      }
+
+      if (!row) {
+        renderEmptyDashboard('Data BEP/HPP untuk outlet ini belum tersimpan.');
+        return;
+      }
+
+      var hpp = cleanNumber(row.hpp || row.HPP_Per_Kg || row.hppPerKg);
+      var bepKg = cleanNumber(row.bepKg || row.BEP_Kg);
+      var bepRupiah = cleanNumber(row.bepRupiah || row.BEP_Rupiah);
+      var biayaTetap = cleanNumber(row.biayaTetap || row.Biaya_Tetap);
+      var biayaVariabel = cleanNumber(row.biayaVariabel || row.Biaya_Variabel_Per_Kg || hpp);
+      var kapasitas = cleanNumber(row.kapasitas || row.Kapasitas_Per_Bulan);
+      var hargaAcuan = cleanNumber(row.hargaAcuan || row.Harga_Acuan_BEP);
+
+      var margin = hargaAcuan - hpp;
+      var achievement = bepKg > 0 ? Math.min((kapasitas / bepKg) * 100, 999) : 0;
+      var profit = (hargaAcuan * kapasitas) - (biayaVariabel * kapasitas) - biayaTetap;
+      var varPct = (biayaTetap + (biayaVariabel * Math.max(kapasitas, 1))) > 0 ? ((biayaVariabel * Math.max(kapasitas, 1)) / (biayaTetap + (biayaVariabel * Math.max(kapasitas, 1)))) * 100 : 0;
+
+      setText('v1-val-margin', money(margin));
+      setText('v1-sub-margin', margin >= 0 ? 'Margin positif / kg' : 'Margin negatif / kg');
+      setText('v1-val-vol', achievement.toFixed(0) + '%');
+      setText('v1-sub-vol', 'Kapasitas vs target BEP');
+      setText('v1-val-profit', money(profit));
+      setText('v1-sub-profit', profit >= 0 ? 'Estimasi laba bersih' : 'Estimasi defisit');
+      setText('v1-gauge-pct', achievement.toFixed(0) + '%');
+      setText('v1-donut-total', money(hpp));
+
+      var gauge = $('v1-gauge-path');
+      if (gauge) {
+        var offset = 141.37 - (141.37 * Math.min(achievement, 100) / 100);
+        gauge.style.strokeDashoffset = String(offset);
+        gauge.style.stroke = achievement >= 100 ? '#10b981' : '#6366f1';
+      }
+
+      var donut = $('v1-donut-el');
+      if (donut) donut.style.setProperty('--val-var', Math.max(0, Math.min(varPct, 100)).toFixed(1) + '%');
+
+      var tbody = $('v1-table-body');
+      if (tbody) {
+        tbody.innerHTML = '' +
+          '<tr><td>HPP / Kg</td><td class="td-right">' + money(hpp) + '</td><td class="td-right">-</td><td class="td-right">-</td></tr>' +
+          '<tr><td>Target BEP</td><td class="td-right">' + money(bepRupiah) + '</td><td class="td-right">' + bepKg.toLocaleString('id-ID') + ' Kg</td><td class="td-right">100%</td></tr>' +
+          '<tr><td>Kapasitas Bulanan</td><td class="td-right">-</td><td class="td-right">' + kapasitas.toLocaleString('id-ID') + ' Kg</td><td class="td-right">' + achievement.toFixed(1) + '%</td></tr>' +
+          '<tr><td>Estimasi Laba</td><td class="td-right">' + money(profit) + '</td><td class="td-right">-</td><td class="td-right">-</td></tr>';
+      }
+    } catch (error) {
+      console.error('[ZETTBOT PATCH] renderSingleOutletDashboard error:', error);
+      renderEmptyDashboard('Dashboard gagal dirender.');
+    }
+  };
+
+  window.toggleSidebar = function () {
+    var sidebar = $('sidebar');
+    var overlay = $('sidebarOverlay');
+    if (!sidebar) return;
+
+    sidebar.classList.toggle('-translate-x-full');
+    if (overlay) overlay.classList.toggle('hidden');
+  };
+
+  window.switchMainTab = function (tab) {
+    try {
+      var requestedTab = tab || 'dashboard';
+      var target = $('view-' + requestedTab);
+
+      // [ZETTBOT HOTFIX: SAFE NAVIGATION]
+      // Jangan sembunyikan view lama sebelum target benar-benar ditemukan.
+      // Kasus "Proyeksi ROI" belum memiliki view-roi di Index, sehingga sebelumnya layar bisa menjadi kosong.
+      if (!target) {
+        console.warn('[ZETTBOT PATCH] View tidak ditemukan:', 'view-' + requestedTab);
+        requestedTab = 'dashboard';
+        target = $('view-dashboard');
+        if (!target) return;
+      }
+
+      var views = document.querySelectorAll('.main-view');
+      for (var i = 0; i < views.length; i++) {
+        views[i].classList.add('hidden');
+        views[i].classList.remove('block');
+        views[i].style.display = 'none';
+      }
+
+      target.classList.remove('hidden');
+      target.classList.add('block');
+      target.style.display = 'block';
+      target.style.visibility = 'visible';
+      target.style.opacity = '1';
+
+      // [ZETTBOT HOTFIX: PROFIL OPERASIONAL]
+      // View kapasitas punya 2 layer internal: dashboard dan form.
+      // Pastikan minimal dashboard outlet tampil saat tab Profil Operasional dibuka.
+      if (requestedTab === 'kapasitas') {
+        var kapasitasDashboard = $('kapasitas-dashboard');
+        var kapasitasForm = $('kapasitas-form-container');
+
+        if (kapasitasDashboard) {
+          kapasitasDashboard.classList.remove('hidden');
+          kapasitasDashboard.style.display = 'flex';
+          kapasitasDashboard.style.visibility = 'visible';
+          kapasitasDashboard.style.opacity = '1';
+        }
+
+        if (kapasitasForm) {
+          kapasitasForm.classList.add('hidden');
+          kapasitasForm.style.display = 'none';
+        }
+
+        if (typeof applyCabangUIData === 'function') {
+          try { applyCabangUIData(); } catch(eApply) { console.error('[ZETTBOT PATCH] applyCabangUIData gagal:', eApply); }
+        }
+
+        if (typeof loadDaftarCabang === 'function') {
+          try { loadDaftarCabang(); } catch(eLoad) { console.error('[ZETTBOT PATCH] loadDaftarCabang gagal:', eLoad); }
+        }
+      }
+
+      var titleMap = {
+        dashboard: 'Dashboard Eksekutif',
+        kapasitas: 'Profil Operasional',
+        hpp: 'Struktur Biaya (HPP)',
+        harga: 'Katalog Layanan',
+        bep: 'Target Titik Impas',
+        roi: 'Proyeksi ROI'
+      };
+      setText('headerTitle', titleMap[requestedTab] || 'Dashboard Eksekutif');
+
+      var buttons = document.querySelectorAll('.nav-btn');
+      for (var j = 0; j < buttons.length; j++) {
+        buttons[j].classList.remove('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-indigo-900/30', 'text-white');
+        buttons[j].classList.add('text-slate-400');
+      }
+
+      var active = $('nav-' + requestedTab);
+      if (active) {
+        active.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-indigo-900/30', 'text-white');
+        active.classList.remove('text-slate-400');
+      }
+
+      var sidebar = $('sidebar');
+      var overlay = $('sidebarOverlay');
+      if (window.innerWidth < 768 && sidebar) sidebar.classList.add('-translate-x-full');
+      if (overlay) overlay.classList.add('hidden');
+
+      if (requestedTab === 'dashboard') window.renderSingleOutletDashboard();
+      if ((requestedTab === 'bep' || requestedTab === 'roi') && typeof calculateAll === 'function') calculateAll();
+      if (requestedTab === 'hpp' && typeof StateMachine !== 'undefined' && StateMachine.calculateTotal) StateMachine.calculateTotal();
+    } catch (error) {
+      console.error('[ZETTBOT PATCH] switchMainTab error:', error);
+    }
+  };
+
+  window.zettForceLoadDashboardData = function () {
+    var cached = getPayloadFromMemory();
+    if (cached) {
+      commitPayload(cached);
+      syncSelectors(getSelectedOutletName());
+      window.renderSingleOutletDashboard();
+    } else {
+      syncSelectors('');
+      renderEmptyDashboard('Mengambil data outlet dari server...');
+    }
+
+    if (patchState.loading) return;
+    if (!window.google || !google.script || !google.script.run) {
+      renderEmptyDashboard('google.script.run belum tersedia. Pastikan aplikasi dibuka dari deployment Apps Script.');
+      return;
+    }
+
+    patchState.loading = true;
+    google.script.run
+      .withSuccessHandler(function (data) {
+        patchState.loading = false;
+        if (data && data.status === 'success') {
+          commitPayload(data);
+          syncSelectors(getSelectedOutletName());
+          window.renderSingleOutletDashboard();
+        } else {
+          console.error('[ZETTBOT PATCH] Payload gagal:', data);
+          renderEmptyDashboard(data && data.message ? data.message : 'Server belum mengirim data.');
+        }
+      })
+      .withFailureHandler(function (err) {
+        patchState.loading = false;
+        console.error('[ZETTBOT PATCH] google.script.run gagal:', err);
+        renderEmptyDashboard((err && err.message) ? err.message : 'Gagal mengambil data dari server.');
+      })
+      .getZettBotInitialPayload();
+  };
+
+  window.loadDaftarCabang = function () {
+    window.zettForceLoadDashboardData();
+  };
+
+  function bootPatch() {
+    if (patchState.booted) return;
+    patchState.booted = true;
+
+    syncSelectors(getSelectedOutletName());
+    window.renderSingleOutletDashboard();
+    window.zettForceLoadDashboardData();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootPatch);
+  } else {
+    setTimeout(bootPatch, 0);
+  }
+})();
+/* ======================= END ZETTBOT EMERGENCY PATCH ======================= */
+
+
+    /**
+     * ==========================================
+     * FRONT-END LOGIC: CALCULATIONS & TRANSACTIONS
+     * Fase: Ultra-Performance (Debounce Engine & SPA Aggregation)
+     * ==========================================
+     */
+
+    let state = { hpp: 0, bepKg: 0, bepRupiah: 0, hargaJualAcuan: 0 };
+
+    function calculateMarginDashboard() {
+      const hpp = state.hpp;
+      if(document.getElementById('dashHPP')) {
+          document.getElementById('dashHPP').innerText = formatRupiah(hpp);
+      }
+
+      const cards = ['cs', 'cl', 'c', 'ss']; 
+      
+      cards.forEach(prefix => {
+        for (let i = 1; i <= 3; i++) {
+          const elPrice = document.getElementById(`${prefix}_price_${i}`);
+          if (!elPrice) continue;
+          
+          const rawPrice = elPrice.value.replace(/\./g, '');
+          const price = parseFloat(rawPrice) || 0;
+          const margin = price - hpp;
+          
+          const elMargin = document.getElementById(`${prefix}_margin_${i}`);
+          if (elMargin) {
+              elMargin.innerText = formatRupiah(margin);
+              
+              if (margin > 0) {
+                elMargin.className = "text-sm font-black text-emerald-500 tabular-nums [font-feature-settings:'tnum']";
+              } else {
+                elMargin.className = "text-sm font-black text-rose-500 tabular-nums [font-feature-settings:'tnum']";
+              }
+          }
+        }
+      });
+    }
+
+    let myBepChart = null;
+    function updateBEPChart(fixedCost, variableCost, price, bepKg, maxKg) {
+      try {
+        const canvas = document.getElementById('bepChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        if (price <= variableCost || price === 0 || !isFinite(bepKg) || bepKg < 0) {
+            if (myBepChart) {
+                myBepChart.destroy();
+                myBepChart = null;
+            }
+            return;
+        }
+
+        let maxLimit = Math.max(bepKg * 1.5, maxKg || 100);
+        
+        const labels = [
+          0, 
+          Math.round(bepKg * 0.5), 
+          Math.round(bepKg), 
+          Math.round(bepKg * 1.25), 
+          Math.round(maxLimit)
+        ];
+        
+        const dataFixedCost = labels.map(() => fixedCost);
+        const dataTotalCost = labels.map(kg => fixedCost + (variableCost * kg));
+        const dataRevenue = labels.map(kg => price * kg);
+
+        if (myBepChart) {
+            myBepChart.data.labels = labels;
+            myBepChart.data.datasets[0].data = dataRevenue;
+            myBepChart.data.datasets[1].data = dataTotalCost;
+            myBepChart.data.datasets[2].data = dataFixedCost;
+            myBepChart.update();
+        } else {
+            myBepChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Pendapatan (Revenue)',
+                            data: dataRevenue,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Total Biaya (Total Cost)',
+                            data: dataTotalCost,
+                            borderColor: '#f43f5e',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Biaya Tetap (Fixed Cost)',
+                            data: dataFixedCost,
+                            borderColor: '#64748b',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            tension: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    animation: {
+                        duration: 400 // Fast animation for better UX during rapid typing
+                    },
+                    plugins: {
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleFont: { size: 13 },
+                            bodyFont: { size: 13 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { weight: 'bold' } } }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Volume Cucian (Kg)', font: { weight: 'bold' } }, grid: { display: false } },
+                        y: {
+                            title: { display: true, text: 'Nominal Rupiah (Rp)', font: { weight: 'bold' } },
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Rp ' + new Intl.NumberFormat('id-ID', {notation: "compact", compactDisplay: "short"}).format(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+      } catch (e) {
+          console.error("Gagal merender grafik BEP:", e);
+      }
+    }
+
+    function updateTargetPenjualanTable(biayaTetap, biayaVariabel, operasionalHari, mingguTutup) {
+      const tbody = document.getElementById('tableTargetBEP');
+      if(!tbody) return;
+      
+      const tipeLaundry = document.getElementById('bepTipeLaundry') ? document.getElementById('bepTipeLaundry').value : 'kg';
+      const satuan = tipeLaundry === 'load' ? 'Load' : 'Kg';
+      
+      let washerKg = 1;
+      document.querySelectorAll('.input-mesin-cuci').forEach((el, index) => {
+        if(index === 0) washerKg = parseFloat(el.querySelector('.m-kg').value) || 1;
+      });
+      if(washerKg <= 0) washerKg = 1;
+
+      const hariPerMinggu = mingguTutup ? 6 : 7;
+
+      const layananList = [
+          { id: 'cs_price_1', name: 'Cuci Setrika' },
+          { id: 'cl_price_1', name: 'Cuci Lipat' },
+          { id: 'c_price_1', name: 'Cuci Saja' },
+          { id: 'ss_price_1', name: 'Setrika Saja' }
+      ];
+
+      let html = '';
+
+      layananList.forEach(layanan => {
+          const el = document.getElementById(layanan.id);
+          let harga = 0;
+          if(el) harga = parseFloat(el.value.replace(/\./g, '')) || 0;
+
+          const margin = harga - biayaVariabel;
+          let bepQtyBulan = 0;
+          let bepOmset = 0;
+
+          if (margin > 0) {
+              bepQtyBulan = biayaTetap / margin;
+              bepOmset = bepQtyBulan * harga;
+          }
+
+          let displayQtyBulan = bepQtyBulan;
+          if (tipeLaundry === 'load') displayQtyBulan = bepQtyBulan / washerKg;
+
+          let targetBulan = margin > 0 ? displayQtyBulan : 0;
+          let targetHari = margin > 0 ? (displayQtyBulan / operasionalHari) : 0;
+          let targetMinggu = targetHari * hariPerMinggu;
+
+          let rowClass = margin > 0 ? "" : "bg-rose-50";
+          let warningText = margin > 0 ? "" : `<span class="text-[10px] text-rose-500 font-semibold block mt-0.5"><i class="ph ph-warning-circle"></i> Harga terlalu murah (Rugi)</span>`;
+
+          html += `
+          <tr class="${rowClass} hover:bg-indigo-50/50 transition-colors group">
+            <td class="p-4">
+              <span class="font-black text-slate-700 block">${layanan.name}</span>
+              ${warningText}
+            </td>
+            <td class="p-4 text-right">
+              <span class="bg-white text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-100 font-black text-sm group-hover:bg-indigo-100 transition-colors shadow-sm">${formatRupiah(bepOmset)}</span>
+            </td>
+            <td class="p-4 text-right">
+              <div class="font-black text-slate-700 text-base">${targetBulan.toFixed(1)} <span class="text-[10px] text-slate-400 font-bold tracking-widest uppercase ml-1">${satuan}</span></div>
+            </td>
+            <td class="p-4 text-right">
+              <div class="font-black text-slate-700 text-base">${targetMinggu.toFixed(1)} <span class="text-[10px] text-slate-400 font-bold tracking-widest uppercase ml-1">${satuan}</span></div>
+            </td>
+            <td class="p-4 text-right bg-indigo-50/50 border-l border-indigo-100/50">
+              <div class="font-black text-indigo-600 text-lg">${targetHari.toFixed(1)} <span class="text-[10px] text-indigo-400 font-bold tracking-widest uppercase ml-1">${satuan}</span></div>
+            </td>
+          </tr>
+          `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // [ZETTBOT REVISI: IN-MEMORY BATCH INITIALIZATION (No Timeouts/Lags)]
+    async function initZettBotApp() {
+      try { if(typeof injectSearchIcon === 'function') injectSearchIcon(); } catch(e){ console.error(e); }
+      try { if(typeof addKaryawan === 'function') addKaryawan(); } catch(e){ console.error(e); }
+      try { 
+          if(typeof addMesin === 'function') {
+              addMesin('cuci');
+              addMesin('pengering');
+              addMesin('setrika'); 
+          }
+      } catch(e){ console.error(e); }
+      
+      // Sequencing Async Data Loaders murni dari 1x Payload
+      try { if(typeof loadDaftarCabang === "function") await loadDaftarCabang(); } catch(e){ console.error(e); }
+      try { if(typeof loadData === "function") await loadData(); } catch(e){ console.error("loadData error:", e); }
+      
+      try { if(typeof toggleKategoriLaundry === "function") toggleKategoriLaundry(); } catch(e){ console.error(e); }
+      try { if(typeof toggleAirInputs === "function") toggleAirInputs(); } catch(e){ console.error(e); }
+      try { if(typeof toggleBahanInputs === "function") toggleBahanInputs(); } catch(e){ console.error(e); }
+      try { if(typeof togglePelicinVisibility === "function") togglePelicinVisibility(); } catch(e){ console.error(e); }
+      try { if(typeof toggleNotaInputs === "function") toggleNotaInputs(); } catch(e){ console.error(e); }
+      try { if(typeof calculatePacking === "function") calculatePacking(); } catch(e){ console.error(e); }
+      try { if(typeof calculateBahanBaku === "function") calculateBahanBaku(); } catch(e){ console.error(e); }
+      try { if(typeof calculateNota === "function") calculateNota(); } catch(e){ console.error(e); }
+      
+      try { calculateAll(); } catch(e){ console.error("calculateAll error:", e); }
+      try { if(typeof toggleActionButtons === "function") toggleActionButtons(); } catch(e){ console.error(e); }
+
+      if (typeof renderSingleOutletDashboard === 'function') {
+          renderSingleOutletDashboard();
+      }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initZettBotApp);
+    } else {
+        initZettBotApp();
+    }
+
+    // [ZETTBOT REVISI: DEBOUNCED MASTER CALCULATION]
+    // Mencegah frame-drop atau freezing pada chart saat user mengetik cepat
+    let calcAllTimeout;
+    function calculateAll() {
+      clearTimeout(calcAllTimeout);
+      calcAllTimeout = setTimeout(() => {
+          _coreCalculateAll();
+      }, 80);
+    }
+
+    function _coreCalculateAll() {
+      try {
+        isKapasitasSaved = false; 
+        if(typeof toggleActionButtons === "function") toggleActionButtons();
+        
+        let operasionalMenitPerHari = 0;
+        const jamBuka = document.getElementById('inputJamBuka') ? document.getElementById('inputJamBuka').value : '';
+        const jamTutup = document.getElementById('inputJamTutup') ? document.getElementById('inputJamTutup').value : '';
+        
+        if(jamBuka && jamBuka.length === 5 && jamTutup && jamTutup.length === 5) {
+          const [bukaH, bukaM] = jamBuka.split(':').map(Number);
+          const [tutupH, tutupM] = jamTutup.split(':').map(Number);
+          
+          if(!isNaN(bukaH) && !isNaN(bukaM) && !isNaN(tutupH) && !isNaN(tutupM)) {
+              let menitBuka = bukaH * 60 + bukaM;
+              let menitTutup = tutupH * 60 + tutupM;
+              
+              if (menitTutup < menitBuka) menitTutup += 24 * 60; 
+              operasionalMenitPerHari = menitTutup - menitBuka;
+              
+              const durasiJam = Math.floor(operasionalMenitPerHari / 60);
+              const durasiMenit = operasionalMenitPerHari % 60;
+              if(document.getElementById('displayDurasi')) document.getElementById('displayDurasi').innerText = `${durasiJam} Jam ${durasiMenit} Menit`;
+          } else {
+              if(document.getElementById('displayDurasi')) document.getElementById('displayDurasi').innerText = `- Jam - Menit`;
+          }
+        } else {
+          if(document.getElementById('displayDurasi')) document.getElementById('displayDurasi').innerText = `- Jam - Menit`;
+        }
+
+        const mingguTutup = document.getElementById('inputMingguTutup') ? document.getElementById('inputMingguTutup').checked : false;
+        const operasionalHariPerBulan = mingguTutup ? 26 : 30;
+        if(document.getElementById('displayHariOperasional')) document.getElementById('displayHariOperasional').innerText = operasionalHariPerBulan;
+
+        const sewaTahunRaw = document.getElementById('inputSewaTahun') ? document.getElementById('inputSewaTahun').value.replace(/\./g, '') : '0';
+        const sewaTahun = parseFloat(sewaTahunRaw) || 0;
+        const totalSewaBulan = sewaTahun / 12;
+        const sewaHari = totalSewaBulan / operasionalHariPerBulan;
+        
+        if(document.getElementById('displaySewaBulan')) document.getElementById('displaySewaBulan').innerText = formatRupiah(totalSewaBulan);
+        if(document.getElementById('displaySewaHari')) document.getElementById('displaySewaHari').innerText = formatRupiah(sewaHari);
+
+        let totalGaji = 0;
+        document.querySelectorAll('.input-gaji').forEach(input => {
+            totalGaji += parseFloat(input.value) || 0;
+        });
+        if(document.getElementById('displayTotalGaji')) document.getElementById('displayTotalGaji').innerText = formatRupiah(totalGaji);
+
+        const targetOkupansiCuci = parseFloat(document.getElementById('inputOkupansiCuci') ? document.getElementById('inputOkupansiCuci').value : 100) || 100;
+        const targetOkupansiKering = parseFloat(document.getElementById('inputOkupansiKering') ? document.getElementById('inputOkupansiKering').value : 100) || 100;
+        const targetOkupansiSetrika = parseFloat(document.getElementById('inputOkupansiSetrika') ? document.getElementById('inputOkupansiSetrika').value : 100) || 100;
+
+        let totalCuciLoadHari = 0;
+        let totalCuciKgHari = 0;
+        let totalKeringLoadHari = 0;
+        let totalKeringKgHari = 0;
+        let totalSetrikaKgHari = 0;
+
+        document.querySelectorAll('.input-mesin-cuci').forEach(row => {
+            const unit = parseFloat(row.querySelector('.m-unit').value) || 0;
+            const durasi = parseFloat(row.querySelector('.m-durasi').value) || 0;
+            const kg = parseFloat(row.querySelector('.m-kg').value) || 0;
+
+            if (durasi > 0 && operasionalMenitPerHari > 0) {
+                const siklusMaksimalPerMesin = Math.floor(operasionalMenitPerHari / durasi);
+                const totalSiklusSemuaUnit = siklusMaksimalPerMesin * unit;
+                totalCuciLoadHari += totalSiklusSemuaUnit;
+                totalCuciKgHari += (totalSiklusSemuaUnit * kg);
+            }
+        });
+        
+        document.querySelectorAll('.input-mesin-pengering').forEach(row => {
+            const unit = parseFloat(row.querySelector('.m-unit').value) || 0;
+            const durasi = parseFloat(row.querySelector('.m-durasi').value) || 0;
+            const kg = parseFloat(row.querySelector('.m-kg').value) || 0;
+
+            if (durasi > 0 && operasionalMenitPerHari > 0) {
+                const siklusMaksimalPerMesin = Math.floor(operasionalMenitPerHari / durasi);
+                const totalSiklusSemuaUnit = siklusMaksimalPerMesin * unit;
+                totalKeringLoadHari += totalSiklusSemuaUnit;
+                totalKeringKgHari += (totalSiklusSemuaUnit * kg);
+            }
+        });
+
+        document.querySelectorAll('.input-mesin-setrika').forEach(row => {
+            const unit = parseFloat(row.querySelector('.m-unit').value) || 0;
+            const durasi = parseFloat(row.querySelector('.m-durasi').value) || 0;
+            const kg = parseFloat(row.querySelector('.m-kg').value) || 0;
+
+            if (durasi > 0 && operasionalMenitPerHari > 0) {
+                const siklusMaksimalPerMesin = Math.floor(operasionalMenitPerHari / durasi);
+                totalSetrikaKgHari += (siklusMaksimalPerMesin * unit * kg);
+            }
+        });
+
+        const estimasiCuciLoadHari = Math.floor(totalCuciLoadHari * (targetOkupansiCuci / 100));
+        const estimasiCuciKgHari = totalCuciKgHari * (targetOkupansiCuci / 100);
+        const estimasiCuciKgBulan = estimasiCuciKgHari * operasionalHariPerBulan;
+
+        const estimasiKeringLoadHari = Math.floor(totalKeringLoadHari * (targetOkupansiKering / 100));
+        const estimasiKeringKgHari = totalKeringKgHari * (targetOkupansiKering / 100);
+        const estimasiKeringKgBulan = estimasiKeringKgHari * operasionalHariPerBulan;
+        
+        const estimasiSetrikaKgHari = totalSetrikaKgHari * (targetOkupansiSetrika / 100);
+        const estimasiSetrikaKgBulan = estimasiSetrikaKgHari * operasionalHariPerBulan;
+
+        const hariPerMinggu = mingguTutup ? 6 : 7;
+        
+        const estimasiCuciKgMinggu = estimasiCuciKgHari * hariPerMinggu;
+        const estimasiKeringKgMinggu = estimasiKeringKgHari * hariPerMinggu;
+        const estimasiSetrikaKgMinggu = estimasiSetrikaKgHari * hariPerMinggu;
+        
+        const estimasiCuciLoadMinggu = estimasiCuciLoadHari * hariPerMinggu;
+        const estimasiCuciLoadBulan = estimasiCuciLoadHari * operasionalHariPerBulan;
+        const estimasiKeringLoadMinggu = estimasiKeringLoadHari * hariPerMinggu;
+        const estimasiKeringLoadBulan = estimasiKeringLoadHari * operasionalHariPerBulan;
+
+        const isSelfService = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service';
+        const unitText = isSelfService ? 'Load' : 'Kg';
+
+        const arrLabels = ['lblCuciHari', 'lblCuciMinggu', 'lblCuciBulan', 'lblKeringHari', 'lblKeringMinggu', 'lblKeringBulan', 'lblSetrikaHari', 'lblSetrikaMinggu', 'lblSetrikaBulan'];
+        arrLabels.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                let period = id.includes('Hari') ? 'Hari' : (id.includes('Minggu') ? 'Minggu' : 'Bulan');
+                el.innerText = `${unitText}/${period}:`;
+            }
+        });
+
+        if(document.getElementById('rowCuciLoadHari')) document.getElementById('rowCuciLoadHari').style.display = isSelfService ? 'none' : 'flex';
+        if(document.getElementById('rowKeringLoadHari')) document.getElementById('rowKeringLoadHari').style.display = isSelfService ? 'none' : 'flex';
+
+        if(document.getElementById('dispCuciLoadHari')) document.getElementById('dispCuciLoadHari').innerText = estimasiCuciLoadHari;
+        if(document.getElementById('dispCuciKgHari')) document.getElementById('dispCuciKgHari').innerText = isSelfService ? (estimasiCuciLoadHari + ' ' + unitText) : (estimasiCuciKgHari.toFixed(1) + ' ' + unitText);
+        if(document.getElementById('dispCuciKgMinggu')) document.getElementById('dispCuciKgMinggu').innerText = isSelfService ? (estimasiCuciLoadMinggu + ' ' + unitText) : (estimasiCuciKgMinggu.toFixed(1) + ' ' + unitText);
+        if(document.getElementById('dispCuciKgBulan')) document.getElementById('dispCuciKgBulan').innerText = isSelfService ? (estimasiCuciLoadBulan + ' ' + unitText) : (estimasiCuciKgBulan.toFixed(1) + ' ' + unitText);
+
+        if(document.getElementById('dispKeringLoadHari')) document.getElementById('dispKeringLoadHari').innerText = estimasiKeringLoadHari;
+        if(document.getElementById('dispKeringKgHari')) document.getElementById('dispKeringKgHari').innerText = isSelfService ? (estimasiKeringLoadHari + ' ' + unitText) : (estimasiKeringKgHari.toFixed(1) + ' ' + unitText);
+        if(document.getElementById('dispKeringKgMinggu')) document.getElementById('dispKeringKgMinggu').innerText = isSelfService ? (estimasiKeringLoadMinggu + ' ' + unitText) : (estimasiKeringKgMinggu.toFixed(1) + ' ' + unitText);
+        if(document.getElementById('dispKeringKgBulan')) document.getElementById('dispKeringKgBulan').innerText = isSelfService ? (estimasiKeringLoadBulan + ' ' + unitText) : (estimasiKeringKgBulan.toFixed(1) + ' ' + unitText);
+
+        if(document.getElementById('dispSetrikaKgHari')) document.getElementById('dispSetrikaKgHari').innerText = estimasiSetrikaKgHari.toFixed(1) + ' ' + unitText;
+        if(document.getElementById('dispSetrikaKgMinggu')) document.getElementById('dispSetrikaKgMinggu').innerText = estimasiSetrikaKgMinggu.toFixed(1) + ' ' + unitText;
+        if(document.getElementById('dispSetrikaKgBulan')) document.getElementById('dispSetrikaKgBulan').innerText = estimasiSetrikaKgBulan.toFixed(1) + ' ' + unitText;
+
+        const GRAND_TOTAL_KAPASITAS_BULAN = estimasiCuciKgBulan;
+        
+        const biayaTetapLain = parseFloat(document.getElementById('inputBiayaTetapLain') ? document.getElementById('inputBiayaTetapLain').value : 0) || 0;
+        const GRAND_TOTAL_BIAYA_TETAP = totalSewaBulan + totalGaji + biayaTetapLain;
+        
+        if(document.getElementById('hiddenTotalBiayaTetap')) document.getElementById('hiddenTotalBiayaTetap').value = GRAND_TOTAL_BIAYA_TETAP;
+        if(document.getElementById('hiddenTotalKapasitasBulan')) document.getElementById('hiddenTotalKapasitasBulan').value = GRAND_TOTAL_KAPASITAS_BULAN;
+
+        const biayaVariabel = parseFloat(document.getElementById('inputBiayaVariabel') ? document.getElementById('inputBiayaVariabel').value : 0) || 0;
+
+        if (GRAND_TOTAL_KAPASITAS_BULAN > 0) {
+          state.hpp = (GRAND_TOTAL_BIAYA_TETAP / GRAND_TOTAL_KAPASITAS_BULAN) + biayaVariabel;
+        } else {
+          state.hpp = 0;
+        }
+
+        calculateMarginDashboard();
+
+        const bepRefId = document.getElementById('bepReference') ? document.getElementById('bepReference').value : '';
+        let refPrice = 0;
+        if (bepRefId && document.getElementById(bepRefId)) {
+          const rawRefPrice = document.getElementById(bepRefId).value.replace(/\./g, '');
+          refPrice = parseFloat(rawRefPrice) || 0;
+        }
+        
+        state.hargaJualAcuan = refPrice;
+        if(document.getElementById('hiddenHargaJualAcuan')) document.getElementById('hiddenHargaJualAcuan').value = state.hargaJualAcuan;
+
+        const statusText = document.getElementById('displayStatusMargin');
+        const marginKontribusi = refPrice - biayaVariabel;
+        
+        if (marginKontribusi > 0) {
+          state.bepKg = GRAND_TOTAL_BIAYA_TETAP / marginKontribusi;
+          state.bepRupiah = state.bepKg * refPrice;
+          
+          if(statusText) {
+            statusText.innerText = `*BEP dihitung dinamis menggunakan Harga Acuan: ${formatRupiah(refPrice)}`;
+            statusText.classList.remove('text-rose-500');
+            statusText.classList.add('text-indigo-600/70');
+          }
+        } else if (refPrice > 0 && marginKontribusi <= 0) {
+          state.bepKg = 0;
+          state.bepRupiah = 0;
+          if(statusText) {
+            statusText.innerText = "⚠️ Harga Acuan BEP Anda terlalu murah (Lebih rendah dari Biaya Variabel). Anda akan rugi terus!";
+            statusText.classList.remove('text-indigo-600/70');
+            statusText.classList.add('text-rose-500', 'font-bold');
+          }
+        } else {
+          state.bepKg = 0;
+          state.bepRupiah = 0;
+          if(statusText) statusText.innerText = "*Pilih Target Acuan BEP yang valid.";
+        }
+
+        if(document.getElementById('displayBEPKg')) document.getElementById('displayBEPKg').innerText = state.bepKg.toFixed(1) + ' Kg';
+        if(document.getElementById('displayBEPRupiah')) document.getElementById('displayBEPRupiah').innerText = formatRupiah(state.bepRupiah);
+        
+        updateBEPChart(GRAND_TOTAL_BIAYA_TETAP, biayaVariabel, refPrice, state.bepKg, GRAND_TOTAL_KAPASITAS_BULAN);
+        updateTargetPenjualanTable(GRAND_TOTAL_BIAYA_TETAP, biayaVariabel, operasionalHariPerBulan, mingguTutup);
+        
+        const omsetBulan = GRAND_TOTAL_KAPASITAS_BULAN * refPrice;
+        const totalBiayaBulan = GRAND_TOTAL_BIAYA_TETAP + (GRAND_TOTAL_KAPASITAS_BULAN * biayaVariabel);
+        const labaBersihBulan = omsetBulan - totalBiayaBulan;
+
+        let modalAwalRaw = '0';
+        if (document.getElementById('inputModalAwal')) {
+            modalAwalRaw = document.getElementById('inputModalAwal').value.replace(/\./g, '');
+        }
+        const modalAwal = parseFloat(modalAwalRaw) || 0;
+
+        if (document.getElementById('dispRoiModal')) {
+            document.getElementById('dispRoiModal').innerText = formatRupiah(modalAwal);
+            document.getElementById('dispRoiLaba').innerText = formatRupiah(labaBersihBulan);
+
+            if (labaBersihBulan > 0 && modalAwal > 0) {
+                const bulanBalikModal = modalAwal / labaBersihBulan;
+                const totalBulan = Math.ceil(bulanBalikModal); 
+                
+                const tahun = Math.floor(totalBulan / 12);
+                const sisaBulan = totalBulan % 12;
+
+                document.getElementById('dispRoiWaktu').innerText = `${totalBulan} Bulan`;
+                
+                let textTahun = "";
+                if (tahun > 0) {
+                    textTahun = `${tahun} Tahun`;
+                    if (sisaBulan > 0) textTahun += ` ${sisaBulan} Bulan`;
+                } else {
+                    textTahun = `< 1 Tahun`;
+                }
+
+                document.getElementById('dispRoiTahun').innerText = textTahun;
+            } else if (labaBersihBulan <= 0) {
+                document.getElementById('dispRoiWaktu').innerText = "Rugi";
+                document.getElementById('dispRoiTahun').innerText = "Tidak Balik Modal";
+            } else {
+                document.getElementById('dispRoiWaktu').innerText = "- Bulan";
+                document.getElementById('dispRoiTahun').innerText = "-";
+            }
+        }
+      } catch (e) {
+         console.error('Error saat calculateAll: ', e);
+      }
+    }
+
+    async function prosesSimpanBEP_JS3_DISABLED_DUPLICATE() {
+      if(!acquireLock()) return;
+      const btn = document.getElementById('btnSubmit');
+      
+      const selectHPP = document.getElementById('inputNamaHPP');
+      if (!selectHPP || !selectHPP.value) {
+          showOmniToast('Pilih cabang terlebih dahulu di pojok kanan atas.', 'error');
+          releaseLock();
+          return;
+      }
+      
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-2xl"></i> Menyimpan...';
+      btn.classList.add('opacity-80', 'pointer-events-none', 'scale-95');
+
+      try {
+        const payload = {
+          namaOutlet: selectHPP.value,
+          jamOperasional: document.getElementById('inputJamBuka').value + " - " + document.getElementById('inputJamTutup').value,
+          biayaTetap: parseFloat(document.getElementById('hiddenTotalBiayaTetap').value) || 0,
+          biayaVariabel: parseFloat(document.getElementById('inputBiayaVariabel').value.replace(/\./g, '')) || 0,
+          kapasitas: parseFloat(document.getElementById('hiddenTotalKapasitasBulan').value) || 0,
+          hpp: state.hpp,
+          hargaJualAcuan: state.hargaJualAcuan,
+          bepKg: state.bepKg,
+          bepRupiah: state.bepRupiah,
+          cuciSetrika: parseFloat(document.getElementById('cs_price_1').value.replace(/\./g, '')) || 0,
+          cuciLipat: parseFloat(document.getElementById('cl_price_1').value.replace(/\./g, '')) || 0,
+          cuciSaja: parseFloat(document.getElementById('c_price_1').value.replace(/\./g, '')) || 0,
+          setrikaSaja: parseFloat(document.getElementById('ss_price_1').value.replace(/\./g, '')) || 0
+        };
+
+        const res = await runServer('saveTransaction', payload);
+        hasLoadedInitialData = false; 
+
+        btn.innerHTML = '<i class="ph ph-check-circle text-2xl"></i> Tersimpan!';
+        btn.classList.replace('from-blue-600', 'from-emerald-500');
+        btn.classList.replace('to-indigo-600', 'to-teal-500');
+        showOmniToast(res.message, 'success');
+        
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.classList.remove('opacity-80', 'pointer-events-none', 'scale-95');
+          btn.classList.replace('from-emerald-500', 'from-blue-600');
+          btn.classList.replace('to-teal-500', 'to-indigo-600');
+          loadData(); 
+          switchMainTab('dashboard'); 
+          releaseLock();
+        }, 1500);
+
+      } catch (error) {
+        btn.innerHTML = originalText;
+        btn.classList.remove('opacity-80', 'pointer-events-none', 'scale-95');
+        showOmniToast(error.message, 'error');
+        releaseLock();
+      }
+    }
+</script>

@@ -1,0 +1,499 @@
+<!-- ================= VIEW DASHBOARD UTAMA (PURE VANILLA CSS) ================= -->
+<style id="vanilla-fintech-css">
+  /* * ZETTBOT ELITE FINTECH ARCHITECTURE
+   * Murni CSS Vanilla, CSS Math Functions, Variables & Grid
+   * DILARANG MENGGUNAKAN TAILWIND DI AREA INI 
+   */
+  
+  :root {
+    --fin-bg: #f8fafc;
+    --fin-surface: rgba(255, 255, 255, 0.9);
+    --fin-surface-solid: #ffffff;
+    --fin-border: rgba(226, 232, 240, 0.8);
+    --fin-border-strong: #e2e8f0;
+    --fin-text-main: #0f172a;
+    --fin-text-muted: #475569; /* WCAG AAA Contrast (Digelapkan dari #64748b) */
+    --fin-text-light: #94a3b8;
+    
+    /* Semantic Colors */
+    --fin-emerald: #10b981;
+    --fin-emerald-bg: rgba(16, 185, 129, 0.1);
+    --fin-rose: #f43f5e;
+    --fin-rose-bg: rgba(244, 63, 94, 0.1);
+    --fin-indigo: #6366f1;
+    --fin-indigo-bg: rgba(99, 102, 241, 0.1);
+    --fin-amber: #f59e0b;
+    
+    /* Shadows & Effects (Hyper-Premium Layered Soft Shadows) */
+    --fin-shadow-sm: 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --fin-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --fin-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    --fin-shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  }
+
+  .fin-dashboard {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--fin-text-main);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    /* Hardware acceleration layer untuk 120fps */
+    will-change: transform, opacity;
+    transform: translateZ(0);
+  }
+
+  /* Glassmorphism Panel Base */
+  .fin-panel {
+    background: var(--fin-surface);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--fin-border);
+    border-radius: 1.5rem;
+    box-shadow: var(--fin-shadow-md);
+    padding: 1.5rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  }
+  
+  .fin-panel:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--fin-shadow-hover);
+  }
+
+  /* HEADER ROW */
+  .fin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+  }
+
+  .fin-header-title h2 {
+    margin: 0;
+    font-size: clamp(1.25rem, 2vw, 1.5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  
+  .fin-header-title p {
+    margin: 0.25rem 0 0 0;
+    color: var(--fin-text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  /* Dropdown Selector Context Switcher */
+  .fin-selector-wrap {
+    position: relative;
+    min-width: 250px;
+    flex-grow: 1;
+    max-width: 350px;
+  }
+
+  @media (max-width: 768px) {
+    .fin-selector-wrap { max-width: 100%; }
+  }
+
+  .fin-selector {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    background: var(--fin-surface-solid);
+    border: 1px solid var(--fin-border-strong);
+    border-radius: 1rem;
+    padding: 0.85rem 1rem 0.85rem 2.8rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--fin-text-main);
+    cursor: pointer;
+    box-shadow: var(--fin-shadow-inner);
+    transition: all 0.2s ease;
+    outline: none;
+  }
+  
+  .fin-selector:focus {
+    border-color: var(--fin-indigo);
+    box-shadow: 0 0 0 4px var(--fin-indigo-bg);
+  }
+
+  .fin-selector-icon {
+    position: absolute;
+    left: 1.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--fin-indigo);
+    font-size: 1.2rem;
+    pointer-events: none;
+  }
+
+  /* SCORECARDS (F-Pattern Top Row) */
+  .fin-scorecards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .fin-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 140px;
+  }
+
+  .fin-card-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 800;
+    color: var(--fin-text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .fin-card-value {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.5rem 0;
+    color: var(--fin-text-main);
+    /* Tabular nums to prevent layout shift during countUp animation */
+    font-variant-numeric: tabular-nums; 
+    font-feature-settings: "tnum";
+  }
+
+  .fin-card-sub {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    display: inline-block;
+    width: fit-content;
+  }
+
+  /* Colors specific to cards */
+  .c-margin .fin-card-sub { background: var(--fin-emerald-bg); color: var(--fin-emerald); }
+  .c-bep .fin-card-sub { background: var(--fin-indigo-bg); color: var(--fin-indigo); }
+  .c-profit .fin-card-sub { background: var(--fin-amber); color: #fff; }
+
+  /* ANALYTICAL ROW (Visualizations) */
+  .fin-visuals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 400px) {
+    .fin-visuals { grid-template-columns: 1fr; }
+  }
+
+  .fin-visual-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fin-visual-title {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--fin-text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* PURE SVG GAUGE METER (SVG) */
+  .fin-gauge {
+    width: 280px;
+    height: 140px; /* Half of width */
+    margin-top: 2rem;
+    position: relative;
+  }
+
+  .fin-gauge svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .gauge-bg {
+    fill: none;
+    stroke: var(--fin-border-strong);
+    stroke-width: 10;
+    stroke-linecap: round;
+  }
+
+  .gauge-val {
+    fill: none;
+    stroke: var(--fin-emerald);
+    stroke-width: 10;
+    stroke-linecap: round;
+    /* Math logic: Circumference of half circle = Pi * R. R=45 -> ~141.37 */
+    stroke-dasharray: 141.37;
+    stroke-dashoffset: 141.37; /* Starts at 0% */
+    transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.5s ease;
+  }
+
+  .gauge-text-center {
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+  
+  .gauge-percent { font-size: 2.5rem; font-weight: 900; color: var(--fin-text-main); letter-spacing: -0.05em; line-height: 1;}
+  .gauge-label { font-size: 0.75rem; color: var(--fin-text-muted); font-weight: 800; text-transform: uppercase; margin-top: 0.2rem;}
+
+  /* PURE CSS DONUT CHART (conic-gradient + mask) */
+  .fin-donut-wrap {
+    width: 220px;
+    height: 220px;
+    margin-top: 2rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .fin-donut {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    /* CSS Variables injected via JS */
+    background: conic-gradient(
+      var(--fin-rose) 0% var(--val-var), 
+      var(--fin-indigo) var(--val-var) 100%
+    );
+    /* Mask creates the donut hole */
+    -webkit-mask-image: radial-gradient(circle, transparent 55%, black 56%);
+    mask-image: radial-gradient(circle, transparent 55%, black 56%);
+    transition: background 1s ease-out;
+  }
+
+  .donut-center-text {
+    position: absolute;
+    text-align: center;
+  }
+
+  .donut-legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 700; color: var(--fin-text-main); }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-var { background: var(--fin-rose); }
+  .dot-fix { background: var(--fin-indigo); }
+
+  /* COST STRUCTURE TABLE (Progressive Disclosure) */
+  .fin-table-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .fin-table-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--fin-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(248, 250, 252, 0.5);
+  }
+
+  .fin-table-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+  }
+
+  .fin-table-container {
+    overflow-x: auto;
+  }
+
+  .fin-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px; /* Ensures horizontal scroll on small devices */
+  }
+
+  .fin-table th {
+    text-align: left;
+    padding: 1.2rem 2rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--fin-text-muted);
+    border-bottom: 2px solid var(--fin-border-strong);
+    background: var(--fin-bg);
+  }
+
+  .fin-table td {
+    padding: 1.2rem 2rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--fin-text-main);
+    border-bottom: 1px solid var(--fin-border);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  .fin-tr-main:hover { background: rgba(248, 250, 252, 0.8); }
+  
+  .td-right { text-align: right; }
+  .td-badge {
+    background: var(--fin-border-strong);
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  /* PROGRESSIVE SKELETON UI */
+  .fin-skeleton {
+    animation: shimmer 1.5s infinite linear;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    border-radius: 0.5rem;
+    color: transparent !important;
+  }
+  
+  .skel-text { height: 1.75rem; width: 60%; margin-bottom: 0.5rem; }
+  .skel-title { height: 1rem; width: 40%; }
+  .skel-badge { height: 1.5rem; width: 30%; }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Empty State */
+  .fin-empty {
+    padding: 4rem 2rem;
+    text-align: center;
+    color: var(--fin-text-muted);
+    font-weight: 700;
+  }
+</style>
+
+<div id="view-dashboard" class="main-view block">
+  <div id="v1-vanilla-dashboard" class="fin-dashboard">
+    
+    <!-- 1. Hidden Context Switcher: dipertahankan agar script lama tidak error, tetapi UI card header dihapus -->
+    <select id="v1-global-outlet" class="hidden" onchange="renderSingleOutletDashboard()">
+      <option value="">Memuat Engine Data...</option>
+    </select>
+
+    <!-- 2. EXECUTIVE SCORECARDS (The 5-Second Rule) -->
+    <div class="fin-scorecards">
+      
+      <!-- Card 1: Margin Laba/Kg -->
+      <div class="fin-panel fin-card c-margin">
+        <div class="fin-card-label">Margin Laba / Kg</div>
+        <div class="fin-card-value" id="v1-val-margin">
+          <div class="fin-skeleton skel-text"></div>
+        </div>
+        <div class="fin-card-sub" id="v1-sub-margin">
+           <div class="fin-skeleton skel-badge"></div>
+        </div>
+      </div>
+
+      <!-- Card 2: Progres Menuju BEP -->
+      <div class="fin-panel fin-card c-bep">
+        <div class="fin-card-label">Target Aktual vs BEP</div>
+        <div class="fin-card-value" id="v1-val-vol">
+          <div class="fin-skeleton skel-text"></div>
+        </div>
+        <div class="fin-card-sub" id="v1-sub-vol">
+           <div class="fin-skeleton skel-badge"></div>
+        </div>
+      </div>
+
+      <!-- Card 3: Estimasi Laba Bersih -->
+      <div class="fin-panel fin-card c-profit">
+        <div class="fin-card-label">Estimasi Laba Bersih (Bulan)</div>
+        <div class="fin-card-value" id="v1-val-profit">
+          <div class="fin-skeleton skel-text"></div>
+        </div>
+        <div class="fin-card-sub" id="v1-sub-profit">
+           <div class="fin-skeleton skel-badge"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3. VISUALIZATION DASHBOARD -->
+    <div class="fin-visuals">
+      
+      <!-- PURE SVG GAUGE METER -->
+      <div class="fin-panel fin-visual-box">
+        <div class="fin-visual-title"><i class="ph ph-speedometer"></i> Status Titik Impas (BEP)</div>
+        <div class="fin-gauge">
+          <!-- ViewBox is 100x50 for a perfect half circle. 
+               M=Move To, A=Arc. Radius=45 (from 5,50 to 95,50). 
+               Circumference of half circle = Pi * 45 = 141.37 -->
+          <svg viewBox="0 0 100 50">
+            <path class="gauge-bg" d="M 5,50 A 45,45 0 0,1 95,50" />
+            <path class="gauge-val" id="v1-gauge-path" d="M 5,50 A 45,45 0 0,1 95,50" />
+          </svg>
+          <div class="gauge-text-center">
+            <div class="gauge-percent" id="v1-gauge-pct">0%</div>
+            <div class="gauge-label">Pencapaian Target</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PURE CSS DONUT CHART -->
+      <div class="fin-panel fin-visual-box">
+        <div class="fin-visual-title"><i class="ph ph-chart-pie-slice"></i> Komposisi HPP Keseluruhan</div>
+        <div class="fin-donut-wrap">
+          <div class="fin-donut" id="v1-donut-el" style="--val-var: 0%;"></div>
+          <div class="donut-center-text">
+            <div style="font-size:0.75rem; font-weight:800; color:var(--fin-text-muted);">Total HPP</div>
+            <div style="font-size:1.25rem; font-weight:900;" id="v1-donut-total">Rp 0</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item"><div class="legend-dot dot-var"></div>Biaya Variabel</div>
+          <div class="legend-item"><div class="legend-dot dot-fix"></div>Biaya Tetap</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 4. COST STRUCTURE TABLE (Progressive Disclosure) -->
+    <div class="fin-panel fin-table-card">
+      <div class="fin-table-header">
+        <h3>Struktur Biaya & HPP (Cost Breakdown)</h3>
+      </div>
+      <div class="fin-table-container">
+        <table class="fin-table">
+          <thead>
+            <tr>
+              <th>Kategori Beban</th>
+              <th class="td-right">Total Beban / Bulan</th>
+              <th class="td-right">Beban / Kg</th>
+              <th class="td-right">% Komposisi</th>
+            </tr>
+          </thead>
+          <tbody id="v1-table-body">
+             <!-- Initial Skeletons -->
+             <tr><td colspan="4"><div class="fin-skeleton skel-text" style="width: 100%; height: 2rem;"></div></td></tr>
+             <tr><td colspan="4"><div class="fin-skeleton skel-text" style="width: 100%; height: 2rem;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

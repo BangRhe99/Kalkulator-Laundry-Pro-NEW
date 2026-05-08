@@ -1,0 +1,1494 @@
+<script>
+/**
+ * ==========================================
+ * 🤖 BangRhe ELITE FINTECH ARCHITECTURE
+ * FRONT-END LOGIC: DATA BRIDGE & SWR CACHING
+ * Fase: Ultra-Performance (0ms Perceived Latency)
+ * ==========================================
+ */
+
+/**
+ * 1. GLOBAL STATE STORE & TTL CACHING
+ */
+const APP_STATE = {
+  data: {
+    master: null,
+    hpp: { gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0, total: 0 }
+  },
+  cache: {
+    key: 'ZETT_MASTER_CACHE_V5',
+    ttl: 300000 // 5 Menit TTL
+  },
+  locks: {}
+};
+
+let masterDataCabang = [];
+let dashboardRawData = [];
+let masterDataHPP = []; 
+let hasLoadedInitialData = false;
+
+// =========================================================================
+// [BangRhe REVISI: 0ms SYNCHRONOUS BOOTSTRAPPER (SWR PATTERN)]
+// =========================================================================
+(function zettBotFastBoot() {
+    try {
+        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
+        if(cachedStr) {
+            const parsed = JSON.parse(cachedStr);
+            const res = parsed.data;
+            if(res && res.status === 'success') {
+                masterDataCabang = res.kapasitas.map(item => ({...item, namaOutlet: item.namaOutlet || item.namaLaundry || 'Unknown'}));
+                masterDataHPP = res.hpp;
+                dashboardRawData = res.transactions;
+                hasLoadedInitialData = true;
+                APP_STATE.data.master = res;
+            }
+        }
+    } catch(e) {
+        console.error("FastBoot Error:", e);
+    }
+})();
+
+// Fungsi Core Render UI yang ditarik dari fungsi Asynchronous
+function applyCabangUIData() {
+    const tableArea = document.getElementById('tableDaftarOutlet');
+    const selectV1 = document.getElementById('v1-global-outlet');
+    const selectHPP = document.getElementById('inputNamaHPP');
+
+    if(selectV1) {
+        const curV1 = selectV1.value;
+        selectV1.innerHTML = '<option value="">-- Pilih Outlet --</option>';
+        masterDataCabang.forEach(c => selectV1.innerHTML += `<option value="${c.namaOutlet}">${c.namaOutlet}</option>`);
+        if(curV1) selectV1.value = curV1;
+        else if(masterDataCabang.length > 0) selectV1.value = masterDataCabang[0].namaOutlet;
+    }
+
+    if(selectHPP) {
+        const curHPP = selectHPP.value;
+        selectHPP.innerHTML = '<option value="">Pilih Cabang...</option>';
+        masterDataCabang.forEach(c => selectHPP.innerHTML += `<option value="${c.namaOutlet}">${c.namaOutlet}</option>`);
+        
+        if(curHPP) selectHPP.value = curHPP;
+        else if (masterDataCabang.length > 0) selectHPP.value = masterDataCabang[0].namaOutlet;
+        
+        if (selectHPP.value && typeof populateFormHPP === 'function') {
+            populateFormHPP(selectHPP.value);
+        }
+    }
+
+    if(!tableArea) return;
+
+    if(masterDataCabang.length === 0) {
+        tableArea.innerHTML = `
+            <div class="p-12 text-center text-slate-400 bg-slate-50 rounded-[1.5rem] border border-slate-200 border-dashed">
+                <i class="ph ph-storefront text-6xl mb-4 opacity-50"></i>
+                <p class="font-extrabold text-xl text-slate-600 mb-1">Belum ada Data Outlet</p>
+                <p class="text-sm font-medium">Silakan mulai dengan menekan tombol Tambah Outlet di atas.</p>
+            </div>`;
+        return;
+    }
+
+    let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-4">';
+    masterDataCabang.forEach(c => {
+        const kategoriLabel = c.kategori || 'Drop Off';
+        const safeNama = String(c.namaOutlet).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        
+        let operasionalMenit = 0;
+        if (c.jamBuka && c.jamTutup) {
+            const bH = parseInt(c.jamBuka.split(':')[0], 10);
+            const bM = parseInt(c.jamBuka.split(':')[1] || 0, 10);
+            const tH = parseInt(c.jamTutup.split(':')[0], 10);
+            const tM = parseInt(c.jamTutup.split(':')[1] || 0, 10);
+            if (!isNaN(bH) && !isNaN(bM) && !isNaN(tH) && !isNaN(tM)) {
+                let mBuka = bH * 60 + bM;
+                let mTutup = tH * 60 + tM;
+                if (mTutup < mBuka) mTutup += 24 * 60; 
+                operasionalMenit = mTutup - mBuka;
+            }
+        }
+        
+        const hariPerBulan = (c.mingguTutup === 'Ya (Tutup)') ? 26 : 30;
+        const okCuciStr = String(c.targetOkupansiCuci).replace(/[^0-9.]/g, '');
+        const okCuci = (parseFloat(okCuciStr) || 100) / 100;
+        
+        let totalLoadAwal = 0;
+        let totalKgAwal = 0;
+        
+        let uC = parseFloat(c.cuciUnit) || 0;
+        let dC = parseFloat(c.cuciDurasi) || 0;
+        let kC = parseFloat(c.cuciKg) || 0;
+
+        if (dC > 0 && operasionalMenit > 0) {
+            const maxSiklusPerMesin = Math.floor(operasionalMenit / dC);
+            const maxLoadSemuaUnit = maxSiklusPerMesin * uC;
+            totalLoadAwal += maxLoadSemuaUnit;
+            totalKgAwal += (maxLoadSemuaUnit * kC); 
+        }
+        
+        const loadBulan = Math.floor(totalLoadAwal * okCuci) * hariPerBulan;
+        const kgBulan = (totalKgAwal * okCuci) * hariPerBulan;
+        
+        let unitLabel = (c.kategori === 'Self Service') ? 'Load/Bln' : 'Kg/Bln';
+        let capVal = (c.kategori === 'Self Service') ? loadBulan : kgBulan;
+        
+        let formattedCap = Number(capVal).toLocaleString('id-ID');
+
+        let topBorderClass = 'border-t-4 border-t-slate-300';
+        let iconClass = 'bg-blue-50/80 text-blue-500 border-blue-100';
+        let badgeClass = 'bg-slate-100 text-slate-400 border-slate-200 shadow-sm';
+        
+        const labelLower = kategoriLabel.toLowerCase();
+        
+        if (labelLower.includes('self service')) {
+            topBorderClass = 'border-t-[4px] border-t-indigo-500';
+            iconClass = 'bg-indigo-50/80 text-indigo-500 border-indigo-100';
+            badgeClass = 'bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]';
+        } else if (labelLower.includes('drop off') || labelLower.includes('kiloan')) {
+            topBorderClass = 'border-t-[4px] border-t-emerald-500';
+            iconClass = 'bg-emerald-50/80 text-emerald-500 border-emerald-100';
+            badgeClass = 'bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]';
+        } else if (labelLower.includes('hybrid')) {
+            topBorderClass = 'border-t-[4px] border-t-purple-500';
+            iconClass = 'bg-purple-50/80 text-purple-500 border-purple-100';
+            badgeClass = 'bg-purple-50 text-purple-600 border border-purple-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]';
+        } else {
+            topBorderClass = 'border-t-[4px] border-t-blue-500';
+            iconClass = 'bg-blue-50/80 text-blue-500 border-blue-100';
+            badgeClass = 'bg-blue-50 text-blue-600 border border-blue-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]';
+        }
+
+        html += `
+        <div class="bg-white border-b border-l border-r border-slate-200 ${topBorderClass} rounded-[1.5rem] p-5 shadow-sm hover:shadow-md transition-all cursor-pointer relative flex flex-col group overflow-hidden" onclick="pilihCabang('${safeNama}');">
+            <div class="flex justify-between items-start mb-5">
+                <div class="w-12 h-12 ${iconClass} rounded-xl flex items-center justify-center border shrink-0 group-hover:scale-105 transition-transform">
+                    <i class="ph ph-buildings text-2xl"></i>
+                </div>
+                <div class="${badgeClass} text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
+                    ${kategoriLabel}
+                </div>
+            </div>
+            <h4 class="font-extrabold text-slate-800 text-[1.15rem] tracking-tight mb-5">${c.namaOutlet}</h4>
+            <div class="mt-auto space-y-2">
+                <div class="flex justify-between items-center bg-slate-50/80 px-3 py-2.5 rounded-xl border border-slate-100">
+                    <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5"><i class="ph ph-clock text-sm"></i> Jam Ops</span>
+                    <span class="text-xs font-black text-slate-700">${c.jamBuka} - ${c.jamTutup}</span>
+                </div>
+                <div class="flex justify-between items-center bg-slate-50/80 px-3 py-2.5 rounded-xl border border-slate-100">
+                    <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5"><i class="ph ph-hourglass text-sm"></i> Durasi Ops</span>
+                    <span class="text-xs font-black text-slate-700">${c.durasiOperasional}</span>
+                </div>
+                <div class="flex justify-between items-center bg-emerald-50/80 px-3 py-2.5 rounded-xl border border-emerald-100/60 mt-1">
+                    <span class="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5"><i class="ph ph-waves text-sm"></i> Kapasitas</span>
+                    <span class="text-xs font-black text-emerald-600">${formattedCap} ${unitLabel}</span>
+                </div>
+            </div>
+        </div>`;
+    });
+    html += '</div>';
+    
+    tableArea.innerHTML = html;
+    
+    checkHPPLock();
+    toggleActionButtons();
+    
+    if (typeof renderSingleOutletDashboard === 'function') renderSingleOutletDashboard();
+}
+
+async function loadDaftarCabang() {
+    // 1. Render UI INSTAN (0ms) dari Memori FastBoot
+    if(hasLoadedInitialData) {
+        applyCabangUIData();
+    } else {
+        const tableArea = document.getElementById('tableDaftarOutlet');
+        if(tableArea) tableArea.innerHTML = `<div class="p-10 text-center text-slate-500 font-bold"><i class="ph ph-spinner-gap animate-spin text-4xl mb-4 text-emerald-500 mx-auto"></i><br>Sinkronisasi Cloud Pertama...</div>`;
+    }
+
+    // 2. STALE-WHILE-REVALIDATE (Bg Sync Tanpa Memblokir Layar)
+    if (!StateMachine.acquireLock('bgRevalidate')) return;
+
+    try {
+        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
+        let needsFetch = true;
+        if (cachedStr) {
+            const parsed = JSON.parse(cachedStr);
+            if (Date.now() < parsed.expiry) needsFetch = false;
+        }
+
+        if (needsFetch) {
+            const data = await new Promise((resolve, reject) => {
+                google.script.run
+                .withSuccessHandler(resolve)
+                .withFailureHandler(reject)
+                .getZettBotInitialPayload();
+            });
+            
+            if(data && data.status === 'success') {
+                localStorage.setItem(APP_STATE.cache.key, JSON.stringify({ data: data, expiry: Date.now() + APP_STATE.cache.ttl }));
+                masterDataCabang = data.kapasitas.map(item => ({...item, namaOutlet: item.namaOutlet || item.namaLaundry || 'Unknown'}));
+                masterDataHPP = data.hpp;
+                dashboardRawData = data.transactions;
+                hasLoadedInitialData = true;
+                APP_STATE.data.master = data;
+                applyCabangUIData(); 
+            }
+        }
+    } catch(e) {
+        console.error("SWR Sync Error:", e);
+    } finally {
+        StateMachine.releaseLock('bgRevalidate');
+    }
+}
+
+const StateMachine = {
+  // LOCK SYSTEM
+  acquireLock: function(action) {
+    if (APP_STATE.locks[action]) {
+      console.warn(`[LOCKED] Action ${action} is currently running. Request blocked.`);
+      return false;
+    }
+    APP_STATE.locks[action] = true;
+    return true;
+  },
+
+  releaseLock: function(action) {
+    APP_STATE.locks[action] = false;
+  },
+
+  invalidateClientCache: function() {
+    localStorage.removeItem(APP_STATE.cache.key);
+    hasLoadedInitialData = false;
+    APP_STATE.data.master = null;
+  },
+
+  updateMetric: function(key, value) {
+    if (!this.acquireLock('calcHPP')) return;
+    APP_STATE.data.hpp[key] = value;
+    this.calculateTotal();
+    this.releaseLock('calcHPP');
+  },
+  
+  calculateTotal: function() {
+    const { gas, listrik, air, packing, bahan, nota } = APP_STATE.data.hpp;
+    APP_STATE.data.hpp.total = gas + listrik + air + packing + bahan + nota;
+    window.requestAnimationFrame(() => { this.renderDashboard(); });
+  },
+  
+  renderDashboard: function() {
+    const t = APP_STATE.data.hpp.total;
+    const { gas, listrik, air, packing, bahan, nota } = APP_STATE.data.hpp;
+    
+    const totalEl = document.getElementById('dash-hpp-total');
+    if(totalEl && typeof formatRupiah === 'function') {
+      totalEl.innerText = formatRupiah(t);
+      if(document.getElementById('dash-card-gas')) document.getElementById('dash-card-gas').innerText = formatRupiah(gas);
+      if(document.getElementById('dash-card-listrik')) document.getElementById('dash-card-listrik').innerText = formatRupiah(listrik);
+      if(document.getElementById('dash-card-air')) document.getElementById('dash-card-air').innerText = formatRupiah(air);
+      if(document.getElementById('dash-card-packing')) document.getElementById('dash-card-packing').innerText = formatRupiah(packing);
+      if(document.getElementById('dash-card-bahan')) document.getElementById('dash-card-bahan').innerText = formatRupiah(bahan);
+      if(document.getElementById('dash-card-nota')) document.getElementById('dash-card-nota').innerText = formatRupiah(nota);
+    }
+    
+    const donut = document.getElementById('hpp-donut-chart');
+    const labelsContainer = document.getElementById('hpp-donut-labels');
+
+    if (donut && t > 0) {
+      let pctGas = (gas / t) * 100; let pctListrik = (listrik / t) * 100; let pctAir = (air / t) * 100;
+      let pctPacking = (packing / t) * 100; let pctBahan = (bahan / t) * 100; let pctNota = (nota / t) * 100;
+      let cGas = pctGas; let cListrik = cGas + pctListrik; let cAir = cListrik + pctAir;
+      let cPacking = cAir + pctPacking; let cBahan = cPacking + pctBahan;
+
+      donut.style.setProperty('--p-gas', `${cGas}%`); donut.style.setProperty('--p-listrik', `${cListrik}%`);
+      donut.style.setProperty('--p-air', `${cAir}%`); donut.style.setProperty('--p-packing', `${cPacking}%`);
+      donut.style.setProperty('--p-bahan', `${cBahan}%`);
+
+      if (labelsContainer) {
+          labelsContainer.innerHTML = '';
+          let currentAnglePct = 0;
+          const slices = [pctGas, pctListrik, pctAir, pctPacking, pctBahan, pctNota];
+          slices.forEach(slicePct => {
+              if (slicePct >= 4) { 
+                  let midPct = currentAnglePct + (slicePct / 2); let angleDeg = (midPct * 3.6) - 90;
+                  let rad = angleDeg * Math.PI / 180; let r = 98; 
+                  let x = 120 + r * Math.cos(rad); let y = 120 + r * Math.sin(rad);
+                  let label = document.createElement('div');
+                  label.className = 'absolute text-[11px] font-black text-white tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-20';
+                  label.style.left = x + 'px'; label.style.top = y + 'px'; label.style.transform = 'translate(-50%, -50%)';
+                  label.innerText = Math.round(slicePct) + '%';
+                  labelsContainer.appendChild(label);
+              }
+              currentAnglePct += slicePct;
+          });
+      }
+    } else if (donut) {
+      donut.style.setProperty('--p-gas', `0%`); donut.style.setProperty('--p-listrik', `0%`);
+      donut.style.setProperty('--p-air', `0%`); donut.style.setProperty('--p-packing', `0%`); donut.style.setProperty('--p-bahan', `0%`);
+      if (labelsContainer) labelsContainer.innerHTML = '';
+    }
+  }
+};
+
+const runServer = (serverFunction, ...args) => {
+  return new Promise((resolve, reject) => {
+    google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler((err) => reject(new Error(err.message || "Koneksi Google Cloud Terputus / Time Out")))
+      [serverFunction](...args);
+  });
+};
+
+function showOmniToast(message, type = 'success') {
+  let toast = document.getElementById('omni-toast');
+  if(!toast) { toast = document.createElement('div'); toast.id = 'omni-toast'; document.body.appendChild(toast); }
+  const isMobile = window.innerWidth < 768;
+  const bgColor = type === 'success' ? 'bg-[#0f172a]' : (type === 'warning' ? 'bg-amber-500' : 'bg-[#ef4444]');
+  const icon = type === 'success' ? 'ph-check-circle text-emerald-400' : (type === 'warning' ? 'ph-warning text-white' : 'ph-warning-circle text-white');
+  
+  toast.className = `fixed z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-[1.25rem] shadow-[0_20px_40px_rgba(0,0,0,0.2)] transition-all duration-500 transform-gpu ${bgColor} text-white font-bold text-sm backdrop-blur-xl border border-white/10`;
+  toast.innerHTML = `<i class="ph ${icon} text-2xl drop-shadow-md"></i> <span class="tracking-wide">${message}</span>`;
+  
+  if(isMobile) { toast.style.top = '1.5rem'; toast.style.left = '50%'; toast.style.transform = 'translate(-50%, -100px)'; } 
+  else { toast.style.bottom = '2rem'; toast.style.right = '2rem'; toast.style.transform = 'translate(100px, 0)'; }
+  
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = isMobile ? 'translate(-50%, 0)' : 'translate(0, 0)';
+  });
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = isMobile ? 'translate(-50%, -50px)' : 'translate(100px, 0)';
+  }, 4000);
+}
+
+function showOmniConfirm(title, message) {
+  return new Promise((resolve) => {
+    const existing = document.getElementById('omni-confirm-overlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div'); overlay.id = 'omni-confirm-overlay';
+    overlay.className = 'fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md opacity-0 transition-opacity duration-300';
+    const box = document.createElement('div');
+    box.className = 'bg-white/95 backdrop-blur-xl border border-slate-200/80 p-8 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] max-w-sm w-full transform scale-95 opacity-0 transition-all duration-300 flex flex-col items-center text-center';
+    
+    box.innerHTML = `
+        <div class="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-5 border-[6px] border-rose-100/50 shadow-inner relative"><div class="absolute inset-0 bg-rose-400 opacity-20 rounded-full animate-ping"></div><i class="ph ph-trash text-4xl text-rose-500 drop-shadow-sm"></i></div>
+        <h3 class="text-xl font-black text-slate-800 tracking-tight mb-2">${title}</h3><p class="text-sm font-medium text-slate-500 leading-relaxed mb-8">${message}</p>
+        <div class="flex gap-3 w-full"><button id="omni-btn-cancel" class="flex-1 py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-[1.25rem] transition-colors active:scale-95">Batal</button><button id="omni-btn-confirm" class="flex-1 py-3.5 px-4 bg-rose-500 hover:bg-rose-600 text-white font-black rounded-[1.25rem] shadow-[0_8px_20px_rgba(244,63,94,0.3)] transition-all transform hover:-translate-y-1 active:scale-95">Ya, Hapus</button></div>
+    `;
+    overlay.appendChild(box); document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => { overlay.classList.remove('opacity-0'); box.classList.remove('scale-95', 'opacity-0'); });
+
+    const close = (result) => {
+        overlay.classList.add('opacity-0'); box.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => overlay.remove(), 300); resolve(result);
+    };
+
+    document.getElementById('omni-btn-cancel').onclick = () => close(false);
+    document.getElementById('omni-btn-confirm').onclick = () => close(true);
+  });
+}
+
+function setBtnState(btnId, state) {
+  const btn = document.getElementById(btnId); const formArea = document.getElementById('kapasitas-form-container');
+  if(!btn) return;
+  if(state === 'loading') {
+    if(!btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
+    btn.style.width = btn.offsetWidth + 'px'; btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-xl"></i> Memproses...';
+    btn.classList.add('opacity-80', 'pointer-events-none', 'scale-95');
+    if(formArea) { formArea.style.pointerEvents = 'none'; formArea.style.opacity = '0.7'; formArea.style.transition = 'opacity 0.4s ease'; }
+  } else if(state === 'success') {
+    btn.innerHTML = '<i class="ph ph-check-circle text-xl"></i> Berhasil';
+    if(btn.classList.contains('omni-btn-primary') && !btn.classList.contains('bg-[var(--omni-emerald)]')) {
+        btn.classList.replace('bg-[#0f172a]', 'bg-emerald-500'); btn.classList.replace('text-[#f43f5e]', 'text-white'); 
+    }
+    btn.classList.remove('opacity-80', 'scale-95'); btn.style.width = 'auto';
+  } else {
+    btn.innerHTML = btn.dataset.originalHtml || btn.innerHTML; btn.style.width = 'auto';
+    if(btn.classList.contains('bg-emerald-500')) {
+        btn.classList.replace('bg-emerald-500', 'bg-[#0f172a]'); btn.classList.replace('text-white', 'text-[#f43f5e]');
+    }
+    btn.classList.remove('opacity-80', 'pointer-events-none', 'scale-95');
+    if(formArea) { formArea.style.pointerEvents = 'auto'; formArea.style.opacity = '1'; }
+  }
+}
+
+function formatRupiahInput(input) {
+    let value = input.value.replace(/[^,\d]/g, ''); let split = value.split(',');
+    let sisa = split[0].length % 3; let rupiah = split[0].substr(0, sisa); let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    if (ribuan) { let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
+    rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah; input.value = rupiah;
+}
+
+function formatRupiah(angka) {
+    if (angka === 0 || !angka || isNaN(angka)) return 'Rp 0';
+    let isNegative = angka < 0; let strAngka = Math.round(Math.abs(angka)).toString();
+    let reverse = strAngka.split('').reverse().join(''); let ribuan = reverse.match(/\d{1,3}/g);
+    let formatted = ribuan.join('.').split('').reverse().join('');
+    return (isNegative ? '- Rp ' : 'Rp ') + formatted;
+}
+
+function safeSetSelect(elementId, targetValue) {
+    const el = document.getElementById(elementId);
+    if(!el || !targetValue) return;
+    let cleanVal = String(targetValue).trim(); el.value = cleanVal;
+    if(el.value !== cleanVal) {
+        for(let opt of el.options) {
+            if(opt.value.toLowerCase() === cleanVal.toLowerCase()) { el.value = opt.value; break; }
+        }
+    }
+}
+
+function showFormKapasitas(isNew = true) {
+    try {
+        if (isNew !== false) resetFormKapasitas();
+        const dash = document.getElementById('kapasitas-dashboard'); const form = document.getElementById('kapasitas-form-container');
+        if (dash) dash.classList.add('hidden');
+        if (form) {
+            form.classList.remove('hidden'); form.style.pointerEvents = 'auto'; form.style.opacity = '1';
+            const cards = form.querySelectorAll('.bento-card');
+            cards.forEach((c, i) => {
+              c.style.opacity = '0'; c.style.transform = 'translateY(20px)';
+              setTimeout(() => { c.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)'; c.style.opacity = '1'; c.style.transform = 'translateY(0)'; }, i * 50);
+            });
+        }
+    } catch (error) { console.error("Gagal membuka Form Kapasitas: ", error); }
+}
+
+function hideFormKapasitas() {
+    document.getElementById('kapasitas-form-container').classList.add('hidden');
+    document.getElementById('kapasitas-dashboard').classList.remove('hidden');
+    resetFormKapasitas(); 
+}
+
+function resetFormKapasitas() {
+    try {
+        const formEl = document.getElementById('laundryForm'); if (formEl) formEl.reset();
+        if(document.getElementById('inputNama')) document.getElementById('inputNama').value = '';
+        if(document.getElementById('inputKategori')) document.getElementById('inputKategori').value = 'Drop Off/Kiloan';
+        if(document.getElementById('inputJamBuka')) document.getElementById('inputJamBuka').value = '08:00';
+        if(document.getElementById('inputJamTutup')) document.getElementById('inputJamTutup').value = '20:00';
+        if(document.getElementById('inputMingguTutup')) document.getElementById('inputMingguTutup').checked = false;
+        if(document.getElementById('inputOkupansiCuci')) document.getElementById('inputOkupansiCuci').value = '50';
+        if(document.getElementById('inputOkupansiKering')) document.getElementById('inputOkupansiKering').value = '50';
+        if(document.getElementById('inputOkupansiSetrika')) document.getElementById('inputOkupansiSetrika').value = '50';
+        
+        safeSetSelect('jenisMesinCuci', 'commercial'); safeSetSelect('jenisMesinPengering', 'commercial'); safeSetSelect('jenisSetrikaUtama', 'uap');
+        if(document.getElementById('containerMesinCuci')) document.getElementById('containerMesinCuci').innerHTML = '';
+        if(document.getElementById('containerMesinPengering')) document.getElementById('containerMesinPengering').innerHTML = '';
+        if(document.getElementById('containerMesinSetrika')) document.getElementById('containerMesinSetrika').innerHTML = '';
+        
+        addMesin('cuci', 0, 0, 0); addMesin('pengering', 0, 0, 0); addMesin('setrika', 0, 0, 0); 
+        updateNavName(); toggleActionButtons(); toggleKategoriLaundry(); calculateCapacity(); 
+        if (typeof checkHPPLock === 'function') checkHPPLock();
+    } catch(e) { console.error("Gagal melakukan reset form: ", e); }
+}
+
+function updateNavName() {
+    const val = document.getElementById('inputNama').value.trim();
+    const navEl = document.getElementById('inputNamaHPP');
+    if(navEl) {
+        let exists = false;
+        for(let i=0; i<navEl.options.length; i++) { if(navEl.options[i].value === val) { exists = true; break; } }
+        if(exists) navEl.value = val; else navEl.value = "";
+    }
+}
+
+function toggleActionButtons() {
+    const nama = document.getElementById('inputNama').value.trim().toLowerCase();
+    const isKapasitasExist = masterDataCabang.some(c => String(c.namaOutlet).toLowerCase() === nama);
+    const isHPPExist = masterDataHPP.some(h => String(h.namaOutlet).toLowerCase() === nama);
+    
+    const btnSimpan = document.getElementById('btnSimpanKapasitas'); const btnUpdate = document.getElementById('btnUpdateKapasitas'); const btnHapus = document.getElementById('btnHapusKapasitas');
+    if(isKapasitasExist) {
+        if(btnSimpan) btnSimpan.classList.add('hidden'); if(btnUpdate) btnUpdate.classList.remove('hidden'); if(btnHapus) btnHapus.classList.remove('hidden');
+    } else {
+        if(btnSimpan) btnSimpan.classList.remove('hidden'); if(btnUpdate) btnUpdate.classList.add('hidden'); if(btnHapus) btnHapus.classList.add('hidden');
+    }
+
+    const btnSimpanHPP = document.getElementById('btnSimpanHPP'); const btnUpdateHPP = document.getElementById('btnUpdateHPP');
+    if(isHPPExist) {
+        if(btnSimpanHPP) btnSimpanHPP.classList.add('hidden'); if(btnUpdateHPP) btnUpdateHPP.classList.remove('hidden');
+    } else {
+        if(btnSimpanHPP) btnSimpanHPP.classList.remove('hidden'); if(btnUpdateHPP) btnUpdateHPP.classList.add('hidden');
+    }
+}
+
+function filterCabang() {
+    const val = document.getElementById('inputNama').value.trim().toLowerCase();
+    const dropdown = document.getElementById('dropdownCabangResult');
+    if(!dropdown) return;
+    if(!val) { dropdown.classList.add('hidden'); return; }
+
+    const filtered = masterDataCabang.filter(c => String(c.namaOutlet).toLowerCase().includes(val));
+    if(filtered.length > 0) {
+        let html = '';
+        filtered.forEach(c => { html += `<div class="p-3 border-b border-slate-100 hover:bg-slate-50 cursor-pointer font-bold text-slate-700 text-sm flex items-center transition-colors" onclick="pilihCabang('${c.namaOutlet}')"><i class="ph ph-storefront text-blue-500 mr-2 text-lg"></i> ${c.namaOutlet}</div>`; });
+        dropdown.innerHTML = html; dropdown.classList.remove('hidden');
+    } else { dropdown.classList.add('hidden'); }
+    toggleActionButtons();
+}
+
+function pilihCabang(namaCabang) {
+    const cabang = masterDataCabang.find(c => String(c.namaOutlet) === namaCabang);
+    if(!cabang) return;
+
+    document.getElementById('inputNama').value = cabang.namaOutlet;
+    const globalHeaderDropdown = document.getElementById('inputNamaHPP');
+    if(globalHeaderDropdown) globalHeaderDropdown.value = cabang.namaOutlet;
+    if(document.getElementById('inputKategori')) document.getElementById('inputKategori').value = cabang.kategori || 'Drop Off/Kiloan';
+    
+    let jBuka = String(cabang.jamBuka || '').trim(); let jTutup = String(cabang.jamTutup || '').trim();
+    if(jBuka.includes(':')) { let parts = jBuka.split(':'); jBuka = parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0'); }
+    if(jTutup.includes(':')) { let parts = jTutup.split(':'); jTutup = parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0'); }
+
+    if(document.getElementById('inputJamBuka')) document.getElementById('inputJamBuka').value = jBuka;
+    if(document.getElementById('inputJamTutup')) document.getElementById('inputJamTutup').value = jTutup;
+    if(document.getElementById('inputMingguTutup')) document.getElementById('inputMingguTutup').checked = (cabang.mingguTutup === 'Ya (Tutup)');
+    if(document.getElementById('inputOkupansiCuci')) document.getElementById('inputOkupansiCuci').value = String(cabang.targetOkupansiCuci || '100').replace(/[^0-9.]/g, '');
+    if(document.getElementById('inputOkupansiKering')) document.getElementById('inputOkupansiKering').value = String(cabang.targetOkupansiKering || '100').replace(/[^0-9.]/g, '');
+    if(document.getElementById('inputOkupansiSetrika')) document.getElementById('inputOkupansiSetrika').value = String(cabang.targetOkupansiSetrika || '100').replace(/[^0-9.]/g, '');
+    if(document.getElementById('displayDurasi')) document.getElementById('displayDurasi').innerText = cabang.durasiOperasional || "- Jam - Menit";
+
+    safeSetSelect('jenisMesinCuci', cabang.tipeMesinCuci || 'commercial'); safeSetSelect('jenisMesinPengering', cabang.tipeMesinPengering || 'commercial'); safeSetSelect('jenisSetrikaUtama', cabang.tipeSetrikaUtama || 'uap');
+
+    document.getElementById('containerMesinCuci').innerHTML = ''; document.getElementById('containerMesinPengering').innerHTML = ''; document.getElementById('containerMesinSetrika').innerHTML = '';
+
+    let cuciU = !isNaN(parseFloat(cabang.cuciUnit)) ? parseFloat(cabang.cuciUnit) : 0; let cuciD = !isNaN(parseFloat(cabang.cuciDurasi)) ? parseFloat(cabang.cuciDurasi) : 0; let cuciK = !isNaN(parseFloat(cabang.cuciKg)) ? parseFloat(cabang.cuciKg) : 0;
+    if (cuciU === 0 && cuciK === 0) cuciD = 0; addMesin('cuci', cuciU, cuciD, cuciK);
+
+    let kerU = !isNaN(parseFloat(cabang.pengeringUnit)) ? parseFloat(cabang.pengeringUnit) : 0; let kerD = !isNaN(parseFloat(cabang.pengeringDurasi)) ? parseFloat(cabang.pengeringDurasi) : 0; let kerK = !isNaN(parseFloat(cabang.pengeringKg)) ? parseFloat(cabang.pengeringKg) : 0;
+    if (kerU === 0 && kerK === 0) kerD = 0; addMesin('pengering', kerU, kerD, kerK);
+
+    let setU = !isNaN(parseFloat(cabang.setrikaUnit)) ? parseFloat(cabang.setrikaUnit) : 0; let setD = !isNaN(parseFloat(cabang.setrikaDurasi)) ? parseFloat(cabang.setrikaDurasi) : 0; let setK = !isNaN(parseFloat(cabang.setrikaKg)) ? parseFloat(cabang.setrikaKg) : 0;
+    if (setU === 0 && setK === 0) setD = 0; addMesin('setrika', setU, setD, setK);
+
+    document.getElementById('dropdownCabangResult').classList.add('hidden');
+    updateNavName();
+    
+    if (typeof populateFormHPP === 'function') populateFormHPP(namaCabang);
+    toggleActionButtons(); toggleKategoriLaundry(); calculateCapacity(); 
+    showFormKapasitas(false);
+    if (typeof checkHPPLock === 'function') checkHPPLock();
+}
+
+function resetFormHPP() {
+    safeSetSelect('inputGasKapasitas', '');
+    if(document.getElementById('inputGasHarga')) document.getElementById('inputGasHarga').value = '';
+    if(document.getElementById('inputGasJam')) document.getElementById('inputGasJam').value = '';
+    if(document.getElementById('inputCentralGas')) document.getElementById('inputCentralGas').checked = false;
+    if(document.getElementById('inputGasMenit')) document.getElementById('inputGasMenit').value = '0 Menit';
+
+    if(document.getElementById('inputTDL')) document.getElementById('inputTDL').value = '1.700';
+    if(document.getElementById('inputListrikCuciWatt')) document.getElementById('inputListrikCuciWatt').value = '450';
+    if(document.getElementById('inputListrikPengeringWatt')) document.getElementById('inputListrikPengeringWatt').value = '450';
+    if(document.getElementById('inputListrikPompaWatt')) document.getElementById('inputListrikPompaWatt').value = '280';
+    if(document.getElementById('inputListrikSetrikaWatt')) document.getElementById('inputListrikSetrikaWatt').value = '300';
+    if(document.getElementById('toggleSetrikaListrik')) document.getElementById('toggleSetrikaListrik').checked = false;
+    
+    safeSetSelect('inputAirSumber', 'pdam');
+    if(document.getElementById('inputAirHargaM3')) document.getElementById('inputAirHargaM3').value = '6.000';
+    if(document.getElementById('inputAirHargaTangki')) document.getElementById('inputAirHargaTangki').value = '50.000';
+    if(document.getElementById('inputAirLiterTangki')) document.getElementById('inputAirLiterTangki').value = '1000';
+    if(document.getElementById('inputAirCuciLiter')) document.getElementById('inputAirCuciLiter').value = '50';
+    safeSetSelect('inputAirBoilerSumber', 'sama');
+    if(document.getElementById('inputAirHargaGalon')) document.getElementById('inputAirHargaGalon').value = '5.000';
+    if(document.getElementById('inputAirLiterGalon')) document.getElementById('inputAirLiterGalon').value = '19';
+    if(document.getElementById('inputAirBoilerLiter')) document.getElementById('inputAirBoilerLiter').value = '25';
+    if(document.getElementById('inputAirBoilerJam')) document.getElementById('inputAirBoilerJam').value = '4';
+    if(document.getElementById('inputAirBoilerKgJam')) document.getElementById('inputAirBoilerKgJam').value = '10';
+
+    if(document.getElementById('togglePackingPP')) document.getElementById('togglePackingPP').checked = true;
+    if(document.getElementById('inputPackingPPHarga')) document.getElementById('inputPackingPPHarga').value = '25.000';
+    if(document.getElementById('inputPackingPPIsi')) document.getElementById('inputPackingPPIsi').value = '100';
+    if(document.getElementById('inputPackingPPKg')) document.getElementById('inputPackingPPKg').value = '3';
+    if(document.getElementById('togglePackingHD')) document.getElementById('togglePackingHD').checked = true;
+    if(document.getElementById('inputPackingHDHarga')) document.getElementById('inputPackingHDHarga').value = '15.000';
+    if(document.getElementById('inputPackingHDIsi')) document.getElementById('inputPackingHDIsi').value = '50';
+    if(document.getElementById('inputPackingHDKg')) document.getElementById('inputPackingHDKg').value = '5';
+    if(document.getElementById('togglePackingJinjing')) document.getElementById('togglePackingJinjing').checked = false;
+    if(document.getElementById('inputPackingJinjingHarga')) document.getElementById('inputPackingJinjingHarga').value = '35.000';
+    if(document.getElementById('inputPackingJinjingIsi')) document.getElementById('inputPackingJinjingIsi').value = '100';
+    if(document.getElementById('inputPackingJinjingKg')) document.getElementById('inputPackingJinjingKg').value = '4';
+
+    if(document.getElementById('toggleBahanDet')) document.getElementById('toggleBahanDet').checked = true;
+    safeSetSelect('bahanDetType', 'cair');
+    if(document.getElementById('bahanDetHargaBulk')) document.getElementById('bahanDetHargaBulk').value = '100.000';
+    if(document.getElementById('bahanDetKapasitasBulk')) document.getElementById('bahanDetKapasitasBulk').value = '5';
+    if(document.getElementById('bahanDetPemakaian')) document.getElementById('bahanDetPemakaian').value = '10';
+    if(document.getElementById('toggleBahanSof')) document.getElementById('toggleBahanSof').checked = true;
+    safeSetSelect('bahanSofType', 'cair');
+    if(document.getElementById('bahanSofHargaBulk')) document.getElementById('bahanSofHargaBulk').value = '80.000';
+    if(document.getElementById('bahanSofKapasitasBulk')) document.getElementById('bahanSofKapasitasBulk').value = '5';
+    if(document.getElementById('bahanSofPemakaian')) document.getElementById('bahanSofPemakaian').value = '10';
+    if(document.getElementById('toggleBahanPar')) document.getElementById('toggleBahanPar').checked = true;
+    if(document.getElementById('bahanParHargaBulk')) document.getElementById('bahanParHargaBulk').value = '150.000';
+    if(document.getElementById('bahanParKapasitasBulk')) document.getElementById('bahanParKapasitasBulk').value = '5';
+    if(document.getElementById('bahanParPemakaian')) document.getElementById('bahanParPemakaian').value = '5';
+    if(document.getElementById('toggleBahanPel')) document.getElementById('toggleBahanPel').checked = true;
+    safeSetSelect('bahanPelType', 'cair');
+    if(document.getElementById('bahanPelHargaBulk')) document.getElementById('bahanPelHargaBulk').value = '50.000';
+    if(document.getElementById('bahanPelKapasitasBulk')) document.getElementById('bahanPelKapasitasBulk').value = '5';
+    if(document.getElementById('bahanPelPemakaian')) document.getElementById('bahanPelPemakaian').value = '5';
+
+    safeSetSelect('notaType', 'digital');
+    safeSetSelect('notaAppFeeType', 'bulan');
+    if(document.getElementById('notaAppHargaBulan')) document.getElementById('notaAppHargaBulan').value = '50.000';
+    if(document.getElementById('notaAppTrxBulan')) document.getElementById('notaAppTrxBulan').value = '500';
+    if(document.getElementById('notaAppHargaTrx')) document.getElementById('notaAppHargaTrx').value = '100';
+    if(document.getElementById('notaThermalHarga')) document.getElementById('notaThermalHarga').value = '35';
+    if(document.getElementById('notaManualHarga')) document.getElementById('notaManualHarga').value = '10.000';
+    if(document.getElementById('notaManualLembarTotal')) document.getElementById('notaManualLembarTotal').value = '100';
+    if(document.getElementById('notaManualLembarTrx')) document.getElementById('notaManualLembarTrx').value = '2';
+    if(document.getElementById('notaRataKg')) document.getElementById('notaRataKg').value = '4';
+    
+    if(typeof StateMachine !== 'undefined') StateMachine.calculateTotal();
+}
+
+function populateFormHPP(namaCabang) {
+  const hppData = masterDataHPP.find(h => String(h.namaOutlet) === namaCabang);
+  
+  if (hppData) {
+    safeSetSelect('inputGasKapasitas', hppData['Kap Gas'] || '');
+    if(document.getElementById('inputGasHarga')) document.getElementById('inputGasHarga').value = hppData['Harga Gas'] || '';
+    if(document.getElementById('inputGasJam')) document.getElementById('inputGasJam').value = hppData['Jam Gas'] || '';
+    if(document.getElementById('inputCentralGas')) document.getElementById('inputCentralGas').checked = (hppData['Central Gas'] === 'Ya');
+    if(document.getElementById('inputGasMenit')) document.getElementById('inputGasMenit').value = hppData['Menit Gas'] ? `${hppData['Menit Gas']} Menit` : '0 Menit';
+
+    if(document.getElementById('inputTDL')) document.getElementById('inputTDL').value = hppData['TDL'] || '1.700';
+    if(document.getElementById('inputListrikCuciWatt')) document.getElementById('inputListrikCuciWatt').value = hppData['Watt Cuci'] || '450';
+    if(document.getElementById('inputListrikPengeringWatt')) document.getElementById('inputListrikPengeringWatt').value = hppData['Watt Kering'] || '450';
+    if(document.getElementById('inputListrikPompaWatt')) document.getElementById('inputListrikPompaWatt').value = hppData['Watt Pompa'] || '280';
+    if(document.getElementById('inputListrikSetrikaWatt')) document.getElementById('inputListrikSetrikaWatt').value = hppData['Watt Setrika'] || '300';
+    
+    const isSetrikaListrikActive = parseFloat(hppData['Watt Setrika']) > 0;
+    if(document.getElementById('toggleSetrikaListrik')) document.getElementById('toggleSetrikaListrik').checked = isSetrikaListrikActive;
+
+    safeSetSelect('inputAirSumber', hppData['Sumber Air'] || hppData['Air_Sumber'] || 'pdam');
+    if(document.getElementById('inputAirHargaM3')) document.getElementById('inputAirHargaM3').value = hppData['Harga Air'] || hppData['Air_HargaM3'] || '6.000';
+    if(document.getElementById('inputAirHargaTangki')) document.getElementById('inputAirHargaTangki').value = hppData['Harga Tangki'] || hppData['Air_HargaTangki'] || '50.000';
+    if(document.getElementById('inputAirLiterTangki')) document.getElementById('inputAirLiterTangki').value = hppData['Liter Tangki'] || hppData['Air_LiterTangki'] || '1000';
+    if(document.getElementById('inputAirCuciLiter')) document.getElementById('inputAirCuciLiter').value = hppData['Air Cuci'] || hppData['Air_CuciLiter'] || '50';
+    
+    safeSetSelect('inputAirBoilerSumber', hppData['Sumber Setrika'] || hppData['Air_BoilerSumber'] || 'sama');
+    if(document.getElementById('inputAirHargaGalon')) document.getElementById('inputAirHargaGalon').value = hppData['Galon Setrika'] || hppData['Air_HargaGalon'] || '5.000';
+    if(document.getElementById('inputAirLiterGalon')) document.getElementById('inputAirLiterGalon').value = hppData['Vol Setrika'] || hppData['Air_LiterGalon'] || '19';
+    if(document.getElementById('inputAirBoilerLiter')) document.getElementById('inputAirBoilerLiter').value = hppData['Liter Setrika'] || hppData['Air_BoilerLiter'] || '25';
+    if(document.getElementById('inputAirBoilerJam')) document.getElementById('inputAirBoilerJam').value = hppData['Jam Setrika'] || hppData['Air_BoilerJam'] || '4';
+    if(document.getElementById('inputAirBoilerKgJam')) document.getElementById('inputAirBoilerKgJam').value = hppData['Kg Setrika'] || hppData['Air_BoilerKgJam'] || '10';
+
+    if(document.getElementById('togglePackingPP')) document.getElementById('togglePackingPP').checked = (hppData['Packing_PP_Active'] !== 'false' && hppData['Packing_PP_Active'] !== false);
+    if(document.getElementById('inputPackingPPHarga')) document.getElementById('inputPackingPPHarga').value = hppData['Packing_PP_Harga'] || '25.000';
+    if(document.getElementById('inputPackingPPIsi')) document.getElementById('inputPackingPPIsi').value = hppData['Packing_PP_Isi'] || '100';
+    if(document.getElementById('inputPackingPPKg')) document.getElementById('inputPackingPPKg').value = hppData['Packing_PP_Kg'] || '3';
+    
+    if(document.getElementById('togglePackingHD')) document.getElementById('togglePackingHD').checked = (hppData['Packing_HD_Active'] !== 'false' && hppData['Packing_HD_Active'] !== false);
+    if(document.getElementById('inputPackingHDHarga')) document.getElementById('inputPackingHDHarga').value = hppData['Packing_HD_Harga'] || '15.000';
+    if(document.getElementById('inputPackingHDIsi')) document.getElementById('inputPackingHDIsi').value = hppData['Packing_HD_Isi'] || '50';
+    if(document.getElementById('inputPackingHDKg')) document.getElementById('inputPackingHDKg').value = hppData['Packing_HD_Kg'] || '5';
+    
+    if(document.getElementById('togglePackingJinjing')) document.getElementById('togglePackingJinjing').checked = (hppData['Packing_Jinjing_Active'] === 'true' || hppData['Packing_Jinjing_Active'] === true);
+    if(document.getElementById('inputPackingJinjingHarga')) document.getElementById('inputPackingJinjingHarga').value = hppData['Packing_Jinjing_Harga'] || '35.000';
+    if(document.getElementById('inputPackingJinjingIsi')) document.getElementById('inputPackingJinjingIsi').value = hppData['Packing_Jinjing_Isi'] || '100';
+    if(document.getElementById('inputPackingJinjingKg')) document.getElementById('inputPackingJinjingKg').value = hppData['Packing_Jinjing_Kg'] || '4';
+
+    if(document.getElementById('toggleBahanDet')) document.getElementById('toggleBahanDet').checked = (hppData['Chem_Det_Active'] !== 'false' && hppData['Chem_Det_Active'] !== false);
+    safeSetSelect('bahanDetType', hppData['Chem_Det_Type'] || 'cair');
+    if(document.getElementById('bahanDetHargaBulk')) document.getElementById('bahanDetHargaBulk').value = hppData['Chem_Det_Harga'] || '100.000';
+    if(document.getElementById('bahanDetKapasitasBulk')) document.getElementById('bahanDetKapasitasBulk').value = hppData['Chem_Det_Kapasitas'] || '5';
+    if(document.getElementById('bahanDetPemakaian')) document.getElementById('bahanDetPemakaian').value = hppData['Chem_Det_Pemakaian'] || '10';
+    
+    if(document.getElementById('toggleBahanSof')) document.getElementById('toggleBahanSof').checked = (hppData['Chem_Sof_Active'] !== 'false' && hppData['Chem_Sof_Active'] !== false);
+    safeSetSelect('bahanSofType', hppData['Chem_Sof_Type'] || 'cair');
+    if(document.getElementById('bahanSofHargaBulk')) document.getElementById('bahanSofHargaBulk').value = hppData['Chem_Sof_Harga'] || '80.000';
+    if(document.getElementById('bahanSofKapasitasBulk')) document.getElementById('bahanSofKapasitasBulk').value = hppData['Chem_Sof_Kapasitas'] || '5';
+    if(document.getElementById('bahanSofPemakaian')) document.getElementById('bahanSofPemakaian').value = hppData['Chem_Sof_Pemakaian'] || '10';
+    
+    if(document.getElementById('toggleBahanPar')) document.getElementById('toggleBahanPar').checked = (hppData['Chem_Par_Active'] !== 'false' && hppData['Chem_Par_Active'] !== false);
+    if(document.getElementById('bahanParHargaBulk')) document.getElementById('bahanParHargaBulk').value = hppData['Chem_Par_Harga'] || '150.000';
+    if(document.getElementById('bahanParKapasitasBulk')) document.getElementById('bahanParKapasitasBulk').value = hppData['Chem_Par_Kapasitas'] || '5';
+    if(document.getElementById('bahanParPemakaian')) document.getElementById('bahanParPemakaian').value = hppData['Chem_Par_Pemakaian'] || '5';
+    
+    if(document.getElementById('toggleBahanPel')) document.getElementById('toggleBahanPel').checked = (hppData['Chem_Pel_Active'] !== 'false' && hppData['Chem_Pel_Active'] !== false);
+    safeSetSelect('bahanPelType', hppData['Chem_Pel_Type'] || 'cair');
+    if(document.getElementById('bahanPelHargaBulk')) document.getElementById('bahanPelHargaBulk').value = hppData['Chem_Pel_Harga'] || '50.000';
+    if(document.getElementById('bahanPelKapasitasBulk')) document.getElementById('bahanPelKapasitasBulk').value = hppData['Chem_Pel_Kapasitas'] || '5';
+    if(document.getElementById('bahanPelPemakaian')) document.getElementById('bahanPelPemakaian').value = hppData['Chem_Pel_Pemakaian'] || '5';
+
+    safeSetSelect('notaType', hppData['Nota_Type'] || 'digital');
+    safeSetSelect('notaAppFeeType', hppData['Nota_App_FeeType'] || 'bulan');
+    if(document.getElementById('notaAppHargaBulan')) document.getElementById('notaAppHargaBulan').value = hppData['Nota_App_HargaBulan'] || '50.000';
+    if(document.getElementById('notaAppTrxBulan')) document.getElementById('notaAppTrxBulan').value = hppData['Nota_App_TrxBulan'] || '500';
+    if(document.getElementById('notaAppHargaTrx')) document.getElementById('notaAppHargaTrx').value = hppData['Nota_App_HargaTrx'] || '100';
+    if(document.getElementById('notaThermalHarga')) document.getElementById('notaThermalHarga').value = hppData['Nota_Thermal_Harga'] || '35';
+    if(document.getElementById('notaManualHarga')) document.getElementById('notaManualHarga').value = hppData['Nota_Manual_Harga'] || '10.000';
+    if(document.getElementById('notaManualLembarTotal')) document.getElementById('notaManualLembarTotal').value = hppData['Nota_Manual_LembarTotal'] || '100';
+    if(document.getElementById('notaManualLembarTrx')) document.getElementById('notaManualLembarTrx').value = hppData['Nota_Manual_LembarTrx'] || '2';
+    if(document.getElementById('notaRataKg')) document.getElementById('notaRataKg').value = hppData['Nota_RataKg'] || '4';
+
+  } else {
+    resetFormHPP();
+  }
+
+  if(typeof toggleAirInputs === 'function') toggleAirInputs();
+  if(typeof toggleBahanActive === 'function') toggleBahanActive();
+  if(typeof toggleBahanInputs === 'function') toggleBahanInputs();
+  if(typeof toggleNotaInputs === 'function') toggleNotaInputs();
+
+  if(typeof calculateGas === 'function') calculateGas();
+  if(typeof calculateListrik === 'function') calculateListrik();
+  if(typeof calculateAir === 'function') calculateAir();
+  if(typeof calculatePacking === 'function') calculatePacking();
+  if(typeof calculateBahanBaku === 'function') calculateBahanBaku();
+  if(typeof calculateNota === 'function') calculateNota();
+  
+  if(typeof StateMachine !== 'undefined') StateMachine.calculateTotal();
+}
+
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('dropdownCabangResult');
+    const inputNama = document.getElementById('inputNama');
+    if (dropdown && inputNama && !inputNama.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+function checkHPPLock() {
+    const selectHPP = document.getElementById('inputNamaHPP');
+    const namaCabang = selectHPP ? selectHPP.value : '';
+    
+    const hppContents = document.querySelectorAll('#view-hpp .bento-card, #hpp-dashboard-view, #hpp-form-view');
+    hppContents.forEach(content => {
+        if (!namaCabang) {
+            content.style.pointerEvents = 'none';
+            content.style.opacity = '0.35';
+            content.style.filter = 'grayscale(1)';
+            content.style.transition = 'all 0.4s ease';
+        } else {
+            content.style.pointerEvents = 'auto';
+            content.style.opacity = '1';
+            content.style.filter = 'none';
+        }
+    });
+
+    const btnSimpan = document.getElementById('btnSimpanHPP');
+    const btnUpdate = document.getElementById('btnUpdateHPP');
+    
+    if (btnSimpan) {
+        if (!namaCabang) {
+            btnSimpan.style.opacity = '0.4';
+            btnSimpan.style.pointerEvents = 'none';
+        } else {
+            btnSimpan.style.opacity = '1';
+            btnSimpan.style.pointerEvents = 'auto';
+        }
+    }
+    
+    if (btnUpdate) {
+        if (!namaCabang) {
+            btnUpdate.style.opacity = '0.4';
+            btnUpdate.style.pointerEvents = 'none';
+        } else {
+            btnUpdate.style.opacity = '1';
+            btnUpdate.style.pointerEvents = 'auto';
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    ['inputOkupansiCuci', 'inputOkupansiKering', 'inputOkupansiSetrika'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.addEventListener('input', calculateCapacity);
+            el.addEventListener('change', calculateCapacity);
+        }
+    });
+
+    const btnHapus = document.getElementById('btnHapusKapasitas');
+    if (btnHapus) {
+        btnHapus.addEventListener('click', hapusOutlet);
+    }
+    
+    setTimeout(autoRetryPendingSync, 2000);
+    checkHPPLock();
+});
+
+function addMesin(tipe, unit = 0, durasi = 0, kg = 0) {
+    let idContainer = '';
+    if (tipe === 'cuci') idContainer = 'containerMesinCuci';
+    else if (tipe === 'pengering') idContainer = 'containerMesinPengering';
+    else idContainer = 'containerMesinSetrika';
+    
+    const container = document.getElementById(idContainer);
+    if(!container) return;
+    
+    if(container.children.length === 0) {
+        const header = document.createElement('div');
+        header.className = 'omni-asset-header animate-fade-in';
+        header.innerHTML = `
+            <div class="omni-asset-th">Unit</div>
+            <div class="omni-asset-th">Durasi(m)</div>
+            <div class="omni-asset-th">Max Kg</div>
+            <div class="omni-asset-th">Aksi</div>
+        `;
+        container.appendChild(header);
+    }
+    
+    const id = 'omni_m_' + Date.now() + Math.floor(Math.random() * 1000);
+    const div = document.createElement('div');
+    div.className = `omni-asset-grid animate-fade-in input-mesin-${tipe}`;
+    div.id = id;
+    
+    const safeUnit = (unit === '' || isNaN(parseFloat(unit))) ? 0 : parseFloat(unit);
+    const safeDurasi = (durasi === '' || isNaN(parseFloat(durasi))) ? 0 : parseFloat(durasi);
+    const safeKg = (kg === '' || isNaN(parseFloat(kg))) ? 0 : parseFloat(kg);
+
+    div.innerHTML = `
+        <input type="number" min="0" value="${safeUnit}" class="m-unit omni-asset-input" placeholder="0">
+        <input type="number" min="0" value="${safeDurasi}" class="m-durasi omni-asset-input" placeholder="0">
+        <input type="number" min="0" step="0.1" value="${safeKg}" class="m-kg omni-asset-input" placeholder="0">
+        <button type="button" onclick="document.getElementById('${id}').remove(); calculateCapacity()" class="omni-btn-trash" aria-label="Hapus Aset">
+            <i class="ph ph-trash-bold text-lg"></i>
+        </button>
+    `;
+    container.appendChild(div);
+    
+    div.querySelectorAll('.omni-asset-input').forEach(input => {
+        input.addEventListener('input', calculateCapacity);
+        input.addEventListener('change', calculateCapacity);
+    });
+
+    calculateCapacity();
+}
+
+function _extractMesin(tipe) {
+  let idContainer = '';
+  if (tipe === 'cuci') idContainer = 'containerMesinCuci';
+  else if (tipe === 'pengering') idContainer = 'containerMesinPengering';
+  else idContainer = 'containerMesinSetrika';
+
+  const container = document.getElementById(idContainer);
+  if (!container) return [];
+
+  const rows = container.querySelectorAll('.omni-asset-grid'); 
+  const data = [];
+
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('.omni-asset-input');
+    if (inputs.length >= 3) {
+      let u = parseFloat(inputs[0].value);
+      let d = parseFloat(inputs[1].value);
+      let k = parseFloat(inputs[2].value);
+      data.push({
+        unit: isNaN(u) ? 0 : u,
+        durasi: isNaN(d) ? 0 : d, 
+        max_kg: isNaN(k) ? 0 : k
+      });
+    }
+  });
+  
+  return data;
+}
+
+function toggleKategoriLaundry() {
+    const cat = document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : '';
+    const cardSetrikaMesin = document.getElementById('cardSetrikaMesin');
+    const cardSetrikaOkupansi = document.getElementById('cardSetrikaOkupansi');
+    
+    if(cat === 'Self Service') {
+        if(cardSetrikaMesin) cardSetrikaMesin.style.display = 'none';
+        if(cardSetrikaOkupansi) cardSetrikaOkupansi.style.display = 'none';
+    } else {
+        if(cardSetrikaMesin) cardSetrikaMesin.style.display = 'block';
+        if(cardSetrikaOkupansi) cardSetrikaOkupansi.style.display = 'block';
+    }
+
+    const unitText = (cat === 'Self Service') ? 'Load' : 'Kg';
+    const arrLabels = ['lblCuciHari', 'lblCuciMinggu', 'lblCuciBulan', 'lblKeringHari', 'lblKeringMinggu', 'lblKeringBulan', 'lblSetrikaHari', 'lblSetrikaMinggu', 'lblSetrikaBulan'];
+    arrLabels.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            let period = id.includes('Hari') ? 'Hari' : (id.includes('Minggu') ? 'Minggu' : 'Bulan');
+            el.innerText = `${unitText}/${period}:`;
+        }
+    });
+
+    calculateCapacity();
+}
+
+let capTimeout;
+function calculateCapacity() {
+    clearTimeout(capTimeout);
+    capTimeout = setTimeout(() => {
+        let operasionalMenit = 0;
+        const jamBuka = document.getElementById('inputJamBuka') ? document.getElementById('inputJamBuka').value : '';
+        const jamTutup = document.getElementById('inputJamTutup') ? document.getElementById('inputJamTutup').value : '';
+
+        if (jamBuka && jamTutup) {
+            const bH = parseInt(jamBuka.split(':')[0], 10);
+            const bM = parseInt(jamBuka.split(':')[1] || 0, 10);
+            const tH = parseInt(jamTutup.split(':')[0], 10);
+            const tM = parseInt(jamTutup.split(':')[1] || 0, 10);
+            
+            if (!isNaN(bH) && !isNaN(bM) && !isNaN(tH) && !isNaN(tM)) {
+                let mBuka = bH * 60 + bM;
+                let mTutup = tH * 60 + tM;
+                
+                if (mTutup < mBuka) mTutup += 24 * 60; 
+                operasionalMenit = mTutup - mBuka;
+
+                const durasiJam = Math.floor(operasionalMenit / 60);
+                const durasiMenit = operasionalMenit % 60;
+                if (document.getElementById('displayDurasi')) {
+                    document.getElementById('displayDurasi').innerText = `${durasiJam} Jam ${durasiMenit} Menit`;
+                }
+            } else {
+                if (document.getElementById('displayDurasi')) {
+                    document.getElementById('displayDurasi').innerText = `- Jam - Menit`;
+                }
+            }
+        }
+
+        const mingguTutup = document.getElementById('inputMingguTutup') ? document.getElementById('inputMingguTutup').checked : false;
+        const hariPerBulan = mingguTutup ? 26 : 30;
+        const hariPerMinggu = mingguTutup ? 6 : 7;
+        
+        if (document.getElementById('displayHariOperasional')) {
+            document.getElementById('displayHariOperasional').innerText = hariPerBulan;
+        }
+
+        const valCuci = document.getElementById('inputOkupansiCuci') ? document.getElementById('inputOkupansiCuci').value.replace(/[^0-9.]/g, '') : '100';
+        const valKering = document.getElementById('inputOkupansiKering') ? document.getElementById('inputOkupansiKering').value.replace(/[^0-9.]/g, '') : '100';
+        const valSetrika = document.getElementById('inputOkupansiSetrika') ? document.getElementById('inputOkupansiSetrika').value.replace(/[^0-9.]/g, '') : '100';
+
+        const okCuci = (parseFloat(valCuci) || 100) / 100;
+        const okKering = (parseFloat(valKering) || 100) / 100;
+        const okSetrika = (parseFloat(valSetrika) || 100) / 100;
+
+        const hitungSiklusMesin = (tipe, targetOkupansi) => {
+            let totalLoadAwal = 0;
+            let totalKgAwal = 0;
+
+            document.querySelectorAll(`.input-mesin-${tipe}`).forEach(row => {
+                const unit = parseFloat(row.querySelector('.m-unit').value) || 0;
+                let durasi = parseFloat(row.querySelector('.m-durasi').value);
+                if (isNaN(durasi)) durasi = 0; 
+                
+                const maxKg = parseFloat(row.querySelector('.m-kg').value) || 0;
+
+                if (durasi > 0 && operasionalMenit > 0) {
+                    const maxSiklusPerMesin = Math.floor(operasionalMenit / durasi);
+                    const maxLoadSemuaUnit = maxSiklusPerMesin * unit;
+                    totalLoadAwal += maxLoadSemuaUnit;
+                    totalKgAwal += (maxLoadSemuaUnit * maxKg);
+                }
+            });
+
+            const loadAktual = Math.floor(totalLoadAwal * targetOkupansi);
+            const kgAktual = totalKgAwal * targetOkupansi;
+
+            return {
+                loadHari: loadAktual,
+                kgHari: kgAktual,
+                kgMinggu: kgAktual * hariPerMinggu,
+                kgBulan: kgAktual * hariPerBulan
+            };
+        };
+
+        const hasilCuci = hitungSiklusMesin('cuci', okCuci);
+        const hasilKering = hitungSiklusMesin('pengering', okKering);
+        const hasilSetrika = hitungSiklusMesin('setrika', okSetrika);
+
+        const isSelfService = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service';
+        const unitStr = isSelfService ? 'Load' : 'Kg';
+
+        if(document.getElementById('dispCuciLoadHari')) document.getElementById('dispCuciLoadHari').innerText = hasilCuci.loadHari;
+        if(document.getElementById('dispCuciKgHari')) document.getElementById('dispCuciKgHari').innerText = isSelfService ? `${hasilCuci.loadHari} Load` : `${hasilCuci.kgHari.toFixed(1)} Kg`;
+        if(document.getElementById('dispCuciKgMinggu')) document.getElementById('dispCuciKgMinggu').innerText = isSelfService ? `${hasilCuci.loadHari * hariPerMinggu} Load` : `${hasilCuci.kgMinggu.toFixed(1)} Kg`;
+        if(document.getElementById('dispCuciKgBulan')) document.getElementById('dispCuciKgBulan').innerText = isSelfService ? `${hasilCuci.loadHari * hariPerBulan} Load` : `${hasilCuci.kgBulan.toFixed(1)} Kg`;
+
+        if(document.getElementById('dispKeringLoadHari')) document.getElementById('dispKeringLoadHari').innerText = hasilKering.loadHari;
+        if(document.getElementById('dispKeringKgHari')) document.getElementById('dispKeringKgHari').innerText = isSelfService ? `${hasilKering.loadHari} Load` : `${hasilKering.kgHari.toFixed(1)} Kg`;
+        if(document.getElementById('dispKeringKgMinggu')) document.getElementById('dispKeringKgMinggu').innerText = isSelfService ? `${hasilKering.loadHari * hariPerMinggu} Load` : `${hasilKering.kgMinggu.toFixed(1)} Kg`;
+        if(document.getElementById('dispKeringKgBulan')) document.getElementById('dispKeringKgBulan').innerText = isSelfService ? `${hasilKering.loadHari * hariPerBulan} Load` : `${hasilKering.kgBulan.toFixed(1)} Kg`;
+
+        if(document.getElementById('dispSetrikaKgHari')) document.getElementById('dispSetrikaKgHari').innerText = `${hasilSetrika.kgHari.toFixed(1)} ${unitStr}`;
+        if(document.getElementById('dispSetrikaKgMinggu')) document.getElementById('dispSetrikaKgMinggu').innerText = `${hasilSetrika.kgMinggu.toFixed(1)} ${unitStr}`;
+        if(document.getElementById('dispSetrikaKgBulan')) document.getElementById('dispSetrikaKgBulan').innerText = `${hasilSetrika.kgBulan.toFixed(1)} ${unitStr}`;
+
+        if(typeof calculateAll === 'function' && window.isCalculateCapacityRunning !== true) {
+            window.isCalculateCapacityRunning = true;
+            calculateAll();
+            window.isCalculateCapacityRunning = false;
+        }
+    }, 50);
+}
+
+async function prosesSimpanKapasitas() {
+    if(!StateMachine.acquireLock('saveKapasitas')) return;
+    
+    const nama = document.getElementById('inputNama').value.trim();
+    if(!nama) {
+        StateMachine.releaseLock('saveKapasitas');
+        return showOmniToast('Nama Outlet wajib diisi!', 'error');
+    }
+
+    const isUpdate = !document.getElementById('btnUpdateKapasitas').classList.contains('hidden');
+    const btnId = isUpdate ? 'btnUpdateKapasitas' : 'btnSimpanKapasitas';
+
+    setBtnState(btnId, 'loading');
+
+    try {
+        let exCuci = _extractMesin('cuci')[0] || {unit:0, durasi:0, max_kg:0};
+        let exKering = _extractMesin('pengering')[0] || {unit:0, durasi:0, max_kg:0};
+        let exSetrika = _extractMesin('setrika')[0] || {unit:0, durasi:0, max_kg:0};
+
+        const payload = {
+            namaOutlet: nama, 
+            kategori: document.getElementById('inputKategori').value,
+            jamBuka: document.getElementById('inputJamBuka').value,
+            jamTutup: document.getElementById('inputJamTutup').value,
+            mingguTutup: document.getElementById('inputMingguTutup').checked,
+            targetOkupansiCuci: document.getElementById('inputOkupansiCuci').value,
+            targetOkupansiKering: document.getElementById('inputOkupansiKering').value,
+            targetOkupansiSetrika: document.getElementById('inputOkupansiSetrika').value,
+            estimasiCuciKgBulan: document.getElementById('dispCuciKgBulan') ? document.getElementById('dispCuciKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
+            estimasiKeringKgBulan: document.getElementById('dispKeringKgBulan') ? document.getElementById('dispKeringKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
+            estimasiSetrikaKgBulan: document.getElementById('dispSetrikaKgBulan') ? document.getElementById('dispSetrikaKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
+            
+            tipeMesinCuci: document.getElementById('jenisMesinCuci') ? document.getElementById('jenisMesinCuci').value : 'commercial',
+            tipeMesinPengering: document.getElementById('jenisMesinPengering') ? document.getElementById('jenisMesinPengering').value : 'commercial',
+            tipeSetrikaUtama: document.getElementById('jenisSetrikaUtama') ? document.getElementById('jenisSetrikaUtama').value : 'uap',
+            
+            cuciUnit: exCuci.unit,
+            cuciDurasi: exCuci.durasi,
+            cuciKg: exCuci.max_kg,
+            
+            pengeringUnit: exKering.unit,
+            pengeringDurasi: exKering.durasi,
+            pengeringKg: exKering.max_kg,
+            
+            setrikaUnit: exSetrika.unit,
+            setrikaDurasi: exSetrika.durasi,
+            setrikaKg: exSetrika.max_kg
+        };
+
+        const response = await runServer('saveKapasitasPremium', payload);
+        
+        StateMachine.invalidateClientCache();
+        
+        setBtnState(btnId, 'success');
+        showOmniToast(response.message, 'success');
+        
+        setTimeout(() => {
+            setBtnState(btnId, 'idle');
+            hideFormKapasitas();
+            loadDaftarCabang(); 
+        }, 1500);
+
+    } catch(error) {
+        setBtnState(btnId, 'idle');
+        showOmniToast(error.message, 'error');
+    } finally {
+        StateMachine.releaseLock('saveKapasitas');
+    }
+}
+
+function backgroundSyncHPP(payload) {
+    if(!StateMachine.acquireLock('bgSync')) return;
+    
+    localStorage.setItem('zett_hpp_pending_sync', JSON.stringify(payload));
+    
+    runServer('saveStrukturBiaya', payload)
+        .then(response => {
+            localStorage.removeItem('zett_hpp_pending_sync');
+            StateMachine.invalidateClientCache();
+            console.log("Background Sync HPP Sukses: " + response.message);
+        })
+        .catch(err => {
+            showOmniToast('Koneksi terputus! Data tersimpan aman dan akan dikirim ulang otomatis.', 'error');
+            console.error("Background Sync HPP Gagal: ", err.message);
+        })
+        .finally(() => {
+            StateMachine.releaseLock('bgSync');
+        });
+}
+
+function autoRetryPendingSync() {
+    const pending = localStorage.getItem('zett_hpp_pending_sync');
+    if (pending && !APP_STATE.locks['bgSync']) {
+        try {
+            const payload = JSON.parse(pending);
+            showOmniToast('Mendeteksi antrean. Mengirim ulang data ke Cloud...', 'success');
+            backgroundSyncHPP(payload);
+        } catch(e) {
+            localStorage.removeItem('zett_hpp_pending_sync');
+        }
+    }
+}
+
+function simpanDataHPP(e) {
+    if(e) e.preventDefault(); 
+    
+    const nama = document.getElementById('inputNamaHPP').value.trim();
+    if(!nama) return showOmniToast('Silakan pilih cabang di pojok kanan atas terlebih dahulu!', 'error');
+
+    if(!StateMachine.acquireLock('simpanHPP')) return;
+
+    const isUpdate = document.getElementById('btnUpdateHPP') && !document.getElementById('btnUpdateHPP').classList.contains('hidden');
+    const btnId = isUpdate ? 'btnUpdateHPP' : 'btnSimpanHPP';
+
+    setBtnState(btnId, 'success');
+    showOmniToast(isUpdate ? 'Memperbarui data di Cloud...' : 'Menyimpan data ke Cloud...', 'success');
+
+    const jamGasUI = document.getElementById('inputGasJam') ? parseFloat(document.getElementById('inputGasJam').value) || 0 : 0;
+    const hargaGasUI = document.getElementById('inputGasHarga') ? parseFloat(document.getElementById('inputGasHarga').value.replace(/\./g, '')) || 0 : 0;
+    const menitGasUI = jamGasUI * 60;
+    const centralGasUI = document.getElementById('inputCentralGas') ? document.getElementById('inputCentralGas').checked : false;
+    
+    let jmlKeringUI = 0;
+    let durasiKeringUI = 60;
+    document.querySelectorAll('.input-mesin-pengering').forEach((el, index) => {
+        const u = parseFloat(el.querySelector('.m-unit').value) || 0;
+        jmlKeringUI += u;
+        if(index === 0) {
+          const d = parseFloat(el.querySelector('.m-durasi').value);
+          if(!isNaN(d) && d > 0) durasiKeringUI = d;
+        }
+    });
+    
+    if(jmlKeringUI === 0) jmlKeringUI = 1; 
+    let costPerMenitUI = (menitGasUI > 0 && hargaGasUI > 0) ? (hargaGasUI / menitGasUI) : 0;
+    let gasPerLoadUI = costPerMenitUI * durasiKeringUI;
+
+    const payload = {
+        namaOutlet: nama,
+        
+        gasKapasitas: document.getElementById('inputGasKapasitas') ? document.getElementById('inputGasKapasitas').value : '',
+        gasHarga: hargaGasUI,
+        gasJam: jamGasUI,
+        gasMenit: menitGasUI,
+        gasCentral: centralGasUI ? 'Ya' : 'Tidak',
+        gasJmlKering: jmlKeringUI,
+        gasDurasiKering: durasiKeringUI,
+        gasPerLoad: gasPerLoadUI,
+        
+        listrikTDL: document.getElementById('inputTDL') ? document.getElementById('inputTDL').value : '',
+        listrikCuci: document.getElementById('inputListrikCuciWatt') ? document.getElementById('inputListrikCuciWatt').value : '',
+        listrikPengering: document.getElementById('inputListrikPengeringWatt') ? document.getElementById('inputListrikPengeringWatt').value : '',
+        listrikPompa: document.getElementById('inputListrikPompaWatt') ? document.getElementById('inputListrikPompaWatt').value : '',
+        listrikSetrika: document.getElementById('inputListrikSetrikaWatt') ? document.getElementById('inputListrikSetrikaWatt').value : '',
+        
+        airSumber: document.getElementById('inputAirSumber') ? document.getElementById('inputAirSumber').value : '',
+        airHargaM3: document.getElementById('inputAirHargaM3') ? document.getElementById('inputAirHargaM3').value : '',
+        airHargaTangki: document.getElementById('inputAirHargaTangki') ? document.getElementById('inputAirHargaTangki').value : '',
+        airLiterTangki: document.getElementById('inputAirLiterTangki') ? document.getElementById('inputAirLiterTangki').value : '',
+        airCuciLiter: document.getElementById('inputAirCuciLiter') ? document.getElementById('inputAirCuciLiter').value : '',
+        airBoilerSumber: document.getElementById('inputAirBoilerSumber') ? document.getElementById('inputAirBoilerSumber').value : '',
+        airHargaGalon: document.getElementById('inputAirHargaGalon') ? document.getElementById('inputAirHargaGalon').value : '',
+        airLiterGalon: document.getElementById('inputAirLiterGalon') ? document.getElementById('inputAirLiterGalon').value : '',
+        airBoilerLiter: document.getElementById('inputAirBoilerLiter') ? document.getElementById('inputAirBoilerLiter').value : '',
+        airBoilerJam: document.getElementById('inputAirBoilerJam') ? document.getElementById('inputAirBoilerJam').value : '',
+        airBoilerKgJam: document.getElementById('inputAirBoilerKgJam') ? document.getElementById('inputAirBoilerKgJam').value : '',
+
+        packPPActive: document.getElementById('togglePackingPP') ? document.getElementById('togglePackingPP').checked : false,
+        packPPHarga: document.getElementById('inputPackingPPHarga') ? document.getElementById('inputPackingPPHarga').value : '',
+        packPPIsi: document.getElementById('inputPackingPPIsi') ? document.getElementById('inputPackingPPIsi').value : '',
+        packPPKg: document.getElementById('inputPackingPPKg') ? document.getElementById('inputPackingPPKg').value : '',
+        
+        packHDActive: document.getElementById('togglePackingHD') ? document.getElementById('togglePackingHD').checked : false,
+        packHDHarga: document.getElementById('inputPackingHDHarga') ? document.getElementById('inputPackingHDHarga').value : '',
+        packHDIsi: document.getElementById('inputPackingHDIsi') ? document.getElementById('inputPackingHDIsi').value : '',
+        packHDKg: document.getElementById('inputPackingHDKg') ? document.getElementById('inputPackingHDKg').value : '',
+
+        packJinjingActive: document.getElementById('togglePackingJinjing') ? document.getElementById('togglePackingJinjing').checked : false,
+        packJinjingHarga: document.getElementById('inputPackingJinjingHarga') ? document.getElementById('inputPackingJinjingHarga').value : '',
+        packJinjingIsi: document.getElementById('inputPackingJinjingIsi') ? document.getElementById('inputPackingJinjingIsi').value : '',
+        packJinjingKg: document.getElementById('inputPackingJinjingKg') ? document.getElementById('inputPackingJinjingKg').value : '',
+
+        chemDetActive: document.getElementById('toggleBahanDet') ? document.getElementById('toggleBahanDet').checked : false,
+        chemDetType: document.getElementById('bahanDetType') ? document.getElementById('bahanDetType').value : '',
+        chemDetHargaBulk: document.getElementById('bahanDetHargaBulk') ? document.getElementById('bahanDetHargaBulk').value : '',
+        chemDetKapBulk: document.getElementById('bahanDetKapasitasBulk') ? document.getElementById('bahanDetKapasitasBulk').value : '',
+        chemDetHargaSachet: document.getElementById('bahanDetHargaSachet') ? document.getElementById('bahanDetHargaSachet').value : '',
+        chemDetKapSachet: document.getElementById('bahanDetKapasitasSachet') ? document.getElementById('bahanDetKapasitasSachet').value : '',
+        chemDetPakai: document.getElementById('bahanDetPemakaian') ? document.getElementById('bahanDetPemakaian').value : '',
+
+        chemSofActive: document.getElementById('toggleBahanSof') ? document.getElementById('toggleBahanSof').checked : false,
+        chemSofType: document.getElementById('bahanSofType') ? document.getElementById('bahanSofType').value : '',
+        chemSofHargaBulk: document.getElementById('bahanSofHargaBulk') ? document.getElementById('bahanSofHargaBulk').value : '',
+        chemSofKapBulk: document.getElementById('bahanSofKapasitasBulk') ? document.getElementById('bahanSofKapasitasBulk').value : '',
+        chemSofHargaSachet: document.getElementById('bahanSofHargaSachet') ? document.getElementById('bahanSofHargaSachet').value : '',
+        chemSofKapSachet: document.getElementById('bahanSofKapasitasSachet') ? document.getElementById('bahanSofKapasitasSachet').value : '',
+        chemSofPakai: document.getElementById('bahanSofPemakaian') ? document.getElementById('bahanSofPemakaian').value : '',
+
+        chemParActive: document.getElementById('toggleBahanPar') ? document.getElementById('toggleBahanPar').checked : false,
+        chemParHargaBulk: document.getElementById('bahanParHargaBulk') ? document.getElementById('bahanParHargaBulk').value : '',
+        chemParKapBulk: document.getElementById('bahanParKapasitasBulk') ? document.getElementById('bahanParKapasitasBulk').value : '',
+        chemParPakai: document.getElementById('bahanParPemakaian') ? document.getElementById('bahanParPemakaian').value : '',
+
+        chemPelActive: document.getElementById('toggleBahanPel') ? document.getElementById('toggleBahanPel').checked : false,
+        chemPelType: document.getElementById('bahanPelType') ? document.getElementById('bahanPelType').value : '',
+        chemPelHargaBulk: document.getElementById('bahanPelHargaBulk') ? document.getElementById('bahanPelHargaBulk').value : '',
+        chemPelKapBulk: document.getElementById('bahanPelKapasitasBulk') ? document.getElementById('bahanPelKapasitasBulk').value : '',
+        chemPelHargaSachet: document.getElementById('bahanPelHargaSachet') ? document.getElementById('bahanPelHargaSachet').value : '',
+        chemPelKapSachet: document.getElementById('bahanPelKapasitasSachet') ? document.getElementById('bahanPelKapasitasSachet').value : '',
+        chemPelPakai: document.getElementById('bahanPelPemakaian') ? document.getElementById('bahanPelPemakaian').value : '',
+
+        notaType: document.getElementById('notaType') ? document.getElementById('notaType').value : '',
+        notaAppFeeType: document.getElementById('notaAppFeeType') ? document.getElementById('notaAppFeeType').value : '',
+        notaAppHargaBulan: document.getElementById('notaAppHargaBulan') ? document.getElementById('notaAppHargaBulan').value : '',
+        notaAppTrxBulan: document.getElementById('notaAppTrxBulan') ? document.getElementById('notaAppTrxBulan').value : '',
+        notaAppHargaTrx: document.getElementById('notaAppHargaTrx') ? document.getElementById('notaAppHargaTrx').value : '',
+        notaThermalHarga: document.getElementById('notaThermalHarga') ? document.getElementById('notaThermalHarga').value : '',
+        notaManualHarga: document.getElementById('notaManualHarga') ? document.getElementById('notaManualHarga').value : '',
+        notaManualLbrTotal: document.getElementById('notaManualLembarTotal') ? document.getElementById('notaManualLembarTotal').value : '',
+        notaManualLbrTrx: document.getElementById('notaManualLembarTrx') ? document.getElementById('notaManualLembarTrx').value : '',
+        notaRataKg: document.getElementById('notaRataKg') ? document.getElementById('notaRataKg').value : ''
+    };
+
+    backgroundSyncHPP(payload);
+
+    localStorage.removeItem('zett_hpp_draft_state');
+    if(typeof calculateAll === 'function') calculateAll();
+    
+    setTimeout(() => {
+        setBtnState(btnId, 'idle');
+        showOmniToast(isUpdate ? 'Data struktur biaya berhasil diperbarui!' : 'Data struktur biaya tersimpan.', 'success');
+        
+        loadDaftarCabang(); 
+        StateMachine.releaseLock('simpanHPP');
+    }, 1200);
+}
+
+function hapusOutlet() {
+    const nama = document.getElementById('inputNama').value.trim();
+    if (!nama) return showOmniToast('Pilih outlet yang ingin dihapus terlebih dahulu.', 'warning');
+    
+    showOmniConfirm('Hapus Outlet Permanen', `Anda yakin ingin menghapus data untuk <b>${nama}</b> beserta seluruh riwayat perhitungannya?`)
+    .then(async (isConfirmed) => {
+        if (!isConfirmed) return;
+        
+        if(!StateMachine.acquireLock('hapusOutlet')) return;
+        
+        const originalHtml = document.getElementById('btnHapusKapasitas').innerHTML;
+        document.getElementById('btnHapusKapasitas').innerHTML = '<i class="ph ph-spinner-gap animate-spin"></i> Menghapus...';
+        document.getElementById('btnHapusKapasitas').classList.add('opacity-80', 'pointer-events-none');
+        
+        try {
+            const response = await runServer('deleteKapasitas', nama);
+            StateMachine.invalidateClientCache();
+            showOmniToast(response.message, 'success');
+            hideFormKapasitas();
+            loadDaftarCabang();
+        } catch(error) {
+            showOmniToast(error.message, 'error');
+        } finally {
+            document.getElementById('btnHapusKapasitas').innerHTML = originalHtml;
+            document.getElementById('btnHapusKapasitas').classList.remove('opacity-80', 'pointer-events-none');
+            StateMachine.releaseLock('hapusOutlet');
+        }
+    });
+}
+
+async function prosesSimpanBEP() {
+    if(!StateMachine.acquireLock('simpanBEP')) return;
+    
+    const btn = document.getElementById('btnSubmit');
+    const selectHPP = document.getElementById('inputNamaHPP');
+    
+    if (!selectHPP || !selectHPP.value) {
+        showOmniToast('Pilih cabang terlebih dahulu di pojok kanan atas.', 'error');
+        StateMachine.releaseLock('simpanBEP');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-2xl"></i> Menyimpan...';
+    btn.classList.add('opacity-80', 'pointer-events-none', 'scale-95');
+
+    try {
+        const payload = {
+            namaOutlet: selectHPP.value,
+            jamOperasional: document.getElementById('inputJamBuka').value + " - " + document.getElementById('inputJamTutup').value,
+            biayaTetap: parseFloat(document.getElementById('hiddenTotalBiayaTetap').value) || 0,
+            biayaVariabel: parseFloat(document.getElementById('inputBiayaVariabel').value.replace(/\./g, '')) || 0,
+            kapasitas: parseFloat(document.getElementById('hiddenTotalKapasitasBulan').value) || 0,
+            hpp: typeof state !== 'undefined' ? state.hpp : 0,
+            hargaJualAcuan: typeof state !== 'undefined' ? state.hargaJualAcuan : 0,
+            bepKg: typeof state !== 'undefined' ? state.bepKg : 0,
+            bepRupiah: typeof state !== 'undefined' ? state.bepRupiah : 0,
+            cuciSetrika: parseFloat(document.getElementById('cs_price_1').value.replace(/\./g, '')) || 0,
+            cuciLipat: parseFloat(document.getElementById('cl_price_1').value.replace(/\./g, '')) || 0,
+            cuciSaja: parseFloat(document.getElementById('c_price_1').value.replace(/\./g, '')) || 0,
+            setrikaSaja: parseFloat(document.getElementById('ss_price_1').value.replace(/\./g, '')) || 0
+        };
+
+        const res = await runServer('saveTransaction', payload);
+        StateMachine.invalidateClientCache();
+
+        btn.innerHTML = '<i class="ph ph-check-circle text-2xl"></i> Tersimpan!';
+        btn.classList.replace('from-blue-600', 'from-emerald-500');
+        btn.classList.replace('to-indigo-600', 'to-teal-500');
+        showOmniToast(res.message, 'success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('opacity-80', 'pointer-events-none', 'scale-95');
+            btn.classList.replace('from-emerald-500', 'from-blue-600');
+            btn.classList.replace('to-teal-500', 'to-indigo-600');
+            loadDaftarCabang(); 
+            switchMainTab('dashboard'); 
+            StateMachine.releaseLock('simpanBEP');
+        }, 1500);
+
+    } catch (error) {
+        btn.innerHTML = originalText;
+        btn.classList.remove('opacity-80', 'pointer-events-none', 'scale-95');
+        showOmniToast(error.message, 'error');
+        StateMachine.releaseLock('simpanBEP');
+    }
+}
+
+
+/* =====================================================================
+ * ZETTBOT SINGLE-SHEET HPP FRONTEND OVERRIDE
+ * Membaca data packing dari header baru di Struktur_Biaya_1 dan tetap
+ * kompatibel dengan header lama Packing_PP_*.
+ * ===================================================================== */
+(function(){
+  function zettPick(obj, names, fallback) {
+    if (!obj) return fallback;
+    for (var i = 0; i < names.length; i++) {
+      if (Object.prototype.hasOwnProperty.call(obj, names[i]) && obj[names[i]] !== '' && obj[names[i]] !== null && obj[names[i]] !== undefined) {
+        return obj[names[i]];
+      }
+    }
+    return fallback;
+  }
+
+  function zettSetVal(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.value = value;
+  }
+
+  function zettSetCheck(id, value) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var s = String(value).toLowerCase();
+    el.checked = (value === true || s === 'true' || s === 'ya' || s === 'aktif' || s === '1');
+  }
+
+  window.populateFormHPP = function(namaCabang) {
+    var hppData = (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP))
+      ? masterDataHPP.find(function(h) { return String(h.namaOutlet) === String(namaCabang); })
+      : null;
+
+    if (!hppData) {
+      if (typeof resetFormHPP === 'function') resetFormHPP();
+      return;
+    }
+
+    if (typeof safeSetSelect === 'function') safeSetSelect('inputGasKapasitas', zettPick(hppData, ['Kap Gas'], ''));
+    zettSetVal('inputGasHarga', zettPick(hppData, ['Harga Gas'], ''));
+    zettSetVal('inputGasJam', zettPick(hppData, ['Jam Gas'], ''));
+    zettSetCheck('inputCentralGas', zettPick(hppData, ['Central Gas'], false));
+    zettSetVal('inputGasMenit', zettPick(hppData, ['Menit Gas'], '0') + ' Menit');
+
+    zettSetVal('inputTDL', zettPick(hppData, ['TDL'], '1.700'));
+    zettSetVal('inputListrikCuciWatt', zettPick(hppData, ['Watt Cuci'], '450'));
+    zettSetVal('inputListrikPengeringWatt', zettPick(hppData, ['Watt Kering'], '450'));
+    zettSetVal('inputListrikPompaWatt', zettPick(hppData, ['Watt Pompa'], '280'));
+    zettSetVal('inputListrikSetrikaWatt', zettPick(hppData, ['Watt Setrika'], '300'));
+    zettSetCheck('toggleSetrikaListrik', parseFloat(zettPick(hppData, ['Watt Setrika'], 0)) > 0);
+
+    if (typeof safeSetSelect === 'function') safeSetSelect('inputAirSumber', zettPick(hppData, ['Sumber Air', 'Air_Sumber'], 'pdam'));
+    zettSetVal('inputAirHargaM3', zettPick(hppData, ['Harga Air', 'Air_HargaM3'], '6.000'));
+    zettSetVal('inputAirHargaTangki', zettPick(hppData, ['Harga Tangki', 'Air_HargaTangki'], '50.000'));
+    zettSetVal('inputAirLiterTangki', zettPick(hppData, ['Liter Tangki', 'Air_LiterTangki'], '1000'));
+    zettSetVal('inputAirCuciLiter', zettPick(hppData, ['Air Cuci', 'Air_CuciLiter'], '50'));
+    if (typeof safeSetSelect === 'function') safeSetSelect('inputAirBoilerSumber', zettPick(hppData, ['Sumber Setrika', 'Air_BoilerSumber'], 'sama'));
+    zettSetVal('inputAirHargaGalon', zettPick(hppData, ['Galon Setrika', 'Air_HargaGalon'], '5.000'));
+    zettSetVal('inputAirLiterGalon', zettPick(hppData, ['Vol Setrika', 'Air_LiterGalon'], '19'));
+    zettSetVal('inputAirBoilerLiter', zettPick(hppData, ['Liter Setrika', 'Air_BoilerLiter'], '25'));
+    zettSetVal('inputAirBoilerJam', zettPick(hppData, ['Jam Setrika', 'Air_BoilerJam'], '4'));
+    zettSetVal('inputAirBoilerKgJam', zettPick(hppData, ['Kg Setrika', 'Air_BoilerKgJam'], '10'));
+
+    zettSetCheck('togglePackingPP', zettPick(hppData, ['Packing_PP_Active', 'Plastik PP'], true));
+    zettSetVal('inputPackingPPUkuran', zettPick(hppData, ['Packing_PP_Ukuran', 'Ukr PP', 'Ukr Plastik'], ''));
+    zettSetVal('inputPackingPPHarga', zettPick(hppData, ['Packing_PP_Harga', 'Harga PP', 'Harga Plastik'], '25.000'));
+    zettSetVal('inputPackingPPIsi', zettPick(hppData, ['Packing_PP_Isi', 'Isi PP', 'Isi Plastik'], '100'));
+    zettSetVal('inputPackingPPKg', zettPick(hppData, ['Packing_PP_Kg', 'Kap PP', 'Isi Per Lembar'], '3'));
+
+    zettSetCheck('togglePackingHD', zettPick(hppData, ['Packing_HD_Active', 'Plastik HD'], true));
+    zettSetVal('inputPackingHDHarga', zettPick(hppData, ['Packing_HD_Harga', 'Harga HD'], '15.000'));
+    zettSetVal('inputPackingHDIsi', zettPick(hppData, ['Packing_HD_Isi', 'Isi HD'], '50'));
+    zettSetVal('inputPackingHDKg', zettPick(hppData, ['Packing_HD_Kg', 'Kap HD', 'Isi HD Per Lbr'], '5'));
+
+    zettSetCheck('togglePackingJinjing', zettPick(hppData, ['Packing_Jinjing_Active', 'Plastik Jinjing'], false));
+    zettSetVal('inputPackingJinjingUkuran', zettPick(hppData, ['Packing_Jinjing_Ukuran', 'Ukr Jinjing'], ''));
+    zettSetVal('inputPackingJinjingHarga', zettPick(hppData, ['Packing_Jinjing_Harga', 'Harga Jinjing'], '35.000'));
+    zettSetVal('inputPackingJinjingIsi', zettPick(hppData, ['Packing_Jinjing_Isi', 'Isi Jinjing'], '100'));
+    zettSetVal('inputPackingJinjingKg', zettPick(hppData, ['Packing_Jinjing_Kg', 'Kap Jinjing', 'Isi Jinjing Per Lbr'], '4'));
+
+    zettSetCheck('toggleBahanDet', zettPick(hppData, ['Chem_Det_Active'], true));
+    if (typeof safeSetSelect === 'function') safeSetSelect('bahanDetType', zettPick(hppData, ['Chem_Det_Type'], 'cair'));
+    zettSetVal('bahanDetHargaBulk', zettPick(hppData, ['Chem_Det_Harga'], '100.000'));
+    zettSetVal('bahanDetKapasitasBulk', zettPick(hppData, ['Chem_Det_Kapasitas'], '5'));
+    zettSetVal('bahanDetPemakaian', zettPick(hppData, ['Chem_Det_Pemakaian'], '10'));
+
+    zettSetCheck('toggleBahanSof', zettPick(hppData, ['Chem_Sof_Active'], true));
+    if (typeof safeSetSelect === 'function') safeSetSelect('bahanSofType', zettPick(hppData, ['Chem_Sof_Type'], 'cair'));
+    zettSetVal('bahanSofHargaBulk', zettPick(hppData, ['Chem_Sof_Harga'], '80.000'));
+    zettSetVal('bahanSofKapasitasBulk', zettPick(hppData, ['Chem_Sof_Kapasitas'], '5'));
+    zettSetVal('bahanSofPemakaian', zettPick(hppData, ['Chem_Sof_Pemakaian'], '10'));
+
+    zettSetCheck('toggleBahanPar', zettPick(hppData, ['Chem_Par_Active'], true));
+    zettSetVal('bahanParHargaBulk', zettPick(hppData, ['Chem_Par_Harga'], '150.000'));
+    zettSetVal('bahanParKapasitasBulk', zettPick(hppData, ['Chem_Par_Kapasitas'], '5'));
+    zettSetVal('bahanParPemakaian', zettPick(hppData, ['Chem_Par_Pemakaian'], '5'));
+
+    zettSetCheck('toggleBahanPel', zettPick(hppData, ['Chem_Pel_Active'], true));
+    if (typeof safeSetSelect === 'function') safeSetSelect('bahanPelType', zettPick(hppData, ['Chem_Pel_Type'], 'cair'));
+    zettSetVal('bahanPelHargaBulk', zettPick(hppData, ['Chem_Pel_Harga'], '50.000'));
+    zettSetVal('bahanPelKapasitasBulk', zettPick(hppData, ['Chem_Pel_Kapasitas'], '5'));
+    zettSetVal('bahanPelPemakaian', zettPick(hppData, ['Chem_Pel_Pemakaian'], '5'));
+
+    if (typeof safeSetSelect === 'function') safeSetSelect('notaType', zettPick(hppData, ['Nota_Type'], 'digital'));
+    if (typeof safeSetSelect === 'function') safeSetSelect('notaAppFeeType', zettPick(hppData, ['Nota_App_FeeType'], 'bulan'));
+    zettSetVal('notaAppHargaBulan', zettPick(hppData, ['Nota_App_HargaBulan'], '50.000'));
+    zettSetVal('notaAppTrxBulan', zettPick(hppData, ['Nota_App_TrxBulan'], '500'));
+    zettSetVal('notaAppHargaTrx', zettPick(hppData, ['Nota_App_HargaTrx'], '100'));
+    zettSetVal('notaThermalHarga', zettPick(hppData, ['Nota_Thermal_Harga'], '35'));
+    zettSetVal('notaManualHarga', zettPick(hppData, ['Nota_Manual_Harga'], '10.000'));
+    zettSetVal('notaManualLembarTotal', zettPick(hppData, ['Nota_Manual_LembarTotal'], '100'));
+    zettSetVal('notaManualLembarTrx', zettPick(hppData, ['Nota_Manual_LembarTrx'], '2'));
+    zettSetVal('notaRataKg', zettPick(hppData, ['Nota_RataKg'], '4'));
+
+    if (typeof toggleAirInputs === 'function') toggleAirInputs();
+    if (typeof toggleBahanActive === 'function') toggleBahanActive();
+    if (typeof toggleBahanInputs === 'function') toggleBahanInputs();
+    if (typeof toggleNotaInputs === 'function') toggleNotaInputs();
+    if (typeof calculateGas === 'function') calculateGas();
+    if (typeof calculateListrik === 'function') calculateListrik();
+    if (typeof calculateAir === 'function') calculateAir();
+    if (typeof calculatePacking === 'function') calculatePacking();
+    if (typeof calculateBahanBaku === 'function') calculateBahanBaku();
+    if (typeof calculateNota === 'function') calculateNota();
+    if (typeof toggleActionButtons === 'function') toggleActionButtons();
+    if (typeof checkHPPLock === 'function') checkHPPLock();
+  };
+
+  // Tambahkan field ukuran packing ke payload jika input tersedia, tanpa mengubah fungsi simpanDataHPP lama.
+  var oldBackgroundSyncHPP = window.backgroundSyncHPP;
+  if (typeof oldBackgroundSyncHPP === 'function') {
+    window.backgroundSyncHPP = function(payload) {
+      var ppSize = document.getElementById('inputPackingPPUkuran');
+      var jSize = document.getElementById('inputPackingJinjingUkuran');
+      if (ppSize) payload.packPPUkuran = ppSize.value;
+      if (jSize) payload.packJinjingUkuran = jSize.value;
+      return oldBackgroundSyncHPP(payload);
+    };
+  }
+})();
+
+</script>

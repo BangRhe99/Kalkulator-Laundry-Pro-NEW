@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Kalkulator Laundry Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* UI Enhancements & Typography */
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background-color: #f8fafc; 
+    }
+    
+    .glass-effect { 
+      background: rgba(255, 255, 255, 0.85); 
+      backdrop-filter: blur(12px); 
+      -webkit-backdrop-filter: blur(12px);
+    }
+    
+    /* Toggle Switch Custom CSS */
+    input:checked ~ .toggle-bg { background-color: #3b82f6; }
+    input:checked ~ .toggle-dot { transform: translateX(100%); }
+    input:checked ~ .toggle-bg-teal { background-color: #0f766e; }
+    input:checked ~ .toggle-bg-rose { background-color: #e11d48; }
+    
+    /* Scrollbar Modern & Minimalis */
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .hide-scroll::-webkit-scrollbar { display: none; }
+    .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Animations */
+    .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(15px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+
+    /* ZETTBOT FIX: pastikan .hidden menang dari display:flex bento-card */
+    .hidden {
+      display: none !important;
+    }
+
+    /* ZETTBOT FIX: satu animasi form Profil Operasional agar tidak tampil dua kali */
+    .zett-kapasitas-form-reveal {
+      animation: zettKapasitasFormReveal 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+      will-change: opacity, transform, filter;
+      transform: translate3d(0,0,0);
+      backface-visibility: hidden;
+    }
+
+    @keyframes zettKapasitasFormReveal {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 16px, 0) scale(0.988);
+        filter: blur(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+        filter: blur(0);
+      }
+    }
+
+  </style>
+
+  <!-- [ZETTBOT FIX] Memanggil Module CSS Micro-UI Asset Grid (JS4) secara langsung di Head -->
+  <?!= HtmlService.createHtmlOutputFromFile('JS4').getContent(); ?>
+
+</head>
+<body class="text-slate-800 antialiased overflow-hidden flex h-screen w-full selection:bg-indigo-100 selection:text-indigo-900">
+
+  <!-- ================= SIDEBAR MENU ================= -->
+  <aside id="sidebar" class="bg-[#0b1120] bg-gradient-to-b from-[#0b1120] to-[#111827] text-white w-[280px] flex-shrink-0 flex flex-col h-full fixed md:relative z-50 transition-transform transform -translate-x-full md:translate-x-0 border-r border-slate-800/50 shadow-2xl md:shadow-none">
+    <div class="h-20 flex items-center justify-between px-7 border-b border-white/5 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="bg-gradient-to-tr from-blue-600 to-indigo-500 p-2 rounded-xl shadow-lg shadow-blue-900/20">
+          <i class="ph ph-chart-line-up text-2xl text-white"></i>
+        </div>
+        <span class="text-xl font-extrabold tracking-tight">Kalkulator<span class="text-blue-500">Laundry</span></span>
+      </div>
+      <button class="md:hidden text-slate-400 hover:text-white transition-colors" onclick="toggleSidebar()">
+        <i class="ph ph-x text-2xl"></i>
+      </button>
+    </div>
+    
+    <div class="p-5 flex-1 overflow-y-auto space-y-1.5 custom-scroll">
+      <div class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-3 ml-3 mt-4">Menu Utama</div>
+      
+      <!-- [ZETTBOT UX Update: Parallelism & Information Scent pada Label Menu] -->
+      <button type="button" onclick="switchMainTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-indigo-900/30 text-white font-bold transition-all duration-300 transform active:scale-95">
+        <i class="ph ph-squares-four text-xl"></i> <span>Dashboard Eksekutif</span>
+      </button>
+      
+      <button type="button" onclick="switchMainTab('kapasitas')" id="nav-kapasitas" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-400 hover:bg-white/5 hover:text-slate-100 font-semibold transition-all duration-300 transform active:scale-95 group">
+        <i class="ph ph-washing-machine text-xl group-hover:text-blue-400 transition-colors"></i> <span class="text-sm text-left leading-snug">Profil Operasional</span>
+      </button>
+
+      <button type="button" onclick="switchMainTab('hpp')" id="nav-hpp" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-400 hover:bg-white/5 hover:text-slate-100 font-semibold transition-all duration-300 transform active:scale-95 group">
+        <i class="ph ph-sliders-horizontal text-xl shrink-0 group-hover:text-teal-400 transition-colors"></i> <span class="text-sm text-left leading-snug">Struktur Biaya (HPP)</span>
+      </button>
+
+      <button type="button" onclick="switchMainTab('harga')" id="nav-harga" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-400 hover:bg-white/5 hover:text-slate-100 font-semibold transition-all duration-300 transform active:scale-95 group">
+        <i class="ph ph-tag text-xl shrink-0 group-hover:text-blue-400 transition-colors"></i> <span class="text-sm text-left leading-snug">Katalog Layanan</span>
+      </button>
+      
+      <button type="button" onclick="switchMainTab('bep')" id="nav-bep" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-400 hover:bg-white/5 hover:text-slate-100 font-semibold transition-all duration-300 transform active:scale-95 group">
+        <i class="ph ph-target text-xl shrink-0 group-hover:text-rose-400 transition-colors"></i> <span class="text-sm text-left leading-snug">Target Titik Impas</span>
+      </button>
+
+      <button type="button" onclick="switchMainTab('roi')" id="nav-roi" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-400 hover:bg-white/5 hover:text-slate-100 font-semibold transition-all duration-300 transform active:scale-95 group">
+        <i class="ph ph-chart-pie-slice text-xl shrink-0 group-hover:text-emerald-400 transition-colors"></i> <span class="text-sm text-left leading-snug">Proyeksi ROI</span>
+      </button>
+    </div>
+
+    <div class="p-6 border-t border-white/5 shrink-0 bg-black/20">
+      <div class="flex items-center gap-3.5 hover:bg-white/5 p-2 -m-2 rounded-xl transition-colors cursor-pointer">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-400 flex items-center justify-center font-extrabold text-sm text-white shadow-inner border border-white/20">A</div>
+        <div>
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Logged in as</p>
+          <p class="text-sm font-bold text-slate-200 truncate w-36">Admin Super</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-40 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
+
+  <!-- ================= MAIN CONTENT AREA ================= -->
+  <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+    
+    <div class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-slate-100 to-transparent -z-10 pointer-events-none"></div>
+
+    <!-- [ZETTBOT REVISI] Relokasi Pemilihan Outlet ke Header Global -->
+    <header class="glass-effect shadow-sm border-b border-slate-200/60 h-20 flex items-center justify-between px-6 md:px-10 z-30 shrink-0 sticky top-0 transition-all">
+      <div class="flex items-center gap-4">
+        <button class="md:hidden text-slate-500 hover:text-blue-600 bg-slate-100/80 p-2.5 rounded-xl transition-colors active:scale-95" onclick="toggleSidebar()">
+          <i class="ph ph-list text-2xl"></i>
+        </button>
+        <h2 id="headerTitle" class="font-extrabold text-slate-800 text-[clamp(1.1rem,3vw,1.25rem)] tracking-tight truncate max-w-[150px] md:max-w-full">Dashboard Eksekutif</h2>
+      </div>
+      
+      <!-- Outlet Selector -->
+      <div class="relative text-xs md:text-sm bg-blue-50/80 rounded-[1rem] flex items-center border border-blue-200/60 text-blue-700 font-bold shadow-sm backdrop-blur-md hover:bg-blue-100/80 transition-colors">
+        <i class="ph ph-storefront text-lg text-blue-500 absolute left-3 pointer-events-none"></i>
+        <select id="inputNamaHPP" class="bg-transparent pl-9 pr-8 py-2 w-full max-w-[140px] md:max-w-[200px] appearance-none outline-none cursor-pointer text-blue-700 font-extrabold truncate" onchange="handleGlobalOutletChange(this.value)">
+          <option value="">Pilih Cabang...</option>
+        </select>
+        <i class="ph ph-caret-down absolute right-3 pointer-events-none text-blue-500"></i>
+      </div>
+    </header>
+
+    <!-- CONTAINER VIEWS DINAMIS -->
+    <!-- [ZETTBOT REVISI: TOP WHITESPACE TARGET] Pemangkasan padding-top dari p-4/p-8 menjadi pt-2/md:pt-3 -->
+    <div id="mainViewScroller" class="flex-1 overflow-y-auto custom-scroll px-4 pt-2 pb-4 md:px-8 md:pt-3 md:pb-8">
+      
+      <!-- Memanggil File Views.html -->
+      <?!= HtmlService.createHtmlOutputFromFile('V1').getContent(); ?>
+      <?!= HtmlService.createHtmlOutputFromFile('V2').getContent(); ?>
+      <?!= HtmlService.createHtmlOutputFromFile('V3').getContent(); ?>
+      <?!= HtmlService.createHtmlOutputFromFile('V4').getContent(); ?>
+      
+      <!-- Halaman Modal HPP yang telah diubah menjadi View utama -->
+      <?!= HtmlService.createHtmlOutputFromFile('Modal').getContent(); ?>
+
+    </div>
+  </div>
+
+  <!-- Memanggil Script JS -->
+  <?!= HtmlService.createHtmlOutputFromFile('JS1').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('JS2').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('JS3').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('JS5').getContent(); ?>
+  
+  <script>
+    /**
+     * ==========================================
+     * ZETTBOT FIX: OUTLET CONTEXT PER FEATURE
+     * Scope: Index.html only
+     * Tujuan:
+     * 1. Dropdown outlet header tidak pernah membuka Profil Operasional.
+     * 2. Setiap fitur menyimpan pilihan outlet sendiri agar tidak saling menimpa.
+     * 3. Profil Operasional tetap memakai card outlet untuk membuka form update.
+     * 4. Data Profil Operasional dan HPP dipanggil ulang dengan aman.
+     * ==========================================
+     */
+    (function zettOutletContextPerFeature() {
+      const titleMap = {
+        dashboard: 'Dashboard Eksekutif',
+        kapasitas: 'Profil Operasional',
+        hpp: 'Struktur Biaya (HPP)',
+        harga: 'Katalog Layanan',
+        bep: 'Target Titik Impas',
+        roi: 'Proyeksi ROI'
+      };
+
+      let activeMainTab = 'dashboard';
+      const outletContext = {
+        dashboard: '',
+        kapasitas: '',
+        hpp: '',
+        harga: '',
+        bep: '',
+        roi: ''
+      };
+
+      function getHeaderDropdown() {
+        return document.getElementById('inputNamaHPP');
+      }
+
+      function setHeaderTitle(tabName) {
+        const headerTitle = document.getElementById('headerTitle');
+        if (headerTitle) headerTitle.innerText = titleMap[tabName] || 'Dashboard Eksekutif';
+      }
+
+      function closeMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (sidebar && window.innerWidth < 768) sidebar.classList.add('-translate-x-full');
+        if (overlay && window.innerWidth < 768) overlay.classList.add('hidden');
+      }
+
+      function showOnlyView(tabName) {
+        document.querySelectorAll('.main-view').forEach(view => {
+          view.classList.add('hidden');
+          view.classList.remove('block');
+          view.style.display = 'none';
+        });
+
+        const target = document.getElementById('view-' + tabName);
+        if (target) {
+          target.classList.remove('hidden');
+          target.style.display = '';
+          if (tabName === 'dashboard') target.classList.add('block');
+        }
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+          btn.classList.remove('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-indigo-900/30', 'text-white', 'font-bold');
+          btn.classList.add('text-slate-400', 'hover:bg-white/5', 'hover:text-slate-100', 'font-semibold');
+        });
+
+        const activeNav = document.getElementById('nav-' + tabName);
+        if (activeNav) {
+          activeNav.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-indigo-900/30', 'text-white', 'font-bold');
+          activeNav.classList.remove('text-slate-400', 'hover:bg-white/5', 'hover:text-slate-100', 'font-semibold');
+        }
+
+        setHeaderTitle(tabName);
+        closeMobileSidebar();
+      }
+
+      function setHeaderValueForActiveTab() {
+        const select = getHeaderDropdown();
+        if (!select) return;
+        select.value = outletContext[activeMainTab] || '';
+      }
+
+      function syncDashboardOutlet(namaOutlet) {
+        const selectV1 = document.getElementById('v1-global-outlet');
+        if (selectV1) selectV1.value = namaOutlet || '';
+
+        if (typeof window.renderSingleOutletDashboard === 'function') {
+          try { window.renderSingleOutletDashboard(); } catch (error) { console.error('renderSingleOutletDashboard error:', error); }
+        }
+      }
+
+      function syncHPPOutlet(namaOutlet) {
+        const select = getHeaderDropdown();
+        if (select) select.value = namaOutlet || '';
+
+        if (namaOutlet && typeof window.populateFormHPP === 'function') {
+          try { window.populateFormHPP(namaOutlet); } catch (error) { console.error('populateFormHPP error:', error); }
+        }
+
+        if (!namaOutlet && typeof window.resetFormHPP === 'function') {
+          try { window.resetFormHPP(); } catch (error) { console.error('resetFormHPP error:', error); }
+        }
+
+        if (typeof window.checkHPPLock === 'function') {
+          try { window.checkHPPLock(); } catch (error) { console.error('checkHPPLock error:', error); }
+        }
+
+        if (typeof window.toggleActionButtons === 'function') {
+          try { window.toggleActionButtons(); } catch (error) { console.error('toggleActionButtons error:', error); }
+        }
+
+        if (typeof StateMachine !== 'undefined' && StateMachine.calculateTotal) {
+          try { StateMachine.calculateTotal(); } catch (error) { console.error('StateMachine.calculateTotal error:', error); }
+        }
+
+        if (typeof window.calculateAll === 'function') {
+          try { window.calculateAll(); } catch (error) { console.error('calculateAll error:', error); }
+        }
+      }
+
+      function ensureKapasitasDashboardMode() {
+        const dash = document.getElementById('kapasitas-dashboard');
+        const form = document.getElementById('kapasitas-form-container');
+
+        if (dash) {
+          dash.classList.remove('hidden');
+          dash.style.display = '';
+          dash.style.pointerEvents = 'auto';
+          dash.style.opacity = '1';
+        }
+
+        if (form) {
+          form.classList.add('hidden');
+          form.classList.remove('zett-kapasitas-form-reveal');
+          form.style.display = 'none';
+        }
+      }
+
+      window.handleGlobalOutletChange = function(namaOutlet) {
+        outletContext[activeMainTab] = namaOutlet || '';
+
+        if (activeMainTab === 'dashboard') {
+          syncDashboardOutlet(namaOutlet);
+          return;
+        }
+
+        if (activeMainTab === 'hpp' || activeMainTab === 'harga' || activeMainTab === 'bep' || activeMainTab === 'roi') {
+          syncHPPOutlet(namaOutlet);
+          return;
+        }
+
+        if (activeMainTab === 'kapasitas') {
+          /* Profil Operasional sengaja tidak memakai dropdown header untuk membuka form.
+             Form update hanya dibuka melalui klik card outlet agar state tidak bercampur. */
+          ensureKapasitasDashboardMode();
+          if (typeof window.loadDaftarCabang === 'function') setTimeout(() => window.loadDaftarCabang(), 0);
+        }
+      };
+
+      const originalSwitchMainTab = window.switchMainTab;
+      window.switchMainTab = function(tabName) {
+        activeMainTab = tabName || activeMainTab;
+
+        if (typeof originalSwitchMainTab === 'function') {
+          try { originalSwitchMainTab(tabName); } catch (error) { console.error('switchMainTab original error:', error); }
+        }
+
+        showOnlyView(activeMainTab);
+        setHeaderValueForActiveTab();
+
+        const selectedOutlet = outletContext[activeMainTab] || '';
+
+        if (activeMainTab === 'dashboard') syncDashboardOutlet(selectedOutlet);
+
+        if (activeMainTab === 'hpp' || activeMainTab === 'harga' || activeMainTab === 'bep' || activeMainTab === 'roi') syncHPPOutlet(selectedOutlet);
+
+        if (activeMainTab === 'kapasitas') {
+          ensureKapasitasDashboardMode();
+          if (typeof window.loadDaftarCabang === 'function') setTimeout(() => window.loadDaftarCabang(), 0);
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const headerDropdown = getHeaderDropdown();
+        if (headerDropdown) {
+          headerDropdown.onchange = function() { window.handleGlobalOutletChange(this.value); };
+        }
+
+        showOnlyView('dashboard');
+        if (typeof window.loadDaftarCabang === 'function') setTimeout(() => window.loadDaftarCabang(), 80);
+      });
+    })();
+  </script>
+<!-- test live -->
+</body>
+</html>

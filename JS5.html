@@ -1,0 +1,112 @@
+<!-- ================= BangRhe CUSTOM TIME PICKER DOM ================= -->
+<div id="zettTimeOverlay" class="zett-picker-overlay" onclick="closeZettTimePicker()"></div>
+<div id="zettTimeSheet" class="zett-picker-sheet">
+  <div class="flex justify-between items-center mb-4 px-2">
+    <button type="button" onclick="closeZettTimePicker()" class="text-slate-400 font-bold hover:text-slate-600 transition-colors">Batal</button>
+    <h3 class="font-black text-slate-800 tracking-tight" id="zettTimeLabel">Pilih Jam</h3>
+    <button type="button" onclick="confirmZettTimePicker()" class="text-emerald-600 font-bold hover:text-emerald-800 transition-colors">Selesai</button>
+  </div>
+  
+  <div class="bg-slate-50 border border-slate-100 rounded-[1.5rem] px-4 py-2">
+    <div class="zett-roller-wrap">
+      <div class="zett-roller-highlight"></div>
+      <div class="zett-roller-col" id="colHour" onscroll="syncRollerActive('colHour')"></div>
+      <div class="zett-roller-separator">:</div>
+      <div class="zett-roller-col" id="colMinute" onscroll="syncRollerActive('colMinute')"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ZETTBOT CUSTOM TIME PICKER SCRIPT ================= -->
+<script>
+  let currentTargetTimeInput = null;
+  const itemHeight = 44; 
+
+  function populateRollers() {
+    const colH = document.getElementById('colHour');
+    const colM = document.getElementById('colMinute');
+    if(colH.children.length > 0) return; 
+
+    let htmlH = '';
+    for(let i=0; i<24; i++) {
+      let val = i.toString().padStart(2, '0');
+      htmlH += `<div class="zett-roller-item">${val}</div>`;
+    }
+    colH.innerHTML = htmlH;
+
+    let htmlM = '';
+    for(let i=0; i<60; i++) {
+      let val = i.toString().padStart(2, '0');
+      htmlM += `<div class="zett-roller-item">${val}</div>`;
+    }
+    colM.innerHTML = htmlM;
+  }
+
+  function openZettTimePicker(inputId) {
+    populateRollers();
+    currentTargetTimeInput = document.getElementById(inputId);
+    if(!currentTargetTimeInput) return;
+
+    const label = inputId.includes('Buka') ? 'Jam Buka' : 'Jam Tutup';
+    document.getElementById('zettTimeLabel').innerText = label;
+
+    const currentVal = currentTargetTimeInput.value || "08:00";
+    const [hh, mm] = currentVal.split(':');
+
+    const colH = document.getElementById('colHour');
+    const colM = document.getElementById('colMinute');
+    
+    const hIndex = parseInt(hh, 10) || 0;
+    const mIndex = parseInt(mm, 10) || 0;
+    
+    colH.scrollTop = hIndex * itemHeight;
+    colM.scrollTop = mIndex * itemHeight;
+
+    setTimeout(() => {
+      syncRollerActive('colHour');
+      syncRollerActive('colMinute');
+    }, 50);
+
+    document.getElementById('zettTimeOverlay').classList.add('active');
+    document.getElementById('zettTimeSheet').classList.add('active');
+  }
+
+  function closeZettTimePicker() {
+    document.getElementById('zettTimeOverlay').classList.remove('active');
+    document.getElementById('zettTimeSheet').classList.remove('active');
+    currentTargetTimeInput = null;
+  }
+
+  function syncRollerActive(colId) {
+    const col = document.getElementById(colId);
+    const index = Math.round(col.scrollTop / itemHeight);
+    const items = col.querySelectorAll('.zett-roller-item');
+    
+    items.forEach((el, i) => {
+      if(i === index) {
+        el.classList.add('active-roller');
+      } else {
+        el.classList.remove('active-roller');
+      }
+    });
+  }
+
+  function confirmZettTimePicker() {
+    if(!currentTargetTimeInput) return;
+
+    const activeH = document.getElementById('colHour').querySelector('.active-roller');
+    const activeM = document.getElementById('colMinute').querySelector('.active-roller');
+    
+    const hh = activeH ? activeH.innerText : "00";
+    const mm = activeM ? activeM.innerText : "00";
+
+    currentTargetTimeInput.value = `${hh}:${mm}`;
+    
+    // [ZETTBOT REVISI] Langsung tembak ke fungsi auto-kalkulasi murni V2
+    if(typeof calculateCapacity === 'function') {
+      calculateCapacity();
+    }
+
+    closeZettTimePicker();
+  }
+</script>

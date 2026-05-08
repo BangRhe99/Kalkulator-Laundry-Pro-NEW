@@ -1,0 +1,238 @@
+<!-- ================= VIEW KATALOG & HARGA JUAL (HYPER-PREMIUM FINTECH EDITION) ================= -->
+  <div id="view-harga" class="main-view hidden animate-fade-in space-y-8">
+    
+    <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.03),0_2px_12px_rgba(0,0,0,0.01)] border border-slate-100/80 p-6 md:p-12 transform-gpu will-change-transform transition-all duration-500 ease-out hover:shadow-[0_12px_48px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.02)] animate-fade-in">
+      
+      <!-- [ZETTBOT UX Update: Title-Subtitle Duo] -->
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-100/60 pb-8 shrink-0 gap-6">
+        <div class="flex items-start gap-5">
+          <div class="bg-blue-50/60 p-4 rounded-[1.25rem] text-blue-600 shrink-0 border border-blue-100/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)]">
+            <i class="ph ph-tag text-3xl"></i>
+          </div>
+          <div>
+            <h2 class="text-[clamp(1.5rem,3.5vw,2rem)] font-extrabold text-slate-800 tracking-tight leading-tight">Harga Jual & Margin</h2>
+            <p class="text-sm text-slate-500 mt-2 font-medium leading-relaxed max-w-xl">Tentukan harga jual layanan kepada pelanggan untuk memicu kalkulasi estimasi laba bersih secara otomatis.</p>
+          </div>
+        </div>
+        
+        <button type="button" onclick="switchMainTab('hpp')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 px-6 py-3.5 rounded-[1.25rem] font-extrabold flex items-center gap-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 transform-gpu hover:-translate-y-1 shrink-0 active:scale-95">
+          <i class="ph ph-sliders-horizontal text-xl text-teal-600"></i> Cek Struktur Biaya
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-10">
+        
+        <!-- ================= CARD: CUCI SETRIKA ================= -->
+        <div class="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-[1.5rem] shadow-sm overflow-hidden flex flex-col hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-500 transform-gpu hover:-translate-y-1">
+          <div class="bg-blue-50/50 p-5 border-b border-blue-100/50 flex items-center gap-4">
+            <div class="bg-blue-500 text-white p-2.5 rounded-xl shadow-[0_4px_12px_rgba(59,130,246,0.3)]"><i class="ph ph-t-shirt text-xl"></i></div>
+            <h4 class="font-extrabold text-slate-800 text-lg tracking-tight">Cuci Setrika</h4>
+          </div>
+          <div class="p-6 md:p-8 space-y-7 flex-1 bg-slate-50/30">
+            
+            <!-- Item 1 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="cs_name_1" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-blue-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Reguler (3 Hari)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="cs_price_1" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-blue-500/15 focus:border-blue-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="6.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="cs_margin_1" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="cs_name_2" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-blue-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Kilat (1 Hari)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="cs_price_2" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-blue-500/15 focus:border-blue-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="8.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="cs_margin_2" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="cs_name_3" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-blue-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Express (6 Jam)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="cs_price_3" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-blue-500/15 focus:border-blue-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="10.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="cs_margin_3" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ================= CARD: CUCI LIPAT ================= -->
+        <div class="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-[1.5rem] shadow-sm overflow-hidden flex flex-col hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-500 transform-gpu hover:-translate-y-1">
+          <div class="bg-teal-50/50 p-5 border-b border-teal-100/50 flex items-center gap-4">
+            <div class="bg-teal-500 text-white p-2.5 rounded-xl shadow-[0_4px_12px_rgba(20,184,166,0.3)]"><i class="ph ph-stack text-xl"></i></div>
+            <h4 class="font-extrabold text-slate-800 text-lg tracking-tight">Cuci Lipat</h4>
+          </div>
+          <div class="p-6 md:p-8 space-y-7 flex-1 bg-slate-50/30">
+            
+            <!-- Item 1 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="cl_name_1" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-teal-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Reguler (3 Hari)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="cl_price_1" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-teal-500/15 focus:border-teal-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="5.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="cl_margin_1" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="cl_name_2" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-teal-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Kilat (1 Hari)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="cl_price_2" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-teal-500/15 focus:border-teal-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="7.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="cl_margin_2" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="cl_name_3" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-teal-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Express (6 Jam)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="cl_price_3" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-teal-500/15 focus:border-teal-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="9.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="cl_margin_3" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ================= CARD: CUCI SAJA ================= -->
+        <div class="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-[1.5rem] shadow-sm overflow-hidden flex flex-col hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-500 transform-gpu hover:-translate-y-1">
+          <div class="bg-cyan-50/50 p-5 border-b border-cyan-100/50 flex items-center gap-4">
+            <div class="bg-cyan-500 text-white p-2.5 rounded-xl shadow-[0_4px_12px_rgba(6,182,212,0.3)]"><i class="ph ph-waves text-xl"></i></div>
+            <h4 class="font-extrabold text-slate-800 text-lg tracking-tight">Cuci Saja (Tanpa Setrika)</h4>
+          </div>
+          <div class="p-6 md:p-8 space-y-7 flex-1 bg-slate-50/30">
+            
+            <!-- Item 1 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="c_name_1" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-cyan-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Reguler (3 Hari)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="c_price_1" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-cyan-500/15 focus:border-cyan-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="4.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="c_margin_1" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="c_name_2" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-cyan-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Kilat (1 Hari)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="c_price_2" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-cyan-500/15 focus:border-cyan-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="6.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="c_margin_2" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="c_name_3" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-cyan-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Express (6 Jam)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="c_price_3" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-cyan-500/15 focus:border-cyan-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="8.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="c_margin_3" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ================= CARD: SETRIKA SAJA ================= -->
+        <div class="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-[1.5rem] shadow-sm overflow-hidden flex flex-col hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-500 transform-gpu hover:-translate-y-1">
+          <div class="bg-purple-50/50 p-5 border-b border-purple-100/50 flex items-center gap-4">
+            <div class="bg-purple-500 text-white p-2.5 rounded-xl shadow-[0_4px_12px_rgba(168,85,247,0.3)]"><i class="ph ph-thermometer-hot text-xl"></i></div>
+            <h4 class="font-extrabold text-slate-800 text-lg tracking-tight">Setrika Saja</h4>
+          </div>
+          <div class="p-6 md:p-8 space-y-7 flex-1 bg-slate-50/30">
+            
+            <!-- Item 1 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="ss_name_1" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-purple-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Reguler (3 Hari)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="ss_price_1" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-purple-500/15 focus:border-purple-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="4.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="ss_margin_1" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="ss_name_2" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-purple-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Kilat (1 Hari)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="ss_price_2" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-purple-500/15 focus:border-purple-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="5.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="ss_margin_2" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="space-y-3 relative group">
+              <input type="text" id="ss_name_3" class="w-full bg-transparent border-b border-dashed border-slate-300 text-[11px] font-black text-slate-500 hover:text-slate-800 focus:outline-none focus:border-purple-500 px-1 py-1.5 transition-colors tracking-wide uppercase" value="Express (6 Jam)">
+              <div class="relative flex items-center">
+                <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
+                <input type="text" id="ss_price_3" class="w-full pl-12 pr-5 py-3.5 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-purple-500/15 focus:border-purple-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" value="7.000" oninput="formatRupiahInput(this); calculateAll()">
+              </div>
+              <div class="flex justify-between items-center px-4 py-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <span class="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">Laba Bersih /Kg</span>
+                <span id="ss_margin_3" class="text-sm font-black text-slate-400 tabular-nums [font-feature-settings:'tnum']">Rp 0</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Footer -->
+      <div class="mt-12 flex flex-col sm:flex-row justify-between items-center border-t border-slate-100/80 pt-8 gap-5">
+        <button type="button" onclick="switchMainTab('hpp')" class="text-slate-500 hover:text-slate-800 font-extrabold text-sm px-4 py-2 flex items-center gap-2 transition-colors active:scale-95 w-full sm:w-auto justify-center">
+          <i class="ph ph-arrow-left"></i> Kembali ke Struktur Biaya
+        </button>
+        <button type="button" onclick="calculateAll(); switchMainTab('bep')" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-10 py-4 rounded-[1.25rem] font-black flex items-center justify-center gap-3 shadow-[0_8px_20px_rgba(37,99,235,0.25)] hover:shadow-[0_12px_30px_rgba(37,99,235,0.35)] transition-all duration-500 transform-gpu hover:-translate-y-1 active:scale-[0.96] tracking-wide">
+          Simpan & Lanjut ke Target BEP <i class="ph ph-arrow-right text-xl"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
