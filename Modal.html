@@ -1,123 +1,87 @@
 <!-- ========================================================================= -->
-<!-- VIEW STRUKTUR BIAYA HPP (HYPER-PREMIUM SAAS ARCHITECTURE - CREATOR EDITION) -->
+<!-- VIEW STRUKTUR BIAYA HPP - CLEANUP BASELINE -->
 <!-- ========================================================================= -->
 
 <style>
-  /* PURE CSS CONIC DONUT CHART - SAAS REFINED EDITION */
-  .hpp-donut-wrap {
-    width: 240px;
-    height: 240px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-  }
-  
-  .hpp-donut {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    /* Gradient Warna Vibrant (Dikembalikan agar tajam saat screen recording) */
-    background: conic-gradient(
-      #f43f5e 0% var(--p-gas, 0%),         /* Rose 500 */
-      #f59e0b var(--p-gas, 0%) var(--p-listrik, 0%), /* Amber 500 */
-      #06b6d4 var(--p-listrik, 0%) var(--p-air, 0%), /* Cyan 500 */
-      #6366f1 var(--p-air, 0%) var(--p-packing, 0%), /* Indigo 500 */
-      #10b981 var(--p-packing, 0%) var(--p-bahan, 0%), /* Emerald 500 */
-      #94a3b8 var(--p-bahan, 0%) 100%      /* Slate 400 */
-    );
-    /* Ring dikembalikan sedikit lebih tebal (65%) agar jelas di HP, namun tetap elegan */
-    -webkit-mask-image: radial-gradient(circle, transparent 65%, black 66%);
-    mask-image: radial-gradient(circle, transparent 65%, black 66%);
-    transition: background 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  #view-hpp {
+    margin-top: 1rem;
+    padding-bottom: 0;
   }
 
-  .hpp-donut-center {
-    position: absolute;
-    text-align: center;
+  #view-hpp #hpp-dashboard-view {
+    display: grid;
+    gap: 1rem;
+    max-width: min(100%, 1080px);
+    margin-inline: auto;
+  }
+
+  #view-hpp .hpp-summary,
+  #view-hpp .hpp-card-dash {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1rem;
+  }
+
+  #view-hpp .hpp-summary {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  #view-hpp .summary-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #475569;
+  }
+
+  #view-hpp .summary-value {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  #view-hpp .hpp-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  #view-hpp .hpp-card-dash {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    gap: 0.75rem;
   }
 
-  /* Micro-interactions: Smooth Hover & Click */
-  .hpp-card-dash {
-    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    cursor: pointer;
-    will-change: transform, box-shadow;
-  }
-  .hpp-card-dash:hover {
-    transform: translateY(-6px);
-  }
-  .hpp-card-dash:active {
-    transform: scale(0.96) translateY(-2px);
-  }
-</style>
-
-
-<style id="zett-hpp-spatial-minimalist-overrides">
-  /* ======================================================================
-   * ZETTBOT EXECUTION LAYER: SPATIAL MINIMALIST FINTECH POLISH
-   * Scope: #view-hpp only
-   * Tujuan: memperkaya UI HPP tanpa mengubah struktur HTML/CSS dasar.
-   * ====================================================================== */
-  #view-hpp {
-    --hpp-bg: #ffffff;
-    --hpp-surface: rgba(255, 255, 255, 0.98);
-    --hpp-surface-strong: rgba(255, 255, 255, 1);
-    --hpp-border: rgba(226, 232, 240, 0.8);
-    --hpp-border-soft: rgba(241, 245, 249, 0.9);
-    --hpp-text: #0f172a;
-    --hpp-muted: #64748b;
-    --hpp-soft: #94a3b8;
-    --hpp-emerald: #10b981;
-    --hpp-rose: #f43f5e;
-    --hpp-amber: #f59e0b;
-    --hpp-cyan: #06b6d4;
-    --hpp-indigo: #6366f1;
-    --hpp-slate: #475569;
-    --hpp-radius-xl: clamp(1.15rem, 2vw, 1.5rem);
-    --hpp-radius-2xl: clamp(1.55rem, 2.6vw, 2rem);
-    --hpp-gap: clamp(1.1rem, 2vw, 1.55rem);
-    --hpp-pad: clamp(1.2rem, 2.8vw, 2rem);
-    --hpp-hero-pad: clamp(1.65rem, 4vw, 3rem);
-    --hpp-shadow-ambient: 0 8px 32px rgba(15, 23, 42, 0.08), 0 2px 16px rgba(15, 23, 42, 0.04);
-    --hpp-shadow-card: 0 6px 24px rgba(15, 23, 42, 0.06), 0 1px 8px rgba(15, 23, 42, 0.03);
-    --hpp-shadow-hover: 0 12px 40px rgba(15, 23, 42, 0.12), 0 4px 16px rgba(15, 23, 42, 0.08);
-    --hpp-ease: cubic-bezier(0.16, 1, 0.3, 1);
-    color: var(--hpp-text);
-    transform: translate3d(0, 0, 0);
-    will-change: transform, opacity;
-    backface-visibility: hidden;
-    contain: layout paint;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%);
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
+  #view-hpp .card-title {
+    font-weight: 700;
+    color: #0f172a;
   }
 
-  @media (prefers-color-scheme: dark) {
-    #view-hpp {
-      --hpp-bg: #ffffff;
-      --hpp-surface: rgba(255, 255, 255, 0.98);
-      --hpp-surface-strong: rgba(255, 255, 255, 1);
-      --hpp-border: rgba(226, 232, 240, 0.8);
-      --hpp-border-soft: rgba(241, 245, 249, 0.9);
-      --hpp-text: #0f172a;
-      --hpp-muted: #64748b;
-      --hpp-soft: #94a3b8;
-      --hpp-emerald: #10b981;
-      --hpp-rose: #f43f5e;
-      --hpp-amber: #f59e0b;
-      --hpp-cyan: #06b6d4;
-      --hpp-indigo: #6366f1;
-      --hpp-slate: #475569;
-      --hpp-shadow-ambient: 0 8px 32px rgba(15, 23, 42, 0.08), 0 2px 16px rgba(15, 23, 42, 0.04);
-      --hpp-shadow-card: 0 6px 24px rgba(15, 23, 42, 0.06), 0 1px 8px rgba(15, 23, 42, 0.03);
-      --hpp-shadow-hover: 0 12px 40px rgba(15, 23, 42, 0.12), 0 4px 16px rgba(15, 23, 42, 0.08);
+  #view-hpp .card-value {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  #view-hpp .card-pct {
+    font-size: 0.875rem;
+    color: #64748b;
+    white-space: nowrap;
+  }
+
+  #view-hpp .hpp-card-dash:hover,
+  #view-hpp .hpp-card-dash:active {
+    transform: none;
+    box-shadow: none;
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp #hpp-dashboard-view {
+      gap: 0.85rem;
     }
   }
+</style>
 
   #view-hpp, #view-hpp * {
     -webkit-font-smoothing: antialiased;
@@ -481,277 +445,42 @@
   <!-- ================= L1: HYPER PREMIUM DASHBOARD VIEW ================= -->
   <div id="hpp-dashboard-view" class="animate-fade-in space-y-8">
     
-    <!-- Hero Banner & Chart (Clean, High-Trust Design) -->
-    <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.02),0_2px_10px_rgba(0,0,0,0.01)] p-8 md:p-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-10 md:gap-16 transform-gpu transition-all">
-      
-      <!-- Hero Text & Donut Container -->
-      <div class="flex-1 w-full flex flex-col items-center md:items-start gap-8">
-        
-        <!-- Hero Text Section -->
-        <div class="w-full text-center md:text-left space-y-3 z-10">
-          <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Struktur Biaya (HPP)</h2>
-          <p class="text-xs md:text-sm font-medium text-slate-500 leading-relaxed md:max-w-sm">Simulasi struktur biaya untuk menjaga margin tetap sehat.</p>
-        </div>
-
-        <!-- Total HPP Value -->
-        <div class="w-full space-y-2">
-          <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Total HPP Variabel</h3>
-          <div class="flex items-baseline justify-center md:justify-start gap-2 pt-1">
-            <span class="text-[clamp(2.5rem,8vw,4rem)] leading-none font-black text-slate-900 tracking-tighter tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-hpp-total">Rp 0</span>
-            <span class="text-lg md:text-xl font-bold text-slate-400">/Kg</span>
-          </div>
-        </div>
-
-        <!-- Donut Chart (Mobile & Desktop) -->
-        <div class="w-full flex justify-center md:justify-start">
-          <div class="hpp-donut-wrap relative">
-            <!-- Main CSS Donut Gradient -->
-            <div class="hpp-donut" id="hpp-donut-chart" style="--p-gas: 0%; --p-listrik: 0%; --p-air: 0%; --p-packing: 0%; --p-bahan: 0%;"></div>
-            
-            <!-- Absolute Layer Khusus Render Teks Persentase Trigonometri -->
-            <div id="hpp-donut-labels" class="absolute inset-0 pointer-events-none z-20"></div>
-
-            <!-- Bagian Tengah (Hole) -->
-            <div class="hpp-donut-center z-10">
-              <i class="ph ph-chart-pie-slice text-slate-300/80 text-[2rem] md:text-[2.5rem] mb-1"></i>
-              <span class="text-slate-400 font-black text-[8px] md:text-[9px] uppercase tracking-[0.2em]">Komposisi</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="hpp-summary">
+      <div class="summary-title">Total HPP Variabel</div>
+      <div id="dash-hpp-total" class="summary-value tabular-nums">Rp 0</div>
     </div>
 
-    <!-- Premium Balok List -->
-    <div class="space-y-3">
-      
-      <!-- Balok: Gas -->
-      <div class="hpp-balok-container">
-        <div onclick="toggleHPPBalok('gas')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
-          <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 transition-transform duration-300 group-hover:scale-110">
-              <i class="ph ph-fire text-xl drop-shadow-sm"></i>
-            </div>
-            <span class="text-base font-bold text-slate-800">Gas LPG</span>
-          </div>
-          <div class="flex items-center gap-4">
-            <span class="text-lg font-black text-rose-500 tabular-nums" id="dash-card-gas">Rp 0</span>
-            <span class="text-sm font-bold text-rose-400 bg-rose-50 px-2 py-1 rounded-full" id="dash-card-gas-pct">0%</span>
-            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
-          </div>
-        </div>
-        <div id="hpp-balok-gas" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-rose-50/50 to-white border border-rose-100 rounded-[1rem] p-5 shadow-sm">
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya Gas per Hari</span>
-              <span class="text-sm font-bold text-rose-600" id="gas-hari">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya Gas per Bulan</span>
-              <span class="text-sm font-bold text-rose-600" id="gas-bulan">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Konsumsi Gas</span>
-              <span class="text-sm font-bold text-rose-600" id="gas-konsumsi">0 Kg</span>
-            </div>
-            <div class="pt-3 border-t border-rose-100">
-              <button onclick="openHPPFormExpandable('gas', 'Analisa Biaya Gas')" class="w-full bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
-                <i class="ph ph-pencil-simple mr-2"></i>Edit
-              </button>
-            </div>
-          </div>
-        </div>
+    <div class="hpp-grid">
+      <div class="hpp-card-dash">
+        <span class="card-title">Gas LPG</span>
+        <span id="dash-card-gas" class="card-value tabular-nums">Rp 0</span>
+        <span id="dash-card-gas-pct" class="card-pct">0%</span>
       </div>
-
-      <!-- Balok: Listrik -->
-      <div class="hpp-balok-container">
-        <div onclick="toggleHPPBalok('listrik')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
-          <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 transition-transform duration-300 group-hover:scale-110">
-              <i class="ph ph-lightning text-xl drop-shadow-sm"></i>
-            </div>
-            <span class="text-base font-bold text-slate-800">Listrik</span>
-          </div>
-          <div class="flex items-center gap-4">
-            <span class="text-lg font-black text-amber-500 tabular-nums" id="dash-card-listrik">Rp 0</span>
-            <span class="text-sm font-bold text-amber-400 bg-amber-50 px-2 py-1 rounded-full" id="dash-card-listrik-pct">0%</span>
-            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
-          </div>
-        </div>
-        <div id="hpp-balok-listrik" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-amber-50/50 to-white border border-amber-100 rounded-[1rem] p-5 shadow-sm">
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya Listrik per Load</span>
-              <span class="text-sm font-bold text-amber-600" id="listrik-load">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya Listrik per Kg</span>
-              <span class="text-sm font-bold text-amber-600" id="listrik-kg">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Total Konsumsi</span>
-              <span class="text-sm font-bold text-amber-600" id="listrik-total">0 kWh</span>
-            </div>
-            <div class="pt-3 border-t border-amber-100">
-              <button onclick="openHPPFormExpandable('listrik', 'Analisa Biaya Listrik')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
-                <i class="ph ph-pencil-simple mr-2"></i>Edit
-              </button>
-            </div>
-          </div>
-        </div>
+      <div class="hpp-card-dash">
+        <span class="card-title">Listrik</span>
+        <span id="dash-card-listrik" class="card-value tabular-nums">Rp 0</span>
+        <span id="dash-card-listrik-pct" class="card-pct">0%</span>
       </div>
-
-      <!-- Balok: Air -->
-      <div class="hpp-balok-container">
-        <div onclick="toggleHPPBalok('air')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
-          <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-cyan-50 rounded-xl flex items-center justify-center text-cyan-500 transition-transform duration-300 group-hover:scale-110">
-              <i class="ph ph-drop text-xl drop-shadow-sm"></i>
-            </div>
-            <span class="text-base font-bold text-slate-800">Air</span>
-          </div>
-          <div class="flex items-center gap-4">
-            <span class="text-lg font-black text-cyan-500 tabular-nums" id="dash-card-air">Rp 0</span>
-            <span class="text-sm font-bold text-cyan-400 bg-cyan-50 px-2 py-1 rounded-full" id="dash-card-air-pct">0%</span>
-            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
-          </div>
-        </div>
-        <div id="hpp-balok-air" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-cyan-50/50 to-white border border-cyan-100 rounded-[1rem] p-5 shadow-sm">
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya Air per Load</span>
-              <span class="text-sm font-bold text-cyan-600" id="air-load">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya Air per Kg</span>
-              <span class="text-sm font-bold text-cyan-600" id="air-kg">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Konsumsi Air</span>
-              <span class="text-sm font-bold text-cyan-600" id="air-konsumsi">0 Liter</span>
-            </div>
-            <div class="pt-3 border-t border-cyan-100">
-              <button onclick="openHPPFormExpandable('air', 'Analisa Biaya Air')" class="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
-                <i class="ph ph-pencil-simple mr-2"></i>Edit
-              </button>
-            </div>
-          </div>
-        </div>
+      <div class="hpp-card-dash">
+        <span class="card-title">Air</span>
+        <span id="dash-card-air" class="card-value tabular-nums">Rp 0</span>
+        <span id="dash-card-air-pct" class="card-pct">0%</span>
       </div>
-
-      <!-- Balok: Packing -->
-      <div class="hpp-balok-container">
-        <div onclick="toggleHPPBalok('packing')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
-          <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 transition-transform duration-300 group-hover:scale-110">
-              <i class="ph ph-package text-xl drop-shadow-sm"></i>
-            </div>
-            <span class="text-base font-bold text-slate-800">Packing</span>
-          </div>
-          <div class="flex items-center gap-4">
-            <span class="text-lg font-black text-indigo-500 tabular-nums" id="dash-card-packing">Rp 0</span>
-            <span class="text-sm font-bold text-indigo-400 bg-indigo-50 px-2 py-1 rounded-full" id="dash-card-packing-pct">0%</span>
-            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
-          </div>
-        </div>
-        <div id="hpp-balok-packing" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-indigo-50/50 to-white border border-indigo-100 rounded-[1rem] p-5 shadow-sm">
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya per Lembar</span>
-              <span class="text-sm font-bold text-indigo-600" id="packing-lembar">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya per Kg</span>
-              <span class="text-sm font-bold text-indigo-600" id="packing-kg">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Kapasitas per Lembar</span>
-              <span class="text-sm font-bold text-indigo-600" id="packing-kapasitas">0 Kg</span>
-            </div>
-            <div class="pt-3 border-t border-indigo-100">
-              <button onclick="openHPPFormExpandable('packing', 'Analisa Biaya Packing')" class="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
-                <i class="ph ph-pencil-simple mr-2"></i>Edit
-              </button>
-            </div>
-          </div>
-        </div>
+      <div class="hpp-card-dash">
+        <span class="card-title">Packing</span>
+        <span id="dash-card-packing" class="card-value tabular-nums">Rp 0</span>
+        <span id="dash-card-packing-pct" class="card-pct">0%</span>
       </div>
-
-      <!-- Balok: Chemical -->
-      <div class="hpp-balok-container">
-        <div onclick="toggleHPPBalok('bahan')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
-          <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 transition-transform duration-300 group-hover:scale-110">
-              <i class="ph ph-flask text-xl drop-shadow-sm"></i>
-            </div>
-            <span class="text-base font-bold text-slate-800">Chemical</span>
-          </div>
-          <div class="flex items-center gap-4">
-            <span class="text-lg font-black text-emerald-500 tabular-nums" id="dash-card-bahan">Rp 0</span>
-            <span class="text-sm font-bold text-emerald-400 bg-emerald-50 px-2 py-1 rounded-full" id="dash-card-bahan-pct">0%</span>
-            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
-          </div>
-        </div>
-        <div id="hpp-balok-bahan" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-emerald-50/50 to-white border border-emerald-100 rounded-[1rem] p-5 shadow-sm">
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya Deterjen per Kg</span>
-              <span class="text-sm font-bold text-emerald-600" id="bahan-det">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya Softener per Kg</span>
-              <span class="text-sm font-bold text-emerald-600" id="bahan-sof">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya Parfum per Kg</span>
-              <span class="text-sm font-bold text-emerald-600" id="bahan-par">Rp 0</span>
-            </div>
-            <div class="pt-3 border-t border-emerald-100">
-              <button onclick="openHPPFormExpandable('bahan', 'Analisa Biaya Chemical')" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
-                <i class="ph ph-pencil-simple mr-2"></i>Edit
-              </button>
-            </div>
-          </div>
-        </div>
+      <div class="hpp-card-dash">
+        <span class="card-title">Chemical</span>
+        <span id="dash-card-bahan" class="card-value tabular-nums">Rp 0</span>
+        <span id="dash-card-bahan-pct" class="card-pct">0%</span>
       </div>
-
-      <!-- Balok: Admin/Nota -->
-      <div class="hpp-balok-container">
-        <div onclick="toggleHPPBalok('nota')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.25rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex items-center justify-between cursor-pointer group">
-          <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500 transition-transform duration-300 group-hover:scale-110">
-              <i class="ph ph-receipt text-xl drop-shadow-sm"></i>
-            </div>
-            <span class="text-base font-bold text-slate-800">Admin/Nota</span>
-          </div>
-          <div class="flex items-center gap-4">
-            <span class="text-lg font-black text-slate-600 tabular-nums" id="dash-card-nota">Rp 0</span>
-            <span class="text-sm font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-full" id="dash-card-nota-pct">0%</span>
-            <i class="ph ph-caret-down text-slate-400 transition-transform duration-300 group-hover:text-slate-600"></i>
-          </div>
-        </div>
-        <div id="hpp-balok-nota" class="hpp-balok-detail hidden mt-3 bg-gradient-to-br from-slate-50/50 to-white border border-slate-100 rounded-[1rem] p-5 shadow-sm">
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya per Transaksi</span>
-              <span class="text-sm font-bold text-slate-600" id="nota-trx">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Biaya per Kg</span>
-              <span class="text-sm font-bold text-slate-600" id="nota-kg">Rp 0</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold text-slate-700">Rata-rata Cucian</span>
-              <span class="text-sm font-bold text-slate-600" id="nota-rata">0 Kg</span>
-            </div>
-            <div class="pt-3 border-t border-slate-100">
-              <button onclick="openHPPFormExpandable('nota', 'Analisa Biaya Nota & Kasir')" class="w-full bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-sm transition-all active:scale-95">
-                <i class="ph ph-pencil-simple mr-2"></i>Edit
-              </button>
-            </div>
-          </div>
-        </div>
+      <div class="hpp-card-dash">
+        <span class="card-title">Admin/Nota</span>
+        <span id="dash-card-nota" class="card-value tabular-nums">Rp 0</span>
+        <span id="dash-card-nota-pct" class="card-pct">0%</span>
       </div>
-
     </div>
 
     <!-- Expandable Form Area (Below Cards) -->
@@ -1815,122 +1544,6 @@
 
 
 
-<style id="zett-hpp-final-spacing-and-contrast-fix">
-  /* ======================================================================
-   * ZETTBOT FINAL FIX: HPP SPACING, DONUT LABEL CONTRAST, FORM RESTORE
-   * Scope: #view-hpp only. Tidak mengubah struktur HTML/database/backend.
-   * ====================================================================== */
-
-  /* Jarak atas dari header global: menghapus kesan mepet dari inline margin-top:-1rem */
-  #view-hpp {
-    margin-top: clamp(1.15rem, 2.4vw, 1.85rem) !important;
-  }
-
-  /* Mengunci jarak antar section agar presisi dan tidak ditambah oleh Tailwind space-y-8 */
-  #view-hpp #hpp-dashboard-view {
-    gap: clamp(1.15rem, 1.9vw, 1.55rem) !important;
-    padding-inline: clamp(0rem, 1vw, 0.35rem);
-  }
-
-  #view-hpp #hpp-dashboard-view > * + * {
-    margin-top: 0 !important;
-  }
-
-  /* Hero sedikit lebih lapang di atas, tetapi tidak membuat jarak ke card terlalu jauh */
-  #view-hpp #hpp-dashboard-view > .bg-white\/95 {
-    margin-top: 0 !important;
-    padding-block: clamp(1.65rem, 3.35vw, 2.65rem) !important;
-    padding-inline: clamp(1.45rem, 4.2vw, 3rem) !important;
-  }
-
-  /* Grid card didekatkan secara elegan ke hero, tetap lega untuk screen recording */
-  #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-    gap: clamp(1rem, 1.75vw, 1.35rem) !important;
-  }
-
-  #view-hpp .hpp-card-dash {
-    min-height: clamp(7.25rem, 12vw, 8.45rem) !important;
-    padding: clamp(1rem, 2.2vw, 1.5rem) !important;
-  }
-
-  /* Label persen donut: tidak lagi putih polos, dibuat seperti chip premium agar selalu terbaca */
-  #view-hpp #hpp-donut-labels > div {
-    color: #0f172a !important;
-    background: rgba(255, 255, 255, 0.92) !important;
-    border: 1px solid rgba(226, 232, 240, 0.9) !important;
-    border-radius: 999px !important;
-    padding: 0.16rem 0.42rem !important;
-    min-width: 2rem !important;
-    text-align: center !important;
-    font-size: 10px !important;
-    font-weight: 900 !important;
-    letter-spacing: -0.02em !important;
-    text-shadow: none !important;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255,255,255,0.85) !important;
-    backdrop-filter: blur(10px) saturate(1.2) !important;
-    -webkit-backdrop-filter: blur(10px) saturate(1.2) !important;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    #view-hpp #hpp-donut-labels > div {
-      color: #f8fafc !important;
-      background: rgba(15, 23, 42, 0.88) !important;
-      border-color: rgba(148, 163, 184, 0.38) !important;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08) !important;
-    }
-  }
-
-  /* Transisi form HPP cepat, premium, satu langkah, tanpa kedip */
-  #view-hpp .hpp-form-enter-final {
-    animation: hppFormEnterFinal 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
-    will-change: opacity, transform, filter;
-    transform-origin: top center;
-    backface-visibility: hidden;
-  }
-
-  @keyframes hppFormEnterFinal {
-    0% {
-      opacity: 0;
-      transform: translate3d(0, 18px, 0) scale(0.988);
-      filter: blur(8px);
-    }
-    100% {
-      opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1);
-      filter: blur(0);
-    }
-  }
-
-  #view-hpp .hpp-dashboard-return-final {
-    animation: hppDashboardReturnFinal 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
-    will-change: opacity, transform;
-  }
-
-  @keyframes hppDashboardReturnFinal {
-    0% { opacity: 0; transform: translate3d(0, 12px, 0); }
-    100% { opacity: 1; transform: translate3d(0, 0, 0); }
-  }
-
-  @media (max-width: 767px) {
-    #view-hpp {
-      margin-top: clamp(0.85rem, 3vw, 1.25rem) !important;
-    }
-
-    #view-hpp #hpp-dashboard-view {
-      gap: clamp(0.95rem, 3.5vw, 1.25rem) !important;
-    }
-
-    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
-      padding: clamp(1.25rem, 5vw, 1.75rem) !important;
-      gap: clamp(1rem, 4vw, 1.35rem) !important;
-    }
-
-    #view-hpp .hpp-donut-wrap {
-      width: clamp(160px, 56vw, 210px) !important;
-      height: clamp(160px, 56vw, 210px) !important;
-    }
-  }
-</style>
 
 <script id="zett-hpp-form-controller-restore">
   /**
@@ -2207,157 +1820,6 @@
   })();
 </script>
 
-<style id="zett-hpp-umkm-compact-polish-final">
-  /* ======================================================================
-   * ZETTBOT UMKM FRIENDLY COMPACT POLISH
-   * Scope: Struktur Biaya (HPP) saja.
-   * Fokus: spacing lebih rapat, mobile/TikTok friendly, tetap premium.
-   * ====================================================================== */
-  #view-hpp {
-    margin-top: clamp(0.95rem, 1.8vw, 1.35rem) !important;
-  }
-
-  #view-hpp #hpp-dashboard-view {
-    gap: clamp(1rem, 1.45vw, 1.25rem) !important;
-    max-width: min(100%, 1080px) !important;
-  }
-
-  #view-hpp #hpp-dashboard-view > .bg-white\/95 {
-    min-height: auto !important;
-    padding-block: clamp(1.35rem, 2.6vw, 2.2rem) !important;
-    padding-inline: clamp(1.35rem, 3.4vw, 2.65rem) !important;
-    gap: clamp(1.15rem, 2.5vw, 2.25rem) !important;
-    border-radius: clamp(1.4rem, 2.4vw, 1.8rem) !important;
-  }
-
-  #view-hpp #hpp-dashboard-view > .bg-white\/95 .space-y-5 {
-    gap: clamp(0.75rem, 1.35vw, 1.05rem) !important;
-  }
-
-  #view-hpp #hpp-dashboard-view > .bg-white\/95 p {
-    max-width: 34rem !important;
-    font-size: clamp(0.82rem, 1vw, 0.92rem) !important;
-    line-height: 1.55 !important;
-    padding-top: 0.2rem !important;
-  }
-
-  #view-hpp #dash-hpp-total {
-    font-size: clamp(3rem, 6.1vw, 4.25rem) !important;
-    letter-spacing: -0.06em !important;
-  }
-
-  #view-hpp .hpp-donut-wrap {
-    width: clamp(10rem, 19vw, 13.2rem) !important;
-    height: clamp(10rem, 19vw, 13.2rem) !important;
-  }
-
-  #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-    gap: clamp(0.85rem, 1.25vw, 1.15rem) !important;
-  }
-
-  #view-hpp .hpp-card-dash {
-    min-height: clamp(6.15rem, 9.2vw, 7.35rem) !important;
-    padding: clamp(0.85rem, 1.65vw, 1.15rem) !important;
-    gap: clamp(0.45rem, 0.9vw, 0.68rem) !important;
-    border-radius: clamp(1.15rem, 1.9vw, 1.45rem) !important;
-  }
-
-  #view-hpp .hpp-card-dash .w-12 {
-    width: clamp(2.25rem, 3.4vw, 2.65rem) !important;
-    height: clamp(2.25rem, 3.4vw, 2.65rem) !important;
-    border-radius: 0.95rem !important;
-  }
-
-  #view-hpp .hpp-card-dash .w-12 i {
-    font-size: clamp(1.1rem, 2.2vw, 1.35rem) !important;
-  }
-
-  #view-hpp .hpp-card-dash h3 {
-    margin-bottom: 0.25rem !important;
-    font-size: clamp(0.55rem, 0.78vw, 0.64rem) !important;
-    letter-spacing: 0.16em !important;
-  }
-
-  #view-hpp [id^="dash-card-"] {
-    font-size: clamp(1.15rem, 2.1vw, 1.55rem) !important;
-    line-height: 1.05 !important;
-  }
-
-  #view-hpp .hpp-card-percent {
-    margin-top: 0.35rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: fit-content;
-    max-width: 100%;
-    align-self: center;
-    padding: 0.28rem 0.55rem;
-    border-radius: 999px;
-    background: rgba(248, 250, 252, 0.86);
-    border: 1px solid rgba(226, 232, 240, 0.72);
-    color: #64748b;
-    font-size: clamp(0.6rem, 0.85vw, 0.7rem);
-    font-weight: 900;
-    letter-spacing: -0.01em;
-    line-height: 1;
-    white-space: nowrap;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.86);
-  }
-
-  #view-hpp #hpp-donut-labels > div {
-    color: #0f172a !important;
-    background: rgba(255, 255, 255, 0.96) !important;
-    border: 1px solid rgba(203, 213, 225, 0.92) !important;
-    font-size: 10px !important;
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255,255,255,0.9) !important;
-  }
-
-  @media (max-width: 1024px) {
-    #view-hpp #hpp-dashboard-view {
-      max-width: min(100%, 860px) !important;
-      gap: 1rem !important;
-    }
-
-    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
-      padding: 1.45rem !important;
-      gap: 1.25rem !important;
-    }
-  }
-
-  @media (max-width: 767px) {
-    #mainViewScroller {
-      padding-left: 12px !important;
-      padding-right: 12px !important;
-      padding-top: 12px !important;
-    }
-
-    #view-hpp {
-      margin-top: 0.35rem !important;
-    }
-
-    #view-hpp #hpp-dashboard-view {
-      gap: 12px !important;
-      width: 100% !important;
-    }
-
-    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
-      padding: 20px !important;
-      gap: 16px !important;
-      border-radius: 22px !important;
-      align-items: center !important;
-    }
-
-    #view-hpp #hpp-dashboard-view > .bg-white\/95 .flex-1 {
-      width: 100% !important;
-    }
-
-    #view-hpp #dash-hpp-total {
-      font-size: clamp(2.8rem, 12.5vw, 3.55rem) !important;
-    }
-
-    #view-hpp #dash-hpp-total + span {
-      font-size: clamp(1rem, 5vw, 1.25rem) !important;
-    }
 
     #view-hpp .hpp-donut-wrap {
       width: clamp(140px, 43vw, 176px) !important;
