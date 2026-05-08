@@ -286,6 +286,18 @@ const StateMachine = {
       if(document.getElementById('dash-card-packing')) document.getElementById('dash-card-packing').innerText = formatRupiah(packing);
       if(document.getElementById('dash-card-bahan')) document.getElementById('dash-card-bahan').innerText = formatRupiah(bahan);
       if(document.getElementById('dash-card-nota')) document.getElementById('dash-card-nota').innerText = formatRupiah(nota);
+      
+      // Update percentages for balok
+      const updatePct = (id, value) => {
+        const el = document.getElementById(id);
+        if(el) el.innerText = t > 0 ? Math.round((value / t) * 100) + '%' : '0%';
+      };
+      updatePct('dash-card-gas-pct', gas);
+      updatePct('dash-card-listrik-pct', listrik);
+      updatePct('dash-card-air-pct', air);
+      updatePct('dash-card-packing-pct', packing);
+      updatePct('dash-card-bahan-pct', bahan);
+      updatePct('dash-card-nota-pct', nota);
     }
     
     const donut = document.getElementById('hpp-donut-chart');
@@ -323,6 +335,29 @@ const StateMachine = {
       donut.style.setProperty('--p-gas', `0%`); donut.style.setProperty('--p-listrik', `0%`);
       donut.style.setProperty('--p-air', `0%`); donut.style.setProperty('--p-packing', `0%`); donut.style.setProperty('--p-bahan', `0%`);
       if (labelsContainer) labelsContainer.innerHTML = '';
+    }
+  },
+
+  // Toggle expandable balok details
+  toggleHPPBalok: function(type) {
+    const detailEl = document.getElementById('hpp-balok-' + type);
+    if (!detailEl) return;
+    
+    const isHidden = detailEl.classList.contains('hidden');
+    if (isHidden) {
+      detailEl.classList.remove('hidden');
+      detailEl.style.maxHeight = '0px';
+      detailEl.style.opacity = '0';
+      // Trigger reflow
+      detailEl.offsetHeight;
+      detailEl.style.maxHeight = detailEl.scrollHeight + 'px';
+      detailEl.style.opacity = '1';
+    } else {
+      detailEl.style.maxHeight = '0px';
+      detailEl.style.opacity = '0';
+      setTimeout(() => {
+        detailEl.classList.add('hidden');
+      }, 300);
     }
   }
 };
@@ -1489,6 +1524,13 @@ async function prosesSimpanBEP() {
       return oldBackgroundSyncHPP(payload);
     };
   }
+
+  // Global access to StateMachine functions
+  window.toggleHPPBalok = function(type) {
+    if (typeof StateMachine !== 'undefined' && StateMachine.toggleHPPBalok) {
+      StateMachine.toggleHPPBalok(type);
+    }
+  };
 })();
 
 </script>
