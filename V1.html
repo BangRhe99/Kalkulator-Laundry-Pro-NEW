@@ -522,6 +522,263 @@
   #view-dashboard .fin-tr-main:hover {
     background: rgba(56, 189, 248, 0.08);
   }
+
+  #view-dashboard .fin-hero-panel {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(320px, 420px);
+    gap: 1.5rem;
+    align-items: stretch;
+    min-height: 360px;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(7, 11, 28, 0.96), rgba(10, 14, 38, 0.88));
+    border: 1px solid rgba(94, 123, 255, 0.15);
+    box-shadow: 0 42px 110px -40px rgba(0, 0, 0, 0.55);
+  }
+
+  #view-dashboard .hero-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.4rem;
+  }
+
+  #view-dashboard .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    background: rgba(34, 211, 238, 0.12);
+    border: 1px solid rgba(34, 211, 238, 0.22);
+    color: #a5f3fc;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  #view-dashboard .hero-badge span {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: #22d3ee;
+    box-shadow: 0 0 14px rgba(34, 211, 238, 0.5);
+  }
+
+  #view-dashboard .hero-title {
+    font-size: clamp(1.05rem, 2vw, 1.3rem);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: rgba(148, 163, 184, 0.9);
+    text-transform: uppercase;
+  }
+
+  #view-dashboard .hero-value {
+    font-size: clamp(3rem, 6vw, 4.6rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.05em;
+    color: #ffffff;
+    text-shadow: 0 18px 40px rgba(56, 189, 248, 0.22);
+  }
+
+  #view-dashboard .hero-note {
+    max-width: 560px;
+    color: rgba(226, 232, 240, 0.74);
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  #view-dashboard .hero-pill-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  #view-dashboard .hero-pill {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.95rem 1rem;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: #e2e8f0;
+    font-weight: 700;
+  }
+
+  #view-dashboard .hero-pill-label {
+    color: rgba(203, 213, 225, 0.76);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  #view-dashboard .hero-donut-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding: 1.75rem;
+    background: linear-gradient(180deg, rgba(13, 20, 42, 0.96), rgba(8, 12, 28, 0.94));
+    border: 1px solid rgba(99, 102, 241, 0.16);
+    border-radius: 1.75rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  #view-dashboard .donut-card-title {
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  #view-dashboard .hero-donut-wrap {
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+  }
+
+  #view-dashboard .donut-center-text {
+    position: absolute;
+    text-align: center;
+    color: #f8fafc;
+  }
+
+  #view-dashboard .donut-center-label {
+    font-size: 0.8rem;
+    color: rgba(203, 213, 225, 0.76);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  #view-dashboard .donut-center-value {
+    font-size: 1.65rem;
+    font-weight: 900;
+    margin-top: 0.35rem;
+    color: #ffffff;
+  }
+
+  #view-dashboard .fin-scorecards {
+    gap: 1rem;
+  }
+
+  #view-dashboard .fin-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 150px;
+    backdrop-filter: blur(18px);
+  }
+
+  #view-dashboard .fin-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 30%);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  #view-dashboard .fin-card * {
+    position: relative;
+    z-index: 1;
+  }
+
+  #view-dashboard .fin-card-value {
+    font-size: clamp(1.6rem, 3.5vw, 2.25rem);
+  }
+
+  #view-dashboard .fin-card-sub {
+    margin-top: 1rem;
+  }
+
+  #view-dashboard .c-gas .fin-card-sub { background: rgba(248, 113, 113, 0.12); color: #fb7185; }
+  #view-dashboard .c-electric .fin-card-sub { background: rgba(249, 115, 22, 0.12); color: #f97316; }
+  #view-dashboard .c-water .fin-card-sub { background: rgba(56, 189, 248, 0.12); color: #38bdf8; }
+  #view-dashboard .c-packing .fin-card-sub { background: rgba(168, 85, 247, 0.12); color: #a855f7; }
+  #view-dashboard .c-chemical .fin-card-sub { background: rgba(16, 185, 129, 0.12); color: #22c55e; }
+  #view-dashboard .c-admin .fin-card-sub { background: rgba(168, 85, 247, 0.12); color: #c084fc; }
+
+  #view-dashboard .fin-visuals {
+    gap: 1rem;
+  }
+
+  #view-dashboard .fin-visual-box {
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    min-height: 280px;
+  }
+
+  @media (max-width: 980px) {
+    #view-dashboard .fin-hero-panel {
+      grid-template-columns: 1fr;
+      padding: 1.5rem;
+    }
+
+    #view-dashboard .hero-pill-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 680px) {
+    #view-dashboard .hero-pill-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #view-dashboard .fin-visual-box {
+      min-height: 240px;
+      padding: 1.5rem;
+    }
+  }
+
+  #view-dashboard .fin-bottom-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: -0.75rem;
+    padding: 1rem;
+    background: rgba(7, 11, 28, 0.82);
+    border: 1px solid rgba(56, 189, 248, 0.12);
+    border-radius: 1.5rem;
+  }
+
+  #view-dashboard .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    border-radius: 1.25rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  #view-dashboard .feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(59, 130, 246, 0.12));
+    color: #7dd3fc;
+    font-size: 1.25rem;
+    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.16);
+  }
+
+  #view-dashboard .feature-item strong {
+    display: block;
+    font-size: 0.95rem;
+    color: #f8fafc;
+  }
+
+  #view-dashboard .feature-item p {
+    margin: 0.35rem 0 0;
+    font-size: 0.88rem;
+    color: rgba(203, 213, 225, 0.72);
+  }
 </style>
 
 <div id="view-dashboard" class="main-view block">
@@ -533,9 +790,35 @@
     </select>
 
     <!-- 2. EXECUTIVE SCORECARDS (The 5-Second Rule) -->
+    <div class="fin-hero-panel fin-panel">
+      <div class="hero-copy">
+        <div class="hero-badge"><span></span>REAL-TIME SYNC</div>
+        <div class="hero-title">TOTAL HPP VARIABEL</div>
+        <div class="hero-value" id="v1-donut-total">Rp 0</div>
+        <div class="hero-note">Simulasi struktur biaya untuk menjaga margin tetap sehat.</div>
+        <div class="hero-pill-grid">
+          <div class="hero-pill"><span class="hero-pill-label">Gas LPG</span><strong>86%</strong></div>
+          <div class="hero-pill"><span class="hero-pill-label">Listrik</span><strong>6%</strong></div>
+          <div class="hero-pill"><span class="hero-pill-label">Chemical</span><strong>6%</strong></div>
+        </div>
+      </div>
+      <div class="hero-donut-card">
+        <div class="donut-card-title">Komposisi</div>
+        <div class="fin-donut-wrap hero-donut-wrap">
+          <div class="fin-donut" id="v1-donut-el" style="--val-var: 0%;"></div>
+          <div class="donut-center-text">
+            <div class="donut-center-label">Total HPP</div>
+            <div class="donut-center-value">Rp 0</div>
+          </div>
+        </div>
+        <div class="donut-legend hero-donut-legend">
+          <div class="legend-item"><div class="legend-dot dot-var"></div>Biaya Variabel</div>
+          <div class="legend-item"><div class="legend-dot dot-fix"></div>Biaya Tetap</div>
+        </div>
+      </div>
+    </div>
+
     <div class="fin-scorecards">
-      
-      <!-- Card 1: Margin Laba/Kg -->
       <div class="fin-panel fin-card c-margin">
         <div class="fin-card-label">Margin Laba / Kg</div>
         <div class="fin-card-value" id="v1-val-margin">
@@ -545,8 +828,6 @@
            <div class="fin-skeleton skel-badge"></div>
         </div>
       </div>
-
-      <!-- Card 2: Progres Menuju BEP -->
       <div class="fin-panel fin-card c-bep">
         <div class="fin-card-label">Target Aktual vs BEP</div>
         <div class="fin-card-value" id="v1-val-vol">
@@ -556,8 +837,6 @@
            <div class="fin-skeleton skel-badge"></div>
         </div>
       </div>
-
-      <!-- Card 3: Estimasi Laba Bersih -->
       <div class="fin-panel fin-card c-profit">
         <div class="fin-card-label">Estimasi Laba Bersih (Bulan)</div>
         <div class="fin-card-value" id="v1-val-profit">
@@ -567,7 +846,39 @@
            <div class="fin-skeleton skel-badge"></div>
         </div>
       </div>
+      <div class="fin-panel fin-card c-gas">
+        <div class="fin-card-label">Gas LPG</div>
+        <div class="fin-card-value">Rp 0</div>
+        <div class="fin-card-sub">86%</div>
+      </div>
+      <div class="fin-panel fin-card c-electric">
+        <div class="fin-card-label">Listrik</div>
+        <div class="fin-card-value">Rp 0</div>
+        <div class="fin-card-sub">6%</div>
+      </div>
+      <div class="fin-panel fin-card c-water">
+        <div class="fin-card-label">Air PDAM</div>
+        <div class="fin-card-value">Rp 0</div>
+        <div class="fin-card-sub">0%</div>
+      </div>
+    </div>
 
+    <div class="fin-scorecards">
+      <div class="fin-panel fin-card c-packing">
+        <div class="fin-card-label">Packing</div>
+        <div class="fin-card-value">Rp 0</div>
+        <div class="fin-card-sub">2%</div>
+      </div>
+      <div class="fin-panel fin-card c-chemical">
+        <div class="fin-card-label">Chemical</div>
+        <div class="fin-card-value">Rp 0</div>
+        <div class="fin-card-sub">6%</div>
+      </div>
+      <div class="fin-panel fin-card c-admin">
+        <div class="fin-card-label">Admin/Nota</div>
+        <div class="fin-card-value">Rp 0</div>
+        <div class="fin-card-sub">0%</div>
+      </div>
     </div>
 
     <!-- 3. VISUALIZATION DASHBOARD -->
@@ -591,22 +902,12 @@
         </div>
       </div>
 
-      <!-- PURE CSS DONUT CHART -->
-      <div class="fin-panel fin-visual-box">
-        <div class="fin-visual-title"><i class="ph ph-chart-pie-slice"></i> Komposisi HPP Keseluruhan</div>
-        <div class="fin-donut-wrap">
-          <div class="fin-donut" id="v1-donut-el" style="--val-var: 0%;"></div>
-          <div class="donut-center-text">
-            <div style="font-size:0.75rem; font-weight:800; color:var(--fin-text-muted);">Total HPP</div>
-            <div style="font-size:1.25rem; font-weight:900;" id="v1-donut-total">Rp 0</div>
-          </div>
-        </div>
-        <div class="donut-legend">
-          <div class="legend-item"><div class="legend-dot dot-var"></div>Biaya Variabel</div>
-          <div class="legend-item"><div class="legend-dot dot-fix"></div>Biaya Tetap</div>
-        </div>
-      </div>
+    </div>
 
+    <div class="fin-panel fin-bottom-features">
+      <div class="feature-item"><span class="feature-icon"><i class="ph ph-check-circle"></i></span><div><strong>Akurat & Real-time</strong><p>Data selalu sinkron.</p></div></div>
+      <div class="feature-item"><span class="feature-icon"><i class="ph ph-shield-check"></i></span><div><strong>Terjamin Keamanan</strong><p>Data terlindungi.</p></div></div>
+      <div class="feature-item"><span class="feature-icon"><i class="ph ph-flash"></i></span><div><strong>Performa Optimal</strong><p>Cepat & responsif.</p></div></div>
     </div>
 
     <!-- 4. COST STRUCTURE TABLE (Progressive Disclosure) -->

@@ -64,30 +64,31 @@
    * Tujuan: memperkaya UI HPP tanpa mengubah struktur HTML/CSS dasar.
    * ====================================================================== */
   #view-hpp {
-    --hpp-bg: #f8fafc;
-    --hpp-surface: rgba(255, 255, 255, 0.88);
-    --hpp-surface-strong: rgba(255, 255, 255, 0.96);
-    --hpp-border: rgba(203, 213, 225, 0.46);
-    --hpp-border-soft: rgba(226, 232, 240, 0.72);
-    --hpp-text: #0f172a;
-    --hpp-muted: #475569;
-    --hpp-soft: #64748b;
-    --hpp-emerald: #047857;
-    --hpp-rose: #be123c;
-    --hpp-amber: #b45309;
-    --hpp-cyan: #0e7490;
-    --hpp-indigo: #4f46e5;
-    --hpp-slate: #334155;
+    --hpp-bg: #020617;
+    --hpp-surface: rgba(10, 14, 28, 0.92);
+    --hpp-surface-strong: rgba(12, 18, 34, 0.98);
+    --hpp-border: rgba(94, 123, 255, 0.18);
+    --hpp-border-soft: rgba(56, 189, 248, 0.16);
+    --hpp-text: #e2e8f0;
+    --hpp-muted: #94a3b8;
+    --hpp-soft: #cbd5e1;
+    --hpp-emerald: #34d399;
+    --hpp-rose: #fb7185;
+    --hpp-amber: #fbbf24;
+    --hpp-cyan: #22d3ee;
+    --hpp-indigo: #a855f7;
+    --hpp-slate: #e2e8f0;
     --hpp-radius-xl: clamp(1.15rem, 2vw, 1.5rem);
     --hpp-radius-2xl: clamp(1.55rem, 2.6vw, 2rem);
     --hpp-gap: clamp(1.1rem, 2vw, 1.55rem);
     --hpp-pad: clamp(1.2rem, 2.8vw, 2rem);
     --hpp-hero-pad: clamp(1.65rem, 4vw, 3rem);
-    --hpp-shadow-ambient: 0 22px 60px -36px rgba(15, 23, 42, 0.36), 0 12px 28px -24px rgba(15, 23, 42, 0.22);
-    --hpp-shadow-card: 0 18px 50px -34px rgba(15, 23, 42, 0.34), 0 2px 14px -10px rgba(15, 23, 42, 0.16);
-    --hpp-shadow-hover: 0 30px 72px -34px rgba(15, 23, 42, 0.42), 0 12px 28px -20px rgba(15, 23, 42, 0.28);
+    --hpp-shadow-ambient: 0 30px 80px -40px rgba(0, 0, 0, 0.68), 0 16px 48px -28px rgba(15, 23, 42, 0.4);
+    --hpp-shadow-card: 0 24px 70px -34px rgba(0, 0, 0, 0.6), 0 4px 18px -12px rgba(255, 255, 255, 0.04);
+    --hpp-shadow-hover: 0 34px 90px -38px rgba(0, 0, 0, 0.8), 0 14px 36px -24px rgba(56, 189, 248, 0.22);
     --hpp-ease: cubic-bezier(0.16, 1, 0.3, 1);
     color: var(--hpp-text);
+    background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 18%), radial-gradient(circle at 85% 15%, rgba(168, 85, 247, 0.08), transparent 24%), linear-gradient(180deg, #020617 0%, #060a17 100%);
     transform: translate3d(0, 0, 0);
     will-change: transform, opacity;
     backface-visibility: hidden;
@@ -144,14 +145,14 @@
     isolation: isolate;
     overflow: hidden;
     border-radius: var(--hpp-radius-2xl) !important;
-    border-color: var(--hpp-border) !important;
+    border-color: rgba(94, 123, 255, 0.22) !important;
     background:
-      radial-gradient(circle at 12% 0%, rgba(99, 102, 241, 0.09), transparent 30%),
-      radial-gradient(circle at 92% 18%, rgba(16, 185, 129, 0.11), transparent 32%),
-      linear-gradient(145deg, var(--hpp-surface-strong), var(--hpp-surface)) !important;
+      radial-gradient(circle at 12% 0%, rgba(59, 130, 246, 0.18), transparent 30%),
+      radial-gradient(circle at 92% 18%, rgba(168, 85, 247, 0.14), transparent 32%),
+      linear-gradient(145deg, rgba(12, 17, 33, 0.96), rgba(7, 12, 24, 0.94)) !important;
     box-shadow: var(--hpp-shadow-ambient) !important;
-    backdrop-filter: blur(18px) saturate(1.18) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(1.18) !important;
+    backdrop-filter: blur(22px) saturate(1.2) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(1.2) !important;
     padding: var(--hpp-hero-pad) !important;
     gap: clamp(1.5rem, 4vw, 3.25rem) !important;
     transform: translate3d(0, 0, 0);
@@ -218,18 +219,27 @@
   #view-hpp .hpp-card-dash {
     min-height: clamp(7.4rem, 14vw, 8.9rem);
     border-radius: var(--hpp-radius-xl) !important;
-    border-color: var(--hpp-border-soft) !important;
+    border-color: rgba(148, 163, 184, 0.12) !important;
     background:
-      linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.78)) !important;
+      linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(10, 14, 28, 0.88)) !important;
     box-shadow: var(--hpp-shadow-card) !important;
-    backdrop-filter: blur(14px) saturate(1.12);
-    -webkit-backdrop-filter: blur(14px) saturate(1.12);
+    backdrop-filter: blur(18px) saturate(1.12);
+    -webkit-backdrop-filter: blur(18px) saturate(1.12);
     padding: clamp(1.05rem, 2.35vw, 1.55rem) !important;
     gap: clamp(0.68rem, 1.4vw, 1rem) !important;
     transform: translate3d(0, 0, 0);
     will-change: transform, box-shadow, filter;
     transition: transform 280ms var(--hpp-ease), box-shadow 280ms var(--hpp-ease), border-color 280ms var(--hpp-ease), filter 280ms ease !important;
     contain: layout paint;
+    color: #e2e8f0;
+  }
+
+  #view-hpp .hpp-card-dash h3 {
+    color: rgba(203, 213, 225, 0.92) !important;
+  }
+
+  #view-hpp #dash-hpp-total {
+    color: #f8fafc !important;
   }
 
   @media (prefers-color-scheme: dark) {
