@@ -1,26 +1,31 @@
-.hpp-percentage {
-  font-feature-settings: "tnum";
-  font-variant-numeric: tabular-nums;
-}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-   @media (max-width: 640px) {
-    .hpp-container {
-      grid-template-columns: 1fr;
-      gap: 0.75rem;
-    }
-    .hpp-card {
-      padding: 1rem;
-      border-radius: 10px;
-    }
-  } <base target="_top">
+  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
+  
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap');
+
+    /* CSS yang sebelumnya tercecer di atas dipindahkan ke sini */
+    .hpp-percentage {
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+    }
+    
+    @media (max-width: 640px) {
+      .hpp-container {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+      .hpp-card {
+        padding: 1rem;
+        border-radius: 10px;
+      }
+    }
 
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
