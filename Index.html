@@ -137,6 +137,10 @@
       <button type="button" onclick="switchMainTab('roi')" id="nav-roi" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-400 hover:bg-white/5 hover:text-slate-100 font-semibold transition-all duration-300 transform active:scale-95 group">
         <i class="ph ph-chart-pie-slice text-xl shrink-0 group-hover:text-emerald-400 transition-colors"></i> <span class="text-sm text-left leading-snug">Proyeksi ROI</span>
       </button>
+
+      <button type="button" onclick="switchMainTab('cost-structure')" id="nav-cost-structure" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-400 hover:bg-white/5 hover:text-slate-100 font-semibold transition-all duration-300 transform active:scale-95 group">
+        <i class="ph ph-wallet text-xl shrink-0 group-hover:text-amber-400 transition-colors"></i> <span class="text-sm text-left leading-snug">Dashboard Biaya</span>
+      </button>
     </div>
 
     <div class="p-6 border-t border-white/5 shrink-0 bg-black/20">
@@ -185,6 +189,7 @@
       <?!= HtmlService.createHtmlOutputFromFile('V2').getContent(); ?>
       <?!= HtmlService.createHtmlOutputFromFile('V3').getContent(); ?>
       <?!= HtmlService.createHtmlOutputFromFile('V4').getContent(); ?>
+      <?!= HtmlService.createHtmlOutputFromFile('V5').getContent(); ?>
       
       <!-- Halaman Modal HPP yang telah diubah menjadi View utama -->
       <?!= HtmlService.createHtmlOutputFromFile('Modal').getContent(); ?>
@@ -217,7 +222,8 @@
         hpp: 'Struktur Biaya (HPP)',
         harga: 'Katalog Layanan',
         bep: 'Target Titik Impas',
-        roi: 'Proyeksi ROI'
+        roi: 'Proyeksi ROI',
+        'cost-structure': 'Dashboard Biaya Premium'
       };
 
       let activeMainTab = 'dashboard';
@@ -227,7 +233,8 @@
         hpp: '',
         harga: '',
         bep: '',
-        roi: ''
+        roi: '',
+        'cost-structure': ''
       };
 
       function getHeaderDropdown() {

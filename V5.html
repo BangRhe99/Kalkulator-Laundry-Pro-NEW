@@ -1,0 +1,532 @@
+<!-- ================================================================================ -->
+<!-- VIEW: COST STRUCTURE DASHBOARD - PREMIUM FINTECH UI (V5) -->
+<!-- Modular Component - Fully Compatible with Existing JS & Apps Script Logic -->
+<!-- ================================================================================ -->
+
+<style>
+  /* ========================================================================== */
+  /* V5: PREMIUM COST STRUCTURE DASHBOARD STYLING */
+  /* ========================================================================== */
+
+  #view-cost-structure {
+    animation: v5EnterPremium 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  @keyframes v5EnterPremium {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Hero Metrics Section */
+  .v5-metrics-hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .v5-metric-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .v5-metric-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.08), transparent 50%);
+    pointer-events: none;
+  }
+
+  .v5-metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+
+  .v5-metric-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .v5-metric-value {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  .v5-metric-sub {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+    font-weight: 600;
+  }
+
+  /* Cost Cards Grid */
+  .v5-cost-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .v5-cost-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.5);
+    border-radius: 1.125rem;
+    padding: 1.25rem;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .v5-cost-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent);
+    pointer-events: none;
+  }
+
+  .v5-cost-card:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.06);
+    border-color: rgba(99, 102, 241, 0.25);
+  }
+
+  .v5-cost-card:active {
+    transform: translateY(-1px) scale(0.98);
+    transition-duration: 120ms;
+  }
+
+  .v5-cost-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .v5-cost-value {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  .v5-cost-pct {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    background: rgba(226, 232, 240, 0.4);
+    border-radius: 0.5rem;
+    width: fit-content;
+  }
+
+  /* Color variants for cost cards */
+  .v5-cost-card.gas { --accent-color: #f43f5e; }
+  .v5-cost-card.listrik { --accent-color: #f59e0b; }
+  .v5-cost-card.air { --accent-color: #06b6d4; }
+  .v5-cost-card.packing { --accent-color: #6366f1; }
+  .v5-cost-card.bahan { --accent-color: #10b981; }
+  .v5-cost-card.nota { --accent-color: #8b5cf6; }
+
+  .v5-cost-card.gas .v5-cost-value,
+  .v5-cost-card.listrik .v5-cost-value,
+  .v5-cost-card.air .v5-cost-value,
+  .v5-cost-card.packing .v5-cost-value,
+  .v5-cost-card.bahan .v5-cost-value,
+  .v5-cost-card.nota .v5-cost-value {
+    color: var(--accent-color);
+  }
+
+  /* Section Dividers */
+  .v5-section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(226, 232, 240, 0.8), transparent);
+    margin: 2rem 0;
+  }
+
+  /* Responsive Behavior */
+  @media (max-width: 640px) {
+    .v5-metrics-hero {
+      grid-template-columns: 1fr;
+      gap: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .v5-metric-card {
+      padding: 1.25rem 1rem;
+    }
+
+    .v5-metric-value {
+      font-size: clamp(1.25rem, 5vw, 1.75rem);
+    }
+
+    .v5-cost-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .v5-cost-card {
+      padding: 1rem;
+      border-radius: 1rem;
+    }
+
+    .v5-cost-value {
+      font-size: 1.1rem;
+    }
+
+    .v5-cost-title {
+      font-size: 0.75rem;
+    }
+
+    .v5-section-divider {
+      margin: 1.5rem 0;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .v5-cost-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .v5-metric-card {
+      padding: 1rem;
+    }
+  }
+
+  /* High contrast & accessibility */
+  @media (prefers-color-scheme: dark) {
+    .v5-metric-card,
+    .v5-cost-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+      border-color: rgba(71, 85, 105, 0.3);
+    }
+
+    .v5-metric-value,
+    .v5-cost-value {
+      color: #f1f5f9;
+    }
+
+    .v5-metric-label,
+    .v5-cost-title {
+      color: #94a3b8;
+    }
+
+    .v5-cost-pct {
+      background: rgba(71, 85, 105, 0.3);
+      color: #cbd5e1;
+    }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    #view-cost-structure,
+    .v5-metric-card,
+    .v5-cost-card {
+      animation: none;
+      transition: none;
+    }
+  }
+</style>
+
+<!-- ============================================================================ -->
+<!-- V5: COST STRUCTURE DASHBOARD VIEW -->
+<!-- ============================================================================ -->
+<section id="view-cost-structure" class="main-view hidden">
+  <div class="space-y-6 max-w-6xl mx-auto w-full px-4 py-6 md:px-6 md:py-8">
+
+    <!-- ==================== HERO METRICS ==================== -->
+    <div class="v5-metrics-hero">
+      <!-- Total Cost Metric -->
+      <div class="v5-metric-card">
+        <div class="v5-metric-label">
+          <i class="ph ph-wallet text-base"></i>
+          <span>Total Biaya</span>
+        </div>
+        <div class="v5-metric-value" id="dash-hpp-total-v5">Rp 0</div>
+        <div class="v5-metric-sub">Biaya Variabel Bulanan</div>
+      </div>
+
+      <!-- HPP Percentage Metric -->
+      <div class="v5-metric-card">
+        <div class="v5-metric-label">
+          <i class="ph ph-percent text-base"></i>
+          <span>HPP Rata-Rata</span>
+        </div>
+        <div class="v5-metric-value" id="hpp-percentage-metric-v5">0%</div>
+        <div class="v5-metric-sub">Dari Total Revenue</div>
+      </div>
+
+      <!-- Margin Indicator Metric -->
+      <div class="v5-metric-card">
+        <div class="v5-metric-label">
+          <i class="ph ph-trending-up text-base"></i>
+          <span>Margin Kotor</span>
+        </div>
+        <div class="v5-metric-value" id="gross-margin-metric-v5">0%</div>
+        <div class="v5-metric-sub">Keuntungan Potensial</div>
+      </div>
+    </div>
+
+    <!-- ==================== COST BREAKDOWN CARDS ==================== -->
+    <div>
+      <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 px-1">Struktur Biaya Rinci</h3>
+      
+      <div class="v5-cost-grid">
+        <!-- Gas LPG Card -->
+        <div class="v5-cost-card gas">
+          <div class="v5-cost-title">Gas LPG</div>
+          <div class="v5-cost-value" id="dash-card-gas-v5">Rp 0</div>
+          <div class="v5-cost-pct" id="dash-card-gas-pct-v5">0%</div>
+        </div>
+
+        <!-- Electricity Card -->
+        <div class="v5-cost-card listrik">
+          <div class="v5-cost-title">Listrik</div>
+          <div class="v5-cost-value" id="dash-card-listrik-v5">Rp 0</div>
+          <div class="v5-cost-pct" id="dash-card-listrik-pct-v5">0%</div>
+        </div>
+
+        <!-- Water Card -->
+        <div class="v5-cost-card air">
+          <div class="v5-cost-title">Air</div>
+          <div class="v5-cost-value" id="dash-card-air-v5">Rp 0</div>
+          <div class="v5-cost-pct" id="dash-card-air-pct-v5">0%</div>
+        </div>
+
+        <!-- Packing Card -->
+        <div class="v5-cost-card packing">
+          <div class="v5-cost-title">Packing</div>
+          <div class="v5-cost-value" id="dash-card-packing-v5">Rp 0</div>
+          <div class="v5-cost-pct" id="dash-card-packing-pct-v5">0%</div>
+        </div>
+
+        <!-- Chemical/Material Card -->
+        <div class="v5-cost-card bahan">
+          <div class="v5-cost-title">Chemical</div>
+          <div class="v5-cost-value" id="dash-card-bahan-v5">Rp 0</div>
+          <div class="v5-cost-pct" id="dash-card-bahan-pct-v5">0%</div>
+        </div>
+
+        <!-- Admin/Nota Card -->
+        <div class="v5-cost-card nota">
+          <div class="v5-cost-title">Admin/Nota</div>
+          <div class="v5-cost-value" id="dash-card-nota-v5">Rp 0</div>
+          <div class="v5-cost-pct" id="dash-card-nota-pct-v5">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ACTION SECTION ==================== -->
+    <div class="v5-section-divider"></div>
+    
+    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+      <button 
+        onclick="switchMainTab('hpp')" 
+        class="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-blue-600 text-white font-bold rounded-lg hover:shadow-lg transition-all transform hover:scale-105 active:scale-95"
+      >
+        <i class="ph ph-sliders-horizontal text-lg mr-2 inline-block"></i>
+        Kelola Detail
+      </button>
+      
+      <button 
+        onclick="exportCostStructureReport()" 
+        class="flex-1 px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-all transform hover:scale-105 active:scale-95"
+      >
+        <i class="ph ph-download text-lg mr-2 inline-block"></i>
+        Export Report
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<script>
+  /**
+   * ========================================================================
+   * V5: Cost Structure Dashboard - JS Data Binding & Sync Logic
+   * Synchronizes data from Modal.html HPP view to V5 premium dashboard
+   * ========================================================================
+   */
+
+  (function initV5Dashboard() {
+    let syncInterval;
+
+    // Function to sync data from HPP modal to V5 dashboard
+    function syncHPPDataToV5() {
+      try {
+        // Map of original IDs to V5 display IDs
+        const syncMap = {
+          'dash-hpp-total': 'dash-hpp-total-v5',
+          'dash-card-gas': 'dash-card-gas-v5',
+          'dash-card-listrik': 'dash-card-listrik-v5',
+          'dash-card-air': 'dash-card-air-v5',
+          'dash-card-packing': 'dash-card-packing-v5',
+          'dash-card-bahan': 'dash-card-bahan-v5',
+          'dash-card-nota': 'dash-card-nota-v5',
+          'dash-card-gas-pct': 'dash-card-gas-pct-v5',
+          'dash-card-listrik-pct': 'dash-card-listrik-pct-v5',
+          'dash-card-air-pct': 'dash-card-air-pct-v5',
+          'dash-card-packing-pct': 'dash-card-packing-pct-v5',
+          'dash-card-bahan-pct': 'dash-card-bahan-pct-v5',
+          'dash-card-nota-pct': 'dash-card-nota-pct-v5'
+        };
+
+        // Sync each element
+        for (const [sourceId, targetId] of Object.entries(syncMap)) {
+          const sourceEl = document.getElementById(sourceId);
+          const targetEl = document.getElementById(targetId);
+          if (sourceEl && targetEl && sourceEl.textContent !== targetEl.textContent) {
+            targetEl.textContent = sourceEl.textContent;
+          }
+        }
+      } catch (error) {
+        console.error('V5 sync error:', error);
+      }
+    }
+
+    // Trigger HPP calculations when switching to Cost Structure view
+    function triggerHPPDataRefresh() {
+      try {
+        // Try to trigger the StateMachine calculation if available
+        if (typeof window.StateMachine !== 'undefined' && window.StateMachine.calculateTotal) {
+          window.StateMachine.calculateTotal();
+        }
+        
+        // Sync data immediately after potential refresh
+        setTimeout(() => {
+          syncHPPDataToV5();
+        }, 100);
+      } catch (error) {
+        console.error('Error triggering HPP refresh:', error);
+      }
+    }
+
+    // Watch for data changes and sync
+    function watchHPPDataChanges() {
+      const hppView = document.getElementById('view-hpp');
+      if (!hppView) {
+        // HPP view not yet loaded, try again
+        setTimeout(watchHPPDataChanges, 500);
+        return;
+      }
+
+      const observer = new MutationObserver(() => {
+        syncHPPDataToV5();
+      });
+
+      // Also set up periodic sync as a fallback
+      if (syncInterval) clearInterval(syncInterval);
+      syncInterval = setInterval(() => {
+        syncHPPDataToV5();
+      }, 1000); // Sync every second when view is active
+
+      observer.observe(hppView, {
+        subtree: true,
+        characterData: true,
+        childList: true,
+        attributes: false
+      });
+
+      // Initial sync
+      syncHPPDataToV5();
+    }
+
+    // Hook into view switching to trigger refresh
+    const originalSwitchMainTab = window.switchMainTab;
+    if (typeof originalSwitchMainTab === 'function') {
+      window.switchMainTab = function(tab) {
+        originalSwitchMainTab.call(this, tab);
+        
+        if (tab === 'cost-structure') {
+          // Delay to allow view to render
+          setTimeout(() => {
+            triggerHPPDataRefresh();
+            watchHPPDataChanges();
+          }, 200);
+        }
+      };
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(watchHPPDataChanges, 500);
+      });
+    } else {
+      setTimeout(watchHPPDataChanges, 500);
+    }
+
+    // Clean up interval when view is hidden
+    const observer = new MutationObserver(() => {
+      const v5View = document.getElementById('view-cost-structure');
+      if (v5View && v5View.classList.contains('hidden')) {
+        if (syncInterval) clearInterval(syncInterval);
+      }
+    });
+
+    const mainViewScroller = document.getElementById('mainViewScroller');
+    if (mainViewScroller) {
+      observer.observe(mainViewScroller, { childList: true, subtree: true });
+    }
+  })();
+
+  // Export report function (stub for future implementation)
+  function exportCostStructureReport() {
+    const totalHPP = document.getElementById('dash-hpp-total-v5') ? document.getElementById('dash-hpp-total-v5').textContent : 'N/A';
+    
+    const reportText = `
+    LAPORAN STRUKTUR BIAYA (HPP)
+    ============================
+    Total Biaya Variabel: ${totalHPP}
+    
+    Rincian Biaya:
+    - Gas LPG: ${document.getElementById('dash-card-gas-v5') ? document.getElementById('dash-card-gas-v5').textContent : 'N/A'}
+    - Listrik: ${document.getElementById('dash-card-listrik-v5') ? document.getElementById('dash-card-listrik-v5').textContent : 'N/A'}
+    - Air: ${document.getElementById('dash-card-air-v5') ? document.getElementById('dash-card-air-v5').textContent : 'N/A'}
+    - Packing: ${document.getElementById('dash-card-packing-v5') ? document.getElementById('dash-card-packing-v5').textContent : 'N/A'}
+    - Chemical: ${document.getElementById('dash-card-bahan-v5') ? document.getElementById('dash-card-bahan-v5').textContent : 'N/A'}
+    - Admin/Nota: ${document.getElementById('dash-card-nota-v5') ? document.getElementById('dash-card-nota-v5').textContent : 'N/A'}
+    `;
+
+    alert(reportText);
+  }
+</script>

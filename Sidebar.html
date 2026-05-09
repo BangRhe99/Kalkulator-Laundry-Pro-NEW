@@ -1,529 +1,185 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <base target="_top">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap');
+<!-- ========================================================================= -->
+<!-- SIDEBAR: COLUMN FILTER PANEL FOR HPP STRUCTURE -->
+<!-- Original Purpose: Filter columns in Struktur_Biaya_1 sheet -->
+<!-- ========================================================================= -->
 
-    /* CSS yang sebelumnya tercecer di atas dipindahkan ke sini */
-    .hpp-percentage {
-      font-feature-settings: "tnum";
-      font-variant-numeric: tabular-nums;
-    }
-    
-    @media (max-width: 640px) {
-      .hpp-container {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-      }
-      .hpp-card {
-        padding: 1rem;
-        border-radius: 10px;
-      }
-    }
-
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #f8fafc;
-      color: #0f172a;
-      overflow-x: hidden;
-    }
-
-    .btn-category {
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      will-change: transform, opacity;
-    }
-
-    .btn-category:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-
-    .btn-category:active {
-      transform: scale(0.98);
-    }
-
-    h2 {
-      font-size: clamp(1.25rem, 2vw, 1.5rem);
-      font-weight: 700;
-      color: #1e293b;
-    }
-
-    p {
-      font-size: clamp(0.875rem, 1.5vw, 1rem);
-      color: #64748b;
-    }
-
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
-    .shimmer {
-      animation: shimmer 2s infinite linear;
-      background: linear-gradient(to right, #f1f5f9 4%, #e2e8f0 25%, #f1f5f9 36%);
-    }
-
-    /* [HPP ENHANCEMENT v1.1] - START */
-    .hpp-container {
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      margin: 1rem 0;
-    }
-
-    .hpp-card {
-      background: rgba(255,255,255,0.96);
-      backdrop-filter: blur(8px);
-      border-radius: 12px;
-      padding: 1.25rem;
-      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
-      will-change: transform;
-    }
-
-    .hpp-card:hover {
-      transform: translateY(-2px);
-    }
-    /* [HPP ENHANCEMENT v1.1] - END */
-
-    /* [HPP TYPOGRAPHY v1.2] - START */
-    .hpp-primary-value {
-      font-size: clamp(1.5rem, 3vw, 2rem);
-      font-weight: 800;
-      color: #1e40af;
-      letter-spacing: -0.5px;
-      line-height: 1.2;
-      margin: 0.5rem 0;
-    }
-    
-    .hpp-secondary-label {
-      font-size: 0.875rem;
-      color: #64748b;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .hpp-percentage {
-      font-feature-settings: "tnum";
-      font-variant-numeric: tabular-nums;
-    }
-    /* [HPP TYPOGRAPHY v1.2] - END */
-
-    /* [HPP MOBILE v1.3] - START */
-    @media (max-width: 640px) {
-      .hpp-container {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-      }
-      
-      .hpp-card {
-        padding: 1rem;
-        border-radius: 10px;
-      }
-      
-      .hpp-primary-value {
-        font-size: 1.25rem;
-      }
-    }
-    
-    @media (max-width: 400px) {
-      .hpp-secondary-label {
-        font-size: 0.75rem;
-      }
-    }
-    /* [HPP MOBILE v1.3] - END */
-
-    /* [HPP COLORS v1.4] - START */
-    .hpp-positive {
-      color: #166534; /* Green-800 */
-      background-color: #dcfce7; /* Green-100 */ 
-    }
-    
-    .hpp-negative {
-      color: #991b1b; /* Red-800 */
-      background-color: #fee2e2; /* Red-100 */
-    }
-    
-    .hpp-highlight {
-      position: relative;
-      z-index: 1;
-    }
-    
-    .hpp-highlight::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 40%;
-      background-color: rgba(29, 78, 216, 0.15); /* Blue-700 with opacity */
-      z-index: -1;
-      transform: scaleX(0);
-      transform-origin: right;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .hpp-highlight:hover::after {
-      transform: scaleX(1);
-      transform-origin: left;
-    }
-    /* [HPP COLORS v1.4] - END */
-
-    /* [HPP FINAL v1.5] - START */
-    .hpp-card {
-      margin-bottom: 1.5rem;
-    }
-    
-    .hpp-section-title {
-      padding-bottom: 0.5rem;
-      margin-bottom: 1rem;
-      border-bottom: 1px solid rgba(0,0,0,0.05);
-    }
-    
-    .hpp-spacer {
-      height: 1px;
-      margin: 1.25rem 0; /* Spacing vertikal */
-    }
-    
-    @media (prefers-color-scheme: dark) {
-      .hpp-section-title,
-      .hpp-spacer {
-        border-color: rgba(255,255,255,0.05);
-      }
-    }
-    /* [HPP FINAL v1.5] - END */
-
-    
-      background-size: 1000px 100%;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: -1000px 0; }
-      100% { background-position: 1000px 0; }
-    }
-
-    /* Optimasi performa dengan menggunakan GPU accelerated rendering */
-    .gpu-accelerated {
-      will-change: transform;
-      transform: translate3d(0, 0, 0);
-      backface-visibility: hidden;
-      perspective: 1000px;
-    }
-
-    /* Non-blocking UI dengan menggunakan Vanilla JavaScript modern */
-    .non-blocking-ui {
-      pointer-events: auto;
-      user-select: none;
-    }
-
-    /* Progressive skeleton loading */
-    .skeleton-loading {
-      animation: shimmer 2s infinite linear;
-      background: linear-gradient(to right, #f1f5f9 4%, #e2e8f0 25%, #f1f5f9 36%);
-      background-size: 1000px 100%;
-    }
-
-    .hpp-skeleton {
-      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-      background-size: 400% 100%;
-      animation: shimmer 1.5s infinite linear;
-    }
-
-    /* [HPP ENHANCEMENT v1.1] - START */
-    .hpp-container {
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    }
-
-    .hpp-card {
-      background: rgba(255,255,255,0.96);
-      backdrop-filter: blur(8px);
-      border-radius: 12px;
-      padding: 1.25rem;
-      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
-    }
-
-    .hpp-value {
-    } font-size: 1.5rem;
-    /* [HPP ENHANCEMENT v1.1] - END */
-  </style>
-</head>
-    /* [HPP ENHANCEMENT v1.1] - END */
-<body class="p-4 flex flex-col h-screen">
-</head>
-  <!-- HEADER -->
-  <div class="mb-5 shrink-0">
-    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-600 text-white mb-3">
-      <i class="ph ph-funnel text-xl"></i>
-    </div>
-    <h2 class="text-lg font-black text-slate-800">
-      Filter Kolom
-    </h2>
-    <h2 class="text-lg font-black text-slate-800">
-    <p class="text-xs text-slate-500 mt-1">
-      Pilih kolom yang ingin ditampilkan
-    </p>
-  </div>
-  <!-- LOADING -->
-  <div id="loadingState" class="flex-1 space-y-3">
-    <div class="h-14 rounded-xl shimmer"></div>
-    <div class="h-14 rounded-xl shimmer"></div>
-    <div class="h-14 rounded-xl shimmer"></div>
-  </div>
-  <!-- BUTTON LIST -->
-  <div id="buttonContainer" class="flex-1 overflow-y-auto hidden space-y-3 pb-6"></div>
-
-  <!-- FOOTER -->
-  <div class="shrink-0 mt-4 pt-4 border-t border-slate-200">
-    <button onclick="resetView()" id="btnReset"
-      class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl active:scale-95 flex items-center justify-center gap-2 text-sm">
-      <i class="ph ph-arrows-out-line-horizontal"></i>
-      Reset Kolom
-    </button>
-  </div>
-  <script>
-    // INIT
-    document.addEventListener('DOMContentLoaded', () => {
-      google.script.run
-        .withSuccessHandler(renderButtons)
-        .withFailureHandler(showError)
-    }); .withSuccessHandler(renderButtons)
-        .withFailureHandler(showError)
-    // CLEAN TEXT (Analisa → Biaya)
-    function formatName(name) {
-      return name
-        .replace(/analisa/gi, '')a)
-        .replace(/analysis/gi, '')
-        .replace(/\s+/g, ' ')
-        .trim();(/analisa/gi, '')
-    }   .replace(/analysis/gi, '')
-        .replace(/\s+/g, ' ')
-    // RENDER BUTTON
-    function renderButtons(response) {
-      document.getElementById('loadingState').classList.add('hidden');
-      const container = document.getElementById('buttonContainer');
-      container.classList.remove('hidden');
-      document.getElementById('loadingState').classList.add('hidden');
-      if (response.status === 'error') {entById('buttonContainer');
-        container.innerHTML = `<div class="p-4 bg-rose-50 text-rose-600 rounded-xl text-xs text-center">${response.message}</div>`;
-        return;
-      }f (response.status === 'error') {
-        container.innerHTML = `<div class="p-4 bg-rose-50 text-rose-600 rounded-xl text-xs text-center">${response.message}</div>`;
-      const groups = response.data;
-      }
-      if (!groups.length) {
-        container.innerHTML = `<div class="p-4 bg-slate-50 text-slate-500 rounded-xl text-xs text-center">Tidak ada kolom</div>`;
-        return;
-      }f (!groups.length) {
-        container.innerHTML = `<div class="p-4 bg-slate-50 text-slate-500 rounded-xl text-xs text-center">Tidak ada kolom</div>`;
-      const colors = [
-        'text-rose-500 bg-rose-50',
-        'text-amber-500 bg-amber-50',
-        'text-blue-500 bg-blue-50',
-        'text-emerald-500 bg-emerald-50',
-        'text-purple-500 bg-purple-50'
-      ];'text-blue-500 bg-blue-50',
-        'text-emerald-500 bg-emerald-50',
-      container.innerHTML = groups.map((g, i) => `
-        <button onclick="filterColumns(${g.start}, ${g.end}, this)"
-          class="btn-category w-full bg-white border border-slate-200 p-3 rounded-xl flex items-center gap-3">
-      container.innerHTML = groups.map((g, i) => `
-          <div class="w-10 h-10 flex items-center justify-center rounded-lg ${colors[i % colors.length]}">
-            <i class="ph ph-table text-xl"></i>
-          </div>
-          <div class="w-10 h-10 flex items-center justify-center rounded-lg ${colors[i % colors.length]}">
-          <span class="text-sm font-extrabold text-slate-800 truncate">
-            ${formatName(g.name)}
-          </span>
-        </button>`).join('');
-    }     </span>
-        </button>
-    // FILTER('');
-    function filterColumns(start, end, btn) {
-      if (btn.classList.contains('pointer-events-none')) return;
-    // FILTER
-      const original = btn.innerHTML;, btn) {
-      if (btn.classList.contains('pointer-events-none')) return;
-      btn.innerHTML = `<i class="ph ph-spinner-gap animate-spin text-xl"></i>`;
-      btn.classList.add('pointer-events-none', 'opacity-70');
-
-      google.script.run<i class="ph ph-spinner-gap animate-spin text-xl"></i>`;
-        .withSuccessHandler(() => {ents-none', 'opacity-70');
-          btn.innerHTML = original;
-          btn.classList.remove('pointer-events-none', 'opacity-70');
-        })ithSuccessHandler(() => {
-        .withFailureHandler(err => {
-          btn.innerHTML = original;nter-events-none', 'opacity-70');
-          btn.classList.remove('pointer-events-none', 'opacity-70');
-          showError(err);er(err => {
-        })btn.innerHTML = original;
-        .applySidebarFilter(start, end);('pointer-events-none', 'opacity-70');
-    }     showError(err);
-        })
-    // RESET
-    function resetView() {
-      const btn = document.getElementById('btnReset');
-    // RESET
-      if (btn.classList.contains('pointer-events-none')) return;
-      const btn = document.getElementById('btnReset');
-      const original = btn.innerHTML;
-      if (btn.classList.contains('pointer-events-none')) return;
-      btn.innerHTML = `<i class="ph ph-spinner-gap animate-spin"></i> Memuat...`;
-      btn.classList.add('pointer-events-none', 'opacity-70');
-
-      google.script.run<i class="ph ph-spinner-gap animate-spin"></i> Memuat...`;
-        .withSuccessHandler(() => {ents-none', 'opacity-70');
-          btn.innerHTML = original;
-          btn.classList.remove('pointer-events-none', 'opacity-70');
-        })ithSuccessHandler(() => {
-        .withFailureHandler(err => {
-          btn.innerHTML = original;nter-events-none', 'opacity-70');
-          btn.classList.remove('pointer-events-none', 'opacity-70');
-          showError(err);er(err => {
-        })btn.innerHTML = original;
-        .resetSidebarFilter();('pointer-events-none', 'opacity-70');
-    }     showError(err);
-        })
-    // ERROR
-    function showError(err) {
-      alert("Error: " + err.message);
-    }
-  </script>
-  /* Tambahkan CSS berikut untuk meningkatkan tampilan visual dan responsivitas */
-  .card-hpp {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-  } border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  .card-hpp:hover { 0.3s ease;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  }card-hpp:hover {
-    transform: translateY(-2px);
-  .card-hpp:active {px 15px -3px rgba(0, 0, 0, 0.1);
-    transform: scale(0.98);
-  }
-  .card-hpp:active {
-  .card-hpp .card-title {
-    font-size: 1.125rem;
-    font-weight: 700;
+<style>
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #ffffff;
     color: #0f172a;
-  } font-size: 1.125rem;
-    font-weight: 700;
-  .card-hpp .card-subtitle {
-    font-size: 0.875rem;
-    color: #64748b;
-  }card-hpp .card-subtitle {
-    font-size: 0.875rem;
-  .card-hpp .card-content {
-    font-size: 1rem;
-    color: #0f172a;
-  }card-hpp .card-content {
-    font-size: 1rem;
-  .card-hpp .card-action {
-    background-color: #3b82f6;
-    color: white;
-    border-radius: 8px;
-    padding: 8px 16px;
-  }card-hpp .card-action {
-    background-color: #3b82f6;
-    color: white;
-    border-radius: 8px;
-    padding: 8px 16px;
+    overflow: hidden;
   }
-  .card-hpp .card-action:hover {
-    background-color: #2563eb;
+
+  .sidebar-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 0;
   }
-  .card-hpp .card-action:hover {
-  .card-hpp .card-action:active {
-    transform: scale(0.98);
-  }
-  .card-hpp .card-action:active {
-  /* Tambahkan transisi halus dan elegan */
-  .transition-all {
-    transition: all 0.3s ease;
-  }* Tambahkan transisi halus dan elegan */
-  .transition-all {
-  .transition-transform {ease;
-    transition: transform 0.3s ease;
-  }
-  .transition-transform {
-  .transition-opacity {rm 0.3s ease;
-    transition: opacity 0.3s ease;
-  }
-  .transition-opacity {
-  .transition-shadow {y 0.3s ease;
-    transition: box-shadow 0.3s ease;
-  }
-  .transition-shadow {
-  .transition-background { 0.3s ease;
-    transition: background-color 0.3s ease;
-  }
-  .transition-background {
-  /* Optimasi Card HPP */d-color 0.3s ease;
-  .hpp-card {
+
+  .sidebar-header {
     padding: 1rem;
-    margin: 0.5rem;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(8px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: transform, opacity;
-  } backdrop-filter: blur(8px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  .hpp-card:hover {ansform, opacity;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-  }hpp-card:hover {
-    transform: translateY(-2px);
-  /* Transisi Smooth */15px -3px rgba(0,0,0,0.1);
-  .hpp-transition {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: transform, opacity;
-  }hpp-transition {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Hierarki Visual */orm, opacity;
-  .hpp-primary-text {
-    font-size: clamp(1.25rem, 2vw, 1.5rem);
+    border-bottom: 1px solid #e2e8f0;
+    font-weight: 800;
+    color: #0f172a;
+    font-size: 0.95rem;
+  }
+
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.75rem 0;
+  }
+
+  .filter-group {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .filter-group-title {
+    font-size: 0.8rem;
     font-weight: 700;
-    color: #1e293b;
-  } font-size: clamp(1.25rem, 2vw, 1.5rem);
-    font-weight: 700;
-  .hpp-secondary-text {
-    font-size: clamp(0.875rem, 1.5vw, 1rem);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
     color: #64748b;
-  }hpp-secondary-text {
-    font-size: clamp(0.875rem, 1.5vw, 1rem);
-  /* HPP Card - Premium FinTech Style */
-  .hpp-card {
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(12px);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform, box-shadow;
-  } box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  /* Typography System */m, box-shadow;
-  .hpp-primary {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    font-weight: 700;
-    background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  } -webkit-background-clip: text;
-</body>
-</html>
+    margin-bottom: 0.75rem;
+  }
+
+  .filter-button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 0.5rem;
+  }
+
+  .filter-button:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+  }
+
+  .filter-button.active {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: white;
+    border-color: #3b82f6;
+  }
+
+  .sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+  }
+
+  /* Scrollbar styling */
+  .sidebar-content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sidebar-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+  }
+
+  .sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+</style>
+
+<div class="sidebar-panel">
+  <div class="sidebar-header">
+    <i class="ph ph-sliders-horizontal text-lg align-middle mr-2"></i>
+    Filter Kolom Biaya
+  </div>
+
+  <div class="sidebar-content" id="filter-groups-container">
+    <div style="padding: 1rem; text-align: center; color: #94a3b8;">
+      <p style="font-size: 0.875rem;">Memuat data filter...</p>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <p style="margin: 0;">Aktifkan filter untuk menampilkan kolom yang dipilih di sheet.</p>
+  </div>
+</div>
+
+<script>
+  /**
+   * =========================================================================
+   * SIDEBAR: COLUMN FILTER LOGIC
+   * Communicates with Apps Script to filter columns in Struktur_Biaya_1 sheet
+   * =========================================================================
+   */
+
+  (function initSidebarFilters() {
+    // Call Apps Script to get sidebar group data
+    google.script.run
+      .withSuccessHandler(function(response) {
+        if (response.status === 'success' && response.data && response.data.length > 0) {
+          renderFilterGroups(response.data);
+        } else {
+          document.getElementById('filter-groups-container').innerHTML = 
+            '<div style="padding: 1rem; text-align: center; color: #94a3b8;"><p>Tidak ada kolom filter yang tersedia.</p></div>';
+        }
+      })
+      .withFailureHandler(function(error) {
+        console.error('Failed to load filter data:', error);
+        document.getElementById('filter-groups-container').innerHTML = 
+          '<div style="padding: 1rem; text-align: center; color: #f43f5e;"><p>Error: ' + error + '</p></div>';
+      })
+      .getSidebarGroupData();
+
+    function renderFilterGroups(groups) {
+      const container = document.getElementById('filter-groups-container');
+      container.innerHTML = '';
+
+      groups.forEach((group, index) => {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'filter-group';
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'filter-group-title';
+        titleDiv.textContent = group.name;
+        groupDiv.appendChild(titleDiv);
+
+        const button = document.createElement('button');
+        button.className = 'filter-button';
+        button.textContent = 'Tampilkan ' + group.name;
+        button.onclick = () => applyFilter(group.start, group.end, button);
+        
+        groupDiv.appendChild(button);
+        container.appendChild(groupDiv);
+      });
+    }
+
+    function applyFilter(startCol, endCol, buttonEl) {
+      // Update UI feedback
+      document.querySelectorAll('.filter-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      buttonEl.classList.add('active');
+
+      // Call Apps Script to apply the filter
+      google.script.run
+        .withSuccessHandler(() => {
+          console.log('Filter applied:', startCol, '-', endCol);
+        })
+        .withFailureHandler((error) => {
+          console.error('Filter failed:', error);
+          alert('Gagal menerapkan filter: ' + error);
+        })
+        .applySidebarFilter(startCol, endCol);
+    }
+  })();
 </script>
-</body>
-</html>
