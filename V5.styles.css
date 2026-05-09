@@ -1,0 +1,254 @@
+/* ========================================================================== */
+/* V5: PREMIUM COST STRUCTURE DASHBOARD STYLING */
+/* ========================================================================== */
+
+#view-cost-structure {
+  animation: v5EnterPremium 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes v5EnterPremium {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.v5-metrics-hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.v5-metric-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.v5-metric-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.08), transparent 50%);
+  pointer-events: none;
+}
+
+.v5-metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.v5-metric-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.v5-metric-value {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.v5-metric-sub {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
+.v5-cost-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.v5-cost-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  border-radius: 1.125rem;
+  padding: 1.25rem;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.v5-cost-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent);
+  pointer-events: none;
+}
+
+.v5-cost-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.06);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+.v5-cost-card:active {
+  transform: translateY(-1px) scale(0.98);
+  transition-duration: 120ms;
+}
+
+.v5-cost-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.v5-cost-value {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.v5-cost-pct {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  background: rgba(226, 232, 240, 0.4);
+  border-radius: 0.5rem;
+  width: fit-content;
+}
+
+.v5-cost-card.gas { --accent-color: #f43f5e; }
+.v5-cost-card.listrik { --accent-color: #f59e0b; }
+.v5-cost-card.air { --accent-color: #06b6d4; }
+.v5-cost-card.packing { --accent-color: #6366f1; }
+.v5-cost-card.bahan { --accent-color: #10b981; }
+.v5-cost-card.nota { --accent-color: #8b5cf6; }
+
+.v5-cost-card.gas .v5-cost-value,
+.v5-cost-card.listrik .v5-cost-value,
+.v5-cost-card.air .v5-cost-value,
+.v5-cost-card.packing .v5-cost-value,
+.v5-cost-card.bahan .v5-cost-value,
+.v5-cost-card.nota .v5-cost-value {
+  color: var(--accent-color);
+}
+
+.v5-section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(226, 232, 240, 0.8), transparent);
+  margin: 2rem 0;
+}
+
+@media (max-width: 640px) {
+  .v5-metrics-hero {
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .v5-metric-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .v5-metric-value {
+    font-size: clamp(1.25rem, 5vw, 1.75rem);
+  }
+
+  .v5-cost-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.875rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .v5-cost-card {
+    padding: 1rem;
+    border-radius: 1rem;
+  }
+
+  .v5-cost-value {
+    font-size: 1.1rem;
+  }
+
+  .v5-cost-title {
+    font-size: 0.75rem;
+  }
+
+  .v5-section-divider {
+    margin: 1.5rem 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .v5-cost-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .v5-metric-card {
+    padding: 1rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .v5-metric-card,
+  .v5-cost-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+    border-color: rgba(71, 85, 105, 0.3);
+  }
+
+  .v5-metric-value,
+  .v5-cost-value {
+    color: #f1f5f9;
+  }
+
+  .v5-metric-label,
+  .v5-cost-title {
+    color: #94a3b8;
+  }
+
+  .v5-cost-pct {
+    background: rgba(71, 85, 105, 0.3);
+    color: #cbd5e1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #view-cost-structure,
+  .v5-metric-card,
+  .v5-cost-card {
+    animation: none;
+    transition: none;
+  }
+}
