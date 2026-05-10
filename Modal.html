@@ -289,3 +289,105 @@
   </div>
 
 </div>
+<script>
+
+function formatRupiah(num) {
+  return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
+}
+
+function loadHPPDashboard() {
+
+  google.script.run
+    .withSuccessHandler(function(data) {
+
+      console.log("DATA HPP:", data);
+
+      if (!data) return;
+
+      const total =
+        (data.gas || 0) +
+        (data.listrik || 0) +
+        (data.air || 0) +
+        (data.packing || 0) +
+        (data.bahan || 0) +
+        (data.nota || 0);
+
+      document.getElementById('dash-hpp-total').innerText =
+        formatRupiah(total);
+
+      document.getElementById('dash-card-gas').innerText =
+        formatRupiah(data.gas);
+
+      document.getElementById('dash-card-listrik').innerText =
+        formatRupiah(data.listrik);
+
+      document.getElementById('dash-card-air').innerText =
+        formatRupiah(data.air);
+
+      document.getElementById('dash-card-packing').innerText =
+        formatRupiah(data.packing);
+
+      document.getElementById('dash-card-bahan').innerText =
+        formatRupiah(data.bahan);
+
+      document.getElementById('dash-card-nota').innerText =
+        formatRupiah(data.nota);
+
+      // persen
+      function pct(val) {
+        if (!total) return '0%';
+        return ((val / total) * 100).toFixed(1) + '%';
+      }
+
+      document.getElementById('dash-card-gas-pct').innerText =
+        pct(data.gas);
+
+      document.getElementById('dash-card-listrik-pct').innerText =
+        pct(data.listrik);
+
+      document.getElementById('dash-card-air-pct').innerText =
+        pct(data.air);
+
+      document.getElementById('dash-card-packing-pct').innerText =
+        pct(data.packing);
+
+      document.getElementById('dash-card-bahan-pct').innerText =
+        pct(data.bahan);
+
+      document.getElementById('dash-card-nota-pct').innerText =
+        pct(data.nota);
+
+    })
+    .withFailureHandler(function(err) {
+      console.error("GAGAL LOAD HPP:", err);
+    })
+    .getHPPDashboardData();
+}
+
+
+/* =========================
+   CLICKABLE CARD
+========================= */
+
+document.addEventListener('DOMContentLoaded', function() {
+
+  loadHPPDashboard();
+
+  document.querySelectorAll('.hpp-card-dash').forEach(card => {
+
+    card.style.cursor = 'pointer';
+
+    card.addEventListener('click', function() {
+
+      const title =
+        this.querySelector('.card-title')?.innerText || '';
+
+      alert('Detail ' + title);
+
+    });
+
+  });
+
+});
+
+</script>

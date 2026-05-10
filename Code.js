@@ -1587,3 +1587,15 @@ function saveStrukturBiaya(payload) {
     throw new Error('Gagal menyimpan Struktur Biaya Single-Sheet: ' + error.toString());
   }
 }
+function getHPPDashboardData() {
+
+  return {
+    gas: 150000,
+    listrik: 250000,
+    air: 100000,
+    packing: 50000,
+    bahan: 175000,
+    nota: 25000
+  };
+
+}
