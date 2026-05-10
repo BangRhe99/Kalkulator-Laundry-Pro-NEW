@@ -92,9 +92,14 @@ function applySidebarFilter(startCol, endCol) {
       sheet.hideColumns(14, maxCols - 13);
     }
     
-    if (startCol && endCol && startCol <= maxCols) {
-      const numColsToShow = endCol - startCol + 1;
-      sheet.showColumns(startCol, numColsToShow);
+    const start = Number(startCol);
+    const end = Number(endCol);
+    if (!isNaN(start) && !isNaN(end) && start >= 1 && end >= start && start <= maxCols) {
+      const safeEnd = Math.min(end, maxCols);
+      const numColsToShow = safeEnd - start + 1;
+      if (numColsToShow > 0) {
+        sheet.showColumns(start, numColsToShow);
+      }
     }
     
     sheet.showColumns(1, 13);
@@ -127,8 +132,9 @@ function clearServerCache() {
   cache.remove('ZETT_MASTER_PAYLOAD');
   cache.remove('ZETT_MASTER_PAYLOAD_chunks');
   
-  if (chunks) {
-    for (let i = 0; i < parseInt(chunks); i++) {
+  const chunkCount = parseInt(chunks, 10);
+  if (!isNaN(chunkCount) && chunkCount > 0) {
+    for (let i = 0; i < chunkCount; i++) {
       cache.remove('ZETT_MASTER_PAYLOAD_' + i);
     }
   }
@@ -248,8 +254,7 @@ function setupDatabase() {
       'HPP_Per_Kg', 'Harga_Acuan_BEP', 'BEP_Kg', 'BEP_Rupiah',
       'Paket_Cuci_Setrika', 'Paket_Cuci_Lipat', 'Paket_Cuci_Saja', 'Paket_Setrika_Saja'
     ];
-    
-    const headersKap = [
+        const headersKap = [
       'Timestamp', 'Nama Outlet', 
       'Jam Buka', 'Jam Tutup', 'Tutup Hari Minggu', 
       'Target Okupansi Cuci', 'Target Okupansi Kering', 'Target Okupansi Setrika', 
@@ -472,7 +477,8 @@ function getTransactions() {
     
     const dataBep = sheetBep ? sheetBep.getDataRange().getDisplayValues() : [];
     const dataKap = sheetKap ? sheetKap.getDataRange().getDisplayValues() : [];
-    
+
+        
     const bepMap = new Map();
     if (sheetBep && dataBep.length > 1) {
       const colMapBep = getHeaderMap(sheetBep);
@@ -623,454 +629,399 @@ function saveStrukturBiaya(payload) {
       for (let i = 1; i < dataHPP1.length; i++) {
         if (String(dataHPP1[i][checkColName1]).trim().toLowerCase() === sanitizedNama) {
           if ('Kategori Laundry' in colMapHPP1) {
-            kategoriLaundry = String(dataHPP1[i][colMapHPP1['Kategori Laundry']]);
+            kategoriLaundry = String(dataHPP1[i][colMapHPP1['Kategori Laundry']] || 'Drop Off/Kiloan');
           }
           if ('Kap Kering' in colMapHPP1) {
-            let val = parseFloat(dataHPP1[i][colMapHPP1['Kap Kering']]);
-            if (!isNaN(val) && val > 0) kapKering = val;
+            kapKering = parseFloat(String(dataHPP1[i][colMapHPP1['Kap Kering']]).replace(/[^\d.-]/g, '')) || 1;
           }
           if ('Kap Setrika' in colMapHPP1) {
-            let val = parseFloat(dataHPP1[i][colMapHPP1['Kap Setrika']]);
-            if (!isNaN(val) && val > 0) kapSetrika = val;
+            kapSetrika = parseFloat(String(dataHPP1[i][colMapHPP1['Kap Setrika']]).replace(/[^\d.-]/g, '')) || 1;
           }
           break;
         }
       }
     }
 
-    let gasJam = parseFloat(payload.gasJam) || 0;
-    let gasHarga = parseFloat(payload.gasHarga) || 0;
-    let gasPerLoad = parseFloat(payload.gasPerLoad) || 0;
+    let targetRow1 = -1;
+    if(checkColName1 !== null) {
+      for (let i = 1; i < dataHPP1.length; i++) {
+          if(String(dataHPP1[i][checkColName1]).trim().toLowerCase() === sanitizedNama) {
+              targetRow1 = i + 1;
+              break;
+          }
+      }
+    }
+
+    const colMap1 = colMapHPP1;
+    const rowLength1 = sheet1.getLastColumn();
+    
+    const gasJam = parseFloat(payload.gasJam) || 0;
+    const gasHarga = parseFloat(payload.gasHarga) || 0;
+    const gasPerLoad = parseFloat(payload.gasPerLoad) || 0;
     
     let gasPerKgStr = "";
     let setrikaPerJamStr = "";
     let setrikaPerKgStr = "";
 
     if (kategoriLaundry.toLowerCase().includes('self service')) {
-      gasPerKgStr = ""; 
+      gasPerKgStr = "";
       setrikaPerJamStr = "";
       setrikaPerKgStr = "";
     } else {
-      gasPerKgStr = gasPerLoad / kapKering; 
-      let costPerJam = gasJam > 0 ? (gasHarga / gasJam) : 0;
-      setrikaPerJamStr = costPerJam;
-      setrikaPerKgStr = kapSetrika > 0 ? (costPerJam / kapSetrika) : 0;
-    }
+      const gasPerKg = kapKering > 0 ? gasPerLoad / kapKering : 0;
+      const setrikaPerJam = gasJam > 0 ? gasHarga / gasJam : 0;
+      const setrikaPerKg = kapSetrika > 0 ? setrikaPerJam / kapSetrika : 0;
 
-    const processSheet = (sheet, payloadMapping) => {
-      const data = sheet.getDataRange().getDisplayValues();
-      const colMap = getHeaderMap(sheet);
-      let targetRow = -1;
+      gasPerKgStr = gasPerKg;
+      setrikaPerJamStr = setrikaPerJam;
+      setrikaPerKgStr = setrikaPerKg;
+    }
+    
+    const applyHPP1 = (rowArr, isUpdate, rNum) => {
+      const setVal = (key, val) => {
+        if (key in colMap1) {
+          if (isUpdate) sheet1.getRange(rNum, colMap1[key] + 1).setValue(val);
+          else rowArr[colMap1[key]] = val;
+        }
+      };
       
-      let checkColName = 'Nama Outlet' in colMap ? colMap['Nama Outlet'] : null;
-      if(checkColName !== null) {
-        for (let i = 1; i < data.length; i++) {
-          if (String(data[i][checkColName]).trim().toLowerCase() === sanitizedNama) {
-            targetRow = i + 1;
-            break;
+      const setFormula = (key, formula) => {
+        if (key in colMap1) {
+          const colNum = colMap1[key] + 1;
+          let formulaWithRow = formula;
+          Object.keys(colMap1).forEach(headerKey => {
+            const headerColNum = colMap1[headerKey] + 1;
+            const colLetter = String.fromCharCode(64 + headerColNum);
+            formulaWithRow = formulaWithRow.replace(new RegExp(`\\{${headerKey}\\}`, 'g'), `${colLetter}${rNum}`);
+          });
+          if (isUpdate) {
+            sheet1.getRange(rNum, colNum).setFormula(formulaWithRow);
+          } else {
+            rowArr[colMap1[key]] = formulaWithRow;
           }
         }
-      }
+      };
 
-      const getColLetter = (colIndex) => {
-        let temp, letter = '';
-        let col = colIndex + 1;
-        while (col > 0) {
-          temp = (col - 1) % 26;
-          letter = String.fromCharCode(temp + 65) + letter;
-          col = (col - temp - 1) / 26;
+      setVal('Timestamp', timestamp);
+      setVal('Nama Outlet', payload.namaOutlet);
+
+      setVal('Kap Gas', payload.gasKapasitas);
+      setVal('Harga Gas', payload.gasHarga);
+      setVal('Jam Gas', payload.gasJam);
+      setVal('Menit Gas', payload.gasMenit);
+      setVal('Central Gas', payload.gasCentral);
+      setVal('Gas Per Load', payload.gasPerLoad);
+      setVal('Gas Per Kg', gasPerKgStr);
+      setVal('Setrika Per Jam', setrikaPerJamStr);
+      setVal('Setrika Per Kg', setrikaPerKgStr);
+
+      setVal('TDL', payload.listrikTDL);
+      setVal('Watt Cuci', payload.listrikCuci);
+      setVal('Watt Kering', payload.listrikPengering);
+      setVal('Watt Pompa', payload.listrikPompa);
+      setVal('Watt Setrika', payload.listrikSetrika);
+
+      setFormula('kW Watt Cuci', '=IF({Watt Cuci}="";"";{Watt Cuci}/1000)');
+      setFormula('kW Watt Kering', '=IF({Watt Kering}="";"";{Watt Kering}/1000)');
+      setFormula('kW Watt Pompa', '=IF({Watt Pompa}="";"";{Watt Pompa}/1000)');
+      setFormula('kW Watt Setrika', '=IF({Watt Setrika}="";"";{Watt Setrika}/1000)');
+      setFormula('Cuci Per Load', '=IF({kW Watt Cuci}="";"";{kW Watt Cuci}*{TDL}*1)');
+      setFormula('Cuci Per Kg', '=IF(OR({Kategori Laundry}="Self Service";{Cuci Per Load}="");"";{Cuci Per Load}/{Kap Cuci})');
+      setFormula('Kering Per Load', '=IF({kW Watt Kering}="";"";{kW Watt Kering}*{TDL}*1)');
+      setFormula('Kering Per Kg', '=IF(OR({Kategori Laundry}="Self Service";{Kering Per Load}="");"";{Kering Per Load}/{Kap Kering})');
+      setFormula('Listrik Setrika Jam', '=IF(OR({Kategori Laundry}="Self Service";{kW Watt Setrika}="");"";{kW Watt Setrika}*{TDL}*1)');
+      setFormula('Listrik Setrika Kg', '=IF(OR({Kategori Laundry}="Self Service";{Listrik Setrika Jam}="");"";{Listrik Setrika Jam}/{Kap Setrika})');
+
+            setVal('Sumber Air', payload.airSumber);
+      setVal('Harga Air', payload.airHargaM3);
+      setVal('Harga Tangki', payload.airHargaTangki);
+      setVal('Liter Tangki', payload.airLiterTangki);
+      setVal('Air Cuci', payload.airCuciLiter);
+      setVal('Sumber Setrika', payload.airBoilerSumber);
+      setVal('Galon Setrika', payload.airHargaGalon);
+      setVal('Vol Setrika', payload.airLiterGalon);
+      setVal('Liter Setrika', payload.airBoilerLiter);
+      setVal('Jam Setrika', payload.airBoilerJam);
+      setVal('Kg Setrika', payload.airBoilerKgJam);
+
+      setFormula('Air Per Load', '=IF({Sumber Air}="pdam";({Harga Air}/1000)*{Air Cuci};IF({Sumber Air}="tangki";({Harga Tangki}/{Liter Tangki})*{Air Cuci};0))');
+      setFormula('Air Per Kg', '=IF(OR({Kategori Laundry}="Self Service";{Air Per Load}="");"";{Air Per Load}/{Kap Cuci})');
+      setFormula('Air Setrika Jam', '=IF(OR({Kategori Laundry}="Self Service";{Liter Setrika}="");"";IF({Sumber Setrika}="galon";({Galon Setrika}/{Vol Setrika})*({Liter Setrika}/{Jam Setrika});IF({Sumber Air}="pdam";({Harga Air}/1000)*({Liter Setrika}/{Jam Setrika});IF({Sumber Air}="tangki";({Harga Tangki}/{Liter Tangki})*({Liter Setrika}/{Jam Setrika});0))))');
+      setFormula('Air Setrika Kg', '=IF(OR({Kategori Laundry}="Self Service";{Air Setrika Jam}="");"";{Air Setrika Jam}/{Kg Setrika})');
+    };
+    
+    if (targetRow1 !== -1) {
+      applyHPP1([], true, targetRow1);
+    } else {
+      const newRow = new Array(rowLength1).fill("");
+      applyHPP1(newRow, false, sheet1.getLastRow() + 1);
+      sheet1.appendRow(newRow);
+      targetRow1 = sheet1.getLastRow();
+    }
+    
+    const dataHPP2 = sheet2.getDataRange().getDisplayValues();
+    const colMapHPP2 = getHeaderMap(sheet2);
+    let checkColName2 = 'Nama Outlet' in colMapHPP2 ? colMapHPP2['Nama Outlet'] : null;
+    let targetRow2 = -1;
+    
+    if (checkColName2 !== null) {
+      for (let i = 1; i < dataHPP2.length; i++) {
+        if (String(dataHPP2[i][checkColName2]).trim().toLowerCase() === sanitizedNama) {
+          targetRow2 = i + 1;
+          break;
         }
-        return letter;
-      };
-
-      const applyData = (rowArr, isUpdate, rowNum) => {
-         Object.keys(payloadMapping).forEach(key => {
-            if(key in colMap) {
-               let val = payloadMapping[key];
-               
-               if (typeof val === 'string' && val.startsWith('=')) {
-                   val = val.replace(/\{ROW\}/g, rowNum);
-                   val = val.replace(/\{COL:(.*?)\}/g, (match, colName) => {
-                       return (colName in colMap) ? getColLetter(colMap[colName]) : 'A';
-                   });
-               }
-
-               if(isUpdate) {
-                   let cell = sheet.getRange(rowNum, colMap[key] + 1);
-                   if (typeof val === 'string' && val.startsWith('=')) {
-                       cell.setFormula(val);
-                   } else {
-                       cell.setValue(val);
-                   }
-               } else {
-                   rowArr[colMap[key]] = val;
-               }
-            }
-         });
-      };
-
-      if (targetRow !== -1) {
-        if('Timestamp' in colMap) sheet.getRange(targetRow, colMap['Timestamp'] + 1).setValue(timestamp);
-        applyData([], true, targetRow);
-      } else {
-        const headersLength = sheet.getLastColumn();
-        const newRow = new Array(headersLength).fill("");
-        let newRowNum = sheet.getLastRow() + 1; 
-        
-        if('Timestamp' in colMap) newRow[colMap['Timestamp']] = timestamp;
-        if(checkColName !== null) newRow[checkColName] = payload.namaOutlet;
-        
-        applyData(newRow, false, newRowNum);
-        sheet.appendRow(newRow); 
       }
+    }
+
+    const colMap2 = colMapHPP2;
+    const rowLength2 = sheet2.getLastColumn();
+
+    const applyHPP2 = (rowArr, isUpdate, rNum) => {
+      const setVal = (key, val) => {
+        if (key in colMap2) {
+          if (isUpdate) sheet2.getRange(rNum, colMap2[key] + 1).setValue(val);
+          else rowArr[colMap2[key]] = val;
+        }
+      };
+
+      setVal('Timestamp', timestamp);
+      setVal('Nama Outlet', payload.namaOutlet);
+      setVal('Packing_PP_Active', payload.packPPActive);
+      setVal('Packing_PP_Harga', payload.packPPHarga);
+      setVal('Packing_PP_Isi', payload.packPPIsi);
+      setVal('Packing_PP_Kg', payload.packPPKg);
+      setVal('Packing_HD_Active', payload.packHDActive);
+      setVal('Packing_HD_Harga', payload.packHDHarga);
+      setVal('Packing_HD_Isi', payload.packHDIsi);
+      setVal('Packing_HD_Kg', payload.packHDKg);
+      setVal('Packing_Jinjing_Active', payload.packJinjingActive);
+      setVal('Packing_Jinjing_Harga', payload.packJinjingHarga);
+      setVal('Packing_Jinjing_Isi', payload.packJinjingIsi);
+      setVal('Packing_Jinjing_Kg', payload.packJinjingKg);
     };
 
-    // [ZETTBOT REVISI: METODE WATER PRICE FORMULA UNTUK DATABASE]
-    const formulaHargaAirLiter = 'IF({COL:Sumber Air}{ROW}="pdam"; {COL:Harga Air}{ROW}/1000; IF({COL:Sumber Air}{ROW}="tangki"; {COL:Harga Tangki}{ROW}/{COL:Liter Tangki}{ROW}; 0))';
-    const formulaBoilerAirLiter = 'IF({COL:Sumber Setrika}{ROW}="galon"; {COL:Galon Setrika}{ROW}/{COL:Vol Setrika}{ROW}; ' + formulaHargaAirLiter + ')';
+    if (targetRow2 !== -1) {
+      applyHPP2([], true, targetRow2);
+    } else {
+      const newRow = new Array(rowLength2).fill("");
+      applyHPP2(newRow, false, 0);
+      sheet2.appendRow(newRow);
+    }
 
-    processSheet(ss.getSheetByName(SHEET_HPP_1), {
-      'Kap Gas': payload.gasKapasitas, 
-      'Harga Gas': payload.gasHarga, 
-      'Jam Gas': payload.gasJam, 
-      'Menit Gas': payload.gasMenit,
-      'Central Gas': payload.gasCentral,
-      'Gas Per Load': gasPerLoad,
-      'Gas Per Kg': gasPerKgStr,
-      'Setrika Per Jam': setrikaPerJamStr,
-      'Setrika Per Kg': setrikaPerKgStr,
-      
-      'TDL': payload.listrikTDL, 
-      
-      'Watt Cuci': payload.listrikCuci, 
-      'kW Watt Cuci': '=IF({COL:Watt Cuci}{ROW}="";""; {COL:Watt Cuci}{ROW}/1000)',
-      'Watt Kering': payload.listrikPengering, 
-      'kW Watt Kering': '=IF({COL:Watt Kering}{ROW}="";""; {COL:Watt Kering}{ROW}/1000)',
-      'Watt Pompa': payload.listrikPompa, 
-      'kW Watt Pompa': '=IF({COL:Watt Pompa}{ROW}="";""; {COL:Watt Pompa}{ROW}/1000)',
-      'Watt Setrika': payload.listrikSetrika, 
-      'kW Watt Setrika': '=IF({COL:Watt Setrika}{ROW}="";""; {COL:Watt Setrika}{ROW}/1000)',
+    const dataHPP3 = sheet3.getDataRange().getDisplayValues();
+    const colMapHPP3 = getHeaderMap(sheet3);
+    let checkColName3 = 'Nama Outlet' in colMapHPP3 ? colMapHPP3['Nama Outlet'] : null;
+    let targetRow3 = -1;
+    
+    if (checkColName3 !== null) {
+      for (let i = 1; i < dataHPP3.length; i++) {
+        if (String(dataHPP3[i][checkColName3]).trim().toLowerCase() === sanitizedNama) {
+          targetRow3 = i + 1;
+          break;
+        }
+      }
+    }
 
-      'Cuci Per Load': '=IF({COL:kW Watt Cuci}{ROW}="";""; {COL:kW Watt Cuci}{ROW}*{COL:TDL}{ROW}*1)',
-      'Cuci Per Kg': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Cuci Per Load}{ROW}="");""; {COL:Cuci Per Load}{ROW}/{COL:Kap Cuci}{ROW})',
-      'Kering Per Load': '=IF({COL:kW Watt Kering}{ROW}="";""; {COL:kW Watt Kering}{ROW}*{COL:TDL}{ROW}*1)',
-      'Kering Per Kg': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Kering Per Load}{ROW}="");""; {COL:Kering Per Load}{ROW}/{COL:Kap Kering}{ROW})',
-      
-      'Listrik Setrika Jam': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:kW Watt Setrika}{ROW}="");""; {COL:kW Watt Setrika}{ROW}*{COL:TDL}{ROW}*1)',
-      'Listrik Setrika Kg': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Listrik Setrika Jam}{ROW}="");""; {COL:Listrik Setrika Jam}{ROW}/{COL:Kap Setrika}{ROW})',
-      
-      // MAPPING BARU UNTUK AIR
-      'Sumber Air': payload.airSumber, 
-      'Harga Air': payload.airHargaM3, 
-      'Harga Tangki': payload.airHargaTangki, 
-      'Liter Tangki': payload.airLiterTangki, 
-      'Air Cuci': payload.airCuciLiter, 
-      'Sumber Setrika': payload.airBoilerSumber, 
-      'Galon Setrika': payload.airHargaGalon, 
-      'Vol Setrika': payload.airLiterGalon, 
-      'Liter Setrika': payload.airBoilerLiter, 
-      'Jam Setrika': payload.airBoilerJam, 
-      'Kg Setrika': payload.airBoilerKgJam,
+    const colMap3 = colMapHPP3;
+    const rowLength3 = sheet3.getLastColumn();
 
-      'Air Per Load': '=' + formulaHargaAirLiter + ' * {COL:Air Cuci}{ROW}',
-      'Air Per Kg': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Air Per Load}{ROW}="");""; {COL:Air Per Load}{ROW}/{COL:Kap Cuci}{ROW})',
-      'Air Setrika Jam': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Liter Setrika}{ROW}="");""; ' + formulaBoilerAirLiter + ' * ({COL:Liter Setrika}{ROW} / {COL:Jam Setrika}{ROW}))',
-      'Air Setrika Kg': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Air Setrika Jam}{ROW}="");""; {COL:Air Setrika Jam}{ROW} / {COL:Kg Setrika}{ROW})'
-    });
+    const applyHPP3 = (rowArr, isUpdate, rNum) => {
+      const setVal = (key, val) => {
+        if (key in colMap3) {
+          if (isUpdate) sheet3.getRange(rNum, colMap3[key] + 1).setValue(val);
+          else rowArr[colMap3[key]] = val;
+        }
+      };
 
-    processSheet(ss.getSheetByName(SHEET_HPP_2), {
-      'Packing_PP_Active': payload.packPPActive, 'Packing_PP_Harga': payload.packPPHarga, 'Packing_PP_Isi': payload.packPPIsi, 'Packing_PP_Kg': payload.packPPKg,
-      'Packing_HD_Active': payload.packHDActive, 'Packing_HD_Harga': payload.packHDHarga, 'Packing_HD_Isi': payload.packHDIsi, 'Packing_HD_Kg': payload.packHDKg,
-      'Packing_Jinjing_Active': payload.packJinjingActive, 'Packing_Jinjing_Harga': payload.packJinjingHarga, 'Packing_Jinjing_Isi': payload.packJinjingIsi, 'Packing_Jinjing_Kg': payload.packJinjingKg
-    });
+      setVal('Timestamp', timestamp);
+      setVal('Nama Outlet', payload.namaOutlet);
 
-    processSheet(ss.getSheetByName(SHEET_HPP_3), {
-      'Chem_Det_Active': payload.chemDetActive, 'Chem_Det_Type': payload.chemDetType, 'Chem_Det_Harga': payload.chemDetHargaBulk, 'Chem_Det_Kapasitas': payload.chemDetKapBulk, 'Chem_Det_Pemakaian': payload.chemDetPakai,
-      'Chem_Sof_Active': payload.chemSofActive, 'Chem_Sof_Type': payload.chemSofType, 'Chem_Sof_Harga': payload.chemSofHargaBulk, 'Chem_Sof_Kapasitas': payload.chemSofKapBulk, 'Chem_Sof_Pemakaian': payload.chemSofPakai,
-      'Chem_Par_Active': payload.chemParActive, 'Chem_Par_Harga': payload.chemParHargaBulk, 'Chem_Par_Kapasitas': payload.chemParKapBulk, 'Chem_Par_Pemakaian': payload.chemParPakai,
-      'Chem_Pel_Active': payload.chemPelActive, 'Chem_Pel_Type': payload.chemPelType, 'Chem_Pel_Harga': payload.chemPelHargaBulk, 'Chem_Pel_Kapasitas': payload.chemPelKapBulk, 'Chem_Pel_Pemakaian': payload.chemPelPakai,
-      'Nota_Type': payload.notaType, 'Nota_App_FeeType': payload.notaAppFeeType, 'Nota_App_HargaBulan': payload.notaAppHargaBulan, 'Nota_App_TrxBulan': payload.notaAppTrxBulan, 'Nota_App_HargaTrx': payload.notaAppHargaTrx, 'Nota_Thermal_Harga': payload.notaThermalHarga, 'Nota_Manual_Harga': payload.notaManualHarga, 'Nota_Manual_LembarTotal': payload.notaManualLbrTotal, 'Nota_Manual_LembarTrx': payload.notaManualLbrTrx, 'Nota_RataKg': payload.notaRataKg
-    });
+      setVal('Chem_Det_Active', payload.chemDetActive);
+      setVal('Chem_Det_Type', payload.chemDetType);
+      setVal('Chem_Det_Harga', payload.chemDetHargaBulk);
+      setVal('Chem_Det_Kapasitas', payload.chemDetKapBulk);
+      setVal('Chem_Det_Pemakaian', payload.chemDetPakai);
+
+      setVal('Chem_Sof_Active', payload.chemSofActive);
+      setVal('Chem_Sof_Type', payload.chemSofType);
+      setVal('Chem_Sof_Harga', payload.chemSofHargaBulk);
+      setVal('Chem_Sof_Kapasitas', payload.chemSofKapBulk);
+      setVal('Chem_Sof_Pemakaian', payload.chemSofPakai);
+
+      setVal('Chem_Par_Active', payload.chemParActive);
+      setVal('Chem_Par_Harga', payload.chemParHargaBulk);
+      setVal('Chem_Par_Kapasitas', payload.chemParKapBulk);
+      setVal('Chem_Par_Pemakaian', payload.chemParPakai);
+
+      setVal('Chem_Pel_Active', payload.chemPelActive);
+      setVal('Chem_Pel_Type', payload.chemPelType);
+      setVal('Chem_Pel_Harga', payload.chemPelHargaBulk);
+      setVal('Chem_Pel_Kapasitas', payload.chemPelKapBulk);
+      setVal('Chem_Pel_Pemakaian', payload.chemPelPakai);
+
+      setVal('Nota_Type', payload.notaType);
+      setVal('Nota_App_FeeType', payload.notaAppFeeType);
+      setVal('Nota_App_HargaBulan', payload.notaAppHargaBulan);
+      setVal('Nota_App_TrxBulan', payload.notaAppTrxBulan);
+      setVal('Nota_App_HargaTrx', payload.notaAppHargaTrx);
+      setVal('Nota_Thermal_Harga', payload.notaThermalHarga);
+      setVal('Nota_Manual_Harga', payload.notaManualHarga);
+      setVal('Nota_Manual_LembarTotal', payload.notaManualLbrTotal);
+      setVal('Nota_Manual_LembarTrx', payload.notaManualLbrTrx);
+      setVal('Nota_RataKg', payload.notaRataKg);
+    };
+
+    if (targetRow3 !== -1) {
+      applyHPP3([], true, targetRow3);
+    } else {
+      const newRow = new Array(rowLength3).fill("");
+      applyHPP3(newRow, false, 0);
+      sheet3.appendRow(newRow);
+    }
 
     SpreadsheetApp.flush();
     clearServerCache(); // <--- Reset server cache after update
-    return { status: 'success', message: 'Data Struktur Biaya (HPP) berhasil tersimpan di Cloud!' };
-
+    return { status: 'success', message: 'Data Struktur Biaya berhasil disimpan ke Cloud!' };
   } catch (error) {
-    throw new Error("Gagal menyimpan Struktur Biaya: " + error.toString());
+    throw new Error("Gagal menyimpan data Struktur Biaya: " + error.toString());
   }
 }
 
-function saveKapasitasPremium(payload) {
+function saveKapasitas(payload) {
   try {
     const ss = _getSpreadsheet();
-    setupDatabase(); // Pastikan struktur siap
-    let sheet = ss.getSheetByName(SHEET_NAME_KAPASITAS);
-    
+    const sheet = ss.getSheetByName(SHEET_NAME_KAPASITAS);
     const now = new Date();
     const timestamp = Utilities.formatDate(now, 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss');
-    const colMap = getHeaderMap(sheet);
     
-    let durasiOps = "-";
-    if (payload.jamBuka && payload.jamTutup) {
-        const buka = payload.jamBuka.split(':');
-        const tutup = payload.jamTutup.split(':');
-        let mBuka = parseInt(buka[0])*60 + parseInt(buka[1]||0);
-        let mTutup = parseInt(tutup[0])*60 + parseInt(tutup[1]||0);
-        if(mTutup < mBuka) mTutup += 24*60;
-        const diff = mTutup - mBuka;
-        durasiOps = `${Math.floor(diff/60)} Jam ${diff%60} Menit`;
-    }
-
-    let unitCuci = parseFloat(payload.cuciUnit) || 0;
-    let durasiCuci = parseFloat(payload.cuciDurasi) || 0;
-    let kapCuci = parseFloat(payload.cuciKg) || 0;
-
-    let unitKering = parseFloat(payload.pengeringUnit) || 0;
-    let durasiKering = parseFloat(payload.pengeringDurasi) || 0;
-    let kapKering = parseFloat(payload.pengeringKg) || 0;
-
-    let unitSetrika = parseFloat(payload.setrikaUnit) || 0;
-    let durasiSetrika = parseFloat(payload.setrikaDurasi) || 0;
-    let kapSetrika = parseFloat(payload.setrikaKg) || 0;
-
-    const sanitizedNama = String(payload.namaOutlet).trim().toLowerCase();
+    const colMap = getHeaderMap(sheet);
+    const headersLength = sheet.getLastColumn();
+    
     let targetRow = -1;
     const data = sheet.getDataRange().getDisplayValues();
-    
     let checkColName = 'Nama Outlet' in colMap ? colMap['Nama Outlet'] : ('Nama Cabang/Outlet' in colMap ? colMap['Nama Cabang/Outlet'] : null);
     
-    if(checkColName !== null) {
+    const sanitizedNama = String(payload.namaOutlet).trim().toLowerCase();
+
+    if (checkColName !== null) {
       for (let i = 1; i < data.length; i++) {
-        const iterNama = String(data[i][checkColName]).trim().toLowerCase();
-        if (iterNama === sanitizedNama) {
+        if (String(data[i][checkColName]).trim().toLowerCase() === sanitizedNama) {
           targetRow = i + 1;
           break;
         }
       }
     }
 
+    const applyData = (rowArr, isUpdate, rNum) => {
+      const setVal = (key, val) => {
+        if(key in colMap) {
+          if(isUpdate) sheet.getRange(rNum, colMap[key] + 1).setValue(val);
+          else rowArr[colMap[key]] = val;
+        }
+      };
+
+      setVal('Timestamp', timestamp);
+      if('Nama Outlet' in colMap) setVal('Nama Outlet', payload.namaOutlet);
+      else setVal('Nama Cabang/Outlet', payload.namaOutlet);
+
+      setVal('Jam Buka', payload.jamBuka);
+      setVal('Jam Tutup', payload.jamTutup);
+      setVal('Tutup Hari Minggu', payload.tutupMinggu);
+      setVal('Target Okupansi Cuci', payload.okupansiCuci);
+      setVal('Target Okupansi Kering', payload.okupansiKering);
+      setVal('Target Okupansi Setrika', payload.okupansiSetrika);
+      setVal('Estimasi Cuci', payload.estimasiCuci);
+      setVal('Estimasi Kering', payload.estimasiKering);
+      setVal('Estimasi Setrika', payload.estimasiSetrika);
+      setVal('Durasi Operasional', payload.durasiOperasional);
+      setVal('Kategori Laundry', payload.kategoriLaundry);
+      setVal('Mesin Cuci', payload.mesinCuci);
+      setVal('Mesin Pengering', payload.mesinPengering);
+      setVal('Kap Cuci', payload.kapCuci);
+      setVal('Kap Kering', payload.kapKering);
+      setVal('Durasi Cuci', payload.durasiCuci);
+      setVal('Durasi Kering', payload.durasiKering);
+      setVal('Alat Setrika', payload.alatSetrika);
+      setVal('Kap Setrika', payload.kapSetrika);
+      setVal('Durasi Setrika', payload.durasiSetrika);
+      setVal('Tipe Mesin Cuci', payload.tipeMesinCuci);
+      setVal('Tipe Mesin Pengering', payload.tipeMesinPengering);
+      setVal('Tipe Setrika', payload.tipeSetrika);
+    };
+
     if (targetRow !== -1) {
-      if('Timestamp' in colMap) sheet.getRange(targetRow, colMap['Timestamp'] + 1).setValue(timestamp);
-      if('Nama Outlet' in colMap) sheet.getRange(targetRow, colMap['Nama Outlet'] + 1).setValue(payload.namaOutlet);
-      else if('Nama Cabang/Outlet' in colMap) sheet.getRange(targetRow, colMap['Nama Cabang/Outlet'] + 1).setValue(payload.namaOutlet); 
-      
-      if('Jam Buka' in colMap) sheet.getRange(targetRow, colMap['Jam Buka'] + 1).setValue(payload.jamBuka);
-      if('Jam Tutup' in colMap) sheet.getRange(targetRow, colMap['Jam Tutup'] + 1).setValue(payload.jamTutup);
-      if('Tutup Hari Minggu' in colMap) sheet.getRange(targetRow, colMap['Tutup Hari Minggu'] + 1).setValue(payload.mingguTutup ? "Ya (Tutup)" : "Tidak (Buka)");
-      if('Target Okupansi Cuci' in colMap) sheet.getRange(targetRow, colMap['Target Okupansi Cuci'] + 1).setValue(payload.targetOkupansiCuci + "%");
-      if('Target Okupansi Kering' in colMap) sheet.getRange(targetRow, colMap['Target Okupansi Kering'] + 1).setValue(payload.targetOkupansiKering + "%");
-      if('Target Okupansi Setrika' in colMap) sheet.getRange(targetRow, colMap['Target Okupansi Setrika'] + 1).setValue(payload.targetOkupansiSetrika + "%");
-      if('Estimasi Cuci' in colMap) sheet.getRange(targetRow, colMap['Estimasi Cuci'] + 1).setValue(payload.estimasiCuciKgBulan);
-      if('Estimasi Kering' in colMap) sheet.getRange(targetRow, colMap['Estimasi Kering'] + 1).setValue(payload.estimasiKeringKgBulan);
-      if('Estimasi Setrika' in colMap) sheet.getRange(targetRow, colMap['Estimasi Setrika'] + 1).setValue(payload.estimasiSetrikaKgBulan);
-      
-      if('Durasi Operasional' in colMap) sheet.getRange(targetRow, colMap['Durasi Operasional'] + 1).setValue(durasiOps);
-      if('Kategori Laundry' in colMap) sheet.getRange(targetRow, colMap['Kategori Laundry'] + 1).setValue(payload.kategori);
-      
-      if('Mesin Cuci' in colMap) sheet.getRange(targetRow, colMap['Mesin Cuci'] + 1).setValue(unitCuci);
-      if('Mesin Pengering' in colMap) sheet.getRange(targetRow, colMap['Mesin Pengering'] + 1).setValue(unitKering);
-      if('Kap Cuci' in colMap) sheet.getRange(targetRow, colMap['Kap Cuci'] + 1).setValue(kapCuci);
-      if('Kap Kering' in colMap) sheet.getRange(targetRow, colMap['Kap Kering'] + 1).setValue(kapKering);
-      if('Durasi Cuci' in colMap) sheet.getRange(targetRow, colMap['Durasi Cuci'] + 1).setValue(durasiCuci);
-      if('Durasi Kering' in colMap) sheet.getRange(targetRow, colMap['Durasi Kering'] + 1).setValue(durasiKering);
-      
-      if('Alat Setrika' in colMap) sheet.getRange(targetRow, colMap['Alat Setrika'] + 1).setValue(unitSetrika);
-      if('Kap Setrika' in colMap) sheet.getRange(targetRow, colMap['Kap Setrika'] + 1).setValue(kapSetrika);
-      if('Durasi Setrika' in colMap) sheet.getRange(targetRow, colMap['Durasi Setrika'] + 1).setValue(durasiSetrika);
-      
-      if('Tipe Mesin Cuci' in colMap) sheet.getRange(targetRow, colMap['Tipe Mesin Cuci'] + 1).setValue(payload.tipeMesinCuci);
-      if('Tipe Mesin Pengering' in colMap) sheet.getRange(targetRow, colMap['Tipe Mesin Pengering'] + 1).setValue(payload.tipeMesinPengering);
-      if('Tipe Setrika' in colMap) sheet.getRange(targetRow, colMap['Tipe Setrika'] + 1).setValue(payload.tipeSetrikaUtama);
-
+      applyData([], true, targetRow);
     } else {
-      const headersLength = sheet.getLastColumn();
       const newRow = new Array(headersLength).fill("");
-      
-      if('Timestamp' in colMap) newRow[colMap['Timestamp']] = timestamp;
-      
-      if('Nama Outlet' in colMap) newRow[colMap['Nama Outlet']] = payload.namaOutlet;
-      else if('Nama Cabang/Outlet' in colMap) newRow[colMap['Nama Cabang/Outlet']] = payload.namaOutlet;
-      
-      if('Jam Buka' in colMap) newRow[colMap['Jam Buka']] = payload.jamBuka;
-      if('Jam Tutup' in colMap) newRow[colMap['Jam Tutup']] = payload.jamTutup;
-      if('Tutup Hari Minggu' in colMap) newRow[colMap['Tutup Hari Minggu']] = payload.mingguTutup ? "Ya (Tutup)" : "Tidak (Buka)";
-      if('Target Okupansi Cuci' in colMap) newRow[colMap['Target Okupansi Cuci']] = payload.targetOkupansiCuci + "%";
-      if('Target Okupansi Kering' in colMap) newRow[colMap['Target Okupansi Kering']] = payload.targetOkupansiKering + "%";
-      if('Target Okupansi Setrika' in colMap) newRow[colMap['Target Okupansi Setrika']] = payload.targetOkupansiSetrika + "%";
-      if('Estimasi Cuci' in colMap) newRow[colMap['Estimasi Cuci']] = payload.estimasiCuciKgBulan;
-      if('Estimasi Kering' in colMap) newRow[colMap['Estimasi Kering']] = payload.estimasiKeringKgBulan;
-      if('Estimasi Setrika' in colMap) newRow[colMap['Estimasi Setrika']] = payload.estimasiSetrikaKgBulan;
-      
-      if('Durasi Operasional' in colMap) newRow[colMap['Durasi Operasional']] = durasiOps;
-      if('Kategori Laundry' in colMap) newRow[colMap['Kategori Laundry']] = payload.kategori;
-      
-      if('Mesin Cuci' in colMap) newRow[colMap['Mesin Cuci']] = unitCuci;
-      if('Mesin Pengering' in colMap) newRow[colMap['Mesin Pengering']] = unitKering;
-      if('Kap Cuci' in colMap) newRow[colMap['Kap Cuci']] = kapCuci;
-      if('Kap Kering' in colMap) newRow[colMap['Kap Kering']] = kapKering;
-      if('Durasi Cuci' in colMap) newRow[colMap['Durasi Cuci']] = durasiCuci;
-      if('Durasi Kering' in colMap) newRow[colMap['Durasi Kering']] = durasiKering;
-      
-      if('Alat Setrika' in colMap) newRow[colMap['Alat Setrika']] = unitSetrika;
-      if('Kap Setrika' in colMap) newRow[colMap['Kap Setrika']] = kapSetrika;
-      if('Durasi Setrika' in colMap) newRow[colMap['Durasi Setrika']] = durasiSetrika;
-
-      if('Tipe Mesin Cuci' in colMap) newRow[colMap['Tipe Mesin Cuci']] = payload.tipeMesinCuci;
-      if('Tipe Mesin Pengering' in colMap) newRow[colMap['Tipe Mesin Pengering']] = payload.tipeMesinPengering;
-      if('Tipe Setrika' in colMap) newRow[colMap['Tipe Setrika']] = payload.tipeSetrikaUtama;
-
+      applyData(newRow, false, 0);
       sheet.appendRow(newRow);
     }
 
-    const sheetHPP1 = ss.getSheetByName(SHEET_HPP_1);
-    if (sheetHPP1) {
-      const colMapHPP = getHeaderMap(sheetHPP1);
-      const dataHPP = sheetHPP1.getDataRange().getDisplayValues();
-      let targetRowHPP = -1;
-      let checkColHPP = 'Nama Outlet' in colMapHPP ? colMapHPP['Nama Outlet'] : null;
-      let existingGasLoad = 0; 
-      let existingGasHarga = 0;
-      let existingGasJam = 0;
-      
-      if(checkColHPP !== null) {
-        for (let i = 1; i < dataHPP.length; i++) {
-          if (String(dataHPP[i][checkColHPP]).trim().toLowerCase() === sanitizedNama) {
-            targetRowHPP = i + 1;
-            if ('Gas Per Load' in colMapHPP) existingGasLoad = parseFloat(dataHPP[i][colMapHPP['Gas Per Load']]) || 0;
-            if ('Harga Gas' in colMapHPP) existingGasHarga = parseFloat(dataHPP[i][colMapHPP['Harga Gas']]) || 0;
-            if ('Jam Gas' in colMapHPP) existingGasJam = parseFloat(dataHPP[i][colMapHPP['Jam Gas']]) || 0;
-            break;
-          }
-        }
-      }
-
-      const hppPayload = {
-        'Kategori Laundry': payload.kategori,
-        'Mesin Cuci': unitCuci,
-        'Kap Cuci': kapCuci,
-        'Durasi Cuci': durasiCuci,
-        'Mesin Pengering': unitKering,
-        'Kap Kering': kapKering,
-        'Durasi Kering': durasiKering,
-        'Alat Setrika': unitSetrika,
-        'Kap Setrika': kapSetrika,
-        'Durasi Setrika': durasiSetrika,
-        'Tipe Setrika': payload.tipeSetrikaUtama
-      };
-
-      if (payload.kategori.toLowerCase().includes('self service')) {
-         hppPayload['Gas Per Kg'] = "";
-         hppPayload['Setrika Per Jam'] = "";
-         hppPayload['Setrika Per Kg'] = "";
-      } else {
-         hppPayload['Gas Per Kg'] = kapKering > 0 ? (existingGasLoad / kapKering) : 0;
-         
-         let costPerJam = existingGasJam > 0 ? (existingGasHarga / existingGasJam) : 0;
-         hppPayload['Setrika Per Jam'] = costPerJam;
-         hppPayload['Setrika Per Kg'] = kapSetrika > 0 ? (costPerJam / kapSetrika) : 0;
-      }
-
-      if (targetRowHPP !== -1) {
-        if('Timestamp' in colMapHPP) sheetHPP1.getRange(targetRowHPP, colMapHPP['Timestamp'] + 1).setValue(timestamp);
-        Object.keys(hppPayload).forEach(key => {
-            if(key in colMapHPP) {
-               sheetHPP1.getRange(targetRowHPP, colMapHPP[key] + 1).setValue(hppPayload[key]);
-            }
-        });
-      } else {
-        const headersLengthHPP = sheetHPP1.getLastColumn();
-        const newRowHPP = new Array(headersLengthHPP).fill("");
-        if('Timestamp' in colMapHPP) newRowHPP[colMapHPP['Timestamp']] = timestamp;
-        if(checkColHPP !== null) newRowHPP[checkColHPP] = payload.namaOutlet;
-        
-        Object.keys(hppPayload).forEach(key => {
-            if(key in colMapHPP) {
-               newRowHPP[colMapHPP[key]] = hppPayload[key];
-            }
-        });
-        sheetHPP1.appendRow(newRowHPP);
-      }
-    }
-
-    SpreadsheetApp.flush(); 
+    SpreadsheetApp.flush();
     clearServerCache(); // <--- Reset server cache after update
-    return { status: 'success', message: 'Data Outlet dan Kapasitas berhasil di-cascade ke Cloud!' };
+    return { status: 'success', message: 'Data Kapasitas berhasil disimpan ke Cloud!' };
   } catch (error) {
-    throw new Error("Gagal menyimpan Kapasitas: " + error.toString());
+    throw new Error("Gagal menyimpan data Kapasitas: " + error.toString());
   }
 }
+
 
 function getDaftarKapasitas() {
   try {
     const ss = _getSpreadsheet();
     const sheet = ss.getSheetByName(SHEET_NAME_KAPASITAS);
-    if(!sheet) return [];
-    
+    if (!sheet || sheet.getLastRow() < 2) return [];
+
     const data = sheet.getDataRange().getDisplayValues();
+    const colMap = getHeaderMap(sheet);
     const result = [];
     
-    if (data.length > 1) {
-      const colMap = getHeaderMap(sheet);
-      
-      for(let i = 1; i < data.length; i++) {
-        let fetchedName = 'Nama Outlet' in colMap ? data[i][colMap['Nama Outlet']] : ('Nama Cabang/Outlet' in colMap ? data[i][colMap['Nama Cabang/Outlet']] : 'Unknown');
-        
-        if (fetchedName.toLowerCase().includes('nama outlet') || fetchedName.toLowerCase().includes('nama cabang')) continue;
+    let getValue = (row, keyA, keyB = null) => {
+      if (keyA in colMap) return row[colMap[keyA]];
+      if (keyB && keyB in colMap) return row[colMap[keyB]];
+      return "";
+    };
 
-        let uCuci = 'Mesin Cuci' in colMap ? parseFloat(data[i][colMap['Mesin Cuci']]) || 0 : 0;
-        let kCuci = 'Kap Cuci' in colMap ? parseFloat(data[i][colMap['Kap Cuci']]) || 0 : 0;
-        let dCuci = 'Durasi Cuci' in colMap ? parseFloat(data[i][colMap['Durasi Cuci']]) || 0 : 0;
-        
-        let uKering = 'Mesin Pengering' in colMap ? parseFloat(data[i][colMap['Mesin Pengering']]) || 0 : 0;
-        let kKering = 'Kap Kering' in colMap ? parseFloat(data[i][colMap['Kap Kering']]) || 0 : 0;
-        let dKering = 'Durasi Kering' in colMap ? parseFloat(data[i][colMap['Durasi Kering']]) || 0 : 0;
-        
-        let uSetrika = 'Alat Setrika' in colMap ? parseFloat(data[i][colMap['Alat Setrika']]) || 0 : 0;
-        let kSetrika = 'Kap Setrika' in colMap ? parseFloat(data[i][colMap['Kap Setrika']]) || 0 : 0;
-        let dSetrika = 'Durasi Setrika' in colMap ? parseFloat(data[i][colMap['Durasi Setrika']]) || 0 : 0;
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const namaOutlet = getValue(row, 'Nama Outlet', 'Nama Cabang/Outlet');
+      if (!namaOutlet || String(namaOutlet).toLowerCase().includes('nama outlet')) continue;
 
-        let tipeCuci = colMap['Tipe Mesin Cuci'] !== undefined ? String(data[i][colMap['Tipe Mesin Cuci']]).trim() : '';
-        if(!tipeCuci) tipeCuci = 'commercial';
-        
-        let tipeKering = colMap['Tipe Mesin Pengering'] !== undefined ? String(data[i][colMap['Tipe Mesin Pengering']]).trim() : '';
-        if(!tipeKering) tipeKering = 'commercial';
-        
-        let tipeSetrika = colMap['Tipe Setrika'] !== undefined ? String(data[i][colMap['Tipe Setrika']]).trim() : '';
-        if(!tipeSetrika) tipeSetrika = 'uap';
-
-        result.push({
-          namaOutlet: fetchedName,
-          jamBuka: data[i][colMap['Jam Buka']],
-          jamTutup: data[i][colMap['Jam Tutup']],
-          mingguTutup: data[i][colMap['Tutup Hari Minggu']],
-          targetOkupansiCuci: data[i][colMap['Target Okupansi Cuci']],
-          targetOkupansiKering: data[i][colMap['Target Okupansi Kering']],
-          targetOkupansiSetrika: data[i][colMap['Target Okupansi Setrika']],
-          estimasiCuciKgBulan: data[i][colMap['Estimasi Cuci']],
-          estimasiKeringKgBulan: data[i][colMap['Estimasi Kering']],
-          estimasiSetrikaKgBulan: data[i][colMap['Estimasi Setrika']],
-          kategori: 'Kategori Laundry' in colMap ? data[i][colMap['Kategori Laundry']] : 'Drop Off/Kiloan',
-          durasiOperasional: 'Durasi Operasional' in colMap ? data[i][colMap['Durasi Operasional']] : '-',
-          
-          cuciUnit: uCuci, cuciDurasi: dCuci, cuciKg: kCuci,
-          pengeringUnit: uKering, pengeringDurasi: dKering, pengeringKg: kKering,
-          setrikaUnit: uSetrika, setrikaDurasi: dSetrika, setrikaKg: kSetrika,
-          
-          tipeMesinCuci: tipeCuci,
-          tipeMesinPengering: tipeKering,
-          tipeSetrikaUtama: tipeSetrika
-        });
-      }
+      result.push({
+        namaOutlet: namaOutlet,
+        jamBuka: getValue(row, 'Jam Buka'),
+        jamTutup: getValue(row, 'Jam Tutup'),
+        tutupMinggu: getValue(row, 'Tutup Hari Minggu'),
+        okupansiCuci: getValue(row, 'Target Okupansi Cuci'),
+        okupansiKering: getValue(row, 'Target Okupansi Kering'),
+        okupansiSetrika: getValue(row, 'Target Okupansi Setrika'),
+        estimasiCuci: getValue(row, 'Estimasi Cuci'),
+        estimasiKering: getValue(row, 'Estimasi Kering'),
+        estimasiSetrika: getValue(row, 'Estimasi Setrika'),
+        durasiOperasional: getValue(row, 'Durasi Operasional'),
+        kategoriLaundry: getValue(row, 'Kategori Laundry'),
+        mesinCuci: getValue(row, 'Mesin Cuci'),
+        mesinPengering: getValue(row, 'Mesin Pengering'),
+        kapCuci: getValue(row, 'Kap Cuci'),
+        kapKering: getValue(row, 'Kap Kering'),
+        durasiCuci: getValue(row, 'Durasi Cuci'),
+        durasiKering: getValue(row, 'Durasi Kering'),
+        alatSetrika: getValue(row, 'Alat Setrika'),
+        kapSetrika: getValue(row, 'Kap Setrika'),
+        durasiSetrika: getValue(row, 'Durasi Setrika'),
+        tipeMesinCuci: getValue(row, 'Tipe Mesin Cuci'),
+        tipeMesinPengering: getValue(row, 'Tipe Mesin Pengering'),
+        tipeSetrika: getValue(row, 'Tipe Setrika')
+      });
     }
+
     return result;
-  } catch(error) {
-    console.error("Fetch Data Error:", error);
-    return []; 
+  } catch (error) {
+    throw new Error("Gagal mengambil daftar kapasitas: " + error.toString());
   }
 }
 
-function deleteKapasitas(namaOutletRequest) {
+function deleteEntity(namaOutletRequest) {
   try {
     const ss = _getSpreadsheet();
     const sheetKap = ss.getSheetByName(SHEET_NAME_KAPASITAS);
@@ -1246,8 +1197,7 @@ function setupDatabase() {
       'HPP_Per_Kg', 'Harga_Acuan_BEP', 'BEP_Kg', 'BEP_Rupiah',
       'Paket_Cuci_Setrika', 'Paket_Cuci_Lipat', 'Paket_Cuci_Saja', 'Paket_Setrika_Saja'
     ];
-
-    const headersKap = [
+        const headersKap = [
       'Timestamp', 'Nama Outlet', 'Jam Buka', 'Jam Tutup', 'Tutup Hari Minggu',
       'Target Okupansi Cuci', 'Target Okupansi Kering', 'Target Okupansi Setrika',
       'Estimasi Cuci', 'Estimasi Kering', 'Estimasi Setrika', 'Durasi Operasional', 'Kategori Laundry',
