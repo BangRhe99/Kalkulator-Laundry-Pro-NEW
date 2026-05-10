@@ -78,7 +78,6 @@
     color: #94a3b8;
   }
 
-  /* Scrollbar styling */
   .sidebar-content::-webkit-scrollbar {
     width: 6px;
   }
@@ -98,20 +97,32 @@
 </style>
 
 <div class="sidebar-panel">
+
   <div class="sidebar-header">
     <i class="ph ph-sliders-horizontal text-lg align-middle mr-2"></i>
     Filter Kolom Biaya
   </div>
 
   <div class="sidebar-content" id="filter-groups-container">
+
     <div style="padding: 1rem; text-align: center; color: #94a3b8;">
-      <p style="font-size: 0.875rem;">Memuat data filter...</p>
+
+      <p style="font-size: 0.875rem;">
+        Memuat data filter...
+      </p>
+
     </div>
+
   </div>
 
   <div class="sidebar-footer">
-    <p style="margin: 0;">Aktifkan filter untuk menampilkan kolom yang dipilih di sheet.</p>
+
+    <p style="margin: 0;">
+      Aktifkan filter untuk menampilkan kolom yang dipilih di sheet.
+    </p>
+
   </div>
+
 </div>
 
 <script>
@@ -123,63 +134,196 @@
    */
 
   (function initSidebarFilters() {
-    // Call Apps Script to get sidebar group data
+
+    const container =
+      document.getElementById('filter-groups-container');
+
+    if (!container) {
+
+      console.error('Sidebar container not found');
+      return;
+
+    }
+
+    // =========================================================================
+    // LOAD DATA
+    // =========================================================================
+
     google.script.run
+
       .withSuccessHandler(function(response) {
-        if (response.status === 'success' && response.data && response.data.length > 0) {
-          renderFilterGroups(response.data);
-        } else {
-          document.getElementById('filter-groups-container').innerHTML = 
-            '<div style="padding: 1rem; text-align: center; color: #94a3b8;"><p>Tidak ada kolom filter yang tersedia.</p></div>';
+
+        try {
+
+          if (
+            !response ||
+            typeof response !== 'object'
+          ) {
+
+            container.innerHTML = `
+              <div style="padding:1rem;text-align:center;color:#f43f5e;">
+                <p>Response sidebar tidak valid.</p>
+              </div>
+            `;
+
+            return;
+
+          }
+
+          if (
+            response.status === 'success' &&
+            Array.isArray(response.data) &&
+            response.data.length > 0
+          ) {
+
+            renderFilterGroups(response.data);
+
+          } else {
+
+            container.innerHTML = `
+              <div style="padding:1rem;text-align:center;color:#94a3b8;">
+                <p>Tidak ada kolom filter yang tersedia.</p>
+              </div>
+            `;
+
+          }
+
+        } catch (err) {
+
+          console.error('Sidebar render error:', err);
+
+          container.innerHTML = `
+            <div style="padding:1rem;text-align:center;color:#f43f5e;">
+              <p>Gagal memproses data sidebar.</p>
+            </div>
+          `;
+
         }
+
       })
+
       .withFailureHandler(function(error) {
+
         console.error('Failed to load filter data:', error);
-        document.getElementById('filter-groups-container').innerHTML = 
-          '<div style="padding: 1rem; text-align: center; color: #f43f5e;"><p>Error: ' + error + '</p></div>';
+
+        container.innerHTML = `
+          <div style="padding:1rem;text-align:center;color:#f43f5e;">
+            <p>Gagal memuat data filter.</p>
+          </div>
+        `;
+
       })
+
       .getSidebarGroupData();
 
+    // =========================================================================
+    // RENDER GROUPS
+    // =========================================================================
+
     function renderFilterGroups(groups) {
-      const container = document.getElementById('filter-groups-container');
+
       container.innerHTML = '';
 
-      groups.forEach((group, index) => {
-        const groupDiv = document.createElement('div');
+      groups.forEach((group) => {
+
+        if (!group) return;
+
+        const groupDiv =
+          document.createElement('div');
+
         groupDiv.className = 'filter-group';
-        
-        const titleDiv = document.createElement('div');
+
+        const titleDiv =
+          document.createElement('div');
+
         titleDiv.className = 'filter-group-title';
-        titleDiv.textContent = group.name;
+
+        titleDiv.textContent =
+          group.name || 'Untitled Group';
+
         groupDiv.appendChild(titleDiv);
 
-        const button = document.createElement('button');
+        const button =
+          document.createElement('button');
+
+        button.type = 'button';
+
         button.className = 'filter-button';
-        button.textContent = 'Tampilkan ' + group.name;
-        button.onclick = () => applyFilter(group.start, group.end, button);
-        
+
+        button.textContent =
+          'Tampilkan ' + (group.name || 'Filter');
+
+        if (button.dataset.bound === 'true') return;
+
+        button.dataset.bound = 'true';
+
+        button.addEventListener('click', function() {
+
+          applyFilter(
+            group.start,
+            group.end,
+            button
+          );
+
+        });
+
         groupDiv.appendChild(button);
+
         container.appendChild(groupDiv);
+
       });
+
     }
+
+    // =========================================================================
+    // APPLY FILTER
+    // =========================================================================
 
     function applyFilter(startCol, endCol, buttonEl) {
-      // Update UI feedback
-      document.querySelectorAll('.filter-button').forEach(btn => {
-        btn.classList.remove('active');
-      });
+
+      if (!buttonEl) return;
+
+      document.querySelectorAll('.filter-button')
+        .forEach((btn) => {
+
+          btn.classList.remove('active');
+
+        });
+
       buttonEl.classList.add('active');
 
-      // Call Apps Script to apply the filter
       google.script.run
-        .withSuccessHandler(() => {
-          console.log('Filter applied:', startCol, '-', endCol);
+
+        .withSuccessHandler(function() {
+
+          console.log(
+            'Filter applied:',
+            startCol,
+            '-',
+            endCol
+          );
+
         })
-        .withFailureHandler((error) => {
-          console.error('Filter failed:', error);
-          alert('Gagal menerapkan filter: ' + error);
+
+        .withFailureHandler(function(error) {
+
+          console.error(
+            'Filter failed:',
+            error
+          );
+
+          alert(
+            'Gagal menerapkan filter'
+          );
+
         })
-        .applySidebarFilter(startCol, endCol);
+
+        .applySidebarFilter(
+          startCol,
+          endCol
+        );
+
     }
+
   })();
 </script>
