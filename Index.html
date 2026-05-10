@@ -380,7 +380,18 @@
 
         if (activeMainTab === 'dashboard') syncDashboardOutlet(selectedOutlet);
 
-        if (activeMainTab === 'hpp' || activeMainTab === 'harga' || activeMainTab === 'bep' || activeMainTab === 'roi') syncHPPOutlet(selectedOutlet);
+// Tambahkan sebelum </body>
+<script>
+  function initV5Dashboard() {
+    const v5View = document.getElementById('view-cost-structure');
+    if (!v5View) {
+      console.error('V5 view not found!');
+      return;
+    }
+    v5View.classList.remove('hidden');
+  }
+  document.addEventListener('DOMContentLoaded', initV5Dashboard);
+</script>        if (activeMainTab === 'hpp' || activeMainTab === 'harga' || activeMainTab === 'bep' || activeMainTab === 'roi') syncHPPOutlet(selectedOutlet);
 
         if (activeMainTab === 'kapasitas') {
           ensureKapasitasDashboardMode();
