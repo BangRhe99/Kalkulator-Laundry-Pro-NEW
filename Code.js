@@ -6,12 +6,20 @@
  * Fase: HYPER-PERFORMANCE (Server-Side Cache & Optimistic UI)
  */
 
-const SHEET_ID = '1i_4Ik6hiFYRU0mi0gAB8nzgbE3G6TG3nCT1lkhcqBU0'; 
+const SHEET_ID = '1i_4Ik6hiFYRU0mi0gAB8nzgbE3G6TG3nCT1lkhcqBU0';
+
 const SHEET_NAME_BEP = 'Riwayat_BEP_V2';
 const SHEET_NAME_KAPASITAS = 'Master_Kapasitas_V2';
 
 // Database untuk Struktur Biaya
-const SHEET_HPP_1 = 'Struktur_Biaya_1'; // Gas, Listrik, Air, Packing, Chemical, Nota
+const SHEET_HPP_1 = 'Struktur_Biaya_1';
+
+// =========================================================================
+// FIX RUNTIME ERROR
+// =========================================================================
+
+const SHEET_HPP_2 = 'Struktur_Biaya_2';
+const SHEET_HPP_3 = 'Struktur_Biaya_3';
 
 // =========================================================================
 // [FITUR SIDEBAR SPREADSHEET (FILTER KOLOM)]
@@ -23,18 +31,14 @@ function onOpen() {
     .addItem('Buka Panel Filter Biaya', 'showFilterSidebar')
     .addToUi();
 }
-function doGet() {
-  return HtmlService
-    .createHtmlOutputFromFile('Index')
-    .setTitle('Kalkulator Laundry');
-}
+
 function showFilterSidebar() {
   const html = HtmlService.createHtmlOutputFromFile('Sidebar')
     .setTitle('Navigasi Kolom Biaya')
     .setWidth(320);
+
   SpreadsheetApp.getUi().showSidebar(html);
 }
-
 function getSidebarGroupData() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();

@@ -190,94 +190,6 @@
 
 </div>
 
-<!-- =========================================================================
-     HPP INPUT MODAL
-========================================================================= -->
-
-<div id="hpp-modal"
-     style="
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(15,23,42,.45);
-      z-index:9999;
-      align-items:center;
-      justify-content:center;
-     ">
-
-  <div style="
-      width:min(92%,420px);
-      background:#ffffff;
-      border-radius:1.25rem;
-      padding:1.5rem;
-      box-shadow:0 25px 60px rgba(15,23,42,.18);
-  ">
-
-    <div id="hpp-modal-title"
-         style="
-          font-size:1.1rem;
-          font-weight:800;
-          margin-bottom:1rem;
-          color:#0f172a;
-         ">
-      Input HPP
-    </div>
-
-    <input
-      id="hpp-input"
-      type="number"
-      placeholder="Masukkan nominal"
-      style="
-        width:100%;
-        padding:1rem;
-        border:1px solid #e2e8f0;
-        border-radius:.85rem;
-        outline:none;
-        margin-bottom:1rem;
-      "
-    >
-
-    <div style="
-        display:flex;
-        gap:.75rem;
-      ">
-
-      <button
-        onclick="saveHPPInput()"
-        style="
-          flex:1;
-          padding:.9rem;
-          border:none;
-          border-radius:.85rem;
-          background:#4f46e5;
-          color:white;
-          font-weight:700;
-          cursor:pointer;
-        ">
-        Simpan
-      </button>
-
-      <button
-        onclick="closeHPPModal()"
-        style="
-          flex:1;
-          padding:.9rem;
-          border:none;
-          border-radius:.85rem;
-          background:#e2e8f0;
-          color:#0f172a;
-          font-weight:700;
-          cursor:pointer;
-        ">
-        Tutup
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
-
 <script>
 
 function formatRupiah(num) {
@@ -362,64 +274,6 @@ function loadHPPDashboard() {
 }
 
 /* =========================================================================
-   MODAL INPUT HPP
-========================================================================= */
-
-let selectedHPP = '';
-
-function openHPPModal(title) {
-
-  selectedHPP = title;
-
-  const modal =
-    document.getElementById('hpp-modal');
-
-  if (!modal) return;
-
-  const titleEl =
-    document.getElementById('hpp-modal-title');
-
-  if (titleEl) {
-
-    titleEl.innerText =
-      'Input ' + title;
-
-  }
-
-  modal.style.display = 'flex';
-
-}
-
-function closeHPPModal() {
-
-  const modal =
-    document.getElementById('hpp-modal');
-
-  if (!modal) return;
-
-  modal.style.display = 'none';
-
-}
-
-function saveHPPInput() {
-
-  const input =
-    document.getElementById('hpp-input');
-
-  const value =
-    input ? input.value : '';
-
-  console.log(
-    'SAVE HPP:',
-    selectedHPP,
-    value
-  );
-
-  closeHPPModal();
-
-}
-
-/* =========================================================================
    CLICKABLE CARD
 ========================================================================= */
 
@@ -432,11 +286,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
       card.addEventListener('click', function() {
 
-        const title =
-          this.querySelector('.card-title')
-          ?.innerText || '';
+        // Trigger modal lama existing system
 
-        openHPPModal(title);
+        const oldModalTrigger =
+          document.querySelector('[data-hpp-modal-trigger]');
+
+        if (oldModalTrigger) {
+
+          oldModalTrigger.click();
+
+        } else {
+
+          console.warn('Modal existing tidak ditemukan');
+
+        }
 
       });
 

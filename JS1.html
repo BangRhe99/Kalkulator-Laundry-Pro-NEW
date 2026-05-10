@@ -214,9 +214,9 @@ function loadHPPFromLocal() {
   }
 
   if (
-    typeof StateMachine !== 'undefined'
+    typeof HPPStateMachine !== 'undefined'
   ) {
-    StateMachine.calculateTotal();
+    HPPStateMachine.calculateTotal();
   }
 
 }
@@ -394,7 +394,7 @@ function setDashboardPercent(
    STATE MACHINE
 ========================================================= */
 
-window.StateMachine = {
+window.HPPStateMachine = {
 
   updateMetric(type, value) {
 
