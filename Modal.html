@@ -59,8 +59,6 @@
     gap: clamp(1.35rem, 2.25vw, 2rem);
     max-width: min(100%, 1120px);
     margin-inline: auto;
-    transform: translate3d(0, 0, 0);
-    will-change: opacity, transform;
   }
 
   #view-hpp .hpp-summary,
@@ -100,6 +98,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
+    cursor: pointer;
   }
 
   #view-hpp .card-title {
@@ -119,70 +118,8 @@
   }
 
   #view-hpp .hpp-card-dash:hover {
-    transform: translate3d(0, -5px, 0) scale(1.006) !important;
-    box-shadow: var(--hpp-shadow-hover) !important;
-    border-color: rgba(148, 163, 184, 0.42) !important;
-    filter: saturate(1.08);
-  }
-
-  #view-hpp .hpp-card-dash:active {
-    transform: translate3d(0, -1px, 0) scale(0.982) !important;
-    transition-duration: 120ms !important;
-  }
-
-  #view-hpp #dash-hpp-total {
-    color: var(--hpp-text) !important;
-    font-size: clamp(2.85rem, 8.5vw, 4.7rem) !important;
-    line-height: 0.94 !important;
-    letter-spacing: -0.065em !important;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.28);
-  }
-
-  #view-hpp #dash-card-gas {
-    color: var(--hpp-rose) !important;
-  }
-
-  #view-hpp #dash-card-listrik {
-    color: var(--hpp-amber) !important;
-  }
-
-  #view-hpp #dash-card-air {
-    color: var(--hpp-cyan) !important;
-  }
-
-  #view-hpp #dash-card-packing {
-    color: var(--hpp-indigo) !important;
-  }
-
-  #view-hpp #dash-card-bahan {
-    color: var(--hpp-emerald) !important;
-  }
-
-  #view-hpp #dash-card-nota {
-    color: var(--hpp-slate) !important;
-  }
-
-  #view-hpp [id^="dash-card-"] {
-    font-size: clamp(1.15rem, 2.65vw, 1.7rem) !important;
-    line-height: 1 !important;
-  }
-
-  .hpp-view-enter-premium {
-    animation: hppViewEnterPremium 460ms var(--hpp-ease) both;
-  }
-
-  @keyframes hppViewEnterPremium {
-    from {
-      opacity: 0;
-      transform: translate3d(0, 18px, 0) scale(0.988);
-      filter: blur(8px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1);
-      filter: blur(0);
-    }
+    transform: translate3d(0, -5px, 0) scale(1.006);
+    box-shadow: var(--hpp-shadow-hover);
   }
 
   @media (min-width: 768px) {
@@ -191,52 +128,14 @@
     }
   }
 
-  @media (max-width: 767px) {
-    #view-hpp {
-      margin-top: 0 !important;
-    }
-
-    #view-hpp #hpp-dashboard-view {
-      gap: 1.25rem;
-      max-width: 100%;
-    }
-
-    #view-hpp .hpp-card-dash {
-      min-height: 6.5rem;
-      padding: 0.9rem !important;
-      border-radius: 1.25rem !important;
-    }
-
-    #view-hpp [id^="dash-card-"] {
-      font-size: clamp(0.95rem, 4.5vw, 1.2rem) !important;
-    }
-
-    #view-hpp #dash-hpp-total {
-      font-size: clamp(2rem, 10vw, 3rem) !important;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    #view-hpp,
-    #view-hpp *,
-    #view-hpp *::before,
-    #view-hpp *::after {
-      animation-duration: 1ms !important;
-      animation-iteration-count: 1 !important;
-      scroll-behavior: auto !important;
-      transition-duration: 1ms !important;
-    }
-  }
-
 </style>
 
 <div id="view-hpp" class="main-view hidden hpp-view-enter-premium">
 
-  <!-- ================= DASHBOARD VIEW ================= -->
-
   <div id="hpp-dashboard-view" class="space-y-4">
 
     <div class="hpp-summary">
+
       <div class="summary-title">
         Total HPP Variabel
       </div>
@@ -244,6 +143,7 @@
       <div id="dash-hpp-total" class="summary-value tabular-nums">
         Rp 0
       </div>
+
     </div>
 
     <div class="hpp-grid">
@@ -289,6 +189,95 @@
   </div>
 
 </div>
+
+<!-- =========================================================================
+     HPP INPUT MODAL
+========================================================================= -->
+
+<div id="hpp-modal"
+     style="
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.45);
+      z-index:9999;
+      align-items:center;
+      justify-content:center;
+     ">
+
+  <div style="
+      width:min(92%,420px);
+      background:#ffffff;
+      border-radius:1.25rem;
+      padding:1.5rem;
+      box-shadow:0 25px 60px rgba(15,23,42,.18);
+  ">
+
+    <div id="hpp-modal-title"
+         style="
+          font-size:1.1rem;
+          font-weight:800;
+          margin-bottom:1rem;
+          color:#0f172a;
+         ">
+      Input HPP
+    </div>
+
+    <input
+      id="hpp-input"
+      type="number"
+      placeholder="Masukkan nominal"
+      style="
+        width:100%;
+        padding:1rem;
+        border:1px solid #e2e8f0;
+        border-radius:.85rem;
+        outline:none;
+        margin-bottom:1rem;
+      "
+    >
+
+    <div style="
+        display:flex;
+        gap:.75rem;
+      ">
+
+      <button
+        onclick="saveHPPInput()"
+        style="
+          flex:1;
+          padding:.9rem;
+          border:none;
+          border-radius:.85rem;
+          background:#4f46e5;
+          color:white;
+          font-weight:700;
+          cursor:pointer;
+        ">
+        Simpan
+      </button>
+
+      <button
+        onclick="closeHPPModal()"
+        style="
+          flex:1;
+          padding:.9rem;
+          border:none;
+          border-radius:.85rem;
+          background:#e2e8f0;
+          color:#0f172a;
+          font-weight:700;
+          cursor:pointer;
+        ">
+        Tutup
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
 <script>
 
 function formatRupiah(num) {
@@ -302,8 +291,6 @@ function loadHPPDashboard() {
   google.script.run
 
     .withSuccessHandler(function(data) {
-
-      console.log('DATA HPP:', data);
 
       if (!data) return;
 
@@ -443,8 +430,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.hpp-card-dash')
     .forEach(card => {
 
-      card.style.cursor = 'pointer';
-
       card.addEventListener('click', function() {
 
         const title =
@@ -459,91 +444,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 
-<!-- =========================================================================
-     HPP INPUT MODAL
-========================================================================= -->
-
-<div id="hpp-modal"
-     style="
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(15,23,42,.45);
-      z-index:9999;
-      align-items:center;
-      justify-content:center;
-     ">
-
-  <div style="
-      width:min(92%,420px);
-      background:#ffffff;
-      border-radius:1.25rem;
-      padding:1.5rem;
-      box-shadow:0 25px 60px rgba(15,23,42,.18);
-  ">
-
-    <div id="hpp-modal-title"
-         style="
-          font-size:1.1rem;
-          font-weight:800;
-          margin-bottom:1rem;
-          color:#0f172a;
-         ">
-      Input HPP
-    </div>
-
-    <input
-      id="hpp-input"
-      type="number"
-      placeholder="Masukkan nominal"
-      style="
-        width:100%;
-        padding:1rem;
-        border:1px solid #e2e8f0;
-        border-radius:.85rem;
-        outline:none;
-        margin-bottom:1rem;
-      "
-    >
-
-    <div style="
-        display:flex;
-        gap:.75rem;
-      ">
-
-      <button
-        onclick="saveHPPInput()"
-        style="
-          flex:1;
-          padding:.9rem;
-          border:none;
-          border-radius:.85rem;
-          background:#4f46e5;
-          color:white;
-          font-weight:700;
-          cursor:pointer;
-        ">
-        Simpan
-      </button>
-
-      <button
-        onclick="closeHPPModal()"
-        style="
-          flex:1;
-          padding:.9rem;
-          border:none;
-          border-radius:.85rem;
-          background:#e2e8f0;
-          color:#0f172a;
-          font-weight:700;
-          cursor:pointer;
-        ">
-        Tutup
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
 </script>
