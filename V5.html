@@ -2,7 +2,11 @@
 
 (function initV5Dashboard() {
 
+  if (window.__v5DashboardInitDone === true) return;
+  window.__v5DashboardInitDone = true;
+
   let observerInitialized = false;
+  let hppObserver = null;
 
   function safeGet(id) {
 
@@ -104,13 +108,17 @@
 
     observerInitialized = true;
 
-    const observer = new MutationObserver(() => {
+    if (hppObserver) {
+      hppObserver.disconnect();
+    }
+
+    hppObserver = new MutationObserver(() => {
 
       syncHPPDataToV5();
 
     });
 
-    observer.observe(hppView, {
+    hppObserver.observe(hppView, {
 
       subtree: true,
       childList: true,
@@ -161,7 +169,12 @@
 
   const originalSwitchMainTab = window.switchMainTab;
 
-  if (typeof originalSwitchMainTab === 'function') {
+  if (
+    typeof originalSwitchMainTab === 'function' &&
+    window.__v5SwitchMainTabWrapped !== true
+  ) {
+
+    window.__v5SwitchMainTabWrapped = true;
 
     window.switchMainTab = function(tab) {
 
