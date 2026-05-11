@@ -15,7 +15,7 @@
           </div>
         </div>
         
-        <button type="button" onclick="switchMainTab('harga')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 px-6 py-3.5 rounded-[1.25rem] font-extrabold flex items-center gap-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 transform-gpu hover:-translate-y-1 shrink-0 active:scale-95">
+        <button type="button" onclick="safeSwitchMainTab('harga')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 px-6 py-3.5 rounded-[1.25rem] font-extrabold flex items-center gap-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 transform-gpu hover:-translate-y-1 shrink-0 active:scale-95">
           <i class="ph ph-tag text-xl text-blue-600"></i> Cek Harga Jual
         </button>
       </div>
@@ -27,7 +27,7 @@
           <label class="block text-sm font-extrabold text-slate-700 flex items-center gap-3 tracking-tight"><i class="ph ph-house text-blue-500 text-xl"></i> Biaya Sewa Tahunan</label>
           <div class="relative flex items-center">
             <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
-            <input type="text" id="inputSewaTahun" inputmode="numeric" class="w-full pl-12 pr-5 py-4 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-blue-500/15 focus:border-blue-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="Misal: 30.000.000" oninput="formatRupiahInput(this); calculateAll()">
+            <input type="text" id="inputSewaTahun" inputmode="numeric" class="w-full pl-12 pr-5 py-4 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-blue-500/15 focus:border-blue-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="Misal: 30.000.000" oninput="safeFormatAndCalculate(this)">
           </div>
           <div class="grid grid-cols-2 gap-4 text-xs mt-2">
             <div class="bg-slate-50/80 p-4 rounded-xl border border-slate-100 text-center shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
@@ -45,7 +45,7 @@
         <div class="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-[1.5rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] p-6 md:p-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] transition-all duration-500 transform-gpu hover:-translate-y-1 space-y-5 flex flex-col">
           <div class="flex justify-between items-center">
             <label class="block text-sm font-extrabold text-slate-700 flex items-center gap-3 tracking-tight"><i class="ph ph-users text-blue-500 text-xl"></i> Gaji Karyawan</label>
-            <button type="button" onclick="addKaryawan()" class="text-[10px] bg-blue-50 border border-blue-200/80 text-blue-700 px-4 py-2 rounded-xl font-black hover:bg-blue-100 transition-colors active:scale-95 uppercase tracking-widest flex items-center gap-1"><i class="ph ph-plus"></i> Tambah</button>
+            <button type="button" onclick="safeAddKaryawan()" class="text-[10px] bg-blue-50 border border-blue-200/80 text-blue-700 px-4 py-2 rounded-xl font-black hover:bg-blue-100 transition-colors active:scale-95 uppercase tracking-widest flex items-center gap-1"><i class="ph ph-plus"></i> Tambah</button>
           </div>
           <div id="containerKaryawan" class="flex-1 space-y-3 max-h-48 overflow-y-auto custom-scroll pr-2"></div>
           <div class="bg-slate-50/80 p-5 rounded-xl border border-slate-100 flex justify-between items-center text-sm shadow-[0_2px_8px_rgba(0,0,0,0.02)] mt-auto shrink-0">
@@ -64,7 +64,7 @@
             <label class="block text-xs font-extrabold text-slate-600 uppercase tracking-widest">Biaya Tetap Lainnya / Bulan (Rp)</label>
             <div class="relative flex items-center">
               <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
-              <input type="text" id="inputBiayaTetapLain" class="w-full pl-12 pr-5 py-4 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-blue-500/15 focus:border-blue-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="0" oninput="formatRupiahInput(this); calculateAll()">
+              <input type="text" id="inputBiayaTetapLain" class="w-full pl-12 pr-5 py-4 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-blue-500/15 focus:border-blue-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="0" oninput="safeFormatAndCalculate(this)">
             </div>
           </div>
           
@@ -76,7 +76,7 @@
             </div>
             <div class="relative z-10 flex items-center">
               <span class="absolute left-5 text-base font-black text-indigo-500">Rp</span>
-              <input type="text" id="inputBiayaVariabel" class="w-full pl-14 pr-5 py-4 rounded-[1rem] border border-indigo-300/80 font-black text-indigo-900 bg-white/90 focus:ring-[4px] focus:ring-indigo-500/20 focus:border-indigo-500 text-xl shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="0" oninput="formatRupiahInput(this); calculateAll()">
+              <input type="text" id="inputBiayaVariabel" class="w-full pl-14 pr-5 py-4 rounded-[1rem] border border-indigo-300/80 font-black text-indigo-900 bg-white/90 focus:ring-[4px] focus:ring-indigo-500/20 focus:border-indigo-500 text-xl shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="0" oninput="safeFormatAndCalculate(this)">
             </div>
           </div>
 
@@ -101,7 +101,7 @@
           <div class="md:col-span-5 space-y-4 z-10">
             <label class="text-[10px] font-black text-slate-400 block tracking-[0.2em] uppercase">Pilih Acuan Harga Tertinggi:</label>
             <div class="relative">
-              <select id="bepReference" class="w-full pl-5 pr-10 py-4 text-sm border border-slate-600/80 rounded-[1.25rem] font-bold text-slate-100 bg-slate-800/50 backdrop-blur-md focus:ring-[4px] focus:ring-blue-500/30 focus:border-blue-400 shadow-[inset_0_2px_6px_rgba(0,0,0,0.2)] transition-all duration-300 outline-none appearance-none cursor-pointer" onchange="calculateAll()">
+              <select id="bepReference" class="w-full pl-5 pr-10 py-4 text-sm border border-slate-600/80 rounded-[1.25rem] font-bold text-slate-100 bg-slate-800/50 backdrop-blur-md focus:ring-[4px] focus:ring-blue-500/30 focus:border-blue-400 shadow-[inset_0_2px_6px_rgba(0,0,0,0.2)] transition-all duration-300 outline-none appearance-none cursor-pointer" onchange="safeCalculateAll()">
                 <option value="cs_price_1">Cuci Setrika - Pilihan 1</option>
                 <option value="cs_price_2">Cuci Setrika - Pilihan 2</option>
                 <option value="cl_price_1">Cuci Lipat - Pilihan 1</option>
@@ -152,7 +152,7 @@
             <div class="bg-indigo-50/60 px-5 py-3 rounded-[1.25rem] border border-indigo-100/80 flex items-center gap-4 shrink-0 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)] w-full xl:w-auto justify-between">
               <label class="text-[10px] font-black text-indigo-800 uppercase tracking-[0.1em]">Tipe Laundry:</label>
               <div class="relative w-full xl:w-48">
-                <select id="bepTipeLaundry" class="w-full text-sm px-4 py-2.5 rounded-xl border border-indigo-200 focus:ring-[4px] focus:ring-indigo-500/20 focus:border-indigo-400 bg-white font-extrabold text-indigo-900 shadow-sm transition-all cursor-pointer outline-none appearance-none" onchange="calculateAll()">
+                <select id="bepTipeLaundry" class="w-full text-sm px-4 py-2.5 rounded-xl border border-indigo-200 focus:ring-[4px] focus:ring-indigo-500/20 focus:border-indigo-400 bg-white font-extrabold text-indigo-900 shadow-sm transition-all cursor-pointer outline-none appearance-none" onchange="safeCalculateAll()">
                   <option value="kg">Kiloan / Drop Off (Kg)</option>
                   <option value="load">Self Service (Load)</option>
                 </select>
@@ -190,10 +190,10 @@
 
       <!-- Action Footer -->
       <div class="mt-12 flex flex-col sm:flex-row justify-between items-center border-t border-slate-100/80 pt-8 gap-5">
-        <button type="button" onclick="switchMainTab('harga')" class="text-slate-500 hover:text-slate-800 font-extrabold text-sm px-4 py-2 flex items-center gap-2 transition-colors active:scale-95 w-full sm:w-auto justify-center">
+        <button type="button" onclick="safeSwitchMainTab('harga')" class="text-slate-500 hover:text-slate-800 font-extrabold text-sm px-4 py-2 flex items-center gap-2 transition-colors active:scale-95 w-full sm:w-auto justify-center">
           <i class="ph ph-arrow-left"></i> Kembali ke Harga Jual
         </button>
-        <button type="button" onclick="switchMainTab('roi')" class="w-full sm:w-auto bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white px-10 py-4 rounded-[1.25rem] font-black flex items-center justify-center gap-3 shadow-[0_8px_20px_rgba(15,23,42,0.2)] hover:shadow-[0_12px_30px_rgba(15,23,42,0.3)] transition-all duration-500 transform-gpu hover:-translate-y-1 active:scale-[0.96] tracking-wide">
+        <button type="button" onclick="safeSwitchMainTab('roi')" class="w-full sm:w-auto bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white px-10 py-4 rounded-[1.25rem] font-black flex items-center justify-center gap-3 shadow-[0_8px_20px_rgba(15,23,42,0.2)] hover:shadow-[0_12px_30px_rgba(15,23,42,0.3)] transition-all duration-500 transform-gpu hover:-translate-y-1 active:scale-[0.96] tracking-wide">
           Lanjut ke Proyeksi ROI <i class="ph ph-arrow-right text-xl"></i>
         </button>
       </div>
@@ -226,7 +226,7 @@
          </label>
          <div class="relative flex items-center w-full md:w-2/3">
            <span class="absolute left-5 text-lg font-black text-slate-400">Rp</span>
-           <input type="text" id="inputModalAwal" inputmode="numeric" class="w-full pl-14 pr-6 py-5 rounded-[1.25rem] border border-slate-300/80 focus:bg-white focus:ring-[4px] focus:ring-emerald-500/15 focus:border-emerald-500 font-black text-slate-800 text-[clamp(1.5rem,2.5vw,2rem)] tracking-tight tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] outline-none" placeholder="150.000.000" oninput="formatRupiahInput(this); calculateAll()">
+           <input type="text" id="inputModalAwal" inputmode="numeric" class="w-full pl-14 pr-6 py-5 rounded-[1.25rem] border border-slate-300/80 focus:bg-white focus:ring-[4px] focus:ring-emerald-500/15 focus:border-emerald-500 font-black text-slate-800 text-[clamp(1.5rem,2.5vw,2rem)] tracking-tight tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] outline-none" placeholder="150.000.000" oninput="safeFormatAndCalculate(this)">
          </div>
          <p class="text-[11px] text-slate-400 font-bold mt-4 tracking-wide">*(Opsional) Masukkan total modal awal untuk menghitung *Payback Period*.</p>
       </div>
@@ -260,12 +260,46 @@
 
       <!-- Action Footer -->
       <div class="mt-14 flex flex-col sm:flex-row gap-5 items-center justify-between border-t border-slate-100/80 pt-10">
-        <button type="button" onclick="switchMainTab('bep')" class="text-slate-500 hover:text-slate-800 font-extrabold text-sm px-4 py-2 flex items-center gap-2 transition-colors active:scale-95 w-full sm:w-auto justify-center">
+        <button type="button" onclick="safeSwitchMainTab('bep')" class="text-slate-500 hover:text-slate-800 font-extrabold text-sm px-4 py-2 flex items-center gap-2 transition-colors active:scale-95 w-full sm:w-auto justify-center">
           <i class="ph ph-arrow-left"></i> Kembali ke Target Titik Impas
         </button>
-        <button type="button" id="btnSubmit" onclick="prosesSimpanBEP()" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black py-4 px-10 rounded-[1.25rem] transition-all duration-500 transform-gpu hover:-translate-y-1 shadow-[0_12px_30px_rgba(37,99,235,0.25)] hover:shadow-[0_16px_40px_rgba(37,99,235,0.35)] flex items-center justify-center gap-3 tracking-wide active:scale-[0.96]">
+        <button type="button" id="btnSubmit" onclick="safeProsesSimpanBEP()" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black py-4 px-10 rounded-[1.25rem] transition-all duration-500 transform-gpu hover:-translate-y-1 shadow-[0_12px_30px_rgba(37,99,235,0.25)] hover:shadow-[0_16px_40px_rgba(37,99,235,0.35)] flex items-center justify-center gap-3 tracking-wide active:scale-[0.96]">
           <i class="ph ph-cloud-arrow-up text-2xl"></i> Simpan Data ke Cloud
         </button>
       </div>
     </div>
   </div>
+<script>
+function safeFormatAndCalculate(inputEl) {
+  if (typeof formatRupiahInput === 'function') {
+    formatRupiahInput(inputEl);
+  }
+  if (typeof calculateAll === 'function') {
+    calculateAll();
+  }
+}
+
+function safeCalculateAll() {
+  if (typeof calculateAll === 'function') {
+    calculateAll();
+  }
+}
+
+function safeSwitchMainTab(tabName) {
+  if (typeof switchMainTab === 'function') {
+    switchMainTab(tabName);
+  }
+}
+
+function safeAddKaryawan() {
+  if (typeof addKaryawan === 'function') {
+    addKaryawan();
+  }
+}
+
+function safeProsesSimpanBEP() {
+  if (typeof prosesSimpanBEP === 'function') {
+    prosesSimpanBEP();
+  }
+}
+</script>
