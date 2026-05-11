@@ -506,7 +506,8 @@
         return;
       }
 
-      v5View.classList.remove('hidden');
+      // Keep default tab state controlled by switchMainTab().
+      // Do not force V5 view visible on startup.
 
     }
 
@@ -548,7 +549,15 @@
 
       initV5Dashboard();
 
-      setInterval(syncHPPData, 1000);
+      setInterval(() => {
+
+        const v5View = document.getElementById('view-cost-structure');
+
+        if (v5View && !v5View.classList.contains('hidden')) {
+          syncHPPData();
+        }
+
+      }, 1000);
 
     });
 

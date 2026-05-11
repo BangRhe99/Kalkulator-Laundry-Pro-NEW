@@ -565,8 +565,7 @@ function saveTransaction(payload) {
     const applyData = (rowArr, isUpdate, rNum) => {
         const setVal = (key, val) => {
             if(key in colMap) {
-                if(isUpdate) sheet.getRange(rNum, colMap[key] + 1).setValue(val);
-                else rowArr[colMap[key]] = val;
+                rowArr[colMap[key]] = val;
             }
         };
         
@@ -589,7 +588,9 @@ function saveTransaction(payload) {
     };
 
     if(targetRow !== -1) {
-        applyData([], true, targetRow);
+        const updatedRow = new Array(headersLength).fill("");
+        applyData(updatedRow, true, targetRow);
+        sheet.getRange(targetRow, 1, 1, headersLength).setValues([updatedRow]);
     } else {
         const newRow = new Array(headersLength).fill("");
         applyData(newRow, false, 0);
@@ -915,8 +916,7 @@ function saveKapasitas(payload) {
     const applyData = (rowArr, isUpdate, rNum) => {
       const setVal = (key, val) => {
         if(key in colMap) {
-          if(isUpdate) sheet.getRange(rNum, colMap[key] + 1).setValue(val);
-          else rowArr[colMap[key]] = val;
+          rowArr[colMap[key]] = val;
         }
       };
 
@@ -950,7 +950,9 @@ function saveKapasitas(payload) {
     };
 
     if (targetRow !== -1) {
-      applyData([], true, targetRow);
+      const updatedRow = new Array(headersLength).fill("");
+      applyData(updatedRow, true, targetRow);
+      sheet.getRange(targetRow, 1, 1, headersLength).setValues([updatedRow]);
     } else {
       const newRow = new Array(headersLength).fill("");
       applyData(newRow, false, 0);
@@ -1524,14 +1526,13 @@ function saveStrukturBiaya(payload) {
       });
       sheet.appendRow(newRow);
     } else {
-      if ('Timestamp' in colMap) sheet.getRange(rowNum, colMap['Timestamp'] + 1).setValue(timestamp);
+      const updatedRow = sheet.getRange(rowNum, 1, 1, sheet.getLastColumn()).getValues()[0];
+      if ('Timestamp' in colMap) updatedRow[colMap['Timestamp']] = timestamp;
       Object.keys(mapping).forEach(function(key) {
         if (!(key in colMap)) return;
-        const val = resolveFormula(mapping[key], rowNum);
-        const cell = sheet.getRange(rowNum, colMap[key] + 1);
-        if (typeof val === 'string' && val.startsWith('=')) cell.setFormula(val);
-        else cell.setValue(val);
+        updatedRow[colMap[key]] = resolveFormula(mapping[key], rowNum);
       });
+      sheet.getRange(rowNum, 1, 1, updatedRow.length).setValues([updatedRow]);
     }
 
     SpreadsheetApp.flush();
