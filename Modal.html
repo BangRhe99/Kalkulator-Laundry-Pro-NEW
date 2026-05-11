@@ -192,11 +192,11 @@
 
 <script>
 
-function formatRupiah(num) {
+const formatRupiahModal = (num) => {
 
   return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
 
-}
+};
 
 function loadHPPDashboard() {
 
@@ -214,26 +214,18 @@ function loadHPPDashboard() {
         (data.bahan || 0) +
         (data.nota || 0);
 
-      document.getElementById('dash-hpp-total').innerText =
-        formatRupiah(total);
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+      };
 
-      document.getElementById('dash-card-gas').innerText =
-        formatRupiah(data.gas);
-
-      document.getElementById('dash-card-listrik').innerText =
-        formatRupiah(data.listrik);
-
-      document.getElementById('dash-card-air').innerText =
-        formatRupiah(data.air);
-
-      document.getElementById('dash-card-packing').innerText =
-        formatRupiah(data.packing);
-
-      document.getElementById('dash-card-bahan').innerText =
-        formatRupiah(data.bahan);
-
-      document.getElementById('dash-card-nota').innerText =
-        formatRupiah(data.nota);
+      setText('dash-hpp-total', formatRupiahModal(total));
+      setText('dash-card-gas', formatRupiahModal(data.gas));
+      setText('dash-card-listrik', formatRupiahModal(data.listrik));
+      setText('dash-card-air', formatRupiahModal(data.air));
+      setText('dash-card-packing', formatRupiahModal(data.packing));
+      setText('dash-card-bahan', formatRupiahModal(data.bahan));
+      setText('dash-card-nota', formatRupiahModal(data.nota));
 
       function pct(val) {
 
@@ -243,23 +235,12 @@ function loadHPPDashboard() {
 
       }
 
-      document.getElementById('dash-card-gas-pct').innerText =
-        pct(data.gas);
-
-      document.getElementById('dash-card-listrik-pct').innerText =
-        pct(data.listrik);
-
-      document.getElementById('dash-card-air-pct').innerText =
-        pct(data.air);
-
-      document.getElementById('dash-card-packing-pct').innerText =
-        pct(data.packing);
-
-      document.getElementById('dash-card-bahan-pct').innerText =
-        pct(data.bahan);
-
-      document.getElementById('dash-card-nota-pct').innerText =
-        pct(data.nota);
+      setText('dash-card-gas-pct', pct(data.gas));
+      setText('dash-card-listrik-pct', pct(data.listrik));
+      setText('dash-card-air-pct', pct(data.air));
+      setText('dash-card-packing-pct', pct(data.packing));
+      setText('dash-card-bahan-pct', pct(data.bahan));
+      setText('dash-card-nota-pct', pct(data.nota));
 
     })
 

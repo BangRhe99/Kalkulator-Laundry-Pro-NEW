@@ -785,7 +785,7 @@
   <div id="v1-vanilla-dashboard" class="fin-dashboard">
     
     <!-- 1. Hidden Context Switcher: dipertahankan agar script lama tidak error, tetapi UI card header dihapus -->
-    <select id="v1-global-outlet" class="hidden" onchange="renderSingleOutletDashboard()">
+    <select id="v1-global-outlet" class="hidden" onchange="safeRenderSingleOutletDashboard()">
       <option value="">Memuat Engine Data...</option>
     </select>
 
@@ -936,3 +936,10 @@
 
   </div>
 </div>
+<script>
+function safeRenderSingleOutletDashboard() {
+  if (typeof renderSingleOutletDashboard === 'function') {
+    renderSingleOutletDashboard();
+  }
+}
+</script>
