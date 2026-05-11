@@ -1,291 +1,219 @@
-<!-- ========================================================================= -->
-<!-- VIEW STRUKTUR BIAYA HPP - CLEANUP BASELINE -->
-<!-- ========================================================================= -->
-
-<style>
-
-  :root {
-    --hpp-radius-2xl: 2rem;
-    --hpp-radius-xl: 1.25rem;
-
-    --hpp-border: #e2e8f0;
-    --hpp-border-soft: rgba(226,232,240,0.8);
-
-    --hpp-surface: #ffffff;
-    --hpp-surface-strong: rgba(255,255,255,0.95);
-
-    --hpp-shadow-card: 0 10px 30px rgba(15,23,42,0.06);
-    --hpp-shadow-hover: 0 20px 40px rgba(15,23,42,0.12);
-    --hpp-shadow-ambient: 0 25px 60px rgba(15,23,42,0.08);
-
-    --hpp-text: #0f172a;
-    --hpp-muted: #64748b;
-    --hpp-soft: #475569;
-
-    --hpp-rose: #e11d48;
-    --hpp-amber: #f59e0b;
-    --hpp-cyan: #06b6d4;
-    --hpp-indigo: #6366f1;
-    --hpp-emerald: #10b981;
-    --hpp-slate: #64748b;
-
-    --hpp-hero-pad: clamp(1.5rem, 3vw, 2.5rem);
-
-    --hpp-ease: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  #view-hpp {
-    margin-top: 1rem;
-    padding-bottom: 0;
-  }
-
-  #view-hpp,
-  #view-hpp * {
-    -webkit-font-smoothing: antialiased;
-    text-rendering: geometricPrecision;
-  }
-
-  #view-hpp .tabular-nums,
-  #view-hpp [id^="dash-card-"],
-  #view-hpp #dash-hpp-total,
-  #view-hpp input,
-  #view-hpp select {
-    font-variant-numeric: tabular-nums lining-nums;
-    font-feature-settings: "tnum" 1, "lnum" 1, "kern" 1;
-  }
-
-  #view-hpp #hpp-dashboard-view {
-    display: grid;
-    gap: clamp(1.35rem, 2.25vw, 2rem);
-    max-width: min(100%, 1120px);
-    margin-inline: auto;
-  }
-
-  #view-hpp .hpp-summary,
-  #view-hpp .hpp-card-dash {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    padding: 1rem;
-  }
-
-  #view-hpp .hpp-summary {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  #view-hpp .summary-title {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #475569;
-  }
-
-  #view-hpp .summary-value {
-    font-size: clamp(2rem, 4vw, 3rem);
-    font-weight: 800;
-    color: #0f172a;
-  }
-
-  #view-hpp .hpp-grid {
-    display: grid;
-    gap: 0.75rem;
-  }
-
-  #view-hpp .hpp-card-dash {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    cursor: pointer;
-  }
-
-  #view-hpp .card-title {
-    font-weight: 700;
-    color: #0f172a;
-  }
-
-  #view-hpp .card-value {
-    font-weight: 700;
-    color: #0f172a;
-  }
-
-  #view-hpp .card-pct {
-    font-size: 0.875rem;
-    color: #64748b;
-    white-space: nowrap;
-  }
-
-  #view-hpp .hpp-card-dash:hover {
-    transform: translate3d(0, -5px, 0) scale(1.006);
-    box-shadow: var(--hpp-shadow-hover);
-  }
-
-  @media (min-width: 768px) {
-    #view-hpp .hpp-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-</style>
-
-<div id="view-hpp" class="main-view hidden hpp-view-enter-premium">
-
-  <div id="hpp-dashboard-view" class="space-y-4">
-
-    <div class="hpp-summary">
-
-      <div class="summary-title">
-        Total HPP Variabel
-      </div>
-
-      <div id="dash-hpp-total" class="summary-value tabular-nums">
-        Rp 0
-      </div>
-
-    </div>
-
-    <div class="hpp-grid">
-
-      <div class="hpp-card-dash">
-        <span class="card-title">Gas LPG</span>
-        <span id="dash-card-gas" class="card-value tabular-nums">Rp 0</span>
-        <span id="dash-card-gas-pct" class="card-pct">0%</span>
-      </div>
-
-      <div class="hpp-card-dash">
-        <span class="card-title">Listrik</span>
-        <span id="dash-card-listrik" class="card-value tabular-nums">Rp 0</span>
-        <span id="dash-card-listrik-pct" class="card-pct">0%</span>
-      </div>
-
-      <div class="hpp-card-dash">
-        <span class="card-title">Air</span>
-        <span id="dash-card-air" class="card-value tabular-nums">Rp 0</span>
-        <span id="dash-card-air-pct" class="card-pct">0%</span>
-      </div>
-
-      <div class="hpp-card-dash">
-        <span class="card-title">Packing</span>
-        <span id="dash-card-packing" class="card-value tabular-nums">Rp 0</span>
-        <span id="dash-card-packing-pct" class="card-pct">0%</span>
-      </div>
-
-      <div class="hpp-card-dash">
-        <span class="card-title">Chemical</span>
-        <span id="dash-card-bahan" class="card-value tabular-nums">Rp 0</span>
-        <span id="dash-card-bahan-pct" class="card-pct">0%</span>
-      </div>
-
-      <div class="hpp-card-dash">
-        <span class="card-title">Admin/Nota</span>
-        <span id="dash-card-nota" class="card-value tabular-nums">Rp 0</span>
-        <span id="dash-card-nota-pct" class="card-pct">0%</span>
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
 <script>
+  const formatRupiahModal = (num) => {
+    return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
+  };
 
-const formatRupiahModal = (num) => {
+  function loadHPPDashboard() {
+    google.script.run
+      .withSuccessHandler(function(data) {
+        if (!data) return;
 
-  return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
+        const total =
+          (data.gas || 0) +
+          (data.listrik || 0) +
+          (data.air || 0) +
+          (data.packing || 0) +
+          (data.bahan || 0) +
+          (data.nota || 0);
 
-};
+        const setText = (id, value) => {
+          const el = document.getElementById(id);
+          if (el) el.innerText = value;
+        };
 
-function loadHPPDashboard() {
+        setText('dash-hpp-total', formatRupiahModal(total));
+        setText('dash-card-gas', formatRupiahModal(data.gas));
+        setText('dash-card-listrik', formatRupiahModal(data.listrik));
+        setText('dash-card-air', formatRupiahModal(data.air));
+        setText('dash-card-packing', formatRupiahModal(data.packing));
+        setText('dash-card-bahan', formatRupiahModal(data.bahan));
+        setText('dash-card-nota', formatRupiahModal(data.nota));
 
-  google.script.run
-
-    .withSuccessHandler(function(data) {
-
-      if (!data) return;
-
-      const total =
-        (data.gas || 0) +
-        (data.listrik || 0) +
-        (data.air || 0) +
-        (data.packing || 0) +
-        (data.bahan || 0) +
-        (data.nota || 0);
-
-      const setText = (id, value) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = value;
-      };
-
-      setText('dash-hpp-total', formatRupiahModal(total));
-      setText('dash-card-gas', formatRupiahModal(data.gas));
-      setText('dash-card-listrik', formatRupiahModal(data.listrik));
-      setText('dash-card-air', formatRupiahModal(data.air));
-      setText('dash-card-packing', formatRupiahModal(data.packing));
-      setText('dash-card-bahan', formatRupiahModal(data.bahan));
-      setText('dash-card-nota', formatRupiahModal(data.nota));
-
-      function pct(val) {
-
-        if (!total) return '0%';
-
-        return ((val / total) * 100).toFixed(1) + '%';
-
-      }
-
-      setText('dash-card-gas-pct', pct(data.gas));
-      setText('dash-card-listrik-pct', pct(data.listrik));
-      setText('dash-card-air-pct', pct(data.air));
-      setText('dash-card-packing-pct', pct(data.packing));
-      setText('dash-card-bahan-pct', pct(data.bahan));
-      setText('dash-card-nota-pct', pct(data.nota));
-
-    })
-
-    .withFailureHandler(function(err) {
-
-      console.error('GAGAL LOAD HPP:', err);
-
-    })
-
-    .getHPPDashboardData();
-
-}
-
-/* =========================================================================
-   CLICKABLE CARD
-========================================================================= */
-
-document.addEventListener('DOMContentLoaded', function() {
-
-  loadHPPDashboard();
-
-  document.querySelectorAll('.hpp-card-dash')
-    .forEach(card => {
-
-      card.addEventListener('click', function() {
-
-        // Trigger modal lama existing system
-
-        const oldModalTrigger =
-          document.querySelector('[data-hpp-modal-trigger]');
-
-        if (oldModalTrigger) {
-
-          oldModalTrigger.click();
-
-        } else {
-
-          console.warn('Modal existing tidak ditemukan');
-
+        function pct(val) {
+          if (!total) return '0%';
+          return ((val / total) * 100).toFixed(1) + '%';
         }
 
-      });
+        setText('dash-card-gas-pct', pct(data.gas));
+        setText('dash-card-listrik-pct', pct(data.listrik));
+        setText('dash-card-air-pct', pct(data.air));
+        setText('dash-card-packing-pct', pct(data.packing));
+        setText('dash-card-bahan-pct', pct(data.bahan));
+        setText('dash-card-nota-pct', pct(data.nota));
+      })
 
+      .withFailureHandler(function(err) {
+        console.error('GAGAL LOAD HPP:', err);
+      })
+
+      .getHPPDashboardData();
+  }
+
+  /* =========================================================================
+     GLOBAL HPP INPUT OPENER
+     Fungsi ini sengaja dibuat global agar bisa dipanggil dari:
+     1. Card HPP di Modal.html
+     2. Card Dashboard Biaya V5
+  ========================================================================= */
+
+  window.openHPPModal = function(categoryTitle) {
+    const rawTitle = String(categoryTitle || '').toLowerCase();
+
+    if (typeof switchMainTab === 'function') {
+      switchMainTab('hpp');
+    }
+
+    const categoryMap = [
+      {
+        keys: ['gas', 'lpg'],
+        selectors: [
+          '#form-gas',
+          '#section-gas',
+          '#input-gas',
+          '#hpp-gas',
+          '[data-hpp-section="gas"]',
+          '[data-hpp-form="gas"]',
+          '[data-category="gas"]'
+        ]
+      },
+      {
+        keys: ['listrik'],
+        selectors: [
+          '#form-listrik',
+          '#section-listrik',
+          '#input-listrik',
+          '#hpp-listrik',
+          '[data-hpp-section="listrik"]',
+          '[data-hpp-form="listrik"]',
+          '[data-category="listrik"]'
+        ]
+      },
+      {
+        keys: ['air'],
+        selectors: [
+          '#form-air',
+          '#section-air',
+          '#input-air',
+          '#hpp-air',
+          '[data-hpp-section="air"]',
+          '[data-hpp-form="air"]',
+          '[data-category="air"]'
+        ]
+      },
+      {
+        keys: ['packing', 'plastik'],
+        selectors: [
+          '#form-packing',
+          '#section-packing',
+          '#input-packing',
+          '#hpp-packing',
+          '[data-hpp-section="packing"]',
+          '[data-hpp-form="packing"]',
+          '[data-category="packing"]'
+        ]
+      },
+      {
+        keys: ['chemical', 'bahan'],
+        selectors: [
+          '#form-bahan',
+          '#form-chemical',
+          '#section-bahan',
+          '#section-chemical',
+          '#input-bahan',
+          '#input-chemical',
+          '#hpp-bahan',
+          '#hpp-chemical',
+          '[data-hpp-section="bahan"]',
+          '[data-hpp-section="chemical"]',
+          '[data-hpp-form="bahan"]',
+          '[data-hpp-form="chemical"]',
+          '[data-category="bahan"]',
+          '[data-category="chemical"]'
+        ]
+      },
+      {
+        keys: ['nota', 'admin'],
+        selectors: [
+          '#form-nota',
+          '#form-admin',
+          '#section-nota',
+          '#section-admin',
+          '#input-nota',
+          '#input-admin',
+          '#hpp-nota',
+          '#hpp-admin',
+          '[data-hpp-section="nota"]',
+          '[data-hpp-section="admin"]',
+          '[data-hpp-form="nota"]',
+          '[data-hpp-form="admin"]',
+          '[data-category="nota"]',
+          '[data-category="admin"]'
+        ]
+      }
+    ];
+
+    const matchedCategory = categoryMap.find((item) => {
+      return item.keys.some((key) => rawTitle.includes(key));
     });
 
-});
+    if (!matchedCategory) {
+      console.warn('Kategori HPP tidak dikenali:', categoryTitle);
+      return;
+    }
 
+    setTimeout(() => {
+      let targetEl = null;
+
+      for (const selector of matchedCategory.selectors) {
+        targetEl = document.querySelector(selector);
+        if (targetEl) break;
+      }
+
+      if (!targetEl) {
+        console.warn('Target form HPP belum ditemukan untuk:', categoryTitle);
+        return;
+      }
+
+      targetEl.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+
+      const focusEl = targetEl.matches('input, select, textarea, button')
+        ? targetEl
+        : targetEl.querySelector('input, select, textarea, button');
+
+      if (focusEl && typeof focusEl.focus === 'function') {
+        setTimeout(() => {
+          focusEl.focus();
+        }, 250);
+      }
+    }, 180);
+  };
+
+  /* =========================================================================
+     CLICKABLE CARD
+  ========================================================================= */
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadHPPDashboard();
+
+    document.querySelectorAll('.hpp-card-dash').forEach(card => {
+      if (card.dataset.hppClickBound === 'true') return;
+
+      card.dataset.hppClickBound = 'true';
+
+      card.addEventListener('click', function() {
+        const titleEl = card.querySelector('.card-title');
+        const title = titleEl ? titleEl.textContent.trim() : '';
+
+        if (typeof window.openHPPModal === 'function') {
+          window.openHPPModal(title);
+          return;
+        }
+
+        console.warn('window.openHPPModal tidak tersedia');
+      });
+    });
+  });
 </script>
