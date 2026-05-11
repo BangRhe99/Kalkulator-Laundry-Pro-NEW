@@ -1,252 +1,550 @@
+<!-- ========================================================================= -->
+<!-- V5.html -->
+<!-- Dashboard Biaya / Cost Structure View -->
+<!-- ========================================================================= -->
+<!-- CATATAN:
+     File ini adalah halaman utama untuk menu:
+     Dashboard Biaya / Cost Structure.
+
+     File ini WAJIB memiliki:
+     id="view-cost-structure"
+
+     Karena di Index.html tombol menu memanggil:
+     switchMainTab('cost-structure')
+
+     Maka switchMainTab akan mencari:
+     document.getElementById('view-cost-structure')
+-->
+<!-- ========================================================================= -->
+
+<section
+  id="view-cost-structure"
+  class="main-view hidden animate-fade-in space-y-6"
+>
+
+  <!-- =========================================================
+       HEADER DASHBOARD BIAYA
+  ========================================================= -->
+
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+
+    <div>
+
+      <p class="text-xs font-extrabold text-indigo-500 uppercase tracking-[0.18em] mb-2">
+        Dashboard Biaya
+      </p>
+
+      <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+        Struktur Biaya Laundry
+      </h1>
+
+      <p class="text-sm md:text-base text-slate-500 font-medium mt-1">
+        Ringkasan visual biaya operasional berdasarkan data HPP yang sedang aktif.
+      </p>
+
+    </div>
+
+    <button
+      type="button"
+      onclick="exportCostStructureReport()"
+      class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl
+      bg-slate-900 text-white text-sm font-extrabold shadow-lg shadow-slate-900/10
+      hover:bg-slate-800 active:scale-[0.98] transition-all"
+    >
+      <i class="ph ph-file-arrow-down text-lg"></i>
+      Export Ringkasan
+    </button>
+
+  </div>
+
+  <!-- =========================================================
+       HERO METRICS
+  ========================================================= -->
+
+  <div class="v5-metrics-hero">
+
+    <div class="v5-metric-card">
+
+      <div class="v5-metric-label">
+        <i class="ph ph-calculator text-lg text-indigo-500"></i>
+        Total Biaya Variabel
+      </div>
+
+      <div
+        id="dash-hpp-total-v5"
+        class="v5-metric-value"
+      >
+        Rp 0
+      </div>
+
+      <div class="v5-metric-sub">
+        Disinkronkan dari halaman Struktur Biaya (HPP)
+      </div>
+
+    </div>
+
+    <div class="v5-metric-card">
+
+      <div class="v5-metric-label">
+        <i class="ph ph-chart-pie-slice text-lg text-indigo-500"></i>
+        Komposisi Biaya
+      </div>
+
+      <div class="v5-metric-value">
+        6 Komponen
+      </div>
+
+      <div class="v5-metric-sub">
+        Gas, listrik, air, packing, chemical, dan nota
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- =========================================================
+       COST CARD GRID
+  ========================================================= -->
+
+  <div class="v5-cost-grid">
+
+    <!-- GAS -->
+    <div class="v5-cost-card gas">
+
+      <div class="v5-cost-title">
+        Gas LPG
+      </div>
+
+      <div
+        id="dash-card-gas-v5"
+        class="v5-cost-value"
+      >
+        Rp 0
+      </div>
+
+      <div
+        id="dash-card-gas-pct-v5"
+        class="v5-cost-pct"
+      >
+        0%
+      </div>
+
+    </div>
+
+    <!-- LISTRIK -->
+    <div class="v5-cost-card listrik">
+
+      <div class="v5-cost-title">
+        Listrik
+      </div>
+
+      <div
+        id="dash-card-listrik-v5"
+        class="v5-cost-value"
+      >
+        Rp 0
+      </div>
+
+      <div
+        id="dash-card-listrik-pct-v5"
+        class="v5-cost-pct"
+      >
+        0%
+      </div>
+
+    </div>
+
+    <!-- AIR -->
+    <div class="v5-cost-card air">
+
+      <div class="v5-cost-title">
+        Air
+      </div>
+
+      <div
+        id="dash-card-air-v5"
+        class="v5-cost-value"
+      >
+        Rp 0
+      </div>
+
+      <div
+        id="dash-card-air-pct-v5"
+        class="v5-cost-pct"
+      >
+        0%
+      </div>
+
+    </div>
+
+    <!-- PACKING -->
+    <div class="v5-cost-card packing">
+
+      <div class="v5-cost-title">
+        Packing
+      </div>
+
+      <div
+        id="dash-card-packing-v5"
+        class="v5-cost-value"
+      >
+        Rp 0
+      </div>
+
+      <div
+        id="dash-card-packing-pct-v5"
+        class="v5-cost-pct"
+      >
+        0%
+      </div>
+
+    </div>
+
+    <!-- CHEMICAL -->
+    <div class="v5-cost-card bahan">
+
+      <div class="v5-cost-title">
+        Chemical
+      </div>
+
+      <div
+        id="dash-card-bahan-v5"
+        class="v5-cost-value"
+      >
+        Rp 0
+      </div>
+
+      <div
+        id="dash-card-bahan-pct-v5"
+        class="v5-cost-pct"
+      >
+        0%
+      </div>
+
+    </div>
+
+    <!-- NOTA -->
+    <div class="v5-cost-card nota">
+
+      <div class="v5-cost-title">
+        Admin / Nota
+      </div>
+
+      <div
+        id="dash-card-nota-v5"
+        class="v5-cost-value"
+      >
+        Rp 0
+      </div>
+
+      <div
+        id="dash-card-nota-pct-v5"
+        class="v5-cost-pct"
+      >
+        0%
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="v5-section-divider"></div>
+
+  <!-- =========================================================
+       INFO PANEL
+  ========================================================= -->
+
+  <div class="rounded-[1.25rem] border border-slate-200 bg-white/80 p-5 shadow-sm">
+
+    <div class="flex items-start gap-3">
+
+      <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+        <i class="ph ph-info text-xl"></i>
+      </div>
+
+      <div>
+
+        <h3 class="text-sm font-extrabold text-slate-800 mb-1">
+          Catatan Sinkronisasi Data
+        </h3>
+
+        <p class="text-sm text-slate-500 leading-relaxed">
+          Dashboard ini mengambil ringkasan dari halaman Struktur Biaya (HPP).
+          Jika nilai belum berubah, buka atau hitung ulang halaman HPP terlebih dahulu.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
 <script>
+  (function initV5Dashboard() {
 
-(function initV5Dashboard() {
+    if (window.__v5DashboardInitDone === true) return;
+    window.__v5DashboardInitDone = true;
 
-  if (window.__v5DashboardInitDone === true) return;
-  window.__v5DashboardInitDone = true;
+    let observerInitialized = false;
+    let hppObserver = null;
+    let switchPatchRetry = 0;
 
-  let observerInitialized = false;
-  let hppObserver = null;
+    function syncHPPDataToV5() {
 
-  function safeGet(id) {
+      try {
 
-    const el = document.getElementById(id);
+        const syncMap = {
 
-    return el ? el.textContent.trim() : '';
+          'dash-hpp-total': 'dash-hpp-total-v5',
 
-  }
+          'dash-card-gas': 'dash-card-gas-v5',
+          'dash-card-listrik': 'dash-card-listrik-v5',
+          'dash-card-air': 'dash-card-air-v5',
+          'dash-card-packing': 'dash-card-packing-v5',
+          'dash-card-bahan': 'dash-card-bahan-v5',
+          'dash-card-nota': 'dash-card-nota-v5',
 
-  function syncHPPDataToV5() {
+          'dash-card-gas-pct': 'dash-card-gas-pct-v5',
+          'dash-card-listrik-pct': 'dash-card-listrik-pct-v5',
+          'dash-card-air-pct': 'dash-card-air-pct-v5',
+          'dash-card-packing-pct': 'dash-card-packing-pct-v5',
+          'dash-card-bahan-pct': 'dash-card-bahan-pct-v5',
+          'dash-card-nota-pct': 'dash-card-nota-pct-v5'
 
-    try {
+        };
 
-      const syncMap = {
+        Object.entries(syncMap).forEach(([sourceId, targetId]) => {
 
-        'dash-hpp-total': 'dash-hpp-total-v5',
+          const sourceEl = document.getElementById(sourceId);
+          const targetEl = document.getElementById(targetId);
 
-        'dash-card-gas': 'dash-card-gas-v5',
-        'dash-card-listrik': 'dash-card-listrik-v5',
-        'dash-card-air': 'dash-card-air-v5',
-        'dash-card-packing': 'dash-card-packing-v5',
-        'dash-card-bahan': 'dash-card-bahan-v5',
-        'dash-card-nota': 'dash-card-nota-v5',
+          if (!sourceEl || !targetEl) return;
 
-        'dash-card-gas-pct': 'dash-card-gas-pct-v5',
-        'dash-card-listrik-pct': 'dash-card-listrik-pct-v5',
-        'dash-card-air-pct': 'dash-card-air-pct-v5',
-        'dash-card-packing-pct': 'dash-card-packing-pct-v5',
-        'dash-card-bahan-pct': 'dash-card-bahan-pct-v5',
-        'dash-card-nota-pct': 'dash-card-nota-pct-v5'
+          const sourceText = sourceEl.textContent.trim();
+          const targetText = targetEl.textContent.trim();
 
-      };
+          if (sourceText !== targetText) {
 
-      Object.entries(syncMap).forEach(([sourceId, targetId]) => {
+            targetEl.textContent = sourceText;
 
-        const sourceEl = document.getElementById(sourceId);
-        const targetEl = document.getElementById(targetId);
+          }
 
-        if (!sourceEl || !targetEl) return;
+        });
 
-        const sourceText = sourceEl.textContent.trim();
-        const targetText = targetEl.textContent.trim();
+      } catch (error) {
 
-        if (sourceText !== targetText) {
+        console.error('V5 sync error:', error);
 
-          targetEl.textContent = sourceText;
-
-        }
-
-      });
-
-    } catch (error) {
-
-      console.error('V5 sync error:', error);
+      }
 
     }
 
-  }
+    function triggerHPPDataRefresh() {
 
-  function triggerHPPDataRefresh() {
+      try {
 
-    try {
+        if (
+          typeof window.StateMachine !== 'undefined' &&
+          typeof window.StateMachine.calculateTotal === 'function'
+        ) {
 
-      if (
-        typeof window.StateMachine !== 'undefined' &&
-        typeof window.StateMachine.calculateTotal === 'function'
-      ) {
+          window.StateMachine.calculateTotal();
 
-        window.StateMachine.calculateTotal();
+        }
+
+        setTimeout(() => {
+
+          syncHPPDataToV5();
+
+        }, 120);
+
+      } catch (error) {
+
+        console.error('Error triggering HPP refresh:', error);
 
       }
+
+    }
+
+    function watchHPPDataChanges() {
+
+      if (observerInitialized) return;
+
+      const hppView = document.getElementById('view-hpp');
+
+      if (!hppView) {
+
+        setTimeout(watchHPPDataChanges, 500);
+        return;
+
+      }
+
+      observerInitialized = true;
+
+      if (hppObserver) {
+        hppObserver.disconnect();
+      }
+
+      hppObserver = new MutationObserver(() => {
+
+        syncHPPDataToV5();
+
+      });
+
+      hppObserver.observe(hppView, {
+
+        subtree: true,
+        childList: true,
+        characterData: true
+
+      });
+
+      syncHPPDataToV5();
+
+    }
+
+    function initCardClickHandler() {
+
+      const cards = document.querySelectorAll('.v5-cost-card');
+
+      if (!cards.length) return;
+
+      cards.forEach((card) => {
+
+        card.style.cursor = 'pointer';
+
+        if (card.dataset.clickBound === 'true') return;
+
+        card.dataset.clickBound = 'true';
+
+        card.addEventListener('click', function () {
+
+          const titleEl = this.querySelector('.v5-cost-title');
+
+          if (!titleEl) return;
+
+          const title = titleEl.textContent.trim();
+
+          if (typeof openHPPModal === 'function') {
+
+            openHPPModal(title);
+            return;
+
+          }
+
+          console.warn('openHPPModal() tidak ditemukan');
+
+        });
+
+      });
+
+    }
+
+    function patchSwitchMainTab() {
+
+      if (window.__v5SwitchMainTabWrapped === true) return;
+
+      if (typeof window.switchMainTab !== 'function') {
+
+        switchPatchRetry += 1;
+
+        if (switchPatchRetry <= 20) {
+
+          setTimeout(patchSwitchMainTab, 150);
+
+        } else {
+
+          console.warn('V5: switchMainTab belum tersedia untuk dipatch.');
+
+        }
+
+        return;
+
+      }
+
+      const originalSwitchMainTab = window.switchMainTab;
+
+      window.__v5SwitchMainTabWrapped = true;
+
+      window.switchMainTab = function(tab) {
+
+        originalSwitchMainTab.call(this, tab);
+
+        if (tab === 'cost-structure') {
+
+          setTimeout(() => {
+
+            triggerHPPDataRefresh();
+
+            syncHPPDataToV5();
+
+            initCardClickHandler();
+
+          }, 200);
+
+        }
+
+      };
+
+    }
+
+    function initializeV5Dashboard() {
+
+      watchHPPDataChanges();
+
+      patchSwitchMainTab();
 
       setTimeout(() => {
 
         syncHPPDataToV5();
 
-      }, 120);
+        initCardClickHandler();
 
-    } catch (error) {
-
-      console.error('Error triggering HPP refresh:', error);
+      }, 300);
 
     }
 
-  }
+    if (document.readyState === 'loading') {
 
-  function watchHPPDataChanges() {
+      document.addEventListener('DOMContentLoaded', initializeV5Dashboard);
 
-    if (observerInitialized) return;
+    } else {
 
-    const hppView = document.getElementById('view-hpp');
-
-    if (!hppView) {
-
-      setTimeout(watchHPPDataChanges, 500);
-      return;
+      initializeV5Dashboard();
 
     }
 
-    observerInitialized = true;
+  })();
 
-    if (hppObserver) {
-      hppObserver.disconnect();
-    }
+  function exportCostStructureReport() {
 
-    hppObserver = new MutationObserver(() => {
+    const getText = function(id) {
 
-      syncHPPDataToV5();
+      const el = document.getElementById(id);
 
-    });
-
-    hppObserver.observe(hppView, {
-
-      subtree: true,
-      childList: true,
-      characterData: true
-
-    });
-
-    syncHPPDataToV5();
-
-  }
-
-  function initCardClickHandler() {
-
-    const cards = document.querySelectorAll('.v5-cost-card');
-
-    if (!cards.length) return;
-
-    cards.forEach((card) => {
-
-      card.style.cursor = 'pointer';
-
-      if (card.dataset.clickBound === 'true') return;
-
-      card.dataset.clickBound = 'true';
-
-      card.addEventListener('click', function () {
-
-        const titleEl = this.querySelector('.v5-cost-title');
-
-        if (!titleEl) return;
-
-        const title = titleEl.textContent.trim();
-
-        if (typeof openHPPModal === 'function') {
-
-          openHPPModal(title);
-          return;
-
-        }
-
-        console.warn('openHPPModal() tidak ditemukan');
-
-      });
-
-    });
-
-  }
-
-  const originalSwitchMainTab = window.switchMainTab;
-
-  if (
-    typeof originalSwitchMainTab === 'function' &&
-    window.__v5SwitchMainTabWrapped !== true
-  ) {
-
-    window.__v5SwitchMainTabWrapped = true;
-
-    window.switchMainTab = function(tab) {
-
-      originalSwitchMainTab.call(this, tab);
-
-      if (tab === 'cost-structure') {
-
-        setTimeout(() => {
-
-          triggerHPPDataRefresh();
-
-          syncHPPDataToV5();
-
-          initCardClickHandler();
-
-        }, 200);
-
-      }
+      return el ? el.textContent.trim() : 'N/A';
 
     };
 
-  }
+    const totalHPP = getText('dash-hpp-total-v5');
 
-  function initializeV5Dashboard() {
-
-    watchHPPDataChanges();
-
-    setTimeout(() => {
-
-      syncHPPDataToV5();
-
-      initCardClickHandler();
-
-    }, 300);
-
-  }
-
-  if (document.readyState === 'loading') {
-
-    document.addEventListener('DOMContentLoaded', initializeV5Dashboard);
-
-  } else {
-
-    initializeV5Dashboard();
-
-  }
-
-})();
-
-function exportCostStructureReport() {
-
-  const totalHPP =
-    document.getElementById('dash-hpp-total-v5')
-    ? document.getElementById('dash-hpp-total-v5').textContent
-    : 'N/A';
-
-  const reportText = `
+    const reportText = `
 LAPORAN STRUKTUR BIAYA (HPP)
 ============================
 Total Biaya Variabel: ${totalHPP}
 
 Rincian Biaya:
-- Gas LPG: ${document.getElementById('dash-card-gas-v5') ? document.getElementById('dash-card-gas-v5').textContent : 'N/A'}
-- Listrik: ${document.getElementById('dash-card-listrik-v5') ? document.getElementById('dash-card-listrik-v5').textContent : 'N/A'}
-- Air: ${document.getElementById('dash-card-air-v5') ? document.getElementById('dash-card-air-v5').textContent : 'N/A'}
-- Packing: ${document.getElementById('dash-card-packing-v5') ? document.getElementById('dash-card-packing-v5').textContent : 'N/A'}
-- Chemical: ${document.getElementById('dash-card-bahan-v5') ? document.getElementById('dash-card-bahan-v5').textContent : 'N/A'}
-- Admin/Nota: ${document.getElementById('dash-card-nota-v5') ? document.getElementById('dash-card-nota-v5').textContent : 'N/A'}
+- Gas LPG: ${getText('dash-card-gas-v5')}
+- Listrik: ${getText('dash-card-listrik-v5')}
+- Air: ${getText('dash-card-air-v5')}
+- Packing: ${getText('dash-card-packing-v5')}
+- Chemical: ${getText('dash-card-bahan-v5')}
+- Admin/Nota: ${getText('dash-card-nota-v5')}
 `;
 
-  alert(reportText);
+    alert(reportText);
 
-}
-
+  }
 </script>
