@@ -254,6 +254,40 @@ function loadHPPDashboard() {
 
 }
 
+if (typeof window.openHPPModal !== 'function') {
+  window.openHPPModal = function(categoryTitle) {
+    try {
+      if (typeof window.switchMainTab === 'function') {
+        window.switchMainTab('hpp');
+      }
+
+      const title = String(categoryTitle || '').toLowerCase();
+      const focusMap = [
+        { key: 'gas', id: 'inputGasHarga' },
+        { key: 'listrik', id: 'inputTDL' },
+        { key: 'air', id: 'inputAirHargaM3' },
+        { key: 'packing', id: 'inputPackingPPHarga' },
+        { key: 'chemical', id: 'bahanDetHargaBulk' },
+        { key: 'bahan', id: 'bahanDetHargaBulk' },
+        { key: 'admin', id: 'notaAppHargaBulan' },
+        { key: 'nota', id: 'notaAppHargaBulan' }
+      ];
+
+      const target = focusMap.find(function(item) {
+        return title.includes(item.key);
+      });
+      const inputId = target ? target.id : 'inputGasHarga';
+      const inputEl = document.getElementById(inputId);
+      if (inputEl) {
+        inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        inputEl.focus();
+      }
+    } catch (err) {
+      console.warn('openHPPModal fallback error:', err);
+    }
+  };
+}
+
 /* =========================================================================
    CLICKABLE CARD
 ========================================================================= */
@@ -261,40 +295,6 @@ function loadHPPDashboard() {
 document.addEventListener('DOMContentLoaded', function() {
 
   loadHPPDashboard();
-
-  if (typeof window.openHPPModal !== 'function') {
-    window.openHPPModal = function(categoryTitle) {
-      try {
-        if (typeof window.switchMainTab === 'function') {
-          window.switchMainTab('hpp');
-        }
-
-        const title = String(categoryTitle || '').toLowerCase();
-        const focusMap = [
-          { key: 'gas', id: 'inputGasHarga' },
-          { key: 'listrik', id: 'inputTDL' },
-          { key: 'air', id: 'inputAirHargaM3' },
-          { key: 'packing', id: 'inputPackingPPHarga' },
-          { key: 'chemical', id: 'bahanDetHargaBulk' },
-          { key: 'bahan', id: 'bahanDetHargaBulk' },
-          { key: 'admin', id: 'notaAppHargaBulan' },
-          { key: 'nota', id: 'notaAppHargaBulan' }
-        ];
-
-        const target = focusMap.find(function(item) {
-          return title.includes(item.key);
-        });
-        const inputId = target ? target.id : 'inputGasHarga';
-        const inputEl = document.getElementById(inputId);
-        if (inputEl) {
-          inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          inputEl.focus();
-        }
-      } catch (err) {
-        console.warn('openHPPModal fallback error:', err);
-      }
-    };
-  }
 
   document.querySelectorAll('.hpp-card-dash')
     .forEach(card => {
