@@ -103,6 +103,8 @@ function loadHPPFromLocal() {
       'zett_hpp_draft_state'
     );
 
+  let restoredFromLocal = false;
+
   if (savedState) {
 
     try {
@@ -202,6 +204,8 @@ function loadHPPFromLocal() {
         calculateNota();
       }
 
+      restoredFromLocal = true;
+
     } catch (e) {
 
       console.error(
@@ -218,6 +222,8 @@ function loadHPPFromLocal() {
   ) {
     HPPStateMachine.calculateTotal();
   }
+
+  return restoredFromLocal;
 
 }
 
@@ -425,7 +431,8 @@ document.addEventListener(
   'DOMContentLoaded',
   () => {
 
-    loadHPPFromLocal();
+    const hasRestoredDraft =
+      loadHPPFromLocal();
 
     const hppView =
       document.getElementById(
@@ -455,6 +462,10 @@ document.addEventListener(
     setTimeout(() => {
 
       updateHPPDashboard();
+
+      if (hasRestoredDraft) {
+        return;
+      }
 
       if (
         typeof calculateGas ===
