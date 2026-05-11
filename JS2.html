@@ -54,11 +54,17 @@ function applyCabangUIData() {
     const tableArea = document.getElementById('tableDaftarOutlet');
     const selectV1 = document.getElementById('v1-global-outlet');
     const selectHPP = document.getElementById('inputNamaHPP');
+    const escapeHtml = (str) => String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
 
     if(selectV1) {
         const curV1 = selectV1.value;
         selectV1.innerHTML = '<option value="">-- Pilih Outlet --</option>';
-        masterDataCabang.forEach(c => selectV1.innerHTML += `<option value="${c.namaOutlet}">${c.namaOutlet}</option>`);
+        masterDataCabang.forEach(c => selectV1.innerHTML += `<option value="${escapeHtml(c.namaOutlet)}">${escapeHtml(c.namaOutlet)}</option>`);
         if(curV1) selectV1.value = curV1;
         else if(masterDataCabang.length > 0) selectV1.value = masterDataCabang[0].namaOutlet;
     }
@@ -66,7 +72,7 @@ function applyCabangUIData() {
     if(selectHPP) {
         const curHPP = selectHPP.value;
         selectHPP.innerHTML = '<option value="">Pilih Cabang...</option>';
-        masterDataCabang.forEach(c => selectHPP.innerHTML += `<option value="${c.namaOutlet}">${c.namaOutlet}</option>`);
+        masterDataCabang.forEach(c => selectHPP.innerHTML += `<option value="${escapeHtml(c.namaOutlet)}">${escapeHtml(c.namaOutlet)}</option>`);
         
         if(curHPP) selectHPP.value = curHPP;
         else if (masterDataCabang.length > 0) selectHPP.value = masterDataCabang[0].namaOutlet;
@@ -167,7 +173,7 @@ function applyCabangUIData() {
                     ${kategoriLabel}
                 </div>
             </div>
-            <h4 class="font-extrabold text-slate-800 text-[1.15rem] tracking-tight mb-5">${c.namaOutlet}</h4>
+            <h4 class="font-extrabold text-slate-800 text-[1.15rem] tracking-tight mb-5">${escapeHtml(c.namaOutlet)}</h4>
             <div class="mt-auto space-y-2">
                 <div class="flex justify-between items-center bg-slate-50/80 px-3 py-2.5 rounded-xl border border-slate-100">
                     <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5"><i class="ph ph-clock text-sm"></i> Jam Ops</span>
@@ -551,13 +557,19 @@ function toggleActionButtons() {
 function filterCabang() {
     const val = document.getElementById('inputNama').value.trim().toLowerCase();
     const dropdown = document.getElementById('dropdownCabangResult');
+    const escapeHtml = (str) => String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
     if(!dropdown) return;
     if(!val) { dropdown.classList.add('hidden'); return; }
 
     const filtered = masterDataCabang.filter(c => String(c.namaOutlet).toLowerCase().includes(val));
     if(filtered.length > 0) {
         let html = '';
-        filtered.forEach(c => { html += `<div class="p-3 border-b border-slate-100 hover:bg-slate-50 cursor-pointer font-bold text-slate-700 text-sm flex items-center transition-colors" onclick="pilihCabang('${c.namaOutlet}')"><i class="ph ph-storefront text-blue-500 mr-2 text-lg"></i> ${c.namaOutlet}</div>`; });
+        filtered.forEach(c => { html += `<div class="p-3 border-b border-slate-100 hover:bg-slate-50 cursor-pointer font-bold text-slate-700 text-sm flex items-center transition-colors" onclick="pilihCabang('${escapeHtml(c.namaOutlet)}')"><i class="ph ph-storefront text-blue-500 mr-2 text-lg"></i> ${escapeHtml(c.namaOutlet)}</div>`; });
         dropdown.innerHTML = html; dropdown.classList.remove('hidden');
     } else { dropdown.classList.add('hidden'); }
     toggleActionButtons();
@@ -1172,6 +1184,8 @@ function simpanDataHPP(e) {
     const isUpdate = document.getElementById('btnUpdateHPP') && !document.getElementById('btnUpdateHPP').classList.contains('hidden');
     const btnId = isUpdate ? 'btnUpdateHPP' : 'btnSimpanHPP';
 
+    try {
+
     setBtnState(btnId, 'success');
     showOmniToast(isUpdate ? 'Memperbarui data di Cloud...' : 'Menyimpan data ke Cloud...', 'success');
 
@@ -1293,6 +1307,11 @@ function simpanDataHPP(e) {
         loadDaftarCabang(); 
         StateMachine.releaseLock('simpanHPP');
     }, 1200);
+    } catch (error) {
+        setBtnState(btnId, 'idle');
+        showOmniToast(error.message || 'Terjadi kesalahan saat memproses data HPP.', 'error');
+        StateMachine.releaseLock('simpanHPP');
+    }
 }
 
 function hapusOutlet() {

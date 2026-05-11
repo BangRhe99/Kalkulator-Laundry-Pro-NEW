@@ -145,6 +145,19 @@
 
     }
 
+    const showStatus = (message, color = '#94a3b8') => {
+      container.innerHTML = `
+        <div style="padding:1rem;text-align:center;color:${color};">
+          <p>${message}</p>
+        </div>
+      `;
+    };
+
+    if (!window.google || !google.script || !google.script.run) {
+      showStatus('google.script.run tidak tersedia. Buka panel ini dari Google Sheets Apps Script.', '#f43f5e');
+      return;
+    }
+
     // =========================================================================
     // LOAD DATA
     // =========================================================================
@@ -160,11 +173,7 @@
             typeof response !== 'object'
           ) {
 
-            container.innerHTML = `
-              <div style="padding:1rem;text-align:center;color:#f43f5e;">
-                <p>Response sidebar tidak valid.</p>
-              </div>
-            `;
+            showStatus('Response sidebar tidak valid.', '#f43f5e');
 
             return;
 
@@ -180,11 +189,7 @@
 
           } else {
 
-            container.innerHTML = `
-              <div style="padding:1rem;text-align:center;color:#94a3b8;">
-                <p>Tidak ada kolom filter yang tersedia.</p>
-              </div>
-            `;
+            showStatus('Tidak ada kolom filter yang tersedia.');
 
           }
 
@@ -192,11 +197,7 @@
 
           console.error('Sidebar render error:', err);
 
-          container.innerHTML = `
-            <div style="padding:1rem;text-align:center;color:#f43f5e;">
-              <p>Gagal memproses data sidebar.</p>
-            </div>
-          `;
+          showStatus('Gagal memproses data sidebar.', '#f43f5e');
 
         }
 
@@ -206,11 +207,7 @@
 
         console.error('Failed to load filter data:', error);
 
-        container.innerHTML = `
-          <div style="padding:1rem;text-align:center;color:#f43f5e;">
-            <p>Gagal memuat data filter.</p>
-          </div>
-        `;
+        showStatus('Gagal memuat data filter.', '#f43f5e');
 
       })
 
@@ -312,9 +309,7 @@
             error
           );
 
-          alert(
-            'Gagal menerapkan filter'
-          );
+          showStatus('Gagal menerapkan filter.', '#f43f5e');
 
         })
 
