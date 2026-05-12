@@ -39,6 +39,7 @@ let hasLoadedInitialData = false;
             if(res && res.status === 'success') {
                 masterDataCabang = res.kapasitas.map(item => ({...item, namaOutlet: item.namaOutlet || item.namaLaundry || 'Unknown'}));
                 masterDataHPP = res.hpp;
+                window.masterDataHPP = masterDataHPP;
                 dashboardRawData = res.transactions;
                 hasLoadedInitialData = true;
                 APP_STATE.data.master = res;
@@ -232,6 +233,7 @@ async function loadDaftarCabang() {
                 localStorage.setItem(APP_STATE.cache.key, JSON.stringify({ data: data, expiry: Date.now() + APP_STATE.cache.ttl }));
                 masterDataCabang = data.kapasitas.map(item => ({...item, namaOutlet: item.namaOutlet || item.namaLaundry || 'Unknown'}));
                 masterDataHPP = data.hpp;
+                window.masterDataHPP = masterDataHPP;
                 dashboardRawData = data.transactions;
                 hasLoadedInitialData = true;
                 APP_STATE.data.master = data;
