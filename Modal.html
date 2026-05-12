@@ -2905,7 +2905,13 @@
       donut.style.setProperty('--p-bahan', cBahan + '%');
     }
 
-    function updateDashboardFromState() {
+    function updateDashboardFromState(source) {
+      const sourceTag = source || 'state';
+      if (window.__HPP_GSHEET_SYNC_LOCKED === true && sourceTag !== 'gsheet') {
+        console.log('HPP dashboard update skipped because GSheet sync is locked');
+        return;
+      }
+
       const state = getState();
       const values = {
         gas: Number(state.gas) || 0,
@@ -2954,7 +2960,9 @@
     }
 
     window.zettHPPSetStateValue = setStateValue;
-    window.zettHPPUpdateDashboardFromState = updateDashboardFromState;
+    window.zettHPPUpdateDashboardFromState = function(source) {
+      updateDashboardFromState(source);
+    };
 
     window.zettHPPHandleInput = function(type, inputEl) {
       const value = parseNumber(inputEl ? inputEl.value : 0);
@@ -2976,12 +2984,17 @@
         }
       } catch (error) {}
 
-      updateDashboardFromState();
+      updateDashboardFromState('manual-input');
     };
 
     window.loadHPPDashboard = function() {
+      if (window.__HPP_GSHEET_SYNC_LOCKED === true) {
+        console.log('HPP dashboard update skipped because GSheet sync is locked');
+        return;
+      }
+
       if (typeof google === 'undefined' || !google.script || !google.script.run) {
-        updateDashboardFromState();
+        updateDashboardFromState('load-dashboard');
         return;
       }
 
@@ -2990,12 +3003,12 @@
           if (data) {
             HPP_TYPES.forEach(type => setStateValue(type, data[type]));
           }
-          updateDashboardFromState();
+          updateDashboardFromState('load-dashboard');
           syncSimpleInputsIfPresent();
         })
         .withFailureHandler(function(error) {
           console.error('GAGAL LOAD HPP:', error);
-          updateDashboardFromState();
+          updateDashboardFromState('load-dashboard');
         })
         .getHPPDashboardData();
     };
@@ -3013,8 +3026,12 @@
         }
       } catch (error) {}
 
-      window.loadHPPDashboard();
-      setTimeout(updateDashboardFromState, 180);
+      if (window.__HPP_GSHEET_SYNC_LOCKED !== true) {
+        window.loadHPPDashboard();
+      } else {
+        console.log('HPP dashboard update skipped because GSheet sync is locked');
+      }
+      setTimeout(() => updateDashboardFromState('refresh'), 180);
     };
 
     window.openHPPModal = function(categoryTitle) {
@@ -3046,10 +3063,10 @@
     };
 
     function boot() {
-      updateDashboardFromState();
+      updateDashboardFromState('boot');
       window.loadHPPDashboard();
-      setTimeout(updateDashboardFromState, 350);
-      setTimeout(updateDashboardFromState, 1200);
+      setTimeout(() => updateDashboardFromState('boot'), 350);
+      setTimeout(() => updateDashboardFromState('boot'), 1200);
     }
 
     if (document.readyState === 'loading') {
@@ -3194,29 +3211,66 @@ function zettSetSelectValue(id, value) {
   }
 }
 
+function zettGetHPPMasterDataSources() {
+  const candidates = [];
+
+  if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) {
+    candidates.push(masterDataHPP);
+  }
+
+  if (Array.isArray(window.masterDataHPP)) {
+    candidates.push(window.masterDataHPP);
+  }
+
+  if (typeof APP_STATE !== 'undefined' && APP_STATE && APP_STATE.data) {
+    if (Array.isArray(APP_STATE.data.hppMaster)) candidates.push(APP_STATE.data.hppMaster);
+    if (Array.isArray(APP_STATE.data.hppRows)) candidates.push(APP_STATE.data.hppRows);
+    if (APP_STATE.data.master && Array.isArray(APP_STATE.data.master.hpp)) candidates.push(APP_STATE.data.master.hpp);
+    if (Array.isArray(APP_STATE.data.hpp)) candidates.push(APP_STATE.data.hpp);
+  }
+
+  if (window.APP_STATE && window.APP_STATE.data) {
+    if (window.APP_STATE.data.master && Array.isArray(window.APP_STATE.data.master.hpp)) candidates.push(window.APP_STATE.data.master.hpp);
+    if (Array.isArray(window.APP_STATE.data.hppMaster)) candidates.push(window.APP_STATE.data.hppMaster);
+  }
+
+  try {
+    const cacheKey = (typeof APP_STATE !== 'undefined' && APP_STATE?.cache?.key) || (window.APP_STATE?.cache?.key);
+    if (cacheKey) {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.data && Array.isArray(parsed.data.hpp)) candidates.push(parsed.data.hpp);
+      }
+    }
+  } catch (error) {}
+
+  return candidates.find(arr => Array.isArray(arr) && arr.length > 0) || [];
+}
+
 function zettFindActiveHPPRow() {
-  const outletEl = document.getElementById('inputNamaHPP');
-  const outletName = outletEl ? outletEl.value : '';
+  const outletName = document.getElementById('inputNamaHPP')?.value || '';
 
   if (!outletName) {
     console.warn('Outlet aktif belum dipilih.');
     return null;
   }
 
-  if (!Array.isArray(window.masterDataHPP)) {
+  const dataHPP = zettGetHPPMasterDataSources();
+
+  if (!Array.isArray(dataHPP) || dataHPP.length === 0) {
     console.warn('masterDataHPP belum tersedia.');
     return null;
   }
 
   const activeName = zettNormalizeName(outletName);
-
-  const row = window.masterDataHPP.find(item => {
-    const itemName = item.namaOutlet || item['Nama Outlet'] || item['Nama_Outlet'] || '';
+  const row = dataHPP.find(item => {
+    const itemName = item?.namaOutlet || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '';
     return zettNormalizeName(itemName) === activeName;
   });
 
   if (!row) {
-    console.warn('Data HPP outlet tidak ditemukan:', outletName);
+    console.log('Data HPP outlet tidak ditemukan');
     return null;
   }
 
@@ -3340,15 +3394,80 @@ function zettRunHPPCalculationAfterSync() {
   }
 }
 
+function zettApplyHPPDashboardFallback(row) {
+  if (!row) return;
+
+  const num = key => zettCleanNumber(row[key]);
+  const current = id => zettCleanNumber(document.getElementById(id)?.textContent || 0);
+
+  const gas = num('Gas Per Kg') || num('Gas Per Load');
+  const listrik = num('Cuci Per Kg') + num('Kering Per Kg') + num('Listrik Setrika Kg');
+  const air = num('Air Per Kg') + num('Air Setrika Kg');
+  const packing = current('dash-card-packing');
+  const bahan = current('dash-card-bahan');
+  const nota = current('dash-card-nota');
+
+  const fallback = { gas, listrik, air, packing, bahan, nota };
+  const hasSheetFallback = gas > 0 || listrik > 0 || air > 0;
+
+  if (!hasSheetFallback) return;
+
+  Object.entries(fallback).forEach(([type, value]) => {
+    if (value > 0 && typeof window.zettHPPSetStateValue === 'function') {
+      window.zettHPPSetStateValue(type, value);
+    }
+  });
+
+  if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
+    window.zettHPPUpdateDashboardFromState('gsheet');
+  }
+}
+
 function zettSyncHPPFromGSheet() {
   const row = zettFindActiveHPPRow();
-
-  if (!row) return;
+  if (!row) return false;
 
   zettApplyHPPRowToForm(row);
 
   setTimeout(() => {
     zettRunHPPCalculationAfterSync();
-  }, 150);
+    zettApplyHPPDashboardFallback(row);
+    window.__HPP_GSHEET_SYNC_LOCKED = true;
+    console.log('HPP GSHEET SYNC LOCKED');
+
+    if (typeof window.zettHPPRefreshDashboard === 'function') {
+      window.zettHPPRefreshDashboard();
+    }
+
+    console.log('HPP sync berhasil');
+  }, 180);
+
+  return true;
+}
+
+function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
+  let attempt = 0;
+
+  const run = () => {
+    attempt += 1;
+    const outletValue = document.getElementById('inputNamaHPP')?.value || '';
+    const source = zettGetHPPMasterDataSources();
+    const ready = !!outletValue && Array.isArray(source) && source.length > 0;
+
+    if (ready) {
+      const ok = zettSyncHPPFromGSheet();
+      if (!ok) console.log('Data HPP outlet tidak ditemukan');
+      return;
+    }
+
+    if (attempt >= maxRetry) {
+      console.log('HPP sync retry berhenti');
+      return;
+    }
+
+    setTimeout(run, intervalMs);
+  };
+
+  run();
 }
 </script>
