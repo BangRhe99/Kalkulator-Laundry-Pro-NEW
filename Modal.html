@@ -2684,9 +2684,15 @@
       btnSimpan.classList.add('zett-force-show', 'zett-save-new-mode');
       btnSimpan.classList.remove('hidden');
       btnSimpan.style.display = 'flex';
-      btnSimpan.innerHTML = '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru';
+      const isGas = (window.zettGetActiveHPPType && window.zettGetActiveHPPType() === 'gas');
+      btnSimpan.innerHTML = isGas
+        ? '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Gas'
+        : '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru';
       btnSimpan.onclick = function(event) {
         event.preventDefault();
+        if (window.zettGetActiveHPPType && window.zettGetActiveHPPType() === 'gas' && typeof window.saveGasHPPData === 'function') {
+          return window.saveGasHPPData(event);
+        }
         return window.zettSimpanHPPBaru(event);
       };
 
@@ -3182,6 +3188,77 @@ function zettNormalizeName(value) {
 function zettCleanNumber(value) {
   return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
 }
+
+function zettGetActiveHPPType() {
+  const activeTab = document.querySelector('#view-hpp .tab-content:not(.hidden)');
+  return activeTab ? String(activeTab.id || '').replace('tab-', '') : '';
+}
+window.zettGetActiveHPPType = zettGetActiveHPPType;
+
+function zettGasDefaultHours(cap) {
+  const map = { '3': 8, '5.5': 14.4, '12': 32, '50': 132 };
+  return map[String(cap)] || 0;
+}
+
+window.updateGasDefault = function() {
+  const cap = document.getElementById('inputGasKapasitas')?.value || '';
+  const jamEl = document.getElementById('inputGasJam');
+  if (!jamEl) return;
+  const hour = zettGasDefaultHours(cap);
+  if (hour > 0) jamEl.value = String(hour);
+  window.calculateGas();
+};
+
+window.calculateGas = function() {
+  const harga = zettCleanNumber(document.getElementById('inputGasHarga')?.value);
+  const jam = parseFloat(document.getElementById('inputGasJam')?.value || 0) || 0;
+  const menit = Math.max(0, Math.round(jam * 60));
+  const menitEl = document.getElementById('inputGasMenit');
+  if (menitEl) menitEl.value = String(menit);
+
+  const centralOn = !!document.getElementById('inputCentralGas')?.checked;
+  const statusEl = document.getElementById('displayCentralGasStatus');
+  if (statusEl) statusEl.textContent = centralOn ? 'Ya' : 'Tidak';
+
+  const row = zettFindActiveHPPRow() || {};
+  let mesinKering = zettCleanNumber(row['Mesin Kering']); if (!mesinKering) { mesinKering = 1; console.warn('Mesin Kering kosong, fallback=1'); }
+  let durasiKering = zettCleanNumber(row['Durasi Kering']); if (!durasiKering) { durasiKering = 1; console.warn('Durasi Kering kosong, fallback=1'); }
+  let kapKering = zettCleanNumber(row['Kap Kering']); if (!kapKering) { kapKering = 1; console.warn('Kap Kering kosong, fallback=1'); }
+
+  const gasPerLoad = (harga > 0 && menit > 0) ? (harga / menit) * durasiKering * mesinKering : 0;
+  const gasPerKg = (gasPerLoad > 0 && kapKering > 0) ? gasPerLoad / kapKering : 0;
+  const out = Math.round(gasPerKg);
+
+  const display = document.getElementById('displayBiayaGasMenit');
+  if (display) display.textContent = 'Rp ' + out.toLocaleString('id-ID');
+
+  return { gasPerLoad, gasPerKg: out, menitGas: menit };
+};
+
+window.saveGasHPPData = function(event) {
+  if (event) event.preventDefault();
+  const namaOutlet = document.getElementById('inputNamaHPP')?.value?.trim() || '';
+  const kapGas = document.getElementById('inputGasKapasitas')?.value || '';
+  const hargaGas = zettCleanNumber(document.getElementById('inputGasHarga')?.value);
+  const jamGas = parseFloat(document.getElementById('inputGasJam')?.value || 0) || 0;
+  const calc = window.calculateGas();
+  const centralGas = document.getElementById('inputCentralGas')?.checked ? 'Ya' : 'Tidak';
+
+  if (!namaOutlet || !kapGas || hargaGas <= 0 || jamGas <= 0 || !calc.menitGas) {
+    alert('Lengkapi input Gas terlebih dahulu.');
+    return;
+  }
+
+  const payload = { namaOutlet, kapGas, hargaGas, jamGas, menitGas: calc.menitGas, centralGas, gasPerLoad: calc.gasPerLoad, gasPerKg: calc.gasPerKg };
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (typeof zettRetrySyncHPPFromGSheet === 'function') zettRetrySyncHPPFromGSheet();
+      alert((res && res.message) || 'Data gas berhasil disimpan');
+      if (typeof window.openHPPForm === 'function') window.openHPPForm('listrik', 'Analisa Biaya Listrik');
+    })
+    .withFailureHandler(function(err) { alert('Gagal simpan data gas: ' + (err && err.message ? err.message : err)); })
+    .saveGasHPPData(payload);
+};
 
 function zettSetInputValue(id, value) {
   const el = document.getElementById(id);

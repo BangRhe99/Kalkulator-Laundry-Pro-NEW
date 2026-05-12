@@ -888,6 +888,66 @@ function saveStrukturBiaya(payload) {
   }
 }
 
+function saveGasHPPData(payload) {
+  try {
+    const ss = _getSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_HPP_1);
+    if (!sheet) throw new Error('Sheet Struktur_Biaya_1 tidak ditemukan.');
+
+    const headerMap = zettGetHeaderMap_(sheet);
+    const nameCol = headerMap['Nama Outlet'];
+    if (typeof nameCol !== 'number') throw new Error('Header "Nama Outlet" tidak ditemukan.');
+
+    const normalize = v => String(v || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const outletNorm = normalize(payload.namaOutlet);
+    if (!outletNorm) throw new Error('Nama outlet wajib diisi.');
+
+    const data = sheet.getDataRange().getDisplayValues();
+    const headerRow = zettHppHeaderRow_(sheet);
+    let targetRow = -1;
+    for (let i = headerRow; i < data.length; i++) {
+      if (normalize(data[i][nameCol]) === outletNorm) {
+        targetRow = i + 1;
+        break;
+      }
+    }
+
+    const col = (key) => (typeof headerMap[key] === 'number' ? headerMap[key] + 1 : 0);
+    const values = {
+      'Nama Outlet': String(payload.namaOutlet || '').trim(),
+      'Kap Gas': payload.kapGas,
+      'Harga Gas': zettToNumber_(payload.hargaGas),
+      'Jam Gas': zettToNumber_(payload.jamGas),
+      'Menit Gas': zettToNumber_(payload.menitGas),
+      'Central Gas': String(payload.centralGas || 'Tidak') === 'Ya' ? 'Ya' : 'Tidak',
+      'Gas Per Load': zettToNumber_(payload.gasPerLoad),
+      'Gas Per Kg': zettToNumber_(payload.gasPerKg),
+      'Timestamp': Utilities.formatDate(new Date(), 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss')
+    };
+
+    if (targetRow > 0) {
+      Object.keys(values).forEach((k) => {
+        const c = col(k);
+        if (c > 0) sheet.getRange(targetRow, c).setValue(values[k]);
+      });
+    } else {
+      const row = new Array(sheet.getLastColumn()).fill('');
+      Object.keys(values).forEach((k) => {
+        const idx = headerMap[k];
+        if (typeof idx === 'number') row[idx] = values[k];
+      });
+      sheet.appendRow(row);
+      targetRow = sheet.getLastRow();
+    }
+
+    SpreadsheetApp.flush();
+    clearServerCache();
+    return { status: 'success', message: 'Data gas berhasil disimpan', data: { row: targetRow, ...values } };
+  } catch (error) {
+    throw new Error('Gagal simpan data gas: ' + error.message);
+  }
+}
+
 function saveKapasitas(payload) {
   try {
     const ss = _getSpreadsheet();
