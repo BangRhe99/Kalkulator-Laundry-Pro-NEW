@@ -491,6 +491,12 @@
         populateFormHPP(value);
       }
 
+      if (typeof zettRetrySyncHPPFromGSheet === 'function') {
+        zettRetrySyncHPPFromGSheet();
+      } else if (typeof zettSyncHPPFromGSheet === 'function') {
+        zettSyncHPPFromGSheet();
+      }
+
     }
 
     /* =========================================================
