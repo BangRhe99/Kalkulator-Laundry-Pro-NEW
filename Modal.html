@@ -1,52 +1,675 @@
+<!-- ========================================================================= -->
+<!-- MODAL.html / VIEW STRUKTUR BIAYA (HPP)                                    -->
+<!-- ========================================================================= -->
+<!-- Fungsi file ini:
+     1. Menyediakan halaman utama id="view-hpp"
+     2. Menyediakan card dashboard HPP
+     3. Menyediakan form input sederhana untuk Gas, Listrik, Air, Packing, Bahan, Nota
+     4. Menjaga kompatibilitas dengan JS1, JS2, V5, dan switchMainTab('hpp')
+-->
+<!-- ========================================================================= -->
+
+<section
+  id="view-hpp"
+  class="main-view hidden animate-fade-in space-y-6"
+>
+  <!-- =========================================================
+       HEADER HPP
+  ========================================================= -->
+
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+    <div>
+      <p class="text-xs font-extrabold text-blue-500 uppercase tracking-[0.18em] mb-2">
+        Struktur Biaya
+      </p>
+
+      <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+        Struktur Biaya (HPP)
+      </h1>
+
+      <p class="text-sm md:text-base text-slate-500 font-medium mt-1">
+        Kelola biaya variabel laundry seperti gas, listrik, air, packing, chemical, dan nota.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onclick="zettHPPRefreshDashboard()"
+      class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl
+      bg-slate-900 text-white text-sm font-extrabold shadow-lg shadow-slate-900/10
+      hover:bg-slate-800 active:scale-[0.98] transition-all"
+    >
+      <i class="ph ph-arrows-clockwise text-lg"></i>
+      Refresh HPP
+    </button>
+  </div>
+
+  <!-- =========================================================
+       TOTAL HPP
+  ========================================================= -->
+
+  <div class="rounded-[1.75rem] bg-white/95 border border-slate-200 shadow-sm p-5 md:p-6">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-2">
+          Total Biaya Variabel
+        </p>
+
+        <div
+          id="dash-hpp-total"
+          class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight"
+        >
+          Rp 0
+        </div>
+
+        <p class="text-sm text-slate-500 font-medium mt-2">
+          Total otomatis dari seluruh komponen biaya HPP.
+        </p>
+      </div>
+
+      <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+        <i class="ph ph-calculator text-2xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       CARD DASHBOARD HPP
+  ========================================================= -->
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+
+    <!-- GAS -->
+    <div
+      class="hpp-card-dash rounded-[1.5rem] bg-white border border-slate-200 shadow-sm p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all"
+      data-hpp-card="gas"
+    >
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <div class="card-title text-sm font-extrabold text-slate-700">
+            Gas LPG
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-1">
+            Biaya bahan bakar operasional.
+          </p>
+        </div>
+
+        <div class="w-10 h-10 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center">
+          <i class="ph ph-fire text-xl"></i>
+        </div>
+      </div>
+
+      <div id="dash-card-gas" class="text-2xl font-black text-slate-900">
+        Rp 0
+      </div>
+
+      <div id="dash-card-gas-pct" class="text-sm font-bold text-blue-500 mt-1">
+        0%
+      </div>
+    </div>
+
+    <!-- LISTRIK -->
+    <div
+      class="hpp-card-dash rounded-[1.5rem] bg-white border border-slate-200 shadow-sm p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all"
+      data-hpp-card="listrik"
+    >
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <div class="card-title text-sm font-extrabold text-slate-700">
+            Listrik
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-1">
+            Biaya daya mesin dan operasional.
+          </p>
+        </div>
+
+        <div class="w-10 h-10 rounded-2xl bg-yellow-50 text-yellow-500 flex items-center justify-center">
+          <i class="ph ph-lightning text-xl"></i>
+        </div>
+      </div>
+
+      <div id="dash-card-listrik" class="text-2xl font-black text-slate-900">
+        Rp 0
+      </div>
+
+      <div id="dash-card-listrik-pct" class="text-sm font-bold text-blue-500 mt-1">
+        0%
+      </div>
+    </div>
+
+    <!-- AIR -->
+    <div
+      class="hpp-card-dash rounded-[1.5rem] bg-white border border-slate-200 shadow-sm p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all"
+      data-hpp-card="air"
+    >
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <div class="card-title text-sm font-extrabold text-slate-700">
+            Air
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-1">
+            Biaya penggunaan air laundry.
+          </p>
+        </div>
+
+        <div class="w-10 h-10 rounded-2xl bg-cyan-50 text-cyan-500 flex items-center justify-center">
+          <i class="ph ph-drop text-xl"></i>
+        </div>
+      </div>
+
+      <div id="dash-card-air" class="text-2xl font-black text-slate-900">
+        Rp 0
+      </div>
+
+      <div id="dash-card-air-pct" class="text-sm font-bold text-blue-500 mt-1">
+        0%
+      </div>
+    </div>
+
+    <!-- PACKING -->
+    <div
+      class="hpp-card-dash rounded-[1.5rem] bg-white border border-slate-200 shadow-sm p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all"
+      data-hpp-card="packing"
+    >
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <div class="card-title text-sm font-extrabold text-slate-700">
+            Packing
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-1">
+            Plastik, kemasan, dan perlengkapan packing.
+          </p>
+        </div>
+
+        <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
+          <i class="ph ph-package text-xl"></i>
+        </div>
+      </div>
+
+      <div id="dash-card-packing" class="text-2xl font-black text-slate-900">
+        Rp 0
+      </div>
+
+      <div id="dash-card-packing-pct" class="text-sm font-bold text-blue-500 mt-1">
+        0%
+      </div>
+    </div>
+
+    <!-- BAHAN -->
+    <div
+      class="hpp-card-dash rounded-[1.5rem] bg-white border border-slate-200 shadow-sm p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all"
+      data-hpp-card="bahan"
+    >
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <div class="card-title text-sm font-extrabold text-slate-700">
+            Chemical
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-1">
+            Deterjen, parfum, softener, dan bahan baku.
+          </p>
+        </div>
+
+        <div class="w-10 h-10 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center">
+          <i class="ph ph-flask text-xl"></i>
+        </div>
+      </div>
+
+      <div id="dash-card-bahan" class="text-2xl font-black text-slate-900">
+        Rp 0
+      </div>
+
+      <div id="dash-card-bahan-pct" class="text-sm font-bold text-blue-500 mt-1">
+        0%
+      </div>
+    </div>
+
+    <!-- NOTA -->
+    <div
+      class="hpp-card-dash rounded-[1.5rem] bg-white border border-slate-200 shadow-sm p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all"
+      data-hpp-card="nota"
+    >
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <div class="card-title text-sm font-extrabold text-slate-700">
+            Admin / Nota
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-1">
+            Nota, label, admin, dan biaya pendukung.
+          </p>
+        </div>
+
+        <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center">
+          <i class="ph ph-receipt text-xl"></i>
+        </div>
+      </div>
+
+      <div id="dash-card-nota" class="text-2xl font-black text-slate-900">
+        Rp 0
+      </div>
+
+      <div id="dash-card-nota-pct" class="text-sm font-bold text-blue-500 mt-1">
+        0%
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =========================================================
+       FORM INPUT HPP SEDERHANA
+  ========================================================= -->
+
+  <div class="rounded-[1.75rem] bg-white/95 border border-slate-200 shadow-sm p-5 md:p-6">
+    <div class="flex items-start justify-between gap-4 mb-6">
+      <div>
+        <p class="text-xs font-extrabold text-blue-500 uppercase tracking-[0.18em] mb-2">
+          Input Manual
+        </p>
+
+        <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
+          Input Komponen HPP
+        </h2>
+
+        <p class="text-sm text-slate-500 font-medium mt-1">
+          Isi nominal biaya per komponen. Nilai akan langsung diperbarui ke card HPP.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+
+      <!-- FORM GAS -->
+      <div
+        id="form-gas"
+        data-hpp-section="gas"
+        data-hpp-form="gas"
+        data-category="gas"
+        class="rounded-[1.25rem] border border-slate-200 bg-slate-50/70 p-4"
+      >
+        <label for="input-gas" class="block text-sm font-extrabold text-slate-700 mb-2">
+          Gas LPG
+        </label>
+
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">
+            Rp
+          </span>
+
+          <input
+            id="input-gas"
+            type="text"
+            inputmode="numeric"
+            placeholder="0"
+            oninput="zettHPPHandleInput('gas', this)"
+            class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-white
+            text-slate-800 font-black outline-none focus:border-blue-400 focus:ring-4
+            focus:ring-blue-500/10 transition-all"
+          >
+        </div>
+      </div>
+
+      <!-- FORM LISTRIK -->
+      <div
+        id="form-listrik"
+        data-hpp-section="listrik"
+        data-hpp-form="listrik"
+        data-category="listrik"
+        class="rounded-[1.25rem] border border-slate-200 bg-slate-50/70 p-4"
+      >
+        <label for="input-listrik" class="block text-sm font-extrabold text-slate-700 mb-2">
+          Listrik
+        </label>
+
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">
+            Rp
+          </span>
+
+          <input
+            id="input-listrik"
+            type="text"
+            inputmode="numeric"
+            placeholder="0"
+            oninput="zettHPPHandleInput('listrik', this)"
+            class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-white
+            text-slate-800 font-black outline-none focus:border-blue-400 focus:ring-4
+            focus:ring-blue-500/10 transition-all"
+          >
+        </div>
+      </div>
+
+      <!-- FORM AIR -->
+      <div
+        id="form-air"
+        data-hpp-section="air"
+        data-hpp-form="air"
+        data-category="air"
+        class="rounded-[1.25rem] border border-slate-200 bg-slate-50/70 p-4"
+      >
+        <label for="input-air" class="block text-sm font-extrabold text-slate-700 mb-2">
+          Air
+        </label>
+
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">
+            Rp
+          </span>
+
+          <input
+            id="input-air"
+            type="text"
+            inputmode="numeric"
+            placeholder="0"
+            oninput="zettHPPHandleInput('air', this)"
+            class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-white
+            text-slate-800 font-black outline-none focus:border-blue-400 focus:ring-4
+            focus:ring-blue-500/10 transition-all"
+          >
+        </div>
+      </div>
+
+      <!-- FORM PACKING -->
+      <div
+        id="form-packing"
+        data-hpp-section="packing"
+        data-hpp-form="packing"
+        data-category="packing"
+        class="rounded-[1.25rem] border border-slate-200 bg-slate-50/70 p-4"
+      >
+        <label for="input-packing" class="block text-sm font-extrabold text-slate-700 mb-2">
+          Packing
+        </label>
+
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">
+            Rp
+          </span>
+
+          <input
+            id="input-packing"
+            type="text"
+            inputmode="numeric"
+            placeholder="0"
+            oninput="zettHPPHandleInput('packing', this)"
+            class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-white
+            text-slate-800 font-black outline-none focus:border-blue-400 focus:ring-4
+            focus:ring-blue-500/10 transition-all"
+          >
+        </div>
+      </div>
+
+      <!-- FORM BAHAN -->
+      <div
+        id="form-bahan"
+        data-hpp-section="bahan"
+        data-hpp-form="bahan"
+        data-category="bahan"
+        class="rounded-[1.25rem] border border-slate-200 bg-slate-50/70 p-4"
+      >
+        <label for="input-bahan" class="block text-sm font-extrabold text-slate-700 mb-2">
+          Chemical / Bahan
+        </label>
+
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">
+            Rp
+          </span>
+
+          <input
+            id="input-bahan"
+            type="text"
+            inputmode="numeric"
+            placeholder="0"
+            oninput="zettHPPHandleInput('bahan', this)"
+            class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-white
+            text-slate-800 font-black outline-none focus:border-blue-400 focus:ring-4
+            focus:ring-blue-500/10 transition-all"
+          >
+        </div>
+      </div>
+
+      <!-- FORM NOTA -->
+      <div
+        id="form-nota"
+        data-hpp-section="nota"
+        data-hpp-form="nota"
+        data-category="nota"
+        class="rounded-[1.25rem] border border-slate-200 bg-slate-50/70 p-4"
+      >
+        <label for="input-nota" class="block text-sm font-extrabold text-slate-700 mb-2">
+          Admin / Nota
+        </label>
+
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">
+            Rp
+          </span>
+
+          <input
+            id="input-nota"
+            type="text"
+            inputmode="numeric"
+            placeholder="0"
+            oninput="zettHPPHandleInput('nota', this)"
+            class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-white
+            text-slate-800 font-black outline-none focus:border-blue-400 focus:ring-4
+            focus:ring-blue-500/10 transition-all"
+          >
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</section>
+
 <script>
   const formatRupiahModal = (num) => {
     return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
   };
 
+  function zettHPPParseNumber(value) {
+    return Number(String(value || '').replace(/[^0-9]/g, '')) || 0;
+  }
+
+  function zettHPPFormatInput(inputEl) {
+    if (!inputEl) return;
+
+    const numberValue = zettHPPParseNumber(inputEl.value);
+
+    if (!numberValue) {
+      inputEl.value = '';
+      return;
+    }
+
+    inputEl.value = numberValue.toLocaleString('id-ID');
+  }
+
+  function zettHPPGetState() {
+    if (!window.hppDataState) {
+      window.hppDataState = {
+        gas: 0,
+        listrik: 0,
+        air: 0,
+        packing: 0,
+        bahan: 0,
+        nota: 0
+      };
+    }
+
+    return window.hppDataState;
+  }
+
+  function zettHPPSetStateValue(type, value) {
+    const state = zettHPPGetState();
+
+    state[type] = Number(value) || 0;
+
+    if (
+      window.APP_STATE &&
+      window.APP_STATE.data &&
+      window.APP_STATE.data.hpp
+    ) {
+      window.APP_STATE.data.hpp[type] = Number(value) || 0;
+
+      window.APP_STATE.data.hpp.total =
+        (Number(window.APP_STATE.data.hpp.gas) || 0) +
+        (Number(window.APP_STATE.data.hpp.listrik) || 0) +
+        (Number(window.APP_STATE.data.hpp.air) || 0) +
+        (Number(window.APP_STATE.data.hpp.packing) || 0) +
+        (Number(window.APP_STATE.data.hpp.bahan) || 0) +
+        (Number(window.APP_STATE.data.hpp.nota) || 0);
+    }
+  }
+
+  function zettHPPUpdateDashboardFromState() {
+    const state = zettHPPGetState();
+
+    const gas = Number(state.gas) || 0;
+    const listrik = Number(state.listrik) || 0;
+    const air = Number(state.air) || 0;
+    const packing = Number(state.packing) || 0;
+    const bahan = Number(state.bahan) || 0;
+    const nota = Number(state.nota) || 0;
+
+    const total =
+      gas +
+      listrik +
+      air +
+      packing +
+      bahan +
+      nota;
+
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = value;
+    };
+
+    const pct = (value) => {
+      if (!total) return '0%';
+      return ((Number(value || 0) / total) * 100).toFixed(1) + '%';
+    };
+
+    setText('dash-hpp-total', formatRupiahModal(total));
+
+    setText('dash-card-gas', formatRupiahModal(gas));
+    setText('dash-card-listrik', formatRupiahModal(listrik));
+    setText('dash-card-air', formatRupiahModal(air));
+    setText('dash-card-packing', formatRupiahModal(packing));
+    setText('dash-card-bahan', formatRupiahModal(bahan));
+    setText('dash-card-nota', formatRupiahModal(nota));
+
+    setText('dash-card-gas-pct', pct(gas));
+    setText('dash-card-listrik-pct', pct(listrik));
+    setText('dash-card-air-pct', pct(air));
+    setText('dash-card-packing-pct', pct(packing));
+    setText('dash-card-bahan-pct', pct(bahan));
+    setText('dash-card-nota-pct', pct(nota));
+  }
+
+  function zettHPPSyncInputFromState() {
+    const state = zettHPPGetState();
+
+    const inputMap = {
+      gas: 'input-gas',
+      listrik: 'input-listrik',
+      air: 'input-air',
+      packing: 'input-packing',
+      bahan: 'input-bahan',
+      nota: 'input-nota'
+    };
+
+    Object.entries(inputMap).forEach(([type, inputId]) => {
+      const input = document.getElementById(inputId);
+      const value = Number(state[type]) || 0;
+
+      if (input && value > 0 && !input.value) {
+        input.value = value.toLocaleString('id-ID');
+      }
+    });
+  }
+
+  function zettHPPHandleInput(type, inputEl) {
+    const value = zettHPPParseNumber(inputEl ? inputEl.value : 0);
+
+    zettHPPSetStateValue(type, value);
+
+    zettHPPFormatInput(inputEl);
+
+    if (
+      typeof window.HPPStateMachine !== 'undefined' &&
+      typeof window.HPPStateMachine.updateMetric === 'function'
+    ) {
+      window.HPPStateMachine.updateMetric(type, value);
+    } else if (
+      typeof window.StateMachine !== 'undefined' &&
+      typeof window.StateMachine.updateMetric === 'function'
+    ) {
+      window.StateMachine.updateMetric(type, value);
+    } else {
+      zettHPPUpdateDashboardFromState();
+    }
+
+    zettHPPUpdateDashboardFromState();
+  }
+
   function loadHPPDashboard() {
+    if (
+      typeof google === 'undefined' ||
+      !google.script ||
+      !google.script.run
+    ) {
+      zettHPPUpdateDashboardFromState();
+      return;
+    }
+
     google.script.run
       .withSuccessHandler(function(data) {
-        if (!data) return;
-
-        const total =
-          (data.gas || 0) +
-          (data.listrik || 0) +
-          (data.air || 0) +
-          (data.packing || 0) +
-          (data.bahan || 0) +
-          (data.nota || 0);
-
-        const setText = (id, value) => {
-          const el = document.getElementById(id);
-          if (el) el.innerText = value;
-        };
-
-        setText('dash-hpp-total', formatRupiahModal(total));
-        setText('dash-card-gas', formatRupiahModal(data.gas));
-        setText('dash-card-listrik', formatRupiahModal(data.listrik));
-        setText('dash-card-air', formatRupiahModal(data.air));
-        setText('dash-card-packing', formatRupiahModal(data.packing));
-        setText('dash-card-bahan', formatRupiahModal(data.bahan));
-        setText('dash-card-nota', formatRupiahModal(data.nota));
-
-        function pct(val) {
-          if (!total) return '0%';
-          return ((val / total) * 100).toFixed(1) + '%';
+        if (!data) {
+          zettHPPUpdateDashboardFromState();
+          return;
         }
 
-        setText('dash-card-gas-pct', pct(data.gas));
-        setText('dash-card-listrik-pct', pct(data.listrik));
-        setText('dash-card-air-pct', pct(data.air));
-        setText('dash-card-packing-pct', pct(data.packing));
-        setText('dash-card-bahan-pct', pct(data.bahan));
-        setText('dash-card-nota-pct', pct(data.nota));
+        zettHPPSetStateValue('gas', data.gas);
+        zettHPPSetStateValue('listrik', data.listrik);
+        zettHPPSetStateValue('air', data.air);
+        zettHPPSetStateValue('packing', data.packing);
+        zettHPPSetStateValue('bahan', data.bahan);
+        zettHPPSetStateValue('nota', data.nota);
+
+        zettHPPUpdateDashboardFromState();
+        zettHPPSyncInputFromState();
       })
 
       .withFailureHandler(function(err) {
         console.error('GAGAL LOAD HPP:', err);
+        zettHPPUpdateDashboardFromState();
       })
 
       .getHPPDashboardData();
+  }
+
+  function zettHPPRefreshDashboard() {
+    if (
+      typeof window.HPPStateMachine !== 'undefined' &&
+      typeof window.HPPStateMachine.calculateTotal === 'function'
+    ) {
+      window.HPPStateMachine.calculateTotal();
+    }
+
+    if (
+      typeof window.StateMachine !== 'undefined' &&
+      typeof window.StateMachine.calculateTotal === 'function'
+    ) {
+      window.StateMachine.calculateTotal();
+    }
+
+    loadHPPDashboard();
+
+    setTimeout(() => {
+      zettHPPUpdateDashboardFromState();
+      zettHPPSyncInputFromState();
+    }, 150);
   }
 
   /* =========================================================================
@@ -188,16 +811,14 @@
           focusEl.focus();
         }, 250);
       }
-    }, 180);
+    }, 220);
   };
 
   /* =========================================================================
      CLICKABLE CARD
   ========================================================================= */
 
-  document.addEventListener('DOMContentLoaded', function() {
-    loadHPPDashboard();
-
+  function zettHPPBindClickableCards() {
     document.querySelectorAll('.hpp-card-dash').forEach(card => {
       if (card.dataset.hppClickBound === 'true') return;
 
@@ -215,5 +836,15 @@
         console.warn('window.openHPPModal tidak tersedia');
       });
     });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    zettHPPBindClickableCards();
+
+    setTimeout(() => {
+      loadHPPDashboard();
+      zettHPPUpdateDashboardFromState();
+      zettHPPSyncInputFromState();
+    }, 250);
   });
 </script>
