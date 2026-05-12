@@ -2905,7 +2905,13 @@
       donut.style.setProperty('--p-bahan', cBahan + '%');
     }
 
-    function updateDashboardFromState() {
+    function updateDashboardFromState(source) {
+      const sourceTag = source || 'state';
+      if (window.__HPP_GSHEET_SYNC_LOCKED === true && sourceTag !== 'gsheet') {
+        console.log('HPP dashboard update skipped because GSheet sync is locked');
+        return;
+      }
+
       const state = getState();
       const values = {
         gas: Number(state.gas) || 0,
@@ -2954,7 +2960,9 @@
     }
 
     window.zettHPPSetStateValue = setStateValue;
-    window.zettHPPUpdateDashboardFromState = updateDashboardFromState;
+    window.zettHPPUpdateDashboardFromState = function(source) {
+      updateDashboardFromState(source);
+    };
 
     window.zettHPPHandleInput = function(type, inputEl) {
       const value = parseNumber(inputEl ? inputEl.value : 0);
@@ -2976,12 +2984,17 @@
         }
       } catch (error) {}
 
-      updateDashboardFromState();
+      updateDashboardFromState('manual-input');
     };
 
     window.loadHPPDashboard = function() {
+      if (window.__HPP_GSHEET_SYNC_LOCKED === true) {
+        console.log('HPP dashboard update skipped because GSheet sync is locked');
+        return;
+      }
+
       if (typeof google === 'undefined' || !google.script || !google.script.run) {
-        updateDashboardFromState();
+        updateDashboardFromState('load-dashboard');
         return;
       }
 
@@ -2990,12 +3003,12 @@
           if (data) {
             HPP_TYPES.forEach(type => setStateValue(type, data[type]));
           }
-          updateDashboardFromState();
+          updateDashboardFromState('load-dashboard');
           syncSimpleInputsIfPresent();
         })
         .withFailureHandler(function(error) {
           console.error('GAGAL LOAD HPP:', error);
-          updateDashboardFromState();
+          updateDashboardFromState('load-dashboard');
         })
         .getHPPDashboardData();
     };
@@ -3013,8 +3026,12 @@
         }
       } catch (error) {}
 
-      window.loadHPPDashboard();
-      setTimeout(updateDashboardFromState, 180);
+      if (window.__HPP_GSHEET_SYNC_LOCKED !== true) {
+        window.loadHPPDashboard();
+      } else {
+        console.log('HPP dashboard update skipped because GSheet sync is locked');
+      }
+      setTimeout(() => updateDashboardFromState('refresh'), 180);
     };
 
     window.openHPPModal = function(categoryTitle) {
@@ -3046,10 +3063,10 @@
     };
 
     function boot() {
-      updateDashboardFromState();
+      updateDashboardFromState('boot');
       window.loadHPPDashboard();
-      setTimeout(updateDashboardFromState, 350);
-      setTimeout(updateDashboardFromState, 1200);
+      setTimeout(() => updateDashboardFromState('boot'), 350);
+      setTimeout(() => updateDashboardFromState('boot'), 1200);
     }
 
     if (document.readyState === 'loading') {
@@ -3402,7 +3419,7 @@ function zettApplyHPPDashboardFallback(row) {
   });
 
   if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
-    window.zettHPPUpdateDashboardFromState();
+    window.zettHPPUpdateDashboardFromState('gsheet');
   }
 }
 
@@ -3415,6 +3432,8 @@ function zettSyncHPPFromGSheet() {
   setTimeout(() => {
     zettRunHPPCalculationAfterSync();
     zettApplyHPPDashboardFallback(row);
+    window.__HPP_GSHEET_SYNC_LOCKED = true;
+    console.log('HPP GSHEET SYNC LOCKED');
 
     if (typeof window.zettHPPRefreshDashboard === 'function') {
       window.zettHPPRefreshDashboard();

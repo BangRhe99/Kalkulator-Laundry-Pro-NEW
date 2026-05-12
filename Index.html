@@ -491,6 +491,9 @@
         populateFormHPP(value);
       }
 
+      window.__HPP_GSHEET_SYNC_LOCKED = false;
+      console.log('HPP sync reset because outlet changed');
+
       if (typeof zettRetrySyncHPPFromGSheet === 'function') {
         zettRetrySyncHPPFromGSheet();
       } else if (typeof zettSyncHPPFromGSheet === 'function') {
