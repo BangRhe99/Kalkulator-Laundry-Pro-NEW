@@ -426,27 +426,27 @@
 <div id="view-hpp" class="main-view hidden bento-layout" style="margin-top: -1rem;">
   
   <!-- ================= L1: HYPER PREMIUM DASHBOARD VIEW ================= -->
-  <div id="hpp-dashboard-view" class="animate-fade-in space-y-8">
+  <div id="hpp-dashboard-view" class="animate-fade-in space-y-5 md:space-y-6 max-w-[1120px] mx-auto px-1 sm:px-2">
     
     <!-- Hero Banner & Chart (Clean, High-Trust Design) -->
-    <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.02),0_2px_10px_rgba(0,0,0,0.01)] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transform-gpu transition-all">
+    <div class="bg-white rounded-[1.6rem] md:rounded-[1.85rem] border border-slate-200/70 shadow-[0_8px_26px_rgba(15,23,42,0.06)] p-5 sm:p-6 md:p-8 lg:px-10 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 transform-gpu transition-all duration-200">
       
       <!-- Hero Text -->
-      <div class="flex-1 text-center md:text-left space-y-5 z-10 w-full">
+      <div class="flex-1 text-center md:text-left space-y-3.5 md:space-y-4 z-10 w-full">
         <!-- Badge -->
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50/80 border border-emerald-100 text-emerald-600 font-extrabold text-[10px] uppercase tracking-widest mx-auto md:mx-0">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 font-extrabold text-[10px] uppercase tracking-[0.16em] mx-auto md:mx-0">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Real-time Sync
         </div>
         
         <div class="space-y-1">
-          <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Total HPP Variabel</h2>
+          <h2 class="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Total HPP Variabel</h2>
           <div class="flex items-baseline justify-center md:justify-start gap-1.5 pt-1">
-            <span class="text-[clamp(3rem,6vw,4.5rem)] leading-none font-black text-slate-900 tracking-tighter tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-hpp-total">Rp 0</span>
-            <span class="text-xl md:text-2xl font-bold text-slate-400">/Kg</span>
+            <span class="text-[clamp(2.35rem,10vw,4.25rem)] leading-none font-black text-slate-900 tracking-tight tabular-nums [font-feature-settings:'tnum']" id="dash-hpp-total">Rp 0</span>
+            <span class="text-lg md:text-xl font-bold text-slate-400">/Kg</span>
           </div>
         </div>
         
-        <p class="text-sm font-medium text-slate-500 max-w-md mx-auto md:mx-0 leading-relaxed pt-2">Simulasi struktur biaya untuk menjaga margin tetap sehat.</p>
+        <p class="text-[12px] sm:text-sm font-semibold text-slate-500 max-w-md mx-auto md:mx-0 leading-relaxed pt-1">Ringkasan biaya variabel per outlet untuk menjaga margin tetap sehat.</p>
       </div>
 
       <!-- Donut Chart -->
@@ -468,71 +468,71 @@
     </div>
 
     <!-- 6 Cards Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-4 md:gap-5">
       
       <!-- Card: Gas -->
-      <div onclick="openHPPForm('gas', 'Analisa Biaya Gas')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
-        <div class="w-12 h-12 bg-rose-50 rounded-[1rem] flex items-center justify-center text-rose-500 transition-transform duration-500 group-hover:scale-110">
+      <div onclick="openHPPForm('gas', 'Analisa Biaya Gas')" class="hpp-card-dash bg-white border border-rose-100/70 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+        <div class="w-10 h-10 md:w-11 md:h-11 bg-rose-50 rounded-[0.9rem] flex items-center justify-center text-rose-500 transition-transform duration-200 group-hover:scale-105">
           <i class="ph ph-fire text-2xl drop-shadow-sm"></i>
         </div>
         <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Gas LPG</h3>
-          <p class="text-xl md:text-2xl font-black text-rose-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-gas">Rp 0</p>
+          <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Gas LPG</h3>
+          <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-rose-500 tracking-tight tabular-nums [font-feature-settings:'tnum']" id="dash-card-gas">Rp 0</p>
         </div>
       </div>
 
       <!-- Card: Listrik -->
-      <div onclick="openHPPForm('listrik', 'Analisa Biaya Listrik')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
-        <div class="w-12 h-12 bg-amber-50 rounded-[1rem] flex items-center justify-center text-amber-500 transition-transform duration-500 group-hover:scale-110">
+      <div onclick="openHPPForm('listrik', 'Analisa Biaya Listrik')" class="hpp-card-dash bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+        <div class="w-10 h-10 md:w-11 md:h-11 bg-amber-50 rounded-[0.9rem] flex items-center justify-center text-amber-500 transition-transform duration-200 group-hover:scale-105">
           <i class="ph ph-lightning text-2xl drop-shadow-sm"></i>
         </div>
         <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Listrik</h3>
-          <p class="text-xl md:text-2xl font-black text-amber-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-listrik">Rp 0</p>
+          <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Listrik</h3>
+          <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-amber-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] " id="dash-card-listrik">Rp 0</p>
         </div>
       </div>
 
       <!-- Card: Air -->
-      <div onclick="openHPPForm('air', 'Analisa Biaya Air')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
-        <div class="w-12 h-12 bg-cyan-50 rounded-[1rem] flex items-center justify-center text-cyan-500 transition-transform duration-500 group-hover:scale-110">
+      <div onclick="openHPPForm('air', 'Analisa Biaya Air')" class="hpp-card-dash bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+        <div class="w-10 h-10 md:w-11 md:h-11 bg-cyan-50 rounded-[0.9rem] flex items-center justify-center text-cyan-500 transition-transform duration-200 group-hover:scale-105">
           <i class="ph ph-drop text-2xl drop-shadow-sm"></i>
         </div>
         <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Air PDAM</h3>
-          <p class="text-xl md:text-2xl font-black text-cyan-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-air">Rp 0</p>
+          <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Air PDAM</h3>
+          <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-cyan-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] " id="dash-card-air">Rp 0</p>
         </div>
       </div>
 
       <!-- Card: Packing -->
-      <div onclick="openHPPForm('packing', 'Analisa Biaya Packing')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
-        <div class="w-12 h-12 bg-indigo-50 rounded-[1rem] flex items-center justify-center text-indigo-500 transition-transform duration-500 group-hover:scale-110">
+      <div onclick="openHPPForm('packing', 'Analisa Biaya Packing')" class="hpp-card-dash bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+        <div class="w-10 h-10 md:w-11 md:h-11 bg-indigo-50 rounded-[0.9rem] flex items-center justify-center text-indigo-500 transition-transform duration-200 group-hover:scale-105">
           <i class="ph ph-package text-2xl drop-shadow-sm"></i>
         </div>
         <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Packing</h3>
-          <p class="text-xl md:text-2xl font-black text-indigo-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-packing">Rp 0</p>
+          <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Packing</h3>
+          <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-indigo-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] " id="dash-card-packing">Rp 0</p>
         </div>
       </div>
 
       <!-- Card: Bahan -->
-      <div onclick="openHPPForm('bahan', 'Analisa Biaya Chemical')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
-        <div class="w-12 h-12 bg-emerald-50 rounded-[1rem] flex items-center justify-center text-emerald-500 transition-transform duration-500 group-hover:scale-110">
+      <div onclick="openHPPForm('bahan', 'Analisa Biaya Chemical')" class="hpp-card-dash bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+        <div class="w-10 h-10 md:w-11 md:h-11 bg-emerald-50 rounded-[0.9rem] flex items-center justify-center text-emerald-500 transition-transform duration-200 group-hover:scale-105">
           <i class="ph ph-flask text-2xl drop-shadow-sm"></i>
         </div>
         <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Chemical</h3>
-          <p class="text-xl md:text-2xl font-black text-emerald-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-bahan">Rp 0</p>
+          <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Chemical</h3>
+          <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-emerald-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] " id="dash-card-bahan">Rp 0</p>
         </div>
       </div>
 
       <!-- Card: Nota -->
-      <div onclick="openHPPForm('nota', 'Analisa Biaya Nota & Kasir')" class="hpp-card-dash bg-white border border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] flex flex-col items-center text-center gap-4 group">
-        <div class="w-12 h-12 bg-slate-50 rounded-[1rem] flex items-center justify-center text-slate-500 transition-transform duration-500 group-hover:scale-110">
+      <div onclick="openHPPForm('nota', 'Analisa Biaya Nota & Kasir')" class="hpp-card-dash bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+        <div class="w-10 h-10 md:w-11 md:h-11 bg-slate-50 rounded-[0.9rem] flex items-center justify-center text-slate-500 transition-transform duration-200 group-hover:scale-105">
           <i class="ph ph-receipt text-2xl drop-shadow-sm"></i>
         </div>
         <div>
-          <h3 class="text-slate-400 font-extrabold text-[10px] uppercase tracking-[0.2em] mb-1.5">Admin/Nota</h3>
-          <p class="text-xl md:text-2xl font-black text-slate-600 tracking-tight tabular-nums [font-feature-settings:'tnum'] drop-shadow-sm" id="dash-card-nota">Rp 0</p>
+          <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Admin/Nota</h3>
+          <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-slate-600 tracking-tight tabular-nums [font-feature-settings:'tnum'] " id="dash-card-nota">Rp 0</p>
         </div>
       </div>
 
@@ -1352,6 +1352,16 @@
       <button type="button" id="btnSimpanHPP" class="w-full sm:w-auto bg-gradient-to-b from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white px-10 py-4 rounded-[1.25rem] font-extrabold shadow-[0_8px_20px_rgba(15,23,42,0.15)] hover:shadow-[0_12px_24px_rgba(15,23,42,0.25)] border border-slate-700 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 active:scale-95" onclick="simpanDataHPP()">
         <i class="ph ph-floppy-disk text-xl"></i> Simpan Perubahan HPP
       </button>
+    </div>
+  </div>
+
+  <div id="zettGasToast" aria-live="polite">
+    <div class="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-emerald-200/70 bg-white text-slate-700 shadow-[0_10px_26px_rgba(15,23,42,0.12)]">
+      <i class="ph ph-check-circle text-emerald-500 text-lg"></i>
+      <div class="leading-tight">
+        <div class="text-[12px] font-bold">Data Gas Tersimpan</div>
+        <div class="text-[11px] text-slate-500">Lanjut ke Analisa Biaya Listrik</div>
+      </div>
     </div>
   </div>
 
@@ -2603,12 +2613,10 @@
     bottom: 0;
     z-index: 80;
     margin-top: clamp(1.25rem, 2vw, 2rem) !important;
-    padding: 1rem clamp(0.75rem, 2vw, 1.25rem) !important;
+    padding: 0.72rem clamp(0.72rem, 1.8vw, 1rem) !important;
     border-top: 1px solid rgba(226, 232, 240, 0.85) !important;
-    background: rgba(248, 250, 252, 0.88);
-    backdrop-filter: blur(22px) saturate(1.12);
-    -webkit-backdrop-filter: blur(22px) saturate(1.12);
-    box-shadow: 0 -18px 45px rgba(15, 23, 42, 0.06);
+    background: rgba(248, 250, 252, 0.94);
+    box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.06);
     border-radius: 1.5rem 1.5rem 0 0;
     transform: translate3d(0,0,0);
     will-change: transform, opacity;
@@ -2638,7 +2646,38 @@
   #btnSimpanHPP.zett-save-new-mode {
     background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
     border: 1px solid rgba(15, 23, 42, 0.95) !important;
-    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+  }
+  #btnSimpanHPP.is-loading {
+    opacity: 0.86;
+    cursor: wait;
+    pointer-events: none;
+    transform: none !important;
+  }
+  #actionAreaHPP .text-slate-500 {
+    font-size: 0.78rem;
+    opacity: 0.85;
+    padding-inline: 0.35rem;
+  }
+  #tab-gas .bento-card {
+    max-width: 1020px;
+    margin-inline: auto;
+  }
+  #tab-gas .omni-input { font-size: 0.92rem; }
+  #tab-gas #displayBiayaGasMenit { letter-spacing: -0.02em; }
+  #zettGasToast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(5.2rem + env(safe-area-inset-bottom));
+    transform: translate(-50%, 12px) scale(0.98);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 120;
+    transition: opacity 220ms ease, transform 220ms ease;
+  }
+  #zettGasToast.show {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
   }
 
   #btnUpdateHPP.zett-update-mode {
@@ -2684,9 +2723,15 @@
       btnSimpan.classList.add('zett-force-show', 'zett-save-new-mode');
       btnSimpan.classList.remove('hidden');
       btnSimpan.style.display = 'flex';
-      btnSimpan.innerHTML = '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru';
+      const isGas = (window.zettGetActiveHPPType && window.zettGetActiveHPPType() === 'gas');
+      btnSimpan.innerHTML = isGas
+        ? '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Gas'
+        : '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru';
       btnSimpan.onclick = function(event) {
         event.preventDefault();
+        if (window.zettGetActiveHPPType && window.zettGetActiveHPPType() === 'gas' && typeof window.saveGasHPPData === 'function') {
+          return window.saveGasHPPData(event);
+        }
         return window.zettSimpanHPPBaru(event);
       };
 
@@ -2905,7 +2950,13 @@
       donut.style.setProperty('--p-bahan', cBahan + '%');
     }
 
-    function updateDashboardFromState() {
+    function updateDashboardFromState(source) {
+      const sourceTag = source || 'state';
+      if (window.__HPP_GSHEET_SYNC_LOCKED === true && sourceTag !== 'gsheet') {
+        console.log('HPP dashboard update skipped because GSheet sync is locked');
+        return;
+      }
+
       const state = getState();
       const values = {
         gas: Number(state.gas) || 0,
@@ -2954,7 +3005,9 @@
     }
 
     window.zettHPPSetStateValue = setStateValue;
-    window.zettHPPUpdateDashboardFromState = updateDashboardFromState;
+    window.zettHPPUpdateDashboardFromState = function(source) {
+      updateDashboardFromState(source);
+    };
 
     window.zettHPPHandleInput = function(type, inputEl) {
       const value = parseNumber(inputEl ? inputEl.value : 0);
@@ -2976,12 +3029,17 @@
         }
       } catch (error) {}
 
-      updateDashboardFromState();
+      updateDashboardFromState('manual-input');
     };
 
     window.loadHPPDashboard = function() {
+      if (window.__HPP_GSHEET_SYNC_LOCKED === true) {
+        console.log('HPP dashboard update skipped because GSheet sync is locked');
+        return;
+      }
+
       if (typeof google === 'undefined' || !google.script || !google.script.run) {
-        updateDashboardFromState();
+        updateDashboardFromState('load-dashboard');
         return;
       }
 
@@ -2990,12 +3048,12 @@
           if (data) {
             HPP_TYPES.forEach(type => setStateValue(type, data[type]));
           }
-          updateDashboardFromState();
+          updateDashboardFromState('load-dashboard');
           syncSimpleInputsIfPresent();
         })
         .withFailureHandler(function(error) {
           console.error('GAGAL LOAD HPP:', error);
-          updateDashboardFromState();
+          updateDashboardFromState('load-dashboard');
         })
         .getHPPDashboardData();
     };
@@ -3013,8 +3071,12 @@
         }
       } catch (error) {}
 
-      window.loadHPPDashboard();
-      setTimeout(updateDashboardFromState, 180);
+      if (window.__HPP_GSHEET_SYNC_LOCKED !== true) {
+        window.loadHPPDashboard();
+      } else {
+        console.log('HPP dashboard update skipped because GSheet sync is locked');
+      }
+      setTimeout(() => updateDashboardFromState('refresh'), 180);
     };
 
     window.openHPPModal = function(categoryTitle) {
@@ -3046,10 +3108,10 @@
     };
 
     function boot() {
-      updateDashboardFromState();
+      updateDashboardFromState('boot');
       window.loadHPPDashboard();
-      setTimeout(updateDashboardFromState, 350);
-      setTimeout(updateDashboardFromState, 1200);
+      setTimeout(() => updateDashboardFromState('boot'), 350);
+      setTimeout(() => updateDashboardFromState('boot'), 1200);
     }
 
     if (document.readyState === 'loading') {
@@ -3166,6 +3228,102 @@ function zettCleanNumber(value) {
   return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
 }
 
+function zettGetActiveHPPType() {
+  const activeTab = document.querySelector('#view-hpp .tab-content:not(.hidden)');
+  return activeTab ? String(activeTab.id || '').replace('tab-', '') : '';
+}
+window.zettGetActiveHPPType = zettGetActiveHPPType;
+
+function zettGasDefaultHours(cap) {
+  const map = { '3': 8, '5.5': 14.4, '12': 32, '50': 132 };
+  return map[String(cap)] || 0;
+}
+
+window.updateGasDefault = function() {
+  const cap = document.getElementById('inputGasKapasitas')?.value || '';
+  const jamEl = document.getElementById('inputGasJam');
+  if (!jamEl) return;
+  const hour = zettGasDefaultHours(cap);
+  if (hour > 0) jamEl.value = String(hour);
+  window.calculateGas();
+};
+
+window.calculateGas = function() {
+  const harga = zettCleanNumber(document.getElementById('inputGasHarga')?.value);
+  const jam = parseFloat(document.getElementById('inputGasJam')?.value || 0) || 0;
+  const menit = Math.max(0, Math.round(jam * 60));
+  const menitEl = document.getElementById('inputGasMenit');
+  if (menitEl) menitEl.value = String(menit);
+
+  const centralOn = !!document.getElementById('inputCentralGas')?.checked;
+  const statusEl = document.getElementById('displayCentralGasStatus');
+  if (statusEl) statusEl.textContent = centralOn ? 'Ya' : 'Tidak';
+
+  const row = zettFindActiveHPPRow() || {};
+  let mesinKering = zettCleanNumber(row['Mesin Kering']); if (!mesinKering) { mesinKering = 1; console.warn('Mesin Kering kosong, fallback=1'); }
+  let durasiKering = zettCleanNumber(row['Durasi Kering']); if (!durasiKering) { durasiKering = 1; console.warn('Durasi Kering kosong, fallback=1'); }
+  let kapKering = zettCleanNumber(row['Kap Kering']); if (!kapKering) { kapKering = 1; console.warn('Kap Kering kosong, fallback=1'); }
+
+  const gasPerLoad = (harga > 0 && menit > 0) ? (harga / menit) * durasiKering * mesinKering : 0;
+  const gasPerKg = (gasPerLoad > 0 && kapKering > 0) ? gasPerLoad / kapKering : 0;
+  const out = Math.round(gasPerKg);
+
+  const display = document.getElementById('displayBiayaGasMenit');
+  if (display) display.textContent = 'Rp ' + out.toLocaleString('id-ID');
+
+  return { gasPerLoad, gasPerKg: out, menitGas: menit };
+};
+
+window.saveGasHPPData = function(event) {
+  if (event) event.preventDefault();
+  const btn = document.getElementById('btnSimpanHPP');
+  const toast = document.getElementById('zettGasToast');
+  const showToast = () => {
+    if (!toast) return;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1100);
+  };
+  const namaOutlet = document.getElementById('inputNamaHPP')?.value?.trim() || '';
+  const kapGas = document.getElementById('inputGasKapasitas')?.value || '';
+  const hargaGas = zettCleanNumber(document.getElementById('inputGasHarga')?.value);
+  const jamGas = parseFloat(document.getElementById('inputGasJam')?.value || 0) || 0;
+  const calc = window.calculateGas();
+  const centralGas = document.getElementById('inputCentralGas')?.checked ? 'Ya' : 'Tidak';
+
+  if (!namaOutlet || !kapGas || hargaGas <= 0 || jamGas <= 0 || !calc.menitGas) {
+    if (typeof showOmniToast === 'function') showOmniToast('Lengkapi input Gas terlebih dahulu.', 'error');
+    else console.warn('Lengkapi input Gas terlebih dahulu.');
+    return;
+  }
+  if (btn) {
+    btn.classList.add('is-loading');
+    btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-lg"></i> Menyimpan Data Gas...';
+  }
+
+  const payload = { namaOutlet, kapGas, hargaGas, jamGas, menitGas: calc.menitGas, centralGas, gasPerLoad: calc.gasPerLoad, gasPerKg: calc.gasPerKg };
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (typeof zettRetrySyncHPPFromGSheet === 'function') zettRetrySyncHPPFromGSheet();
+      showToast();
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.innerHTML = '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Gas';
+      }
+      setTimeout(function() {
+        if (typeof window.openHPPForm === 'function') window.openHPPForm('listrik', 'Analisa Biaya Listrik');
+      }, 280);
+    })
+    .withFailureHandler(function(err) {
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.innerHTML = '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Gas';
+      }
+      if (typeof showOmniToast === 'function') showOmniToast('Gagal simpan data gas', 'error');
+      else console.error('Gagal simpan data gas:', err);
+    })
+    .saveGasHPPData(payload);
+};
+
 function zettSetInputValue(id, value) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -3194,29 +3352,66 @@ function zettSetSelectValue(id, value) {
   }
 }
 
+function zettGetHPPMasterDataSources() {
+  const candidates = [];
+
+  if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) {
+    candidates.push(masterDataHPP);
+  }
+
+  if (Array.isArray(window.masterDataHPP)) {
+    candidates.push(window.masterDataHPP);
+  }
+
+  if (typeof APP_STATE !== 'undefined' && APP_STATE && APP_STATE.data) {
+    if (Array.isArray(APP_STATE.data.hppMaster)) candidates.push(APP_STATE.data.hppMaster);
+    if (Array.isArray(APP_STATE.data.hppRows)) candidates.push(APP_STATE.data.hppRows);
+    if (APP_STATE.data.master && Array.isArray(APP_STATE.data.master.hpp)) candidates.push(APP_STATE.data.master.hpp);
+    if (Array.isArray(APP_STATE.data.hpp)) candidates.push(APP_STATE.data.hpp);
+  }
+
+  if (window.APP_STATE && window.APP_STATE.data) {
+    if (window.APP_STATE.data.master && Array.isArray(window.APP_STATE.data.master.hpp)) candidates.push(window.APP_STATE.data.master.hpp);
+    if (Array.isArray(window.APP_STATE.data.hppMaster)) candidates.push(window.APP_STATE.data.hppMaster);
+  }
+
+  try {
+    const cacheKey = (typeof APP_STATE !== 'undefined' && APP_STATE?.cache?.key) || (window.APP_STATE?.cache?.key);
+    if (cacheKey) {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.data && Array.isArray(parsed.data.hpp)) candidates.push(parsed.data.hpp);
+      }
+    }
+  } catch (error) {}
+
+  return candidates.find(arr => Array.isArray(arr) && arr.length > 0) || [];
+}
+
 function zettFindActiveHPPRow() {
-  const outletEl = document.getElementById('inputNamaHPP');
-  const outletName = outletEl ? outletEl.value : '';
+  const outletName = document.getElementById('inputNamaHPP')?.value || '';
 
   if (!outletName) {
     console.warn('Outlet aktif belum dipilih.');
     return null;
   }
 
-  if (!Array.isArray(window.masterDataHPP)) {
+  const dataHPP = zettGetHPPMasterDataSources();
+
+  if (!Array.isArray(dataHPP) || dataHPP.length === 0) {
     console.warn('masterDataHPP belum tersedia.');
     return null;
   }
 
   const activeName = zettNormalizeName(outletName);
-
-  const row = window.masterDataHPP.find(item => {
-    const itemName = item.namaOutlet || item['Nama Outlet'] || item['Nama_Outlet'] || '';
+  const row = dataHPP.find(item => {
+    const itemName = item?.namaOutlet || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '';
     return zettNormalizeName(itemName) === activeName;
   });
 
   if (!row) {
-    console.warn('Data HPP outlet tidak ditemukan:', outletName);
+    console.log('Data HPP outlet tidak ditemukan');
     return null;
   }
 
@@ -3340,15 +3535,80 @@ function zettRunHPPCalculationAfterSync() {
   }
 }
 
+function zettApplyHPPDashboardFallback(row) {
+  if (!row) return;
+
+  const num = key => zettCleanNumber(row[key]);
+  const current = id => zettCleanNumber(document.getElementById(id)?.textContent || 0);
+
+  const gas = num('Gas Per Kg') || num('Gas Per Load');
+  const listrik = num('Cuci Per Kg') + num('Kering Per Kg') + num('Listrik Setrika Kg');
+  const air = num('Air Per Kg') + num('Air Setrika Kg');
+  const packing = current('dash-card-packing');
+  const bahan = current('dash-card-bahan');
+  const nota = current('dash-card-nota');
+
+  const fallback = { gas, listrik, air, packing, bahan, nota };
+  const hasSheetFallback = gas > 0 || listrik > 0 || air > 0;
+
+  if (!hasSheetFallback) return;
+
+  Object.entries(fallback).forEach(([type, value]) => {
+    if (value > 0 && typeof window.zettHPPSetStateValue === 'function') {
+      window.zettHPPSetStateValue(type, value);
+    }
+  });
+
+  if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
+    window.zettHPPUpdateDashboardFromState('gsheet');
+  }
+}
+
 function zettSyncHPPFromGSheet() {
   const row = zettFindActiveHPPRow();
-
-  if (!row) return;
+  if (!row) return false;
 
   zettApplyHPPRowToForm(row);
 
   setTimeout(() => {
     zettRunHPPCalculationAfterSync();
-  }, 150);
+    zettApplyHPPDashboardFallback(row);
+    window.__HPP_GSHEET_SYNC_LOCKED = true;
+    console.log('HPP GSHEET SYNC LOCKED');
+
+    if (typeof window.zettHPPRefreshDashboard === 'function') {
+      window.zettHPPRefreshDashboard();
+    }
+
+    console.log('HPP sync berhasil');
+  }, 180);
+
+  return true;
+}
+
+function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
+  let attempt = 0;
+
+  const run = () => {
+    attempt += 1;
+    const outletValue = document.getElementById('inputNamaHPP')?.value || '';
+    const source = zettGetHPPMasterDataSources();
+    const ready = !!outletValue && Array.isArray(source) && source.length > 0;
+
+    if (ready) {
+      const ok = zettSyncHPPFromGSheet();
+      if (!ok) console.log('Data HPP outlet tidak ditemukan');
+      return;
+    }
+
+    if (attempt >= maxRetry) {
+      console.log('HPP sync retry berhenti');
+      return;
+    }
+
+    setTimeout(run, intervalMs);
+  };
+
+  run();
 }
 </script>
