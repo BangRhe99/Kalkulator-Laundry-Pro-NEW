@@ -3147,4 +3147,208 @@
   if (typeof window.calculateGas !== 'function') {
     window.calculateGas = function() {};
   }
+  /* =========================================================================
+   HPP SYNC FROM GSHEET MASTER DATA
+   Tujuan:
+   - Ambil data HPP sesuai outlet aktif
+   - Isi form lama/premium
+   - Jalankan ulang kalkulasi agar dashboard sesuai GSheet
+=========================================================================== */
+
+function zettNormalizeName(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
+function zettCleanNumber(value) {
+  return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
+}
+
+function zettSetInputValue(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  if (el.type === 'checkbox') {
+    el.checked = value === true || value === 'TRUE' || value === 'Ya' || value === 'Aktif' || value === '1';
+    return;
+  }
+
+  el.value = value == null ? '' : value;
+}
+
+function zettSetSelectValue(id, value) {
+  const el = document.getElementById(id);
+  if (!el || value == null) return;
+
+  const raw = String(value).trim();
+  el.value = raw;
+
+  if (el.value !== raw) {
+    [...el.options].forEach(opt => {
+      if (zettNormalizeName(opt.value) === zettNormalizeName(raw)) {
+        el.value = opt.value;
+      }
+    });
+  }
+}
+
+function zettFindActiveHPPRow() {
+  const outletEl = document.getElementById('inputNamaHPP');
+  const outletName = outletEl ? outletEl.value : '';
+
+  if (!outletName) {
+    console.warn('Outlet aktif belum dipilih.');
+    return null;
+  }
+
+  if (!Array.isArray(window.masterDataHPP)) {
+    console.warn('masterDataHPP belum tersedia.');
+    return null;
+  }
+
+  const activeName = zettNormalizeName(outletName);
+
+  const row = window.masterDataHPP.find(item => {
+    const itemName = item.namaOutlet || item['Nama Outlet'] || item['Nama_Outlet'] || '';
+    return zettNormalizeName(itemName) === activeName;
+  });
+
+  if (!row) {
+    console.warn('Data HPP outlet tidak ditemukan:', outletName);
+    return null;
+  }
+
+  return row;
+}
+
+function zettApplyHPPRowToForm(row) {
+  if (!row) return;
+
+  /* GAS */
+  zettSetSelectValue('inputGasKapasitas', row['Kap Gas']);
+  zettSetInputValue('inputGasHarga', row['Harga Gas']);
+  zettSetInputValue('inputGasJam', row['Jam Gas']);
+  zettSetInputValue('inputGasMenit', row['Menit Gas']);
+  zettSetInputValue('inputCentralGas', row['Central Gas']);
+
+  /* LISTRIK */
+  zettSetInputValue('inputTDL', row['TDL']);
+  zettSetInputValue('inputListrikCuciWatt', row['Watt Cuci']);
+  zettSetInputValue('inputListrikPengeringWatt', row['Watt Kering']);
+  zettSetInputValue('inputListrikPompaWatt', row['Watt Pompa']);
+  zettSetInputValue('inputListrikSetrikaWatt', row['Watt Setrika']);
+
+  /* AIR */
+  zettSetSelectValue('inputAirSumber', row['Sumber Air']);
+  zettSetInputValue('inputAirHargaM3', row['Harga Air']);
+  zettSetInputValue('inputAirHargaTangki', row['Harga Tangki']);
+  zettSetInputValue('inputAirLiterTangki', row['Liter Tangki']);
+  zettSetInputValue('inputAirCuciLiter', row['Air Cuci']);
+  zettSetSelectValue('inputAirBoilerSumber', row['Sumber Setrika']);
+  zettSetInputValue('inputAirHargaGalon', row['Galon Setrika']);
+  zettSetInputValue('inputAirLiterGalon', row['Vol Setrika']);
+  zettSetInputValue('inputAirBoilerLiter', row['Liter Setrika']);
+  zettSetInputValue('inputAirBoilerJam', row['Jam Setrika']);
+  zettSetInputValue('inputAirBoilerKgJam', row['Kg Setrika']);
+
+  /* PACKING */
+  zettSetInputValue('togglePackingPP', row['Packing_PP_Active']);
+  zettSetInputValue('inputPackingPPHarga', row['Packing_PP_Harga']);
+  zettSetInputValue('inputPackingPPIsi', row['Packing_PP_Isi']);
+  zettSetInputValue('inputPackingPPKg', row['Packing_PP_Kg']);
+
+  zettSetInputValue('togglePackingHD', row['Packing_HD_Active']);
+  zettSetInputValue('inputPackingHDHarga', row['Packing_HD_Harga']);
+  zettSetInputValue('inputPackingHDIsi', row['Packing_HD_Isi']);
+  zettSetInputValue('inputPackingHDKg', row['Packing_HD_Kg']);
+
+  zettSetInputValue('togglePackingJinjing', row['Packing_Jinjing_Active']);
+  zettSetInputValue('inputPackingJinjingHarga', row['Packing_Jinjing_Harga']);
+  zettSetInputValue('inputPackingJinjingIsi', row['Packing_Jinjing_Isi']);
+  zettSetInputValue('inputPackingJinjingKg', row['Packing_Jinjing_Kg']);
+
+  /* CHEMICAL */
+  zettSetInputValue('toggleDetergen', row['Chem_Det_Active']);
+  zettSetSelectValue('inputDetergenType', row['Chem_Det_Type']);
+  zettSetInputValue('inputDetergenHarga', row['Chem_Det_Harga']);
+  zettSetInputValue('inputDetergenKapasitas', row['Chem_Det_Kapasitas']);
+  zettSetInputValue('inputDetergenPemakaian', row['Chem_Det_Pemakaian']);
+
+  zettSetInputValue('toggleSoftener', row['Chem_Sof_Active']);
+  zettSetSelectValue('inputSoftenerType', row['Chem_Sof_Type']);
+  zettSetInputValue('inputSoftenerHarga', row['Chem_Sof_Harga']);
+  zettSetInputValue('inputSoftenerKapasitas', row['Chem_Sof_Kapasitas']);
+  zettSetInputValue('inputSoftenerPemakaian', row['Chem_Sof_Pemakaian']);
+
+  zettSetInputValue('toggleParfum', row['Chem_Par_Active']);
+  zettSetInputValue('inputParfumHarga', row['Chem_Par_Harga']);
+  zettSetInputValue('inputParfumKapasitas', row['Chem_Par_Kapasitas']);
+  zettSetInputValue('inputParfumPemakaian', row['Chem_Par_Pemakaian']);
+
+  zettSetInputValue('togglePelicin', row['Chem_Pel_Active']);
+  zettSetSelectValue('inputPelicinType', row['Chem_Pel_Type']);
+  zettSetInputValue('inputPelicinHarga', row['Chem_Pel_Harga']);
+  zettSetInputValue('inputPelicinKapasitas', row['Chem_Pel_Kapasitas']);
+  zettSetInputValue('inputPelicinPemakaian', row['Chem_Pel_Pemakaian']);
+
+  /* NOTA */
+  zettSetSelectValue('inputNotaType', row['Nota_Type']);
+  zettSetSelectValue('inputNotaAppFeeType', row['Nota_App_FeeType']);
+  zettSetInputValue('inputNotaAppHargaBulan', row['Nota_App_HargaBulan']);
+  zettSetInputValue('inputNotaAppTrxBulan', row['Nota_App_TrxBulan']);
+  zettSetInputValue('inputNotaAppHargaTrx', row['Nota_App_HargaTrx']);
+  zettSetInputValue('inputNotaThermalHarga', row['Nota_Thermal_Harga']);
+  zettSetInputValue('inputNotaManualHarga', row['Nota_Manual_Harga']);
+  zettSetInputValue('inputNotaManualLembarTotal', row['Nota_Manual_LembarTotal']);
+  zettSetInputValue('inputNotaManualLembarTrx', row['Nota_Manual_LembarTrx']);
+  zettSetInputValue('inputNotaRataKg', row['Nota_RataKg']);
+}
+
+function zettRunHPPCalculationAfterSync() {
+  if (typeof updateGasDefault === 'function') updateGasDefault();
+  if (typeof calculateGas === 'function') calculateGas();
+
+  if (typeof toggleSetrikaInputs === 'function') toggleSetrikaInputs();
+  if (typeof calculateListrik === 'function') calculateListrik();
+
+  if (typeof toggleAirInputs === 'function') toggleAirInputs();
+  if (typeof calculateAir === 'function') calculateAir();
+
+  if (typeof calculatePacking === 'function') calculatePacking();
+
+  if (typeof toggleBahanActive === 'function') toggleBahanActive();
+  if (typeof toggleBahanInputs === 'function') toggleBahanInputs();
+  if (typeof calculateBahanBaku === 'function') calculateBahanBaku();
+
+  if (typeof toggleNotaInputs === 'function') toggleNotaInputs();
+  if (typeof calculateNota === 'function') calculateNota();
+
+  if (
+    typeof window.HPPStateMachine !== 'undefined' &&
+    typeof window.HPPStateMachine.calculateTotal === 'function'
+  ) {
+    window.HPPStateMachine.calculateTotal();
+  }
+
+  if (
+    typeof window.StateMachine !== 'undefined' &&
+    typeof window.StateMachine.calculateTotal === 'function'
+  ) {
+    window.StateMachine.calculateTotal();
+  }
+}
+
+function zettSyncHPPFromGSheet() {
+  const row = zettFindActiveHPPRow();
+
+  if (!row) return;
+
+  zettApplyHPPRowToForm(row);
+
+  setTimeout(() => {
+    zettRunHPPCalculationAfterSync();
+  }, 150);
+}
 </script>
