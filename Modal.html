@@ -3058,4 +3058,93 @@
       boot();
     }
   })();
+
+  /* =========================================================================
+     HPP SAFE FALLBACK FUNCTIONS
+     Tujuan:
+     - Mencegah error ketika fungsi lama belum tersedia
+     - Menjaga form Air, Bahan, Nota, dan Setrika tetap bisa dibuka
+  ========================================================================= */
+
+  if (typeof window.toggleAirInputs !== 'function') {
+    window.toggleAirInputs = function() {
+      const sumberAir = document.getElementById('inputAirSumber')?.value || 'pdam';
+      const boilerSumber = document.getElementById('inputAirBoilerSumber')?.value || 'sama';
+
+      const wrapAirPdam = document.getElementById('wrapAirPdam');
+      const wrapAirTangki = document.getElementById('wrapAirTangki');
+      const wrapAirSumur = document.getElementById('wrapAirSumur');
+      const wrapAirGalon = document.getElementById('wrapAirGalon');
+
+      if (wrapAirPdam) {
+        wrapAirPdam.classList.toggle('hidden', sumberAir !== 'pdam');
+        wrapAirPdam.style.display = sumberAir === 'pdam' ? '' : 'none';
+      }
+
+      if (wrapAirTangki) {
+        wrapAirTangki.classList.toggle('hidden', sumberAir !== 'tangki');
+        wrapAirTangki.style.display = sumberAir === 'tangki' ? 'flex' : 'none';
+      }
+
+      if (wrapAirSumur) {
+        wrapAirSumur.classList.toggle('hidden', sumberAir !== 'sumur');
+        wrapAirSumur.style.display = sumberAir === 'sumur' ? 'flex' : 'none';
+      }
+
+      if (wrapAirGalon) {
+        wrapAirGalon.classList.toggle('hidden', boilerSumber !== 'galon');
+        wrapAirGalon.style.display = boilerSumber === 'galon' ? 'flex' : 'none';
+      }
+    };
+  }
+
+  if (typeof window.toggleSetrikaInputs !== 'function') {
+    window.toggleSetrikaInputs = function() {
+      const toggle = document.getElementById('toggleSetrikaListrik');
+      const wrap = document.getElementById('wrapSetrikaInputs');
+
+      if (!wrap) return;
+
+      const active = !!toggle?.checked;
+
+      wrap.style.opacity = active ? '1' : '0.4';
+      wrap.style.pointerEvents = active ? 'auto' : 'none';
+    };
+  }
+
+  if (typeof window.toggleBahanActive !== 'function') {
+    window.toggleBahanActive = function() {};
+  }
+
+  if (typeof window.toggleBahanInputs !== 'function') {
+    window.toggleBahanInputs = function() {};
+  }
+
+  if (typeof window.toggleNotaInputs !== 'function') {
+    window.toggleNotaInputs = function() {};
+  }
+
+  if (typeof window.calculateAir !== 'function') {
+    window.calculateAir = function() {};
+  }
+
+  if (typeof window.calculateListrik !== 'function') {
+    window.calculateListrik = function() {};
+  }
+
+  if (typeof window.calculatePacking !== 'function') {
+    window.calculatePacking = function() {};
+  }
+
+  if (typeof window.calculateBahanBaku !== 'function') {
+    window.calculateBahanBaku = function() {};
+  }
+
+  if (typeof window.calculateNota !== 'function') {
+    window.calculateNota = function() {};
+  }
+
+  if (typeof window.calculateGas !== 'function') {
+    window.calculateGas = function() {};
+  }
 </script>
