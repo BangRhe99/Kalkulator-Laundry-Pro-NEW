@@ -2480,6 +2480,10 @@
 
       restoreHppDataForSelectedOutlet();
 
+      if (type === 'gas' && typeof window.zettRefreshActiveHPPRowFromServer === 'function') {
+        window.zettRefreshActiveHPPRowFromServer(getCurrentHppOutlet(), { openType: 'gas' });
+      }
+
       const scroller = byId('mainViewScroller') || document.querySelector('.custom-scroll');
       if (scroller && typeof scroller.scrollTo === 'function') {
         requestAnimationFrame(() => scroller.scrollTo({ top: 0, behavior: 'smooth' }));
@@ -3269,6 +3273,11 @@ function zettCleanNumber(value) {
   return Number(raw) || 0;
 }
 
+function zettFormatNumberID(value) {
+  const number = zettCleanNumber(value);
+  return number ? number.toLocaleString('id-ID') : '';
+}
+
 function zettGetActiveHPPType() {
   const activeTab = document.querySelector('#view-hpp .tab-content:not(.hidden)');
   return activeTab ? String(activeTab.id || '').replace('tab-', '') : '';
@@ -3374,21 +3383,38 @@ window.saveGasHPPData = function(event) {
   setSavingState(true);
 
   const payload = { namaOutlet, kapGas, hargaGas, jamGas, menitGas: calc.menitGas, centralGas, gasPerLoad: calc.gasPerLoad, gasPerKg: calc.gasPerKg };
+  zettPatchActiveHPPRow({
+    'Kap Gas': kapGas,
+    'Harga Gas': zettFormatNumberID(hargaGas),
+    'Jam Gas': jamGas,
+    'Menit Gas': calc.menitGas,
+    'Central Gas': centralGas,
+    'Gas Per Load': calc.gasPerLoad,
+    'Gas Per Kg': calc.gasPerKg
+  });
+
+  if (typeof window.zettHPPSetStateValue === 'function') {
+    window.zettHPPSetStateValue('gas', calc.gasPerKg);
+  }
+  if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
+    window.zettHPPUpdateDashboardFromState('gas-save');
+  }
+
+  setTimeout(function() {
+    setSavingState(false);
+    if (typeof window.openHPPForm === 'function') {
+      window.openHPPForm('listrik', 'Analisa Biaya Listrik');
+    }
+  }, 220);
+
   google.script.run
     .withSuccessHandler(function(res) {
-      setSavingState(false);
-      if (typeof window.zettHPPSetStateValue === 'function') {
-        window.zettHPPSetStateValue('gas', calc.gasPerKg);
-      }
-      if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
-        window.zettHPPUpdateDashboardFromState('gas-save');
-      }
-      if (typeof window.openHPPForm === 'function') {
-        window.openHPPForm('listrik', 'Analisa Biaya Listrik');
-      }
       showGasResult('success', 'Berhasil Disimpan', 'Data gas berhasil disimpan.', { toast: true });
-      if (typeof zettRetrySyncHPPFromGSheet === 'function') {
-        setTimeout(function() { zettRetrySyncHPPFromGSheet(4, 350); }, 120);
+      if (res && res.data) {
+        zettPatchActiveHPPRow(res.data);
+      }
+      if (typeof window.zettRefreshActiveHPPRowFromServer === 'function') {
+        setTimeout(function() { window.zettRefreshActiveHPPRowFromServer(namaOutlet); }, 250);
       }
     })
     .withFailureHandler(function(err) {
@@ -3404,6 +3430,11 @@ function zettSetInputValue(id, value) {
 
   if (el.type === 'checkbox') {
     el.checked = value === true || value === 'TRUE' || value === 'Ya' || value === 'Aktif' || value === '1';
+    return;
+  }
+
+  if (id === 'inputGasHarga') {
+    el.value = value == null || value === '' ? '' : zettFormatNumberID(value);
     return;
   }
 
@@ -3428,6 +3459,10 @@ function zettSetSelectValue(id, value) {
 
 function zettGetHPPMasterDataSources() {
   const candidates = [];
+
+  if (Array.isArray(window.__ZETT_FRESH_HPP_ROWS)) {
+    candidates.push(window.__ZETT_FRESH_HPP_ROWS);
+  }
 
   if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) {
     candidates.push(masterDataHPP);
@@ -3490,6 +3525,86 @@ function zettFindActiveHPPRow() {
   }
 
   return row;
+}
+
+function zettStoreFreshHPPRow(row) {
+  if (!row) return;
+  const rowName = row.namaOutlet || row['Nama Outlet'] || row['Nama_Outlet'] || '';
+  if (!rowName) return;
+
+  if (!Array.isArray(window.__ZETT_FRESH_HPP_ROWS)) {
+    window.__ZETT_FRESH_HPP_ROWS = [];
+  }
+
+  const normalized = zettNormalizeName(rowName);
+  const index = window.__ZETT_FRESH_HPP_ROWS.findIndex(item => {
+    const itemName = item?.namaOutlet || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '';
+    return zettNormalizeName(itemName) === normalized;
+  });
+
+  if (index >= 0) {
+    window.__ZETT_FRESH_HPP_ROWS[index] = row;
+  } else {
+    window.__ZETT_FRESH_HPP_ROWS.unshift(row);
+  }
+
+  if (Array.isArray(window.masterDataHPP)) {
+    const masterIndex = window.masterDataHPP.findIndex(item => {
+      const itemName = item?.namaOutlet || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '';
+      return zettNormalizeName(itemName) === normalized;
+    });
+
+    if (masterIndex >= 0) {
+      window.masterDataHPP[masterIndex] = row;
+    }
+  }
+}
+
+function zettRefreshActiveHPPRowFromServer(outletName, options) {
+  const outlet = String(outletName || document.getElementById('inputNamaHPP')?.value || '').trim();
+  const config = options || {};
+
+  if (!outlet || typeof google === 'undefined' || !google.script || !google.script.run) {
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(response) {
+      if (!response || response.status !== 'success' || !response.data) return;
+      const activeOutlet = document.getElementById('inputNamaHPP')?.value || '';
+      if (zettNormalizeName(activeOutlet) !== zettNormalizeName(outlet)) return;
+
+      zettStoreFreshHPPRow(response.data);
+      zettApplyHPPRowToForm(response.data);
+      zettRunHPPCalculationAfterSync();
+
+      if (config.openType && typeof window.openHPPForm === 'function') {
+        const activeType = window.zettGetActiveHPPType ? window.zettGetActiveHPPType() : '';
+        if (activeType === config.openType) {
+          requestAnimationFrame(function() {
+            zettApplyHPPRowToForm(response.data);
+            if (typeof calculateGas === 'function') calculateGas();
+          });
+        }
+      }
+    })
+    .withFailureHandler(function() {})
+    .getHPPRowByOutlet(outlet);
+}
+
+window.zettRefreshActiveHPPRowFromServer = zettRefreshActiveHPPRowFromServer;
+
+function zettPatchActiveHPPRow(fields) {
+  const outlet = document.getElementById('inputNamaHPP')?.value || '';
+  if (!outlet) return;
+
+  const baseRow = zettFindActiveHPPRow() || { namaOutlet: outlet, 'Nama Outlet': outlet };
+  const patched = Object.assign({}, baseRow, fields || {}, {
+    namaOutlet: baseRow.namaOutlet || outlet,
+    'Nama Outlet': baseRow['Nama Outlet'] || outlet
+  });
+
+  zettStoreFreshHPPRow(patched);
 }
 
 function zettApplyHPPRowToForm(row) {

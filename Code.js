@@ -1354,6 +1354,55 @@ function getAllHPPData() {
   }
 }
 
+function getHPPRowByOutlet(namaOutlet) {
+  try {
+    const targetName = String(namaOutlet || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!targetName) return { status: 'error', message: 'Nama outlet kosong.' };
+
+    const ss = _getSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_HPP_1);
+    if (!sheet) return { status: 'error', message: 'Sheet Struktur_Biaya_1 tidak ditemukan.' };
+
+    const data = sheet.getDataRange().getDisplayValues();
+    const map = zettGetHeaderMap_(sheet);
+    const nameCol = ('Nama Outlet' in map) ? map['Nama Outlet'] : null;
+    if (nameCol === null || data.length < 2) return { status: 'error', message: 'Data HPP belum tersedia.' };
+
+    const headerRow = zettHppHeaderRow_(sheet);
+    for (let i = headerRow; i < data.length; i++) {
+      const row = data[i];
+      const name = String(row[nameCol] || '').trim();
+      if (name.toLowerCase().replace(/\s+/g, ' ') !== targetName) continue;
+
+      const obj = { namaOutlet: name };
+      Object.keys(map).forEach(function(key) {
+        obj[key] = row[map[key]];
+      });
+
+      obj['Packing_PP_Active'] = zettFirst_(obj, ['Packing_PP_Active', 'Plastik PP'], obj['Plastik PP'] || '');
+      obj['Packing_PP_Ukuran'] = zettFirst_(obj, ['Packing_PP_Ukuran', 'Ukr PP', 'Ukr Plastik'], '');
+      obj['Packing_PP_Harga'] = zettFirst_(obj, ['Packing_PP_Harga', 'Harga PP', 'Harga Plastik'], '');
+      obj['Packing_PP_Isi'] = zettFirst_(obj, ['Packing_PP_Isi', 'Isi PP', 'Isi Plastik'], '');
+      obj['Packing_PP_Kg'] = zettFirst_(obj, ['Packing_PP_Kg', 'Kap PP', 'Isi Per Lembar'], '');
+      obj['Packing_HD_Active'] = zettFirst_(obj, ['Packing_HD_Active', 'Plastik HD'], obj['Plastik HD'] || '');
+      obj['Packing_HD_Harga'] = zettFirst_(obj, ['Packing_HD_Harga', 'Harga HD'], '');
+      obj['Packing_HD_Isi'] = zettFirst_(obj, ['Packing_HD_Isi', 'Isi HD'], '');
+      obj['Packing_HD_Kg'] = zettFirst_(obj, ['Packing_HD_Kg', 'Kap HD', 'Isi HD Per Lbr'], '');
+      obj['Packing_Jinjing_Active'] = zettFirst_(obj, ['Packing_Jinjing_Active', 'Plastik Jinjing'], obj['Plastik Jinjing'] || '');
+      obj['Packing_Jinjing_Ukuran'] = zettFirst_(obj, ['Packing_Jinjing_Ukuran', 'Ukr Jinjing'], '');
+      obj['Packing_Jinjing_Harga'] = zettFirst_(obj, ['Packing_Jinjing_Harga', 'Harga Jinjing'], '');
+      obj['Packing_Jinjing_Isi'] = zettFirst_(obj, ['Packing_Jinjing_Isi', 'Isi Jinjing'], '');
+      obj['Packing_Jinjing_Kg'] = zettFirst_(obj, ['Packing_Jinjing_Kg', 'Kap Jinjing', 'Isi Jinjing Per Lbr'], '');
+
+      return { status: 'success', data: obj };
+    }
+
+    return { status: 'error', message: 'Data HPP outlet tidak ditemukan.' };
+  } catch (e) {
+    return { status: 'error', message: e.message };
+  }
+}
+
 function saveStrukturBiaya(payload) {
   try {
     const ss = _getSpreadsheet();

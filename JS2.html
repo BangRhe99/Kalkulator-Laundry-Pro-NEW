@@ -1439,9 +1439,16 @@ async function prosesSimpanBEP() {
   }
 
   window.populateFormHPP = function(namaCabang) {
-    var hppData = (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP))
-      ? masterDataHPP.find(function(h) { return String(h.namaOutlet) === String(namaCabang); })
-      : null;
+    var normalizedCabang = String(namaCabang || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    var freshRows = Array.isArray(window.__ZETT_FRESH_HPP_ROWS) ? window.__ZETT_FRESH_HPP_ROWS : [];
+    var hppData = freshRows.find(function(h) {
+      var name = h && (h.namaOutlet || h['Nama Outlet'] || h['Nama_Outlet']);
+      return String(name || '').trim().toLowerCase().replace(/\s+/g, ' ') === normalizedCabang;
+    });
+
+    if (!hppData && typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) {
+      hppData = masterDataHPP.find(function(h) { return String(h.namaOutlet) === String(namaCabang); });
+    }
 
     if (!hppData) {
       if (typeof resetFormHPP === 'function') resetFormHPP();
@@ -1450,6 +1457,10 @@ async function prosesSimpanBEP() {
 
     if (typeof safeSetSelect === 'function') safeSetSelect('inputGasKapasitas', zettPick(hppData, ['Kap Gas'], ''));
     zettSetVal('inputGasHarga', zettPick(hppData, ['Harga Gas'], ''));
+    if (typeof formatRupiahInput === 'function') {
+      var gasHargaEl = document.getElementById('inputGasHarga');
+      if (gasHargaEl) formatRupiahInput(gasHargaEl);
+    }
     zettSetVal('inputGasJam', zettPick(hppData, ['Jam Gas'], ''));
     zettSetCheck('inputCentralGas', zettPick(hppData, ['Central Gas'], false));
     zettSetVal('inputGasMenit', zettPick(hppData, ['Menit Gas'], '0') + ' Menit');
