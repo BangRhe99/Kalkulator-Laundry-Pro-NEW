@@ -415,6 +415,13 @@
   };
 
   window.loadDaftarCabang = function () {
+    if (
+      typeof window.zettLoadDaftarCabangProfil === 'function' &&
+      document.getElementById('tableDaftarOutlet')
+    ) {
+      return window.zettLoadDaftarCabangProfil();
+    }
+
     window.zettForceLoadDashboardData();
   };
 

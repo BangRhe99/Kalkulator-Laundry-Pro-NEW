@@ -458,7 +458,9 @@
           try { applyCabangUIData(); } catch (error) { console.error('applyCabangUIData error:', error); }
         }
 
-        if (typeof loadDaftarCabang === 'function') {
+        if (typeof window.zettLoadDaftarCabangProfil === 'function') {
+          try { window.zettLoadDaftarCabangProfil(); } catch (error) { console.error('zettLoadDaftarCabangProfil error:', error); }
+        } else if (typeof loadDaftarCabang === 'function') {
           try { loadDaftarCabang(); } catch (error) { console.error('loadDaftarCabang error:', error); }
         }
 
