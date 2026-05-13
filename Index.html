@@ -428,6 +428,48 @@
         target.classList.remove('hidden');
       }
 
+      if (tabName === 'hpp') {
+
+        const hppDashboard =
+          document.getElementById('hpp-dashboard-view');
+        const hppForm =
+          document.getElementById('hpp-form-view');
+
+        if (target) {
+          target.classList.remove('hidden');
+          target.style.display = 'block';
+          target.style.visibility = 'visible';
+          target.style.opacity = '1';
+        }
+
+        if (hppDashboard) {
+          hppDashboard.classList.remove('hidden');
+          hppDashboard.style.display = 'grid';
+          hppDashboard.style.visibility = 'visible';
+          hppDashboard.style.opacity = '1';
+          hppDashboard.style.pointerEvents = 'auto';
+          hppDashboard.style.filter = 'none';
+        }
+
+        if (hppForm) {
+          hppForm.classList.add('hidden');
+          hppForm.style.display = 'none';
+        }
+
+        if (
+          window.StateMachine &&
+          typeof window.StateMachine.calculateTotal === 'function'
+        ) {
+          window.StateMachine.calculateTotal();
+        } else if (
+          window.HPPStateMachine &&
+          typeof window.HPPStateMachine.calculateTotal === 'function'
+        ) {
+          window.HPPStateMachine.calculateTotal();
+        }
+
+      }
+
       document.querySelectorAll('.nav-btn').forEach(btn => {
 
         btn.classList.remove(

@@ -2600,18 +2600,24 @@
 <style id="zett-hpp-action-button-final-css">
   #actionAreaHPP {
     position: sticky;
-    bottom: 0;
+    bottom: clamp(0.5rem, 1.4vw, 1rem);
     z-index: 80;
     margin-top: clamp(1.25rem, 2vw, 2rem) !important;
-    padding: 1rem clamp(0.75rem, 2vw, 1.25rem) !important;
-    border-top: 1px solid rgba(226, 232, 240, 0.85) !important;
-    background: rgba(248, 250, 252, 0.88);
-    backdrop-filter: blur(22px) saturate(1.12);
-    -webkit-backdrop-filter: blur(22px) saturate(1.12);
-    box-shadow: 0 -18px 45px rgba(15, 23, 42, 0.06);
-    border-radius: 1.5rem 1.5rem 0 0;
+    padding: 0.85rem clamp(0.85rem, 2vw, 1.15rem) !important;
+    border: 1px solid rgba(226, 232, 240, 0.72) !important;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.94), rgba(248,250,252,0.9)),
+      radial-gradient(circle at 100% 0%, rgba(15,23,42,0.08), transparent 36%);
+    backdrop-filter: blur(26px) saturate(1.18);
+    -webkit-backdrop-filter: blur(26px) saturate(1.18);
+    box-shadow: 0 18px 48px -28px rgba(15, 23, 42, 0.45), inset 0 1px 0 rgba(255,255,255,0.9);
+    border-radius: 1.35rem;
     transform: translate3d(0,0,0);
     will-change: transform, opacity;
+  }
+
+  #view-hpp #hpp-form-view {
+    padding-bottom: clamp(0.75rem, 2vw, 1.25rem);
   }
 
   #actionAreaHPP .zett-hpp-actions-final {
@@ -2625,9 +2631,29 @@
   #btnUpdateHPP,
   #btnSimpanHPP {
     min-height: 3.25rem;
-    border-radius: 1.15rem !important;
+    border-radius: 999px !important;
     transform: translate3d(0,0,0);
     will-change: transform, box-shadow;
+    letter-spacing: 0;
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease !important;
+  }
+
+  #btnUpdateHPP:hover,
+  #btnSimpanHPP:hover {
+    transform: translateY(-2px) translate3d(0,0,0);
+  }
+
+  #btnUpdateHPP:active,
+  #btnSimpanHPP:active {
+    transform: translateY(0) scale(0.985) translate3d(0,0,0);
+  }
+
+  #btnUpdateHPP:disabled,
+  #btnSimpanHPP:disabled,
+  #btnSimpanHPP.zett-gas-saving {
+    cursor: wait;
+    opacity: 0.82;
+    transform: none !important;
   }
 
   #btnUpdateHPP:not(.hidden),
@@ -2638,7 +2664,7 @@
   #btnSimpanHPP.zett-save-new-mode {
     background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
     border: 1px solid rgba(15, 23, 42, 0.95) !important;
-    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    box-shadow: 0 18px 38px -18px rgba(15, 23, 42, 0.62), inset 0 1px 0 rgba(255,255,255,0.1) !important;
   }
 
   #btnUpdateHPP.zett-update-mode {
@@ -2650,7 +2676,7 @@
       left: 0;
       right: 0;
       padding: 0.85rem 0.85rem calc(0.85rem + env(safe-area-inset-bottom)) !important;
-      border-radius: 1.25rem 1.25rem 0 0;
+      border-radius: 1.2rem;
     }
 
     #actionAreaHPP .zett-hpp-actions-final {
@@ -3237,6 +3263,42 @@ window.calculateGas = function() {
 
 window.saveGasHPPData = function(event) {
   if (event) event.preventDefault();
+  const btnSimpan = document.getElementById('btnSimpanHPP');
+  const originalButtonHtml = btnSimpan ? btnSimpan.innerHTML : '';
+
+  const setSavingState = function(isSaving) {
+    if (!btnSimpan) return;
+    btnSimpan.disabled = isSaving;
+    btnSimpan.classList.toggle('zett-gas-saving', isSaving);
+    btnSimpan.innerHTML = isSaving
+      ? '<i class="ph ph-spinner-gap text-xl animate-spin"></i> Menyimpan...'
+      : originalButtonHtml || '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Gas';
+  };
+
+  const showGasResult = function(type, title, text) {
+    if (window.Swal && typeof window.Swal.fire === 'function') {
+      return window.Swal.fire({
+        icon: type,
+        title: title,
+        text: text,
+        confirmButtonText: 'OK',
+        buttonsStyling: false,
+        showClass: { popup: 'swal2-show' },
+        hideClass: { popup: 'swal2-hide' },
+        customClass: {
+          popup: 'rounded-[1.75rem] border border-slate-200/70 shadow-[0_28px_90px_rgba(15,23,42,0.22)]',
+          title: 'text-slate-900 font-black tracking-tight',
+          htmlContainer: 'text-slate-500 font-semibold',
+          confirmButton: 'bg-slate-950 hover:bg-slate-800 text-white px-7 py-3 rounded-full font-extrabold shadow-[0_14px_30px_rgba(15,23,42,0.22)] transition-all active:scale-[0.98]'
+        }
+      });
+    }
+
+    if (typeof showOmniToast === 'function') {
+      showOmniToast(text, type === 'success' ? 'success' : 'error');
+    }
+  };
+
   const namaOutlet = document.getElementById('inputNamaHPP')?.value?.trim() || '';
   const kapGas = document.getElementById('inputGasKapasitas')?.value || '';
   const hargaGas = zettCleanNumber(document.getElementById('inputGasHarga')?.value);
@@ -3245,18 +3307,23 @@ window.saveGasHPPData = function(event) {
   const centralGas = document.getElementById('inputCentralGas')?.checked ? 'Ya' : 'Tidak';
 
   if (!namaOutlet || !kapGas || hargaGas <= 0 || jamGas <= 0 || !calc.menitGas) {
-    alert('Lengkapi input Gas terlebih dahulu.');
+    showGasResult('warning', 'Data Belum Lengkap', 'Lengkapi input Gas terlebih dahulu.');
     return;
   }
+
+  setSavingState(true);
 
   const payload = { namaOutlet, kapGas, hargaGas, jamGas, menitGas: calc.menitGas, centralGas, gasPerLoad: calc.gasPerLoad, gasPerKg: calc.gasPerKg };
   google.script.run
     .withSuccessHandler(function(res) {
       if (typeof zettRetrySyncHPPFromGSheet === 'function') zettRetrySyncHPPFromGSheet();
-      alert((res && res.message) || 'Data gas berhasil disimpan');
-      if (typeof window.openHPPForm === 'function') window.openHPPForm('listrik', 'Analisa Biaya Listrik');
+      setSavingState(false);
+      showGasResult('success', 'Berhasil Disimpan', 'Data gas berhasil disimpan.');
     })
-    .withFailureHandler(function(err) { alert('Gagal simpan data gas: ' + (err && err.message ? err.message : err)); })
+    .withFailureHandler(function(err) {
+      setSavingState(false);
+      showGasResult('error', 'Gagal Menyimpan', 'Gagal simpan data gas: ' + (err && err.message ? err.message : err));
+    })
     .saveGasHPPData(payload);
 };
 
