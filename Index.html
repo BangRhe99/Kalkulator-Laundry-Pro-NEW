@@ -529,6 +529,32 @@
 
       console.log('Outlet changed:', value);
 
+      const hppView = document.getElementById('view-hpp');
+      const hppDashboard = document.getElementById('hpp-dashboard-view');
+      const hppForm = document.getElementById('hpp-form-view');
+
+      if (hppView && !hppView.classList.contains('hidden')) {
+        if (hppDashboard) {
+          hppDashboard.classList.remove('hidden');
+          hppDashboard.style.display = 'grid';
+          hppDashboard.style.visibility = 'visible';
+          hppDashboard.style.opacity = '1';
+          hppDashboard.style.pointerEvents = 'auto';
+          hppDashboard.style.filter = 'none';
+        }
+
+        if (hppForm) {
+          hppForm.classList.add('hidden');
+          hppForm.style.display = 'none';
+        }
+
+        document.querySelectorAll('#view-hpp .tab-content')
+          .forEach(tab => {
+            tab.classList.add('hidden');
+            tab.style.display = 'none';
+          });
+      }
+
       if (typeof populateFormHPP === 'function') {
         populateFormHPP(value);
       }
