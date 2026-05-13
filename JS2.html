@@ -29,27 +29,35 @@ let dashboardRawData = [];
 let masterDataHPP = []; 
 let hasLoadedInitialData = false;
 
+function hydrateCabangFromCache() {
+    try {
+        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
+        if(!cachedStr) return false;
+
+        const parsed = JSON.parse(cachedStr);
+        const res = parsed && parsed.data;
+        if(!res || res.status !== 'success') return false;
+
+        masterDataCabang = Array.isArray(res.kapasitas)
+          ? res.kapasitas.map(item => ({...item, namaOutlet: item.namaOutlet || item.namaLaundry || 'Unknown'}))
+          : [];
+        masterDataHPP = Array.isArray(res.hpp) ? res.hpp : [];
+        window.masterDataHPP = masterDataHPP;
+        dashboardRawData = Array.isArray(res.transactions) ? res.transactions : [];
+        hasLoadedInitialData = true;
+        APP_STATE.data.master = res;
+        return true;
+    } catch(e) {
+        console.error("Cache hydrate Error:", e);
+        return false;
+    }
+}
+
 // =========================================================================
 // [BangRhe REVISI: 0ms SYNCHRONOUS BOOTSTRAPPER (SWR PATTERN)]
 // =========================================================================
 (function zettBotFastBoot() {
-    try {
-        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
-        if(cachedStr) {
-            const parsed = JSON.parse(cachedStr);
-            const res = parsed.data;
-            if(res && res.status === 'success') {
-                masterDataCabang = res.kapasitas.map(item => ({...item, namaOutlet: item.namaOutlet || item.namaLaundry || 'Unknown'}));
-                masterDataHPP = res.hpp;
-                window.masterDataHPP = masterDataHPP;
-                dashboardRawData = res.transactions;
-                hasLoadedInitialData = true;
-                APP_STATE.data.master = res;
-            }
-        }
-    } catch(e) {
-        console.error("FastBoot Error:", e);
-    }
+    hydrateCabangFromCache();
 })();
 
 // Fungsi Core Render UI yang ditarik dari fungsi Asynchronous
@@ -167,7 +175,7 @@ function applyCabangUIData() {
         }
 
         html += `
-        <div class="bg-white border-b border-l border-r border-slate-200 ${topBorderClass} rounded-[1.5rem] p-5 shadow-sm hover:shadow-md transition-all cursor-pointer relative flex flex-col group overflow-hidden" onclick="pilihCabang('${safeNama}');">
+        <div class="kapasitas-outlet-card bg-white border-b border-l border-r border-slate-200 ${topBorderClass} rounded-[1.5rem] p-5 shadow-sm hover:shadow-md transition-all cursor-pointer relative flex flex-col group overflow-hidden" onclick="pilihCabang('${safeNama}', this);">
             <div class="flex justify-between items-start mb-5">
                 <div class="w-12 h-12 ${iconClass} rounded-xl flex items-center justify-center border shrink-0 group-hover:scale-105 transition-transform">
                     <i class="ph ph-buildings text-2xl"></i>
@@ -205,22 +213,38 @@ function applyCabangUIData() {
 
 async function loadDaftarCabang() {
     // 1. Render UI INSTAN (0ms) dari Memori FastBoot
+    if(!hasLoadedInitialData) {
+        hydrateCabangFromCache();
+    }
+
     if(hasLoadedInitialData) {
         applyCabangUIData();
     } else {
         const tableArea = document.getElementById('tableDaftarOutlet');
-        if(tableArea) tableArea.innerHTML = `<div class="p-10 text-center text-slate-500 font-bold"><i class="ph ph-spinner-gap animate-spin text-4xl mb-4 text-emerald-500 mx-auto"></i><br>Sinkronisasi Cloud Pertama...</div>`;
+        if(tableArea) tableArea.innerHTML = `
+          <div class="p-10 text-center text-slate-500 font-bold bg-slate-50/80 rounded-[1.5rem] border border-slate-100">
+            <i class="ph ph-spinner-gap animate-spin text-4xl mb-4 text-emerald-500 mx-auto"></i>
+            <br>Memuat data outlet...
+          </div>`;
     }
 
     // 2. STALE-WHILE-REVALIDATE (Bg Sync Tanpa Memblokir Layar)
-    if (!StateMachine.acquireLock('bgRevalidate')) return;
+    if (!StateMachine.acquireLock('bgRevalidate')) {
+        if(hasLoadedInitialData) applyCabangUIData();
+        return;
+    }
 
     try {
         const cachedStr = localStorage.getItem(APP_STATE.cache.key);
         let needsFetch = true;
         if (cachedStr) {
             const parsed = JSON.parse(cachedStr);
-            if (Date.now() < parsed.expiry) needsFetch = false;
+            if (Date.now() < parsed.expiry) {
+                needsFetch = false;
+                if(!hasLoadedInitialData && hydrateCabangFromCache()) {
+                    applyCabangUIData();
+                }
+            }
         }
 
         if (needsFetch) {
@@ -240,10 +264,29 @@ async function loadDaftarCabang() {
                 hasLoadedInitialData = true;
                 APP_STATE.data.master = data;
                 applyCabangUIData(); 
+            } else {
+                const tableArea = document.getElementById('tableDaftarOutlet');
+                if(tableArea && !hasLoadedInitialData) {
+                    tableArea.innerHTML = `
+                      <div class="p-10 text-center text-slate-500 bg-slate-50 rounded-[1.5rem] border border-slate-200 border-dashed">
+                        <i class="ph ph-warning-circle text-5xl mb-3 text-amber-500"></i>
+                        <p class="font-extrabold text-slate-700 mb-1">Data outlet belum bisa dimuat</p>
+                        <p class="text-sm font-semibold">Coba buka ulang halaman Profil Operasional.</p>
+                      </div>`;
+                }
             }
         }
     } catch(e) {
         console.error("SWR Sync Error:", e);
+        const tableArea = document.getElementById('tableDaftarOutlet');
+        if(tableArea && !hasLoadedInitialData) {
+            tableArea.innerHTML = `
+              <div class="p-10 text-center text-slate-500 bg-slate-50 rounded-[1.5rem] border border-slate-200 border-dashed">
+                <i class="ph ph-cloud-warning text-5xl mb-3 text-rose-500"></i>
+                <p class="font-extrabold text-slate-700 mb-1">Gagal memuat data outlet</p>
+                <p class="text-sm font-semibold">Periksa koneksi lalu coba lagi.</p>
+              </div>`;
+        }
     } finally {
         StateMachine.releaseLock('bgRevalidate');
     }
@@ -581,7 +624,16 @@ function filterCabang() {
     toggleActionButtons();
 }
 
-function pilihCabang(namaCabang) {
+function pilihCabang(namaCabang, cardEl) {
+    if (cardEl) {
+        cardEl.style.transform = 'scale(0.985)';
+        cardEl.style.boxShadow = '0 18px 34px -24px rgba(37, 99, 235, 0.55)';
+        setTimeout(() => {
+            cardEl.style.transform = '';
+            cardEl.style.boxShadow = '';
+        }, 140);
+    }
+
     const cabang = masterDataCabang.find(c => String(c.namaOutlet) === namaCabang);
     if(!cabang) return;
 

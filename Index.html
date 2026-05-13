@@ -428,6 +428,42 @@
         target.classList.remove('hidden');
       }
 
+      if (tabName === 'kapasitas') {
+
+        const kapasitasDashboard =
+          document.getElementById('kapasitas-dashboard');
+        const kapasitasForm =
+          document.getElementById('kapasitas-form-container');
+
+        if (target) {
+          target.classList.remove('hidden');
+          target.style.display = 'block';
+          target.style.visibility = 'visible';
+          target.style.opacity = '1';
+        }
+
+        if (kapasitasDashboard) {
+          kapasitasDashboard.classList.remove('hidden');
+          kapasitasDashboard.style.display = 'block';
+          kapasitasDashboard.style.visibility = 'visible';
+          kapasitasDashboard.style.opacity = '1';
+        }
+
+        if (kapasitasForm) {
+          kapasitasForm.classList.add('hidden');
+          kapasitasForm.style.display = 'none';
+        }
+
+        if (typeof applyCabangUIData === 'function') {
+          try { applyCabangUIData(); } catch (error) { console.error('applyCabangUIData error:', error); }
+        }
+
+        if (typeof loadDaftarCabang === 'function') {
+          try { loadDaftarCabang(); } catch (error) { console.error('loadDaftarCabang error:', error); }
+        }
+
+      }
+
       if (tabName === 'hpp') {
 
         const hppDashboard =
