@@ -56,6 +56,11 @@ function normalizeKapasitasRow(item) {
     row.pengeringDurasi = pick('pengeringDurasi', 'durasiKering', 'Durasi Kering') || 0;
     row.setrikaDurasi = pick('setrikaDurasi', 'durasiSetrika', 'Durasi Setrika') || 0;
     row.tipeSetrikaUtama = pick('tipeSetrikaUtama', 'tipeSetrika', 'Tipe Setrika') || 'uap';
+    const pakaiPengeringRaw = pick('pakaiPengering', 'Pakai Pengering');
+    const metodePengeringanRaw = String(pick('metodePengeringan', 'Metode Pengeringan') || '').trim().toLowerCase();
+    const dryerText = String(pakaiPengeringRaw || '').trim().toLowerCase();
+    row.pakaiPengering = !(pakaiPengeringRaw === false || dryerText === 'false' || dryerText === 'tidak' || dryerText === '0' || metodePengeringanRaw === 'jemur');
+    row.metodePengeringan = row.pakaiPengering ? (metodePengeringanRaw || 'mesin') : 'jemur';
     row.jamBuka = pick('jamBuka', 'Jam Buka');
     row.jamTutup = pick('jamTutup', 'Jam Tutup');
     row.durasiOperasional = pick('durasiOperasional', 'Durasi Operasional');
@@ -184,6 +189,7 @@ function applyCabangUIData() {
         let capVal = (c.kategori === 'Self Service') ? loadBulan : kgBulan;
         
         let formattedCap = Number(capVal).toLocaleString('id-ID');
+        const dryerLabel = c.pakaiPengering === false ? 'Jemur' : 'Pengering';
 
         let topBorderClass = 'border-t-4 border-t-slate-300';
         let iconClass = 'bg-blue-50/80 text-blue-500 border-blue-100';
@@ -232,6 +238,10 @@ function applyCabangUIData() {
                 <div class="flex justify-between items-center bg-emerald-50/80 px-3 py-2.5 rounded-xl border border-emerald-100/60 mt-1">
                     <span class="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5"><i class="ph ph-waves text-sm"></i> Kapasitas</span>
                     <span class="text-xs font-black text-emerald-600">${formattedCap} ${unitLabel}</span>
+                </div>
+                <div class="flex justify-between items-center bg-orange-50/70 px-3 py-2.5 rounded-xl border border-orange-100/70">
+                    <span class="text-[11px] font-bold text-orange-600 flex items-center gap-1.5"><i class="ph ph-wind text-sm"></i> Pengering</span>
+                    <span class="text-xs font-black text-orange-600">${dryerLabel}</span>
                 </div>
             </div>
         </div>`;
@@ -498,6 +508,10 @@ function resetHPPDashboardToZero() {
   const labelsContainer = document.getElementById('hpp-donut-labels');
   if (labelsContainer) labelsContainer.innerHTML = '';
 
+  ['gas', 'listrik', 'air', 'packing', 'bahan', 'nota'].forEach(type => setHPPCardOperationalState(type, true, ''));
+  const insight = document.getElementById('hpp-operational-insight');
+  if (insight) insight.remove();
+
   if (typeof APP_STATE !== 'undefined' && APP_STATE && APP_STATE.data) {
     APP_STATE.data.hpp = {
       gas: 0,
@@ -527,6 +541,8 @@ const runServer = (serverFunction, ...args) => {
 function showOmniToast(message, type = 'success') {
   let toast = document.getElementById('omni-toast');
   if(!toast) { toast = document.createElement('div'); toast.id = 'omni-toast'; document.body.appendChild(toast); }
+  if (window.__omniToastTimer) clearTimeout(window.__omniToastTimer);
+  if (window.__omniToastRemoveTimer) clearTimeout(window.__omniToastRemoveTimer);
   const isMobile = window.innerWidth < 768;
   const bgColor = type === 'success' ? 'bg-[#0f172a]' : (type === 'warning' ? 'bg-amber-500' : 'bg-[#ef4444]');
   const icon = type === 'success' ? 'ph-check-circle text-emerald-400' : (type === 'warning' ? 'ph-warning text-white' : 'ph-warning-circle text-white');
@@ -542,10 +558,15 @@ function showOmniToast(message, type = 'success') {
     toast.style.transform = isMobile ? 'translate(-50%, 0)' : 'translate(0, 0)';
   });
 
-  setTimeout(() => {
+  window.__omniToastTimer = setTimeout(() => {
     toast.style.opacity = '0';
     toast.style.transform = isMobile ? 'translate(-50%, -50px)' : 'translate(100px, 0)';
-  }, 4000);
+    window.__omniToastRemoveTimer = setTimeout(() => {
+      if (toast && toast.parentNode) toast.remove();
+      window.__omniToastTimer = null;
+      window.__omniToastRemoveTimer = null;
+    }, 350);
+  }, 3500);
 }
 
 function showOmniConfirm(title, message) {
@@ -640,6 +661,7 @@ function showFormKapasitas(isNew = true) {
             form.style.visibility = 'visible';
             form.style.opacity = '1';
             form.style.pointerEvents = 'auto';
+            ensureDryerToggleUI();
             const cards = form.querySelectorAll('.bento-card');
             cards.forEach((c, i) => {
               c.style.opacity = '0'; c.style.transform = 'translateY(20px)';
@@ -685,6 +707,7 @@ function resetFormKapasitas() {
         if(document.getElementById('containerMesinSetrika')) document.getElementById('containerMesinSetrika').innerHTML = '';
         
         addMesin('cuci', 0, 0, 0); addMesin('pengering', 0, 0, 0); addMesin('setrika', 0, 0, 0); 
+        setPakaiPengering(true);
         updateNavName(); toggleActionButtons(); toggleKategoriLaundry(); calculateCapacity(); 
         if (typeof checkHPPLock === 'function') checkHPPLock();
     } catch(e) { console.error("Gagal melakukan reset form: ", e); }
@@ -772,6 +795,7 @@ function pilihCabang(namaCabang, cardEl) {
     if(document.getElementById('displayDurasi')) document.getElementById('displayDurasi').innerText = cabang.durasiOperasional || "- Jam - Menit";
 
     safeSetSelect('jenisMesinCuci', cabang.tipeMesinCuci || 'commercial'); safeSetSelect('jenisMesinPengering', cabang.tipeMesinPengering || 'commercial'); safeSetSelect('jenisSetrikaUtama', cabang.tipeSetrikaUtama || 'uap');
+    setPakaiPengering(cabang.pakaiPengering !== false);
 
     document.getElementById('containerMesinCuci').innerHTML = ''; document.getElementById('containerMesinPengering').innerHTML = ''; document.getElementById('containerMesinSetrika').innerHTML = '';
 
@@ -791,6 +815,111 @@ function pilihCabang(namaCabang, cardEl) {
     toggleActionButtons(); toggleKategoriLaundry(); calculateCapacity(); 
     showFormKapasitas(false);
     if (typeof checkHPPLock === 'function') checkHPPLock();
+}
+
+function normalizeNumericInputValue(input) {
+    let raw = String(input && input.value !== undefined ? input.value : '').replace(/[^0-9]/g, '');
+    if (!raw) return '';
+    return String(parseInt(raw, 10) || 0);
+}
+
+function bindCapacityNumericInputGuard() {
+    if (window.__zettNumericInputGuardBound) return;
+    window.__zettNumericInputGuardBound = true;
+
+    const isCapacityNumeric = (target) => target && target.matches && target.matches('.m-unit, .m-durasi, .m-kg');
+
+    document.addEventListener('focusin', function(e) {
+        if (!isCapacityNumeric(e.target)) return;
+        e.target.value = normalizeNumericInputValue(e.target);
+        requestAnimationFrame(() => {
+            try { e.target.select(); } catch (err) {}
+        });
+    });
+
+    document.addEventListener('input', function(e) {
+        if (!isCapacityNumeric(e.target)) return;
+        const normalized = normalizeNumericInputValue(e.target);
+        if (e.target.value !== normalized) e.target.value = normalized;
+        if (typeof calculateCapacity === 'function') calculateCapacity();
+    });
+
+    document.addEventListener('blur', function(e) {
+        if (!isCapacityNumeric(e.target)) return;
+        const normalized = normalizeNumericInputValue(e.target);
+        e.target.value = normalized === '' ? '0' : normalized;
+        if (typeof calculateCapacity === 'function') calculateCapacity();
+    }, true);
+}
+
+function ensureDryerToggleUI() {
+    const container = document.getElementById('containerMesinPengering');
+    if (!container || document.getElementById('togglePakaiPengering')) return;
+
+    const card = container.closest('.bento-card') || container.parentElement;
+    if (!card) return;
+
+    const toggleWrap = document.createElement('div');
+    toggleWrap.id = 'pengeringModeControl';
+    toggleWrap.className = 'mb-3 rounded-2xl border border-orange-100 bg-orange-50/60 px-4 py-3 transition-all duration-300';
+    toggleWrap.innerHTML = `
+      <label class="flex items-center justify-between gap-3 cursor-pointer select-none">
+        <span class="flex flex-col">
+          <span class="text-[11px] font-black uppercase tracking-[0.16em] text-orange-600">Mode Pengering</span>
+          <span id="labelPakaiPengering" class="text-xs font-bold text-slate-500">Mesin pengering aktif</span>
+        </span>
+        <span class="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full bg-orange-500 transition-colors duration-300 shadow-inner">
+          <input type="checkbox" id="togglePakaiPengering" class="sr-only" checked>
+          <span id="thumbPakaiPengering" class="absolute left-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 translate-x-5"></span>
+        </span>
+      </label>`;
+
+    card.insertBefore(toggleWrap, container);
+    const toggle = document.getElementById('togglePakaiPengering');
+    if (toggle) {
+        toggle.addEventListener('change', function() {
+            setPakaiPengering(toggle.checked);
+            calculateCapacity();
+        });
+    }
+}
+
+function setPakaiPengering(isActive) {
+    ensureDryerToggleUI();
+    const active = isActive !== false;
+    const toggle = document.getElementById('togglePakaiPengering');
+    const thumb = document.getElementById('thumbPakaiPengering');
+    const label = document.getElementById('labelPakaiPengering');
+    const control = document.getElementById('pengeringModeControl');
+    const container = document.getElementById('containerMesinPengering');
+    const select = document.getElementById('jenisMesinPengering');
+
+    if (toggle) toggle.checked = active;
+    if (thumb) thumb.style.transform = active ? 'translateX(1.25rem)' : 'translateX(0)';
+    if (label) label.innerText = active ? 'Mesin pengering aktif' : 'OFF - sistem jemur, pengering tidak dihitung';
+    if (control) {
+        control.classList.toggle('bg-orange-50/60', active);
+        control.classList.toggle('border-orange-100', active);
+        control.classList.toggle('bg-slate-50', !active);
+        control.classList.toggle('border-slate-200', !active);
+    }
+    if (container) {
+        container.style.opacity = active ? '1' : '0.38';
+        container.style.filter = active ? 'none' : 'grayscale(1)';
+        container.querySelectorAll('input, button').forEach(el => {
+            el.disabled = !active;
+            el.style.pointerEvents = active ? 'auto' : 'none';
+        });
+    }
+    if (select) {
+        select.disabled = !active;
+        select.style.opacity = active ? '1' : '0.45';
+    }
+}
+
+function isPakaiPengering() {
+    const toggle = document.getElementById('togglePakaiPengering');
+    return toggle ? toggle.checked : true;
 }
 
 function resetFormHPP() {
@@ -964,6 +1093,7 @@ function populateFormHPP(namaCabang) {
   if(typeof calculateNota === 'function') calculateNota();
   
   if(typeof StateMachine !== 'undefined') StateMachine.calculateTotal();
+  if(typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(namaCabang);
 }
 
 document.addEventListener('click', function(e) {
@@ -984,6 +1114,7 @@ if (!window.__zettHPPSelectListenerBound) {
             if (typeof resetHPPDashboardToZero === 'function') resetHPPDashboardToZero();
         } else if (typeof populateFormHPP === 'function') {
             populateFormHPP(outletName);
+            if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(outletName);
         }
 
         if (typeof toggleActionButtons === 'function') toggleActionButtons();
@@ -1033,7 +1164,104 @@ function checkHPPLock() {
     }
 }
 
+function getOutletOperationalConfig(outletName) {
+    const name = String(outletName || '').trim();
+    const outlet = masterDataCabang.find(c => String(c.namaOutlet || '').trim().toLowerCase() === name.toLowerCase());
+    if (!outlet) return null;
+
+    const jenisSetrika = String(outlet.tipeSetrikaUtama || outlet.tipeSetrika || '').toLowerCase();
+    const tipePengering = String(outlet.tipeMesinPengering || '').toLowerCase();
+    const pakaiPengering = outlet.pakaiPengering !== false;
+    const usesIronElectric = jenisSetrika.includes('listrik');
+    const usesDryer = pakaiPengering;
+    const dryerUsesGas = usesDryer && (tipePengering.includes('konversi') || tipePengering.includes('gas'));
+
+    return {
+        namaOutlet: outlet.namaOutlet,
+        kategori: outlet.kategori || 'Drop Off/Kiloan',
+        pakaiPengering,
+        metodePengeringan: pakaiPengering ? 'mesin' : 'jemur',
+        jenisSetrika: outlet.tipeSetrikaUtama || outlet.tipeSetrika || 'uap',
+        usesGas: dryerUsesGas,
+        usesElectricity: true,
+        usesDryer,
+        usesIronElectric,
+        dryerUsesGas
+    };
+}
+
+function setHPPCardOperationalState(type, active, note) {
+    const valueEl = document.getElementById('dash-card-' + type);
+    const card = valueEl ? valueEl.closest('.hpp-card-dash') : null;
+    if (!card) return;
+
+    card.style.opacity = active ? '1' : '0.38';
+    card.style.filter = active ? 'none' : 'grayscale(1)';
+    card.style.pointerEvents = active ? 'auto' : 'none';
+    card.title = note || '';
+}
+
+function applyOperationalConfigToHPP(outletName) {
+    const config = getOutletOperationalConfig(outletName);
+    const dashboard = document.getElementById('hpp-dashboard-view');
+    if (!dashboard || !config) return;
+
+    let insight = document.getElementById('hpp-operational-insight');
+    if (!insight) {
+        insight = document.createElement('div');
+        insight.id = 'hpp-operational-insight';
+        insight.className = 'rounded-2xl border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-xs font-bold text-emerald-700 shadow-sm';
+        const firstCard = dashboard.querySelector('.bg-white\\/95, .bg-white');
+        (firstCard || dashboard).prepend(insight);
+    }
+
+    const messages = [];
+    if (!config.usesDryer) messages.push('Outlet ini menggunakan sistem jemur, biaya pengering tidak dihitung.');
+    if (config.usesIronElectric) messages.push('Setrika listrik aktif, biaya energi diarahkan ke komponen listrik.');
+    if (!config.usesGas) messages.push('Tidak ada alat berbasis gas aktif, analisa gas dibuat non-dominan.');
+    if (messages.length === 0) messages.push('Konfigurasi operasional outlet aktif dan siap dipakai untuk analisa HPP.');
+    insight.innerText = messages.join(' ');
+
+    setHPPCardOperationalState('gas', config.usesGas, 'Gas tidak relevan untuk konfigurasi outlet ini.');
+    setHPPCardOperationalState('listrik', true, 'Listrik tetap relevan untuk operasi outlet.');
+
+    const gasInputs = ['inputGasKapasitas', 'inputGasHarga', 'inputGasJam', 'inputCentralGas'];
+    gasInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = !config.usesGas;
+        el.style.opacity = config.usesGas ? '1' : '0.45';
+    });
+    if (!config.usesGas) {
+        const gasDisplay = document.getElementById('displayBiayaGasMenit');
+        if (gasDisplay) gasDisplay.textContent = 'Rp 0';
+    }
+
+    const dryerWatt = document.getElementById('inputListrikPengeringWatt');
+    if (dryerWatt) {
+        dryerWatt.disabled = !config.usesDryer;
+        dryerWatt.style.opacity = config.usesDryer ? '1' : '0.45';
+    }
+
+    const ironToggle = document.getElementById('toggleSetrikaListrik');
+    if (ironToggle && config.usesIronElectric && !ironToggle.checked) {
+        ironToggle.checked = true;
+        if (typeof toggleSetrikaInputs === 'function') toggleSetrikaInputs();
+        if (typeof calculateListrik === 'function') calculateListrik();
+    }
+
+    if (!config.usesGas && typeof window.zettHPPSetStateValue === 'function') {
+        window.zettHPPSetStateValue('gas', 0);
+        if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('operational-config');
+    }
+}
+
+window.getOutletOperationalConfig = getOutletOperationalConfig;
+window.applyOperationalConfigToHPP = applyOperationalConfigToHPP;
+
 document.addEventListener('DOMContentLoaded', () => {
+    bindCapacityNumericInputGuard();
+    ensureDryerToggleUI();
     ['inputOkupansiCuci', 'inputOkupansiKering', 'inputOkupansiSetrika'].forEach(id => {
         const el = document.getElementById(id);
         if(el) {
@@ -1096,10 +1324,12 @@ function addMesin(tipe, unit = 0, durasi = 0, kg = 0) {
         input.addEventListener('change', calculateCapacity);
     });
 
+    if (tipe === 'pengering') setPakaiPengering(isPakaiPengering());
     calculateCapacity();
 }
 
 function _extractMesin(tipe) {
+  if (tipe === 'pengering' && !isPakaiPengering()) return [];
   let idContainer = '';
   if (tipe === 'cuci') idContainer = 'containerMesinCuci';
   else if (tipe === 'pengering') idContainer = 'containerMesinPengering';
@@ -1234,7 +1464,7 @@ function calculateCapacity() {
         };
 
         const hasilCuci = hitungSiklusMesin('cuci', okCuci);
-        const hasilKering = hitungSiklusMesin('pengering', okKering);
+        const hasilKering = isPakaiPengering() ? hitungSiklusMesin('pengering', okKering) : { loadHari: 0, kgHari: 0, kgMinggu: 0, kgBulan: 0 };
         const hasilSetrika = hitungSiklusMesin('setrika', okSetrika);
 
         const isSelfService = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service';
@@ -1294,6 +1524,8 @@ async function prosesSimpanKapasitas() {
             estimasiKeringKgBulan: document.getElementById('dispKeringKgBulan') ? document.getElementById('dispKeringKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
             estimasiSetrikaKgBulan: document.getElementById('dispSetrikaKgBulan') ? document.getElementById('dispSetrikaKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
             durasiOperasional: document.getElementById('displayDurasi') ? document.getElementById('displayDurasi').innerText : '',
+            pakaiPengering: isPakaiPengering(),
+            metodePengeringan: isPakaiPengering() ? 'mesin' : 'jemur',
             
             tipeMesinCuci: document.getElementById('jenisMesinCuci') ? document.getElementById('jenisMesinCuci').value : 'commercial',
             tipeMesinPengering: document.getElementById('jenisMesinPengering') ? document.getElementById('jenisMesinPengering').value : 'commercial',
@@ -1517,21 +1749,42 @@ function hapusOutlet() {
         
         if(!StateMachine.acquireLock('hapusOutlet')) return;
         
-        const originalHtml = document.getElementById('btnHapusKapasitas').innerHTML;
-        document.getElementById('btnHapusKapasitas').innerHTML = '<i class="ph ph-spinner-gap animate-spin"></i> Menghapus...';
-        document.getElementById('btnHapusKapasitas').classList.add('opacity-80', 'pointer-events-none');
+        const btnHapus = document.getElementById('btnHapusKapasitas');
+        const originalHtml = btnHapus ? btnHapus.innerHTML : '';
+        const previousCabang = masterDataCabang.slice();
+        const previousHPP = masterDataHPP.slice();
+        const selectedHPP = document.getElementById('inputNamaHPP');
+        const selectedHPPValue = selectedHPP ? selectedHPP.value : '';
+
+        if (btnHapus) {
+            btnHapus.innerHTML = '<i class="ph ph-spinner-gap animate-spin"></i> Menghapus...';
+            btnHapus.classList.add('opacity-80', 'pointer-events-none');
+        }
+
+        masterDataCabang = masterDataCabang.filter(c => String(c.namaOutlet).trim().toLowerCase() !== nama.toLowerCase());
+        masterDataHPP = masterDataHPP.filter(h => String(h.namaOutlet).trim().toLowerCase() !== nama.toLowerCase());
+        if (selectedHPP && selectedHPP.value === nama) selectedHPP.value = '';
+        StateMachine.invalidateClientCache();
+        hideFormKapasitas();
+        applyCabangUIData();
+        showOmniToast('Outlet dihapus dari tampilan. Sinkronisasi cloud berjalan...', 'success');
         
         try {
             const response = await runServer('deleteKapasitas', nama);
             StateMachine.invalidateClientCache();
             showOmniToast(response.message, 'success');
-            hideFormKapasitas();
             loadDaftarCabang(true);
         } catch(error) {
+            masterDataCabang = previousCabang;
+            masterDataHPP = previousHPP;
+            if (selectedHPP) selectedHPP.value = selectedHPPValue;
+            applyCabangUIData();
             showOmniToast(error.message, 'error');
         } finally {
-            document.getElementById('btnHapusKapasitas').innerHTML = originalHtml;
-            document.getElementById('btnHapusKapasitas').classList.remove('opacity-80', 'pointer-events-none');
+            if (btnHapus) {
+                btnHapus.innerHTML = originalHtml;
+                btnHapus.classList.remove('opacity-80', 'pointer-events-none');
+            }
             StateMachine.releaseLock('hapusOutlet');
         }
     });
@@ -1639,6 +1892,7 @@ async function prosesSimpanBEP() {
 
     if (!hppData) {
       if (typeof resetFormHPP === 'function') resetFormHPP();
+      if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(namaCabang);
       return;
     }
 
@@ -1734,6 +1988,7 @@ async function prosesSimpanBEP() {
     if (typeof calculateNota === 'function') calculateNota();
     if (typeof toggleActionButtons === 'function') toggleActionButtons();
     if (typeof checkHPPLock === 'function') checkHPPLock();
+    if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(namaCabang);
   };
 
   // Tambahkan field ukuran packing ke payload jika input tersedia, tanpa mengubah fungsi simpanDataHPP lama.

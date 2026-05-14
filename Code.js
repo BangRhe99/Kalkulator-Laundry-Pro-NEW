@@ -262,7 +262,8 @@ function setupDatabase() {
       'Durasi Operasional', 'Kategori Laundry', 
       'Mesin Cuci', 'Mesin Pengering', 'Kap Cuci', 'Kap Kering', 'Durasi Cuci', 'Durasi Kering', 
       'Alat Setrika', 'Kap Setrika', 'Durasi Setrika', 
-      'Tipe Mesin Cuci', 'Tipe Mesin Pengering', 'Tipe Setrika'
+      'Tipe Mesin Cuci', 'Tipe Mesin Pengering', 'Tipe Setrika',
+      'Pakai Pengering', 'Metode Pengeringan'
     ];
 
     const headersHPP1 = [
@@ -318,6 +319,8 @@ function setupDatabase() {
         if (!('Tipe Mesin Cuci' in colMap)) missingHeaders.push('Tipe Mesin Cuci');
         if (!('Tipe Mesin Pengering' in colMap)) missingHeaders.push('Tipe Mesin Pengering');
         if (!('Tipe Setrika' in colMap)) missingHeaders.push('Tipe Setrika');
+        if (!('Pakai Pengering' in colMap)) missingHeaders.push('Pakai Pengering');
+        if (!('Metode Pengeringan' in colMap)) missingHeaders.push('Metode Pengeringan');
         if (missingHeaders.length > 0) {
           const lastCol = sheetKapasitas.getLastColumn();
           const newRange = sheetKapasitas.getRange(1, lastCol + 1, 1, missingHeaders.length);
@@ -1003,17 +1006,20 @@ function saveKapasitas(payload) {
       setVal('Durasi Operasional', payload.durasiOperasional);
       setVal('Kategori Laundry', pickPayload('kategori', 'kategoriLaundry'));
       setVal('Mesin Cuci', pickPayload('cuciUnit', 'mesinCuci'));
-      setVal('Mesin Pengering', pickPayload('pengeringUnit', 'mesinPengering'));
+      const pakaiPengering = payload.pakaiPengering === false || String(payload.pakaiPengering).toLowerCase() === 'false' ? 'Tidak' : 'Ya';
+      setVal('Mesin Pengering', pakaiPengering === 'Tidak' ? 0 : pickPayload('pengeringUnit', 'mesinPengering'));
       setVal('Kap Cuci', pickPayload('cuciKg', 'kapCuci'));
-      setVal('Kap Kering', pickPayload('pengeringKg', 'kapKering'));
+      setVal('Kap Kering', pakaiPengering === 'Tidak' ? 0 : pickPayload('pengeringKg', 'kapKering'));
       setVal('Durasi Cuci', pickPayload('cuciDurasi', 'durasiCuci'));
-      setVal('Durasi Kering', pickPayload('pengeringDurasi', 'durasiKering'));
+      setVal('Durasi Kering', pakaiPengering === 'Tidak' ? 0 : pickPayload('pengeringDurasi', 'durasiKering'));
       setVal('Alat Setrika', pickPayload('setrikaUnit', 'alatSetrika'));
       setVal('Kap Setrika', pickPayload('setrikaKg', 'kapSetrika'));
       setVal('Durasi Setrika', pickPayload('setrikaDurasi', 'durasiSetrika'));
       setVal('Tipe Mesin Cuci', payload.tipeMesinCuci);
       setVal('Tipe Mesin Pengering', payload.tipeMesinPengering);
       setVal('Tipe Setrika', pickPayload('tipeSetrikaUtama', 'tipeSetrika'));
+      setVal('Pakai Pengering', pakaiPengering);
+      setVal('Metode Pengeringan', pakaiPengering === 'Tidak' ? 'jemur' : (pickPayload('metodePengeringan') || 'mesin'));
     };
 
     if (targetRow !== -1) {
@@ -1075,6 +1081,11 @@ function getDaftarKapasitas() {
       const kapSetrika = getValue(row, 'Kap Setrika');
       const durasiSetrika = getValue(row, 'Durasi Setrika');
       const tipeSetrika = getValue(row, 'Tipe Setrika');
+      const pakaiPengeringRaw = getValue(row, 'Pakai Pengering');
+      const metodePengeringanRaw = getValue(row, 'Metode Pengeringan');
+      const pakaiPengering = String(pakaiPengeringRaw || '').trim().toLowerCase();
+      const metodePengeringan = String(metodePengeringanRaw || '').trim().toLowerCase();
+      const dryerActive = !(pakaiPengering === 'tidak' || pakaiPengering === 'false' || pakaiPengering === '0' || metodePengeringan === 'jemur');
 
       result.push({
         namaOutlet: namaOutlet,
@@ -1115,7 +1126,9 @@ function getDaftarKapasitas() {
         tipeMesinCuci: getValue(row, 'Tipe Mesin Cuci'),
         tipeMesinPengering: getValue(row, 'Tipe Mesin Pengering'),
         tipeSetrika: tipeSetrika,
-        tipeSetrikaUtama: tipeSetrika
+        tipeSetrikaUtama: tipeSetrika,
+        pakaiPengering: dryerActive,
+        metodePengeringan: dryerActive ? (metodePengeringan || 'mesin') : 'jemur'
       });
     }
 
@@ -1310,7 +1323,8 @@ function setupDatabase() {
       'Target Okupansi Cuci', 'Target Okupansi Kering', 'Target Okupansi Setrika',
       'Estimasi Cuci', 'Estimasi Kering', 'Estimasi Setrika', 'Durasi Operasional', 'Kategori Laundry',
       'Mesin Cuci', 'Mesin Pengering', 'Kap Cuci', 'Kap Kering', 'Durasi Cuci', 'Durasi Kering',
-      'Alat Setrika', 'Kap Setrika', 'Durasi Setrika', 'Tipe Mesin Cuci', 'Tipe Mesin Pengering', 'Tipe Setrika'
+      'Alat Setrika', 'Kap Setrika', 'Durasi Setrika', 'Tipe Mesin Cuci', 'Tipe Mesin Pengering', 'Tipe Setrika',
+      'Pakai Pengering', 'Metode Pengeringan'
     ];
 
     const initSheet = function(sheetName, headerArr) {
