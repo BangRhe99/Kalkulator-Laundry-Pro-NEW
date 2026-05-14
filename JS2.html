@@ -69,6 +69,98 @@ function normalizeKapasitasRow(item) {
 
 window.normalizeKapasitasRow = normalizeKapasitasRow;
 
+function formatJamOperasional(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '--:--';
+
+    const cleaned = raw.replace(/\./g, ':');
+    const parts = cleaned.split(':');
+    let hour = 0;
+    let minute = 0;
+
+    if (parts.length === 1) {
+        hour = parseInt(parts[0], 10);
+        minute = 0;
+    } else {
+        hour = parseInt(parts[0], 10);
+        minute = parseInt(parts[1] || '0', 10);
+    }
+
+    if (isNaN(hour) || isNaN(minute)) return raw || '--:--';
+    hour = Math.max(0, Math.min(23, hour));
+    minute = Math.max(0, Math.min(59, minute));
+    return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+}
+
+function hitungDurasiMenit(jamBuka, jamTutup) {
+    const buka = formatJamOperasional(jamBuka);
+    const tutup = formatJamOperasional(jamTutup);
+    if (!/^\d{2}:\d{2}$/.test(buka) || !/^\d{2}:\d{2}$/.test(tutup)) return 0;
+
+    const bParts = buka.split(':');
+    const tParts = tutup.split(':');
+    const b = (parseInt(bParts[0], 10) * 60) + parseInt(bParts[1], 10);
+    let t = (parseInt(tParts[0], 10) * 60) + parseInt(tParts[1], 10);
+    if (t < b) t += 24 * 60;
+    return Math.max(0, t - b);
+}
+
+function formatDurasiOperasional(jamBuka, jamTutup, fallbackDurasi) {
+    const totalMenit = hitungDurasiMenit(jamBuka, jamTutup);
+    if (!totalMenit) return fallbackDurasi || '-';
+
+    const jam = Math.floor(totalMenit / 60);
+    const menit = totalMenit % 60;
+    let label = '';
+    if (jam > 0) label += jam + ' Jam';
+    if (menit > 0) label += (label ? ' ' : '') + menit + ' Menit';
+    if (!label) label = '0 Menit';
+    return label + ' (' + totalMenit.toLocaleString('id-ID') + ' menit)';
+}
+
+function getOutletCapacityBreakdown(outlet) {
+    const c = normalizeKapasitasRow(outlet);
+    const kategori = String(c.kategori || '').toLowerCase();
+    const isSelfService = kategori.includes('self service');
+    const isHybrid = kategori.includes('hybrid');
+    const hariPerBulan = c.mingguTutup === 'Ya (Tutup)' ? 26 : 30;
+    const operasionalMenit = hitungDurasiMenit(c.jamBuka, c.jamTutup);
+    const parseNum = (value, fallback = 0) => {
+        const n = parseFloat(String(value || '').replace(/[^0-9.-]/g, ''));
+        return isNaN(n) ? fallback : n;
+    };
+    const calc = (unit, durasi, kg, okupansi, preferLoad) => {
+        const u = parseNum(unit);
+        const d = parseNum(durasi);
+        const k = parseNum(kg);
+        const ok = parseNum(okupansi, 100) / 100;
+        if (u <= 0 || d <= 0 || operasionalMenit <= 0) return 0;
+        const siklusPerMesin = Math.floor(operasionalMenit / d);
+        const loadHari = Math.floor(siklusPerMesin * u * ok);
+        if (preferLoad) return loadHari * hariPerBulan;
+        return (siklusPerMesin * u * k * ok) * hariPerBulan;
+    };
+
+    const preferLoad = isSelfService;
+    const hybridUnit = isHybrid ? 'Kg/Bln / Load/Bln' : (preferLoad ? 'Load/Bln' : 'Kg/Bln');
+    const setrikaType = String(c.tipeSetrikaUtama || '').toLowerCase().includes('listrik') ? 'Kap S.Listrik' : 'Kap S.Uap';
+
+    const cuciVal = calc(c.cuciUnit, c.cuciDurasi, c.cuciKg, c.targetOkupansiCuci, preferLoad);
+    const keringVal = c.pakaiPengering === false ? 0 : calc(c.pengeringUnit, c.pengeringDurasi, c.pengeringKg, c.targetOkupansiKering, preferLoad);
+    const setrikaVal = calc(c.setrikaUnit, c.setrikaDurasi, c.setrikaKg, c.targetOkupansiSetrika, false);
+
+    const result = [
+        { label: 'Kap Cuci', value: cuciVal, unit: hybridUnit },
+        { label: 'Kap Kering', value: keringVal, unit: hybridUnit, disabled: c.pakaiPengering === false, note: c.pakaiPengering === false ? 'Jemur' : '' }
+    ];
+
+    if (!isSelfService) {
+        result.push({ label: isHybrid ? (setrikaType === 'Kap S.Listrik' ? 'Kap S.Listrik' : 'Kap S.Uap') : setrikaType, value: setrikaVal, unit: 'Kg/Bln' });
+    }
+
+    return result;
+}
+
 function hydrateCabangFromCache() {
     try {
         const cachedStr = localStorage.getItem(APP_STATE.cache.key);
@@ -149,47 +241,18 @@ function applyCabangUIData() {
     masterDataCabang.forEach(c => {
         const kategoriLabel = c.kategori || 'Drop Off';
         const safeNama = String(c.namaOutlet).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        
-        let operasionalMenit = 0;
-        if (c.jamBuka && c.jamTutup) {
-            const bH = parseInt(c.jamBuka.split(':')[0], 10);
-            const bM = parseInt(c.jamBuka.split(':')[1] || 0, 10);
-            const tH = parseInt(c.jamTutup.split(':')[0], 10);
-            const tM = parseInt(c.jamTutup.split(':')[1] || 0, 10);
-            if (!isNaN(bH) && !isNaN(bM) && !isNaN(tH) && !isNaN(tM)) {
-                let mBuka = bH * 60 + bM;
-                let mTutup = tH * 60 + tM;
-                if (mTutup < mBuka) mTutup += 24 * 60; 
-                operasionalMenit = mTutup - mBuka;
-            }
-        }
-        
-        const hariPerBulan = (c.mingguTutup === 'Ya (Tutup)') ? 26 : 30;
-        const okCuciStr = String(c.targetOkupansiCuci).replace(/[^0-9.]/g, '');
-        const okCuci = (parseFloat(okCuciStr) || 100) / 100;
-        
-        let totalLoadAwal = 0;
-        let totalKgAwal = 0;
-        
-        let uC = parseFloat(c.cuciUnit) || 0;
-        let dC = parseFloat(c.cuciDurasi) || 0;
-        let kC = parseFloat(c.cuciKg) || 0;
-
-        if (dC > 0 && operasionalMenit > 0) {
-            const maxSiklusPerMesin = Math.floor(operasionalMenit / dC);
-            const maxLoadSemuaUnit = maxSiklusPerMesin * uC;
-            totalLoadAwal += maxLoadSemuaUnit;
-            totalKgAwal += (maxLoadSemuaUnit * kC); 
-        }
-        
-        const loadBulan = Math.floor(totalLoadAwal * okCuci) * hariPerBulan;
-        const kgBulan = (totalKgAwal * okCuci) * hariPerBulan;
-        
-        let unitLabel = (c.kategori === 'Self Service') ? 'Load/Bln' : 'Kg/Bln';
-        let capVal = (c.kategori === 'Self Service') ? loadBulan : kgBulan;
-        
-        let formattedCap = Number(capVal).toLocaleString('id-ID');
-        const dryerLabel = c.pakaiPengering === false ? 'Jemur' : 'Pengering';
+        const jamOpsLabel = formatJamOperasional(c.jamBuka) + ' - ' + formatJamOperasional(c.jamTutup);
+        const durasiLabel = formatDurasiOperasional(c.jamBuka, c.jamTutup, c.durasiOperasional);
+        const capacityRows = getOutletCapacityBreakdown(c);
+        const capacityHtml = capacityRows.map(item => {
+            const valueText = item.disabled ? (item.note || '-') : ((Number(item.value) || 0).toLocaleString('id-ID') + ' ' + item.unit);
+            const rowClass = item.disabled ? 'bg-orange-50/70 border-orange-100/70 text-orange-600' : 'bg-emerald-50/80 border-emerald-100/60 text-emerald-600';
+            return `
+                <div class="flex justify-between items-center ${rowClass} px-3 py-2.5 rounded-xl border">
+                    <span class="text-[11px] font-bold flex items-center gap-1.5"><i class="ph ph-gauge text-sm"></i> ${escapeHtml(item.label)}</span>
+                    <span class="text-xs font-black text-right">${escapeHtml(valueText)}</span>
+                </div>`;
+        }).join('');
 
         let topBorderClass = 'border-t-4 border-t-slate-300';
         let iconClass = 'bg-blue-50/80 text-blue-500 border-blue-100';
@@ -229,20 +292,13 @@ function applyCabangUIData() {
             <div class="mt-auto space-y-2">
                 <div class="flex justify-between items-center bg-slate-50/80 px-3 py-2.5 rounded-xl border border-slate-100">
                     <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5"><i class="ph ph-clock text-sm"></i> Jam Ops</span>
-                    <span class="text-xs font-black text-slate-700">${c.jamBuka} - ${c.jamTutup}</span>
+                    <span class="text-xs font-black text-slate-700">${jamOpsLabel}</span>
                 </div>
                 <div class="flex justify-between items-center bg-slate-50/80 px-3 py-2.5 rounded-xl border border-slate-100">
                     <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5"><i class="ph ph-hourglass text-sm"></i> Durasi Ops</span>
-                    <span class="text-xs font-black text-slate-700">${c.durasiOperasional}</span>
+                    <span class="text-xs font-black text-slate-700 text-right">${durasiLabel}</span>
                 </div>
-                <div class="flex justify-between items-center bg-emerald-50/80 px-3 py-2.5 rounded-xl border border-emerald-100/60 mt-1">
-                    <span class="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5"><i class="ph ph-waves text-sm"></i> Kapasitas</span>
-                    <span class="text-xs font-black text-emerald-600">${formattedCap} ${unitLabel}</span>
-                </div>
-                <div class="flex justify-between items-center bg-orange-50/70 px-3 py-2.5 rounded-xl border border-orange-100/70">
-                    <span class="text-[11px] font-bold text-orange-600 flex items-center gap-1.5"><i class="ph ph-wind text-sm"></i> Pengering</span>
-                    <span class="text-xs font-black text-orange-600">${dryerLabel}</span>
-                </div>
+                ${capacityHtml}
             </div>
         </div>`;
     });
@@ -662,6 +718,7 @@ function showFormKapasitas(isNew = true) {
             form.style.opacity = '1';
             form.style.pointerEvents = 'auto';
             ensureDryerToggleUI();
+            syncDryerToggleVisibility();
             const cards = form.querySelectorAll('.bento-card');
             cards.forEach((c, i) => {
               c.style.opacity = '0'; c.style.transform = 'translateY(20px)';
@@ -708,6 +765,7 @@ function resetFormKapasitas() {
         
         addMesin('cuci', 0, 0, 0); addMesin('pengering', 0, 0, 0); addMesin('setrika', 0, 0, 0); 
         setPakaiPengering(true);
+        syncDryerToggleVisibility();
         updateNavName(); toggleActionButtons(); toggleKategoriLaundry(); calculateCapacity(); 
         if (typeof checkHPPLock === 'function') checkHPPLock();
     } catch(e) { console.error("Gagal melakukan reset form: ", e); }
@@ -782,9 +840,8 @@ function pilihCabang(namaCabang, cardEl) {
     if(globalHeaderDropdown) globalHeaderDropdown.value = cabang.namaOutlet;
     if(document.getElementById('inputKategori')) document.getElementById('inputKategori').value = cabang.kategori || 'Drop Off/Kiloan';
     
-    let jBuka = String(cabang.jamBuka || '').trim(); let jTutup = String(cabang.jamTutup || '').trim();
-    if(jBuka.includes(':')) { let parts = jBuka.split(':'); jBuka = parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0'); }
-    if(jTutup.includes(':')) { let parts = jTutup.split(':'); jTutup = parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0'); }
+    let jBuka = formatJamOperasional(cabang.jamBuka);
+    let jTutup = formatJamOperasional(cabang.jamTutup);
 
     if(document.getElementById('inputJamBuka')) document.getElementById('inputJamBuka').value = jBuka;
     if(document.getElementById('inputJamTutup')) document.getElementById('inputJamTutup').value = jTutup;
@@ -796,6 +853,7 @@ function pilihCabang(namaCabang, cardEl) {
 
     safeSetSelect('jenisMesinCuci', cabang.tipeMesinCuci || 'commercial'); safeSetSelect('jenisMesinPengering', cabang.tipeMesinPengering || 'commercial'); safeSetSelect('jenisSetrikaUtama', cabang.tipeSetrikaUtama || 'uap');
     setPakaiPengering(cabang.pakaiPengering !== false);
+    syncDryerToggleVisibility();
 
     document.getElementById('containerMesinCuci').innerHTML = ''; document.getElementById('containerMesinPengering').innerHTML = ''; document.getElementById('containerMesinSetrika').innerHTML = '';
 
@@ -812,7 +870,7 @@ function pilihCabang(namaCabang, cardEl) {
     updateNavName();
     
     if (typeof populateFormHPP === 'function') populateFormHPP(namaCabang);
-    toggleActionButtons(); toggleKategoriLaundry(); calculateCapacity(); 
+    toggleActionButtons(); toggleKategoriLaundry(); syncDryerToggleVisibility(); calculateCapacity(); 
     showFormKapasitas(false);
     if (typeof checkHPPLock === 'function') checkHPPLock();
 }
@@ -884,6 +942,38 @@ function ensureDryerToggleUI() {
     }
 }
 
+function shouldShowDryerToggle(kategori) {
+    const k = String(kategori || '').toLowerCase();
+    return k.includes('drop') || k.includes('kiloan');
+}
+
+function syncDryerToggleVisibility() {
+    ensureDryerToggleUI();
+    const kategori = document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : '';
+    const show = shouldShowDryerToggle(kategori);
+    const control = document.getElementById('pengeringModeControl');
+    const container = document.getElementById('containerMesinPengering');
+    const select = document.getElementById('jenisMesinPengering');
+
+    if (control) control.style.display = show ? 'block' : 'none';
+    if (!show) {
+        if (container) {
+            container.style.opacity = '1';
+            container.style.filter = 'none';
+            container.querySelectorAll('input, button').forEach(el => {
+                el.disabled = false;
+                el.style.pointerEvents = 'auto';
+            });
+        }
+        if (select) {
+            select.disabled = false;
+            select.style.opacity = '1';
+        }
+    } else {
+        setPakaiPengering(isPakaiPengering());
+    }
+}
+
 function setPakaiPengering(isActive) {
     ensureDryerToggleUI();
     const active = isActive !== false;
@@ -918,6 +1008,8 @@ function setPakaiPengering(isActive) {
 }
 
 function isPakaiPengering() {
+    const kategori = document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : '';
+    if (!shouldShowDryerToggle(kategori)) return true;
     const toggle = document.getElementById('togglePakaiPengering');
     return toggle ? toggle.checked : true;
 }
@@ -1274,6 +1366,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnHapus) {
         btnHapus.addEventListener('click', hapusOutlet);
     }
+
+    const kategoriInput = document.getElementById('inputKategori');
+    if (kategoriInput && !kategoriInput.dataset.zettDryerToggleBound) {
+        kategoriInput.dataset.zettDryerToggleBound = '1';
+        kategoriInput.addEventListener('change', syncDryerToggleVisibility);
+        kategoriInput.addEventListener('input', syncDryerToggleVisibility);
+    }
     
     setTimeout(autoRetryPendingSync, 2000);
     checkHPPLock();
@@ -1381,6 +1480,7 @@ function toggleKategoriLaundry() {
         }
     });
 
+    syncDryerToggleVisibility();
     calculateCapacity();
 }
 
@@ -1503,6 +1603,7 @@ async function prosesSimpanKapasitas() {
 
     const isUpdate = !document.getElementById('btnUpdateKapasitas').classList.contains('hidden');
     const btnId = isUpdate ? 'btnUpdateKapasitas' : 'btnSimpanKapasitas';
+    let previousCabang = null;
 
     setBtnState(btnId, 'loading');
 
@@ -1544,20 +1645,39 @@ async function prosesSimpanKapasitas() {
             setrikaKg: exSetrika.max_kg
         };
 
-        const response = await runServer('saveKapasitasPremium', payload);
-        
+        previousCabang = masterDataCabang.slice();
+        const optimisticRow = normalizeKapasitasRow(payload);
+        const existingIndex = masterDataCabang.findIndex(c => String(c.namaOutlet).trim().toLowerCase() === nama.toLowerCase());
+
+        if (existingIndex >= 0) {
+            masterDataCabang = masterDataCabang.map((c, idx) => idx === existingIndex ? optimisticRow : c);
+        } else {
+            masterDataCabang = [optimisticRow].concat(masterDataCabang);
+        }
+
         StateMachine.invalidateClientCache();
-        
+        if (APP_STATE.data.master && APP_STATE.data.master.status === 'success') {
+            APP_STATE.data.master = {...APP_STATE.data.master, kapasitas: masterDataCabang};
+        }
+        applyCabangUIData();
         setBtnState(btnId, 'success');
+        hideFormKapasitas();
+        showOmniToast('Perubahan outlet diterapkan. Sinkronisasi cloud berjalan...', 'success');
+
+        const response = await runServer('saveKapasitasPremium', payload);
+        StateMachine.invalidateClientCache();
+        setBtnState(btnId, 'idle');
         showOmniToast(response.message, 'success');
-        
-        setTimeout(() => {
-            setBtnState(btnId, 'idle');
-            hideFormKapasitas();
-            loadDaftarCabang(true); 
-        }, 1500);
+        setTimeout(() => loadDaftarCabang(true), 500);
 
     } catch(error) {
+        if (previousCabang) {
+            masterDataCabang = previousCabang;
+            if (APP_STATE.data.master && APP_STATE.data.master.status === 'success') {
+                APP_STATE.data.master = {...APP_STATE.data.master, kapasitas: masterDataCabang};
+            }
+            applyCabangUIData();
+        }
         setBtnState(btnId, 'idle');
         showOmniToast(error.message, 'error');
     } finally {
