@@ -133,6 +133,74 @@ function formatHybridCapacity(loadValue, kgValue) {
     return `${formatAngkaID(loadValue)} Load (${formatAngkaID(kgValue)} Kg)/Bln`;
 }
 
+function formatKgID(value) {
+    const num = Number(value || 0);
+    return `${(Number.isFinite(num) ? num : 0).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Kg`;
+}
+
+function ensureHybridCapacityRow(anchorId, rowId, labelText) {
+    const anchorValue = document.getElementById(anchorId);
+    if (!anchorValue) return null;
+
+    const anchorRow = anchorValue.closest('.flex');
+    if (!anchorRow || !anchorRow.parentNode) return null;
+
+    let row = document.getElementById(rowId);
+    if (!row) {
+        row = anchorRow.cloneNode(true);
+        row.id = rowId;
+
+        const label = row.querySelector('[id^="lbl"]') || row.firstElementChild;
+        const value = row.querySelector('[id^="disp"]') || row.lastElementChild;
+
+        if (label) {
+            label.id = rowId + 'Label';
+            label.innerText = labelText;
+        }
+        if (value) {
+            value.id = rowId + 'Value';
+            value.innerText = '0';
+        }
+
+        anchorRow.parentNode.insertBefore(row, anchorRow);
+    }
+
+    row.style.display = 'flex';
+    return row.querySelector('#' + rowId + 'Value') || row.querySelector('[id$="Value"]') || row.lastElementChild;
+}
+
+function updateHybridCapacityExtraRows(isHybrid, data) {
+    const rows = [
+        ['dispCuciKgMinggu', 'hybridCuciLoadMingguRow', 'Load/Minggu:', data.cuci.loadMinggu],
+        ['dispCuciKgBulan', 'hybridCuciLoadBulanRow', 'Load/Bulan:', data.cuci.loadBulan],
+        ['dispKeringKgMinggu', 'hybridKeringLoadMingguRow', 'Load/Minggu:', data.kering.loadMinggu],
+        ['dispKeringKgBulan', 'hybridKeringLoadBulanRow', 'Load/Bulan:', data.kering.loadBulan]
+    ];
+
+    rows.forEach(([anchorId, rowId, label, value]) => {
+        const existing = document.getElementById(rowId);
+        if (!isHybrid) {
+            if (existing) existing.style.display = 'none';
+            return;
+        }
+
+        const valueEl = ensureHybridCapacityRow(anchorId, rowId, label);
+        if (valueEl) valueEl.innerText = formatAngkaID(value);
+    });
+}
+
+function updateHybridLoadHariRows(isHybrid) {
+    [
+        ['dispCuciLoadHari', 'Load/Hari:', 'Siklus/Hari:'],
+        ['dispKeringLoadHari', 'Load/Hari:', 'Siklus/Hari:']
+    ].forEach(([valueId, hybridLabel, defaultLabel]) => {
+        const valueEl = document.getElementById(valueId);
+        const row = valueEl ? valueEl.closest('.flex') : null;
+        const label = row ? (row.querySelector('[id^="lbl"]') || row.firstElementChild) : null;
+        if (label) label.innerText = isHybrid ? hybridLabel : defaultLabel;
+    });
+}
+
 function getOutletCapacityBreakdown(outlet) {
     const c = normalizeKapasitasRow(outlet);
     const kategori = String(c.kategori || '').toLowerCase();
@@ -1821,25 +1889,33 @@ function calculateCapacity() {
         const isSelfService = kategoriValue === 'Self Service';
         const isHybrid = String(kategoriValue || '').toLowerCase().includes('hybrid');
         const unitStr = isSelfService ? 'Load' : 'Kg';
+        const cuciLoadMinggu = hasilCuci.loadHari * hariPerMinggu;
         const cuciLoadBulan = hasilCuci.loadHari * hariPerBulan;
+        const keringLoadMinggu = hasilKering.loadHari * hariPerMinggu;
         const keringLoadBulan = hasilKering.loadHari * hariPerBulan;
 
-        if(document.getElementById('dispCuciLoadHari')) document.getElementById('dispCuciLoadHari').innerText = hasilCuci.loadHari;
-        if(document.getElementById('dispCuciKgHari')) document.getElementById('dispCuciKgHari').innerText = isSelfService ? `${hasilCuci.loadHari} Load` : `${hasilCuci.kgHari.toFixed(1)} Kg`;
-        if(document.getElementById('dispCuciKgMinggu')) document.getElementById('dispCuciKgMinggu').innerText = isSelfService ? `${hasilCuci.loadHari * hariPerMinggu} Load` : `${hasilCuci.kgMinggu.toFixed(1)} Kg`;
+        updateHybridLoadHariRows(isHybrid);
+        updateHybridCapacityExtraRows(isHybrid, {
+            cuci: { loadHari: hasilCuci.loadHari, loadMinggu: cuciLoadMinggu, loadBulan: cuciLoadBulan },
+            kering: { loadHari: hasilKering.loadHari, loadMinggu: keringLoadMinggu, loadBulan: keringLoadBulan }
+        });
+
+        if(document.getElementById('dispCuciLoadHari')) document.getElementById('dispCuciLoadHari').innerText = formatAngkaID(hasilCuci.loadHari);
+        if(document.getElementById('dispCuciKgHari')) document.getElementById('dispCuciKgHari').innerText = isSelfService ? `${formatAngkaID(hasilCuci.loadHari)} Load` : formatKgID(hasilCuci.kgHari);
+        if(document.getElementById('dispCuciKgMinggu')) document.getElementById('dispCuciKgMinggu').innerText = isSelfService ? `${formatAngkaID(cuciLoadMinggu)} Load` : formatKgID(hasilCuci.kgMinggu);
         if(document.getElementById('dispCuciKgBulan')) {
             const el = document.getElementById('dispCuciKgBulan');
             el.dataset.kgValue = hasilCuci.kgBulan.toFixed(1);
-            el.innerText = isHybrid ? formatHybridCapacity(cuciLoadBulan, hasilCuci.kgBulan) : (isSelfService ? `${cuciLoadBulan} Load` : `${hasilCuci.kgBulan.toFixed(1)} Kg`);
+            el.innerText = isSelfService ? `${formatAngkaID(cuciLoadBulan)} Load` : formatKgID(hasilCuci.kgBulan);
         }
 
-        if(document.getElementById('dispKeringLoadHari')) document.getElementById('dispKeringLoadHari').innerText = hasilKering.loadHari;
-        if(document.getElementById('dispKeringKgHari')) document.getElementById('dispKeringKgHari').innerText = isSelfService ? `${hasilKering.loadHari} Load` : `${hasilKering.kgHari.toFixed(1)} Kg`;
-        if(document.getElementById('dispKeringKgMinggu')) document.getElementById('dispKeringKgMinggu').innerText = isSelfService ? `${hasilKering.loadHari * hariPerMinggu} Load` : `${hasilKering.kgMinggu.toFixed(1)} Kg`;
+        if(document.getElementById('dispKeringLoadHari')) document.getElementById('dispKeringLoadHari').innerText = formatAngkaID(hasilKering.loadHari);
+        if(document.getElementById('dispKeringKgHari')) document.getElementById('dispKeringKgHari').innerText = isSelfService ? `${formatAngkaID(hasilKering.loadHari)} Load` : formatKgID(hasilKering.kgHari);
+        if(document.getElementById('dispKeringKgMinggu')) document.getElementById('dispKeringKgMinggu').innerText = isSelfService ? `${formatAngkaID(keringLoadMinggu)} Load` : formatKgID(hasilKering.kgMinggu);
         if(document.getElementById('dispKeringKgBulan')) {
             const el = document.getElementById('dispKeringKgBulan');
             el.dataset.kgValue = hasilKering.kgBulan.toFixed(1);
-            el.innerText = isHybrid ? formatHybridCapacity(keringLoadBulan, hasilKering.kgBulan) : (isSelfService ? `${keringLoadBulan} Load` : `${hasilKering.kgBulan.toFixed(1)} Kg`);
+            el.innerText = isSelfService ? `${formatAngkaID(keringLoadBulan)} Load` : formatKgID(hasilKering.kgBulan);
         }
 
         if(document.getElementById('dispSetrikaKgHari')) document.getElementById('dispSetrikaKgHari').innerText = `${hasilSetrika.kgHari.toFixed(1)} ${unitStr}`;
@@ -1851,8 +1927,19 @@ function calculateCapacity() {
             calculateAll();
             window.isCalculateCapacityRunning = false;
             if (isHybrid) {
-                if(document.getElementById('dispCuciKgBulan')) document.getElementById('dispCuciKgBulan').innerText = formatHybridCapacity(cuciLoadBulan, hasilCuci.kgBulan);
-                if(document.getElementById('dispKeringKgBulan')) document.getElementById('dispKeringKgBulan').innerText = formatHybridCapacity(keringLoadBulan, hasilKering.kgBulan);
+                updateHybridLoadHariRows(true);
+                updateHybridCapacityExtraRows(true, {
+                    cuci: { loadHari: hasilCuci.loadHari, loadMinggu: cuciLoadMinggu, loadBulan: cuciLoadBulan },
+                    kering: { loadHari: hasilKering.loadHari, loadMinggu: keringLoadMinggu, loadBulan: keringLoadBulan }
+                });
+                if(document.getElementById('dispCuciLoadHari')) document.getElementById('dispCuciLoadHari').innerText = formatAngkaID(hasilCuci.loadHari);
+                if(document.getElementById('dispCuciKgHari')) document.getElementById('dispCuciKgHari').innerText = formatKgID(hasilCuci.kgHari);
+                if(document.getElementById('dispCuciKgMinggu')) document.getElementById('dispCuciKgMinggu').innerText = formatKgID(hasilCuci.kgMinggu);
+                if(document.getElementById('dispCuciKgBulan')) document.getElementById('dispCuciKgBulan').innerText = formatKgID(hasilCuci.kgBulan);
+                if(document.getElementById('dispKeringLoadHari')) document.getElementById('dispKeringLoadHari').innerText = formatAngkaID(hasilKering.loadHari);
+                if(document.getElementById('dispKeringKgHari')) document.getElementById('dispKeringKgHari').innerText = formatKgID(hasilKering.kgHari);
+                if(document.getElementById('dispKeringKgMinggu')) document.getElementById('dispKeringKgMinggu').innerText = formatKgID(hasilKering.kgMinggu);
+                if(document.getElementById('dispKeringKgBulan')) document.getElementById('dispKeringKgBulan').innerText = formatKgID(hasilKering.kgBulan);
             }
         }
     }, 50);
