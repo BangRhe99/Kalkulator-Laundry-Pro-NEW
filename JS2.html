@@ -142,25 +142,24 @@ function ensureHybridCapacityRow(anchorId, rowId, labelText) {
     const anchorValue = document.getElementById(anchorId);
     if (!anchorValue) return null;
 
-    const anchorRow = anchorValue.closest('.flex');
+    const anchorRow = anchorValue.parentElement;
     if (!anchorRow || !anchorRow.parentNode) return null;
 
     let row = document.getElementById(rowId);
+    if (row && row.dataset.zettHybridCapacityRow !== 'true') {
+        row.remove();
+        row = null;
+    }
+
     if (!row) {
-        row = anchorRow.cloneNode(true);
+        row = document.createElement('div');
         row.id = rowId;
-
-        const label = row.querySelector('[id^="lbl"]') || row.firstElementChild;
-        const value = row.querySelector('[id^="disp"]') || row.lastElementChild;
-
-        if (label) {
-            label.id = rowId + 'Label';
-            label.innerText = labelText;
-        }
-        if (value) {
-            value.id = rowId + 'Value';
-            value.innerText = '0';
-        }
+        row.dataset.zettHybridCapacityRow = 'true';
+        row.style.cssText = 'display: flex; justify-content: space-between; border-bottom: 1px dashed var(--omni-border); padding-bottom: 0.2rem;';
+        row.innerHTML = `
+            <span id="${rowId}Label" style="font-size: 0.7rem; font-weight: 700; color: var(--omni-navy-light);">${labelText}</span>
+            <span id="${rowId}Value" style="font-weight: 800; color: var(--omni-navy);">0</span>
+        `;
 
         anchorRow.parentNode.insertBefore(row, anchorRow);
     }
@@ -195,7 +194,7 @@ function updateHybridLoadHariRows(isHybrid) {
         ['dispKeringLoadHari', 'Load/Hari:', 'Siklus/Hari:']
     ].forEach(([valueId, hybridLabel, defaultLabel]) => {
         const valueEl = document.getElementById(valueId);
-        const row = valueEl ? valueEl.closest('.flex') : null;
+        const row = valueEl ? valueEl.parentElement : null;
         const label = row ? (row.querySelector('[id^="lbl"]') || row.firstElementChild) : null;
         if (label) label.innerText = isHybrid ? hybridLabel : defaultLabel;
     });
