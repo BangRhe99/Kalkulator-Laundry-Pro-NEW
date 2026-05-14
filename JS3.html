@@ -175,10 +175,11 @@
     selectIds.forEach(function (id) {
       var el = $(id);
       if (!el) return;
-      var current = selectedName || el.value || '';
+      var current = id === 'inputNamaHPP' ? (el.value || '') : (selectedName || el.value || '');
       el.innerHTML = html;
       if (current) el.value = current;
-      if (!el.value && outlets.length > 0) el.value = outlets[0].namaOutlet;
+      if (id !== 'inputNamaHPP' && !el.value && outlets.length > 0) el.value = outlets[0].namaOutlet;
+      if (id === 'inputNamaHPP' && !el.value && typeof resetHPPDashboardToZero === 'function') resetHPPDashboardToZero();
     });
   }
 
@@ -370,7 +371,19 @@
 
       if (requestedTab === 'dashboard') window.renderSingleOutletDashboard();
       if ((requestedTab === 'bep' || requestedTab === 'roi') && typeof calculateAll === 'function') calculateAll();
-      if (requestedTab === 'hpp' && typeof StateMachine !== 'undefined' && StateMachine.calculateTotal) StateMachine.calculateTotal();
+      if (requestedTab === 'hpp') {
+        var selectHPP = $('inputNamaHPP');
+        var selectedHPP = selectHPP ? String(selectHPP.value || '').trim() : '';
+
+        if (!selectedHPP) {
+          if (selectHPP) selectHPP.value = '';
+          if (typeof resetHPPDashboardToZero === 'function') {
+            resetHPPDashboardToZero();
+          }
+        } else if (typeof populateFormHPP === 'function') {
+          populateFormHPP(selectedHPP);
+        }
+      }
     } catch (error) {
       console.error('[ZETTBOT PATCH] switchMainTab error:', error);
     }

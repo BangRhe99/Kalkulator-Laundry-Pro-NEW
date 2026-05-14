@@ -85,11 +85,13 @@ function applyCabangUIData() {
         selectHPP.innerHTML = '<option value="">Pilih Cabang...</option>';
         masterDataCabang.forEach(c => selectHPP.innerHTML += `<option value="${escapeHtml(c.namaOutlet)}">${escapeHtml(c.namaOutlet)}</option>`);
         
-        if(curHPP) selectHPP.value = curHPP;
-        else if (masterDataCabang.length > 0) selectHPP.value = masterDataCabang[0].namaOutlet;
+        const isValidHPP = curHPP && masterDataCabang.some(c => String(c.namaOutlet) === String(curHPP));
+        selectHPP.value = isValidHPP ? curHPP : '';
         
         if (selectHPP.value && typeof populateFormHPP === 'function') {
             populateFormHPP(selectHPP.value);
+        } else if (typeof resetHPPDashboardToZero === 'function') {
+            resetHPPDashboardToZero();
         }
     }
 
@@ -419,6 +421,65 @@ const StateMachine = {
 
 window.StateMachine = StateMachine;
 
+function resetHPPDashboardToZero() {
+  const zeroText = (typeof formatRupiah === 'function') ? formatRupiah(0) : 'Rp 0';
+  const valueIds = [
+    'dash-hpp-total',
+    'dash-card-gas',
+    'dash-card-listrik',
+    'dash-card-air',
+    'dash-card-packing',
+    'dash-card-bahan',
+    'dash-card-nota'
+  ];
+  const pctIds = [
+    'dash-card-gas-pct',
+    'dash-card-listrik-pct',
+    'dash-card-air-pct',
+    'dash-card-packing-pct',
+    'dash-card-bahan-pct',
+    'dash-card-nota-pct'
+  ];
+
+  valueIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = zeroText;
+  });
+
+  pctIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = '0%';
+  });
+
+  const donut = document.getElementById('hpp-donut-chart');
+  if (donut) {
+    donut.style.setProperty('--p-gas', '0%');
+    donut.style.setProperty('--p-listrik', '0%');
+    donut.style.setProperty('--p-air', '0%');
+    donut.style.setProperty('--p-packing', '0%');
+    donut.style.setProperty('--p-bahan', '0%');
+  }
+
+  const labelsContainer = document.getElementById('hpp-donut-labels');
+  if (labelsContainer) labelsContainer.innerHTML = '';
+
+  if (typeof APP_STATE !== 'undefined' && APP_STATE && APP_STATE.data) {
+    APP_STATE.data.hpp = {
+      gas: 0,
+      listrik: 0,
+      air: 0,
+      packing: 0,
+      bahan: 0,
+      nota: 0,
+      total: 0
+    };
+  }
+
+  if (typeof checkHPPLock === 'function') checkHPPLock();
+}
+
+window.resetHPPDashboardToZero = resetHPPDashboardToZero;
+
 const runServer = (serverFunction, ...args) => {
   return new Promise((resolve, reject) => {
     google.script.run
@@ -534,9 +595,16 @@ function showFormKapasitas(isNew = true) {
     try {
         if (isNew !== false) resetFormKapasitas();
         const dash = document.getElementById('kapasitas-dashboard'); const form = document.getElementById('kapasitas-form-container');
-        if (dash) dash.classList.add('hidden');
+        if (dash) {
+            dash.classList.add('hidden');
+            dash.style.display = 'none';
+        }
         if (form) {
-            form.classList.remove('hidden'); form.style.pointerEvents = 'auto'; form.style.opacity = '1';
+            form.classList.remove('hidden');
+            form.style.display = 'block';
+            form.style.visibility = 'visible';
+            form.style.opacity = '1';
+            form.style.pointerEvents = 'auto';
             const cards = form.querySelectorAll('.bento-card');
             cards.forEach((c, i) => {
               c.style.opacity = '0'; c.style.transform = 'translateY(20px)';
@@ -547,8 +615,20 @@ function showFormKapasitas(isNew = true) {
 }
 
 function hideFormKapasitas() {
-    document.getElementById('kapasitas-form-container').classList.add('hidden');
-    document.getElementById('kapasitas-dashboard').classList.remove('hidden');
+    const form = document.getElementById('kapasitas-form-container');
+    const dash = document.getElementById('kapasitas-dashboard');
+    if (form) {
+        form.classList.add('hidden');
+        form.style.display = 'none';
+        form.style.visibility = 'hidden';
+        form.style.opacity = '0';
+    }
+    if (dash) {
+        dash.classList.remove('hidden');
+        dash.style.display = 'flex';
+        dash.style.visibility = 'visible';
+        dash.style.opacity = '1';
+    }
     resetFormKapasitas(); 
 }
 
@@ -858,6 +938,23 @@ document.addEventListener('click', function(e) {
         dropdown.classList.add('hidden');
     }
 });
+
+if (!window.__zettHPPSelectListenerBound) {
+    window.__zettHPPSelectListenerBound = true;
+    document.addEventListener('change', function(e) {
+        if (!e.target || e.target.id !== 'inputNamaHPP') return;
+        const outletName = String(e.target.value || '').trim();
+
+        if (!outletName) {
+            if (typeof resetHPPDashboardToZero === 'function') resetHPPDashboardToZero();
+        } else if (typeof populateFormHPP === 'function') {
+            populateFormHPP(outletName);
+        }
+
+        if (typeof toggleActionButtons === 'function') toggleActionButtons();
+        if (typeof checkHPPLock === 'function') checkHPPLock();
+    });
+}
 
 function checkHPPLock() {
     const selectHPP = document.getElementById('inputNamaHPP');
