@@ -124,6 +124,15 @@ function formatDurasiOperasional(jamBuka, jamTutup, fallbackDurasi) {
     return label + ' (' + totalMenit.toLocaleString('id-ID') + ' menit)';
 }
 
+function formatAngkaID(value) {
+    const num = Number(value || 0);
+    return (Number.isFinite(num) ? Math.round(num) : 0).toLocaleString('id-ID');
+}
+
+function formatHybridCapacity(loadValue, kgValue) {
+    return `${formatAngkaID(loadValue)} Load (${formatAngkaID(kgValue)} Kg)/Bln`;
+}
+
 function getOutletCapacityBreakdown(outlet) {
     const c = normalizeKapasitasRow(outlet);
     const kategori = String(c.kategori || '').toLowerCase();
@@ -146,6 +155,19 @@ function getOutletCapacityBreakdown(outlet) {
         if (preferLoad) return loadHari * hariPerBulan;
         return (siklusPerMesin * u * k * ok) * hariPerBulan;
     };
+    const calcPair = (unit, durasi, kg, okupansi) => {
+        const u = parseNum(unit);
+        const d = parseNum(durasi);
+        const k = parseNum(kg);
+        const ok = parseNum(okupansi, 100) / 100;
+        if (u <= 0 || d <= 0 || operasionalMenit <= 0) return { load: 0, kg: 0 };
+        const siklusPerMesin = Math.floor(operasionalMenit / d);
+        const loadHari = Math.floor(siklusPerMesin * u * ok);
+        return {
+            load: loadHari * hariPerBulan,
+            kg: (siklusPerMesin * u * k * ok) * hariPerBulan
+        };
+    };
 
     const preferLoad = isSelfService;
     const hybridUnit = isHybrid ? 'Kg/Bln / Load/Bln' : (preferLoad ? 'Load/Bln' : 'Kg/Bln');
@@ -153,11 +175,13 @@ function getOutletCapacityBreakdown(outlet) {
 
     const cuciVal = calc(c.cuciUnit, c.cuciDurasi, c.cuciKg, c.targetOkupansiCuci, preferLoad);
     const keringVal = c.pakaiPengering === false ? 0 : calc(c.pengeringUnit, c.pengeringDurasi, c.pengeringKg, c.targetOkupansiKering, preferLoad);
+    const cuciHybrid = isHybrid ? calcPair(c.cuciUnit, c.cuciDurasi, c.cuciKg, c.targetOkupansiCuci) : null;
+    const keringHybrid = isHybrid && c.pakaiPengering !== false ? calcPair(c.pengeringUnit, c.pengeringDurasi, c.pengeringKg, c.targetOkupansiKering) : null;
     const setrikaVal = calc(c.setrikaUnit, c.setrikaDurasi, c.setrikaKg, c.targetOkupansiSetrika, false);
 
     const result = [
-        { label: 'Kap Cuci', value: cuciVal, unit: hybridUnit },
-        { label: 'Kap Kering', value: keringVal, unit: hybridUnit, disabled: c.pakaiPengering === false, note: c.pakaiPengering === false ? 'Jemur' : '' }
+        { label: 'Kap Cuci', value: cuciVal, unit: hybridUnit, display: cuciHybrid ? formatHybridCapacity(cuciHybrid.load, cuciHybrid.kg) : null },
+        { label: 'Kap Kering', value: keringVal, unit: hybridUnit, display: keringHybrid ? formatHybridCapacity(keringHybrid.load, keringHybrid.kg) : null, disabled: c.pakaiPengering === false, note: c.pakaiPengering === false ? 'Jemur' : '' }
     ];
 
     if (!isSelfService) {
@@ -279,7 +303,7 @@ function applyCabangUIData() {
         const durasiLabel = formatDurasiOperasional(c.jamBuka, c.jamTutup, c.durasiOperasional);
         const capacityRows = getOutletCapacityBreakdown(c);
         const capacityHtml = capacityRows.map(item => {
-            const valueText = item.disabled ? (item.note || '-') : ((Number(item.value) || 0).toLocaleString('id-ID') + ' ' + item.unit);
+            const valueText = item.disabled ? (item.note || '-') : (item.display || ((Number(item.value) || 0).toLocaleString('id-ID') + ' ' + item.unit));
             const rowClass = item.disabled ? 'bg-orange-50/70 border-orange-100/70 text-orange-600' : 'bg-emerald-50/80 border-emerald-100/60 text-emerald-600';
             return `
                 <div class="flex justify-between items-center ${rowClass} px-3 py-2.5 rounded-xl border">
@@ -1793,18 +1817,30 @@ function calculateCapacity() {
         const hasilKering = isPakaiPengering() ? hitungSiklusMesin('pengering', okKering) : { loadHari: 0, kgHari: 0, kgMinggu: 0, kgBulan: 0 };
         const hasilSetrika = hitungSiklusMesin('setrika', okSetrika);
 
-        const isSelfService = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service';
+        const kategoriValue = document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : '';
+        const isSelfService = kategoriValue === 'Self Service';
+        const isHybrid = String(kategoriValue || '').toLowerCase().includes('hybrid');
         const unitStr = isSelfService ? 'Load' : 'Kg';
+        const cuciLoadBulan = hasilCuci.loadHari * hariPerBulan;
+        const keringLoadBulan = hasilKering.loadHari * hariPerBulan;
 
         if(document.getElementById('dispCuciLoadHari')) document.getElementById('dispCuciLoadHari').innerText = hasilCuci.loadHari;
         if(document.getElementById('dispCuciKgHari')) document.getElementById('dispCuciKgHari').innerText = isSelfService ? `${hasilCuci.loadHari} Load` : `${hasilCuci.kgHari.toFixed(1)} Kg`;
         if(document.getElementById('dispCuciKgMinggu')) document.getElementById('dispCuciKgMinggu').innerText = isSelfService ? `${hasilCuci.loadHari * hariPerMinggu} Load` : `${hasilCuci.kgMinggu.toFixed(1)} Kg`;
-        if(document.getElementById('dispCuciKgBulan')) document.getElementById('dispCuciKgBulan').innerText = isSelfService ? `${hasilCuci.loadHari * hariPerBulan} Load` : `${hasilCuci.kgBulan.toFixed(1)} Kg`;
+        if(document.getElementById('dispCuciKgBulan')) {
+            const el = document.getElementById('dispCuciKgBulan');
+            el.dataset.kgValue = hasilCuci.kgBulan.toFixed(1);
+            el.innerText = isHybrid ? formatHybridCapacity(cuciLoadBulan, hasilCuci.kgBulan) : (isSelfService ? `${cuciLoadBulan} Load` : `${hasilCuci.kgBulan.toFixed(1)} Kg`);
+        }
 
         if(document.getElementById('dispKeringLoadHari')) document.getElementById('dispKeringLoadHari').innerText = hasilKering.loadHari;
         if(document.getElementById('dispKeringKgHari')) document.getElementById('dispKeringKgHari').innerText = isSelfService ? `${hasilKering.loadHari} Load` : `${hasilKering.kgHari.toFixed(1)} Kg`;
         if(document.getElementById('dispKeringKgMinggu')) document.getElementById('dispKeringKgMinggu').innerText = isSelfService ? `${hasilKering.loadHari * hariPerMinggu} Load` : `${hasilKering.kgMinggu.toFixed(1)} Kg`;
-        if(document.getElementById('dispKeringKgBulan')) document.getElementById('dispKeringKgBulan').innerText = isSelfService ? `${hasilKering.loadHari * hariPerBulan} Load` : `${hasilKering.kgBulan.toFixed(1)} Kg`;
+        if(document.getElementById('dispKeringKgBulan')) {
+            const el = document.getElementById('dispKeringKgBulan');
+            el.dataset.kgValue = hasilKering.kgBulan.toFixed(1);
+            el.innerText = isHybrid ? formatHybridCapacity(keringLoadBulan, hasilKering.kgBulan) : (isSelfService ? `${keringLoadBulan} Load` : `${hasilKering.kgBulan.toFixed(1)} Kg`);
+        }
 
         if(document.getElementById('dispSetrikaKgHari')) document.getElementById('dispSetrikaKgHari').innerText = `${hasilSetrika.kgHari.toFixed(1)} ${unitStr}`;
         if(document.getElementById('dispSetrikaKgMinggu')) document.getElementById('dispSetrikaKgMinggu').innerText = `${hasilSetrika.kgMinggu.toFixed(1)} ${unitStr}`;
@@ -1814,6 +1850,10 @@ function calculateCapacity() {
             window.isCalculateCapacityRunning = true;
             calculateAll();
             window.isCalculateCapacityRunning = false;
+            if (isHybrid) {
+                if(document.getElementById('dispCuciKgBulan')) document.getElementById('dispCuciKgBulan').innerText = formatHybridCapacity(cuciLoadBulan, hasilCuci.kgBulan);
+                if(document.getElementById('dispKeringKgBulan')) document.getElementById('dispKeringKgBulan').innerText = formatHybridCapacity(keringLoadBulan, hasilKering.kgBulan);
+            }
         }
     }, 50);
 }
@@ -1858,8 +1898,8 @@ async function prosesSimpanKapasitas() {
             targetOkupansiCuci: document.getElementById('inputOkupansiCuci').value,
             targetOkupansiKering: document.getElementById('inputOkupansiKering').value,
             targetOkupansiSetrika: document.getElementById('inputOkupansiSetrika').value,
-            estimasiCuciKgBulan: document.getElementById('dispCuciKgBulan') ? document.getElementById('dispCuciKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
-            estimasiKeringKgBulan: document.getElementById('dispKeringKgBulan') ? document.getElementById('dispKeringKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
+            estimasiCuciKgBulan: document.getElementById('dispCuciKgBulan') ? (document.getElementById('dispCuciKgBulan').dataset.kgValue || document.getElementById('dispCuciKgBulan').innerText.replace(/[^\d.-]/g, '')) : 0,
+            estimasiKeringKgBulan: document.getElementById('dispKeringKgBulan') ? (document.getElementById('dispKeringKgBulan').dataset.kgValue || document.getElementById('dispKeringKgBulan').innerText.replace(/[^\d.-]/g, '')) : 0,
             estimasiSetrikaKgBulan: document.getElementById('dispSetrikaKgBulan') ? document.getElementById('dispSetrikaKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
             durasiOperasional: document.getElementById('displayDurasi') ? document.getElementById('displayDurasi').innerText : '',
             pakaiPengering: isPakaiPengering(),
