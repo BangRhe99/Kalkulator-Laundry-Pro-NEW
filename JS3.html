@@ -345,7 +345,7 @@
         }
 
         if (typeof loadDaftarCabang === 'function') {
-          try { loadDaftarCabang(true); } catch(eLoad) { console.error('[ZETTBOT PATCH] loadDaftarCabang gagal:', eLoad); }
+          try { loadDaftarCabang(false); } catch(eLoad) { console.error('[ZETTBOT PATCH] loadDaftarCabang gagal:', eLoad); }
         }
       }
 

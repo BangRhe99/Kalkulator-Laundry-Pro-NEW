@@ -28,6 +28,12 @@ let masterDataCabang = [];
 let dashboardRawData = [];
 let masterDataHPP = []; 
 let hasLoadedInitialData = false;
+window.zettOutletState = window.zettOutletState || {
+    loaded: false,
+    loading: false,
+    lastSync: 0,
+    lastRenderKey: ''
+};
 
 function normalizeKapasitasRow(item) {
     const row = item ? {...item} : {};
@@ -176,10 +182,36 @@ function hydrateCabangFromCache() {
         dashboardRawData = Array.isArray(res.transactions) ? res.transactions : [];
         hasLoadedInitialData = true;
         APP_STATE.data.master = res;
+        window.zettOutletState.loaded = masterDataCabang.length > 0;
+        window.zettOutletState.lastSync = parsed.expiry ? parsed.expiry - APP_STATE.cache.ttl : Date.now();
         return true;
     } catch(e) {
         console.error("Cache hydrate Error:", e);
         return false;
+    }
+}
+
+function persistCabangToClientCache() {
+    try {
+        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
+        const cached = cachedStr ? JSON.parse(cachedStr) : {};
+        const cachedData = cached && cached.data && cached.data.status === 'success' ? cached.data : {};
+        const data = {
+            ...cachedData,
+            ...(APP_STATE.data.master && APP_STATE.data.master.status === 'success' ? APP_STATE.data.master : {}),
+            status: 'success',
+            kapasitas: masterDataCabang,
+            hpp: Array.isArray(masterDataHPP) ? masterDataHPP : [],
+            transactions: Array.isArray(dashboardRawData) ? dashboardRawData : []
+        };
+
+        APP_STATE.data.master = data;
+        localStorage.setItem(APP_STATE.cache.key, JSON.stringify({ data: data, expiry: Date.now() + APP_STATE.cache.ttl }));
+        hasLoadedInitialData = true;
+        window.zettOutletState.loaded = true;
+        window.zettOutletState.lastSync = Date.now();
+    } catch (e) {
+        console.warn('Gagal memperbarui cache outlet lokal:', e);
     }
 }
 
@@ -204,16 +236,18 @@ function applyCabangUIData() {
 
     if(selectV1) {
         const curV1 = selectV1.value;
-        selectV1.innerHTML = '<option value="">-- Pilih Outlet --</option>';
-        masterDataCabang.forEach(c => selectV1.innerHTML += `<option value="${escapeHtml(c.namaOutlet)}">${escapeHtml(c.namaOutlet)}</option>`);
+        selectV1.innerHTML = '<option value="">-- Pilih Outlet --</option>' + masterDataCabang
+            .map(c => `<option value="${escapeHtml(c.namaOutlet)}">${escapeHtml(c.namaOutlet)}</option>`)
+            .join('');
         if(curV1) selectV1.value = curV1;
         else if(masterDataCabang.length > 0) selectV1.value = masterDataCabang[0].namaOutlet;
     }
 
     if(selectHPP) {
         const curHPP = selectHPP.value;
-        selectHPP.innerHTML = '<option value="">Pilih Cabang...</option>';
-        masterDataCabang.forEach(c => selectHPP.innerHTML += `<option value="${escapeHtml(c.namaOutlet)}">${escapeHtml(c.namaOutlet)}</option>`);
+        selectHPP.innerHTML = '<option value="">Pilih Cabang...</option>' + masterDataCabang
+            .map(c => `<option value="${escapeHtml(c.namaOutlet)}">${escapeHtml(c.namaOutlet)}</option>`)
+            .join('');
         
         const isValidHPP = curHPP && masterDataCabang.some(c => String(c.namaOutlet) === String(curHPP));
         selectHPP.value = isValidHPP ? curHPP : '';
@@ -330,13 +364,14 @@ async function loadDaftarCabang(forceFresh = false) {
     }
 
     // 2. STALE-WHILE-REVALIDATE (Bg Sync Tanpa Memblokir Layar)
-    const revalidateLock = forceFresh === true ? 'bgRevalidateFresh' : 'bgRevalidate';
+    const revalidateLock = 'profilOutletRevalidate';
     if (!StateMachine.acquireLock(revalidateLock)) {
         if(hasLoadedInitialData) applyCabangUIData();
         return;
     }
 
     try {
+        window.zettOutletState.loading = true;
         const cachedStr = localStorage.getItem(APP_STATE.cache.key);
         let needsFetch = true;
         if (cachedStr) {
@@ -351,21 +386,24 @@ async function loadDaftarCabang(forceFresh = false) {
 
         if (needsFetch) {
             const data = await new Promise((resolve, reject) => {
-                google.script.run
-                .withSuccessHandler(resolve)
-                .withFailureHandler(reject)
-                .getZettBotInitialPayload(forceFresh === true);
+                const runner = google.script.run
+                    .withSuccessHandler(resolve)
+                    .withFailureHandler(reject);
+
+                if (typeof google.script.run.getProfilOperasionalPayload === 'function') {
+                    runner.getProfilOperasionalPayload(forceFresh === true);
+                } else {
+                    runner.getZettBotInitialPayload(forceFresh === true);
+                }
             });
             
             if(data && data.status === 'success') {
-                localStorage.setItem(APP_STATE.cache.key, JSON.stringify({ data: data, expiry: Date.now() + APP_STATE.cache.ttl }));
                 masterDataCabang = Array.isArray(data.kapasitas) ? data.kapasitas.map(normalizeKapasitasRow) : [];
-                masterDataHPP = Array.isArray(data.hpp) ? data.hpp : [];
+                if (Array.isArray(data.hpp)) masterDataHPP = data.hpp;
                 window.masterDataHPP = masterDataHPP;
-                dashboardRawData = Array.isArray(data.transactions) ? data.transactions : [];
-                hasLoadedInitialData = true;
-                APP_STATE.data.master = data;
-                if (typeof window.zettCommitPayload === 'function') window.zettCommitPayload(data);
+                if (Array.isArray(data.transactions)) dashboardRawData = data.transactions;
+                persistCabangToClientCache();
+                if (typeof window.zettCommitPayload === 'function' && APP_STATE.data.master) window.zettCommitPayload(APP_STATE.data.master);
                 applyCabangUIData(); 
             } else {
                 const tableArea = document.getElementById('tableDaftarOutlet');
@@ -391,6 +429,7 @@ async function loadDaftarCabang(forceFresh = false) {
               </div>`;
         }
     } finally {
+        window.zettOutletState.loading = false;
         StateMachine.releaseLock(revalidateLock);
     }
 }
@@ -1639,15 +1678,7 @@ function commitOutletBaruToLocalState(outletData) {
         APP_STATE.data.master = { status: 'success', kapasitas: masterDataCabang, hpp: masterDataHPP, transactions: dashboardRawData };
     }
 
-    try {
-        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
-        const cached = cachedStr ? JSON.parse(cachedStr) : {};
-        const data = cached && cached.data && cached.data.status === 'success' ? cached.data : APP_STATE.data.master;
-        data.kapasitas = masterDataCabang;
-        localStorage.setItem(APP_STATE.cache.key, JSON.stringify({ data: data, expiry: Date.now() + APP_STATE.cache.ttl }));
-    } catch (e) {
-        console.warn('Gagal memperbarui cache outlet lokal:', e);
-    }
+    persistCabangToClientCache();
 
     applyCabangUIData();
 }
@@ -1874,27 +1905,21 @@ async function prosesSimpanKapasitas() {
             masterDataCabang = [optimisticRow].concat(masterDataCabang);
         }
 
-        StateMachine.invalidateClientCache();
-        if (APP_STATE.data.master && APP_STATE.data.master.status === 'success') {
-            APP_STATE.data.master = {...APP_STATE.data.master, kapasitas: masterDataCabang};
-        }
+        persistCabangToClientCache();
         applyCabangUIData();
         setBtnState(btnId, 'success');
         hideFormKapasitas();
         showOmniToast('Perubahan outlet diterapkan. Sinkronisasi cloud berjalan...', 'success');
 
         const response = await runServer('saveKapasitasPremium', payload);
-        StateMachine.invalidateClientCache();
+        persistCabangToClientCache();
         setBtnState(btnId, 'idle');
         showOmniToast(response.message, 'success');
-        setTimeout(() => loadDaftarCabang(true), 500);
 
     } catch(error) {
         if (previousCabang) {
             masterDataCabang = previousCabang;
-            if (APP_STATE.data.master && APP_STATE.data.master.status === 'success') {
-                APP_STATE.data.master = {...APP_STATE.data.master, kapasitas: masterDataCabang};
-            }
+            persistCabangToClientCache();
             applyCabangUIData();
         }
         setBtnState(btnId, 'idle');
@@ -2107,20 +2132,20 @@ function hapusOutlet() {
         masterDataCabang = masterDataCabang.filter(c => String(c.namaOutlet).trim().toLowerCase() !== nama.toLowerCase());
         masterDataHPP = masterDataHPP.filter(h => String(h.namaOutlet).trim().toLowerCase() !== nama.toLowerCase());
         if (selectedHPP && selectedHPP.value === nama) selectedHPP.value = '';
-        StateMachine.invalidateClientCache();
+        persistCabangToClientCache();
         hideFormKapasitas();
         applyCabangUIData();
         showOmniToast('Outlet dihapus dari tampilan. Sinkronisasi cloud berjalan...', 'success');
         
         try {
             const response = await runServer('deleteKapasitas', nama);
-            StateMachine.invalidateClientCache();
+            persistCabangToClientCache();
             showOmniToast(response.message, 'success');
-            loadDaftarCabang(true);
         } catch(error) {
             masterDataCabang = previousCabang;
             masterDataHPP = previousHPP;
             if (selectedHPP) selectedHPP.value = selectedHPPValue;
+            persistCabangToClientCache();
             applyCabangUIData();
             showOmniToast(error.message, 'error');
         } finally {

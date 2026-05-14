@@ -131,6 +131,7 @@ function clearServerCache() {
   
   cache.remove('ZETT_MASTER_PAYLOAD');
   cache.remove('ZETT_MASTER_PAYLOAD_chunks');
+  cache.remove('ZETT_PROFIL_OPERASIONAL_PAYLOAD');
   
   const chunkCount = parseInt(chunks, 10);
   if (!isNaN(chunkCount) && chunkCount > 0) {
@@ -184,6 +185,28 @@ function getZettBotInitialPayload(forceFresh) {
       }
     }
     
+    return payload;
+  } catch (error) {
+    return { status: 'error', message: error.toString() };
+  }
+}
+
+function getProfilOperasionalPayload(forceFresh) {
+  try {
+    const cache = CacheService.getScriptCache();
+    const cacheKey = 'ZETT_PROFIL_OPERASIONAL_PAYLOAD';
+
+    if (forceFresh !== true) {
+      const cachedData = cache.get(cacheKey);
+      if (cachedData) return JSON.parse(cachedData);
+    }
+
+    const payload = {
+      status: 'success',
+      kapasitas: getDaftarKapasitas()
+    };
+
+    cache.put(cacheKey, JSON.stringify(payload), 300);
     return payload;
   } catch (error) {
     return { status: 'error', message: error.toString() };
