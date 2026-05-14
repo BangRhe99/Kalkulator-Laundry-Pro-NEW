@@ -29,6 +29,41 @@ let dashboardRawData = [];
 let masterDataHPP = []; 
 let hasLoadedInitialData = false;
 
+function normalizeKapasitasRow(item) {
+    const row = item ? {...item} : {};
+    const pick = (...keys) => {
+        for (const key of keys) {
+            if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
+        }
+        return '';
+    };
+
+    row.namaOutlet = pick('namaOutlet', 'namaLaundry', 'Nama Outlet', 'Nama Cabang/Outlet') || 'Unknown';
+    row.kategori = pick('kategori', 'kategoriLaundry', 'Kategori Laundry') || 'Drop Off/Kiloan';
+    const mingguTutupRaw = pick('mingguTutup', 'tutupMinggu', 'Tutup Hari Minggu');
+    const mingguTutupText = String(mingguTutupRaw || '').trim().toLowerCase();
+    row.mingguTutup = (mingguTutupRaw === true || mingguTutupText === 'true' || mingguTutupText === 'ya' || mingguTutupText.includes('tutup')) ? 'Ya (Tutup)' : 'Tidak';
+    row.targetOkupansiCuci = pick('targetOkupansiCuci', 'okupansiCuci', 'Target Okupansi Cuci') || '100';
+    row.targetOkupansiKering = pick('targetOkupansiKering', 'okupansiKering', 'Target Okupansi Kering') || '100';
+    row.targetOkupansiSetrika = pick('targetOkupansiSetrika', 'okupansiSetrika', 'Target Okupansi Setrika') || '100';
+    row.cuciUnit = pick('cuciUnit', 'mesinCuci', 'Mesin Cuci') || 0;
+    row.pengeringUnit = pick('pengeringUnit', 'mesinPengering', 'Mesin Pengering') || 0;
+    row.setrikaUnit = pick('setrikaUnit', 'alatSetrika', 'Alat Setrika') || 0;
+    row.cuciKg = pick('cuciKg', 'kapCuci', 'Kap Cuci') || 0;
+    row.pengeringKg = pick('pengeringKg', 'kapKering', 'Kap Kering') || 0;
+    row.setrikaKg = pick('setrikaKg', 'kapSetrika', 'Kap Setrika') || 0;
+    row.cuciDurasi = pick('cuciDurasi', 'durasiCuci', 'Durasi Cuci') || 0;
+    row.pengeringDurasi = pick('pengeringDurasi', 'durasiKering', 'Durasi Kering') || 0;
+    row.setrikaDurasi = pick('setrikaDurasi', 'durasiSetrika', 'Durasi Setrika') || 0;
+    row.tipeSetrikaUtama = pick('tipeSetrikaUtama', 'tipeSetrika', 'Tipe Setrika') || 'uap';
+    row.jamBuka = pick('jamBuka', 'Jam Buka');
+    row.jamTutup = pick('jamTutup', 'Jam Tutup');
+    row.durasiOperasional = pick('durasiOperasional', 'Durasi Operasional');
+    return row;
+}
+
+window.normalizeKapasitasRow = normalizeKapasitasRow;
+
 function hydrateCabangFromCache() {
     try {
         const cachedStr = localStorage.getItem(APP_STATE.cache.key);
@@ -38,9 +73,7 @@ function hydrateCabangFromCache() {
         const res = parsed && parsed.data;
         if(!res || res.status !== 'success') return false;
 
-        masterDataCabang = Array.isArray(res.kapasitas)
-          ? res.kapasitas.map(item => ({...item, namaOutlet: item.namaOutlet || item.namaLaundry || 'Unknown'}))
-          : [];
+        masterDataCabang = Array.isArray(res.kapasitas) ? res.kapasitas.map(normalizeKapasitasRow) : [];
         masterDataHPP = Array.isArray(res.hpp) ? res.hpp : [];
         window.masterDataHPP = masterDataHPP;
         dashboardRawData = Array.isArray(res.transactions) ? res.transactions : [];
@@ -213,7 +246,7 @@ function applyCabangUIData() {
     if (typeof renderSingleOutletDashboard === 'function') renderSingleOutletDashboard();
 }
 
-async function loadDaftarCabang() {
+async function loadDaftarCabang(forceFresh = false) {
     // 1. Render UI INSTAN (0ms) dari Memori FastBoot
     if(!hasLoadedInitialData) {
         hydrateCabangFromCache();
@@ -231,7 +264,8 @@ async function loadDaftarCabang() {
     }
 
     // 2. STALE-WHILE-REVALIDATE (Bg Sync Tanpa Memblokir Layar)
-    if (!StateMachine.acquireLock('bgRevalidate')) {
+    const revalidateLock = forceFresh === true ? 'bgRevalidateFresh' : 'bgRevalidate';
+    if (!StateMachine.acquireLock(revalidateLock)) {
         if(hasLoadedInitialData) applyCabangUIData();
         return;
     }
@@ -241,7 +275,7 @@ async function loadDaftarCabang() {
         let needsFetch = true;
         if (cachedStr) {
             const parsed = JSON.parse(cachedStr);
-            if (Date.now() < parsed.expiry) {
+            if (!forceFresh && Date.now() < parsed.expiry) {
                 needsFetch = false;
                 if(!hasLoadedInitialData && hydrateCabangFromCache()) {
                     applyCabangUIData();
@@ -254,17 +288,18 @@ async function loadDaftarCabang() {
                 google.script.run
                 .withSuccessHandler(resolve)
                 .withFailureHandler(reject)
-                .getZettBotInitialPayload();
+                .getZettBotInitialPayload(forceFresh === true);
             });
             
             if(data && data.status === 'success') {
                 localStorage.setItem(APP_STATE.cache.key, JSON.stringify({ data: data, expiry: Date.now() + APP_STATE.cache.ttl }));
-                masterDataCabang = data.kapasitas.map(item => ({...item, namaOutlet: item.namaOutlet || item.namaLaundry || 'Unknown'}));
-                masterDataHPP = data.hpp;
+                masterDataCabang = Array.isArray(data.kapasitas) ? data.kapasitas.map(normalizeKapasitasRow) : [];
+                masterDataHPP = Array.isArray(data.hpp) ? data.hpp : [];
                 window.masterDataHPP = masterDataHPP;
-                dashboardRawData = data.transactions;
+                dashboardRawData = Array.isArray(data.transactions) ? data.transactions : [];
                 hasLoadedInitialData = true;
                 APP_STATE.data.master = data;
+                if (typeof window.zettCommitPayload === 'function') window.zettCommitPayload(data);
                 applyCabangUIData(); 
             } else {
                 const tableArea = document.getElementById('tableDaftarOutlet');
@@ -290,7 +325,7 @@ async function loadDaftarCabang() {
               </div>`;
         }
     } finally {
-        StateMachine.releaseLock('bgRevalidate');
+        StateMachine.releaseLock(revalidateLock);
     }
 }
 
@@ -1258,6 +1293,7 @@ async function prosesSimpanKapasitas() {
             estimasiCuciKgBulan: document.getElementById('dispCuciKgBulan') ? document.getElementById('dispCuciKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
             estimasiKeringKgBulan: document.getElementById('dispKeringKgBulan') ? document.getElementById('dispKeringKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
             estimasiSetrikaKgBulan: document.getElementById('dispSetrikaKgBulan') ? document.getElementById('dispSetrikaKgBulan').innerText.replace(/[^\d.-]/g, '') : 0,
+            durasiOperasional: document.getElementById('displayDurasi') ? document.getElementById('displayDurasi').innerText : '',
             
             tipeMesinCuci: document.getElementById('jenisMesinCuci') ? document.getElementById('jenisMesinCuci').value : 'commercial',
             tipeMesinPengering: document.getElementById('jenisMesinPengering') ? document.getElementById('jenisMesinPengering').value : 'commercial',
@@ -1286,7 +1322,7 @@ async function prosesSimpanKapasitas() {
         setTimeout(() => {
             setBtnState(btnId, 'idle');
             hideFormKapasitas();
-            loadDaftarCabang(); 
+            loadDaftarCabang(true); 
         }, 1500);
 
     } catch(error) {
@@ -1490,7 +1526,7 @@ function hapusOutlet() {
             StateMachine.invalidateClientCache();
             showOmniToast(response.message, 'success');
             hideFormKapasitas();
-            loadDaftarCabang();
+            loadDaftarCabang(true);
         } catch(error) {
             showOmniToast(error.message, 'error');
         } finally {

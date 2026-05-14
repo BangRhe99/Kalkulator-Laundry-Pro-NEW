@@ -140,12 +140,12 @@ function clearServerCache() {
   }
 }
 
-function getZettBotInitialPayload() {
+function getZettBotInitialPayload(forceFresh) {
   try {
     // LAYER 3 CACHE: MULTI-CHUNK SERVER SIDE
     // Mencegah error cache size limit (max 100KB per item) dari Google
     const cache = CacheService.getScriptCache();
-    const chunks = cache.get('ZETT_MASTER_PAYLOAD_chunks');
+    const chunks = forceFresh === true ? null : cache.get('ZETT_MASTER_PAYLOAD_chunks');
     
     if (chunks) {
       if (chunks === '1') {
@@ -979,6 +979,13 @@ function saveKapasitas(payload) {
           rowArr[colMap[key]] = val;
         }
       };
+      const pickPayload = (...keys) => {
+        for (let i = 0; i < keys.length; i++) {
+          const val = payload[keys[i]];
+          if (val !== undefined && val !== null && val !== '') return val;
+        }
+        return '';
+      };
 
       setVal('Timestamp', timestamp);
       if('Nama Outlet' in colMap) setVal('Nama Outlet', payload.namaOutlet);
@@ -986,27 +993,27 @@ function saveKapasitas(payload) {
 
       setVal('Jam Buka', payload.jamBuka);
       setVal('Jam Tutup', payload.jamTutup);
-      setVal('Tutup Hari Minggu', payload.tutupMinggu);
-      setVal('Target Okupansi Cuci', payload.okupansiCuci);
-      setVal('Target Okupansi Kering', payload.okupansiKering);
-      setVal('Target Okupansi Setrika', payload.okupansiSetrika);
-      setVal('Estimasi Cuci', payload.estimasiCuci);
-      setVal('Estimasi Kering', payload.estimasiKering);
-      setVal('Estimasi Setrika', payload.estimasiSetrika);
+      setVal('Tutup Hari Minggu', payload.mingguTutup === true ? 'Ya (Tutup)' : pickPayload('tutupMinggu') || 'Tidak');
+      setVal('Target Okupansi Cuci', pickPayload('targetOkupansiCuci', 'okupansiCuci'));
+      setVal('Target Okupansi Kering', pickPayload('targetOkupansiKering', 'okupansiKering'));
+      setVal('Target Okupansi Setrika', pickPayload('targetOkupansiSetrika', 'okupansiSetrika'));
+      setVal('Estimasi Cuci', pickPayload('estimasiCuciKgBulan', 'estimasiCuci'));
+      setVal('Estimasi Kering', pickPayload('estimasiKeringKgBulan', 'estimasiKering'));
+      setVal('Estimasi Setrika', pickPayload('estimasiSetrikaKgBulan', 'estimasiSetrika'));
       setVal('Durasi Operasional', payload.durasiOperasional);
-      setVal('Kategori Laundry', payload.kategoriLaundry);
-      setVal('Mesin Cuci', payload.mesinCuci);
-      setVal('Mesin Pengering', payload.mesinPengering);
-      setVal('Kap Cuci', payload.kapCuci);
-      setVal('Kap Kering', payload.kapKering);
-      setVal('Durasi Cuci', payload.durasiCuci);
-      setVal('Durasi Kering', payload.durasiKering);
-      setVal('Alat Setrika', payload.alatSetrika);
-      setVal('Kap Setrika', payload.kapSetrika);
-      setVal('Durasi Setrika', payload.durasiSetrika);
+      setVal('Kategori Laundry', pickPayload('kategori', 'kategoriLaundry'));
+      setVal('Mesin Cuci', pickPayload('cuciUnit', 'mesinCuci'));
+      setVal('Mesin Pengering', pickPayload('pengeringUnit', 'mesinPengering'));
+      setVal('Kap Cuci', pickPayload('cuciKg', 'kapCuci'));
+      setVal('Kap Kering', pickPayload('pengeringKg', 'kapKering'));
+      setVal('Durasi Cuci', pickPayload('cuciDurasi', 'durasiCuci'));
+      setVal('Durasi Kering', pickPayload('pengeringDurasi', 'durasiKering'));
+      setVal('Alat Setrika', pickPayload('setrikaUnit', 'alatSetrika'));
+      setVal('Kap Setrika', pickPayload('setrikaKg', 'kapSetrika'));
+      setVal('Durasi Setrika', pickPayload('setrikaDurasi', 'durasiSetrika'));
       setVal('Tipe Mesin Cuci', payload.tipeMesinCuci);
       setVal('Tipe Mesin Pengering', payload.tipeMesinPengering);
-      setVal('Tipe Setrika', payload.tipeSetrika);
+      setVal('Tipe Setrika', pickPayload('tipeSetrikaUtama', 'tipeSetrika'));
     };
 
     if (targetRow !== -1) {
@@ -1025,6 +1032,10 @@ function saveKapasitas(payload) {
   } catch (error) {
     throw new Error("Gagal menyimpan data Kapasitas: " + error.toString());
   }
+}
+
+function saveKapasitasPremium(payload) {
+  return saveKapasitas(payload);
 }
 
 
@@ -1049,31 +1060,62 @@ function getDaftarKapasitas() {
       const namaOutlet = getValue(row, 'Nama Outlet', 'Nama Cabang/Outlet');
       if (!namaOutlet || String(namaOutlet).toLowerCase().includes('nama outlet')) continue;
 
+      const tutupMinggu = getValue(row, 'Tutup Hari Minggu');
+      const okupansiCuci = getValue(row, 'Target Okupansi Cuci');
+      const okupansiKering = getValue(row, 'Target Okupansi Kering');
+      const okupansiSetrika = getValue(row, 'Target Okupansi Setrika');
+      const kategoriLaundry = getValue(row, 'Kategori Laundry');
+      const mesinCuci = getValue(row, 'Mesin Cuci');
+      const mesinPengering = getValue(row, 'Mesin Pengering');
+      const kapCuci = getValue(row, 'Kap Cuci');
+      const kapKering = getValue(row, 'Kap Kering');
+      const durasiCuci = getValue(row, 'Durasi Cuci');
+      const durasiKering = getValue(row, 'Durasi Kering');
+      const alatSetrika = getValue(row, 'Alat Setrika');
+      const kapSetrika = getValue(row, 'Kap Setrika');
+      const durasiSetrika = getValue(row, 'Durasi Setrika');
+      const tipeSetrika = getValue(row, 'Tipe Setrika');
+
       result.push({
         namaOutlet: namaOutlet,
         jamBuka: getValue(row, 'Jam Buka'),
         jamTutup: getValue(row, 'Jam Tutup'),
-        tutupMinggu: getValue(row, 'Tutup Hari Minggu'),
-        okupansiCuci: getValue(row, 'Target Okupansi Cuci'),
-        okupansiKering: getValue(row, 'Target Okupansi Kering'),
-        okupansiSetrika: getValue(row, 'Target Okupansi Setrika'),
+        tutupMinggu: tutupMinggu,
+        mingguTutup: tutupMinggu,
+        okupansiCuci: okupansiCuci,
+        okupansiKering: okupansiKering,
+        okupansiSetrika: okupansiSetrika,
+        targetOkupansiCuci: okupansiCuci,
+        targetOkupansiKering: okupansiKering,
+        targetOkupansiSetrika: okupansiSetrika,
         estimasiCuci: getValue(row, 'Estimasi Cuci'),
         estimasiKering: getValue(row, 'Estimasi Kering'),
         estimasiSetrika: getValue(row, 'Estimasi Setrika'),
         durasiOperasional: getValue(row, 'Durasi Operasional'),
-        kategoriLaundry: getValue(row, 'Kategori Laundry'),
-        mesinCuci: getValue(row, 'Mesin Cuci'),
-        mesinPengering: getValue(row, 'Mesin Pengering'),
-        kapCuci: getValue(row, 'Kap Cuci'),
-        kapKering: getValue(row, 'Kap Kering'),
-        durasiCuci: getValue(row, 'Durasi Cuci'),
-        durasiKering: getValue(row, 'Durasi Kering'),
-        alatSetrika: getValue(row, 'Alat Setrika'),
-        kapSetrika: getValue(row, 'Kap Setrika'),
-        durasiSetrika: getValue(row, 'Durasi Setrika'),
+        kategoriLaundry: kategoriLaundry,
+        kategori: kategoriLaundry,
+        mesinCuci: mesinCuci,
+        mesinPengering: mesinPengering,
+        kapCuci: kapCuci,
+        kapKering: kapKering,
+        durasiCuci: durasiCuci,
+        durasiKering: durasiKering,
+        alatSetrika: alatSetrika,
+        kapSetrika: kapSetrika,
+        durasiSetrika: durasiSetrika,
+        cuciUnit: mesinCuci,
+        pengeringUnit: mesinPengering,
+        setrikaUnit: alatSetrika,
+        cuciKg: kapCuci,
+        pengeringKg: kapKering,
+        setrikaKg: kapSetrika,
+        cuciDurasi: durasiCuci,
+        pengeringDurasi: durasiKering,
+        setrikaDurasi: durasiSetrika,
         tipeMesinCuci: getValue(row, 'Tipe Mesin Cuci'),
         tipeMesinPengering: getValue(row, 'Tipe Mesin Pengering'),
-        tipeSetrika: getValue(row, 'Tipe Setrika')
+        tipeSetrika: tipeSetrika,
+        tipeSetrikaUtama: tipeSetrika
       });
     }
 
@@ -1134,6 +1176,10 @@ function deleteEntity(namaOutletRequest) {
   } catch(error) {
     throw new Error("Gagal menghapus entitas: " + error.toString());
   }
+}
+
+function deleteKapasitas(namaOutletRequest) {
+  return deleteEntity(namaOutletRequest);
 }
 
 /**

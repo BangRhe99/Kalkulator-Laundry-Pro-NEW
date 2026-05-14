@@ -45,14 +45,14 @@
   }
 
   function getPayloadFromMemory() {
-    if (patchState.payload && patchState.payload.status === 'success') return patchState.payload;
-
     try {
       if (typeof APP_STATE !== 'undefined' && APP_STATE && APP_STATE.data && APP_STATE.data.master && APP_STATE.data.master.status === 'success') {
         patchState.payload = APP_STATE.data.master;
         return patchState.payload;
       }
     } catch (e1) {}
+
+    if (patchState.payload && patchState.payload.status === 'success') return patchState.payload;
 
     try {
       var cached = localStorage.getItem(CACHE_KEY);
@@ -91,7 +91,9 @@
     try {
       if (typeof masterDataCabang !== 'undefined') {
         masterDataCabang = (data.kapasitas || []).map(function (item) {
+          if (typeof window.normalizeKapasitasRow === 'function') return window.normalizeKapasitasRow(item);
           item.namaOutlet = item.namaOutlet || item.namaLaundry || item['Nama Outlet'] || item['Nama Cabang/Outlet'] || 'Unknown';
+          item.kategori = item.kategori || item.kategoriLaundry || item['Kategori Laundry'] || 'Drop Off/Kiloan';
           return item;
         });
       }
@@ -112,6 +114,8 @@
     return true;
   }
 
+  window.zettCommitPayload = commitPayload;
+
   function getOutlets() {
     var payload = getPayloadFromMemory();
     var list = [];
@@ -120,7 +124,9 @@
       list = payload.kapasitas.map(function (item) {
         var clone = {};
         for (var key in item) clone[key] = item[key];
+        if (typeof window.normalizeKapasitasRow === 'function') return window.normalizeKapasitasRow(clone);
         clone.namaOutlet = clone.namaOutlet || clone.namaLaundry || clone['Nama Outlet'] || clone['Nama Cabang/Outlet'] || 'Unknown';
+        clone.kategori = clone.kategori || clone.kategoriLaundry || clone['Kategori Laundry'] || 'Drop Off/Kiloan';
         return clone;
       });
     }
@@ -129,7 +135,9 @@
       try {
         if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) {
           list = masterDataCabang.map(function (item) {
+            if (typeof window.normalizeKapasitasRow === 'function') return window.normalizeKapasitasRow(item);
             item.namaOutlet = item.namaOutlet || item.namaLaundry || item['Nama Outlet'] || item['Nama Cabang/Outlet'] || 'Unknown';
+            item.kategori = item.kategori || item.kategoriLaundry || item['Kategori Laundry'] || 'Drop Off/Kiloan';
             return item;
           });
         }
@@ -337,7 +345,7 @@
         }
 
         if (typeof loadDaftarCabang === 'function') {
-          try { loadDaftarCabang(); } catch(eLoad) { console.error('[ZETTBOT PATCH] loadDaftarCabang gagal:', eLoad); }
+          try { loadDaftarCabang(true); } catch(eLoad) { console.error('[ZETTBOT PATCH] loadDaftarCabang gagal:', eLoad); }
         }
       }
 
@@ -424,15 +432,15 @@
         console.error('[ZETTBOT PATCH] google.script.run gagal:', err);
         renderEmptyDashboard((err && err.message) ? err.message : 'Gagal mengambil data dari server.');
       })
-      .getZettBotInitialPayload();
+      .getZettBotInitialPayload(true);
   };
 
-  window.loadDaftarCabang = function () {
+  window.loadDaftarCabang = function (forceFresh) {
     if (
       typeof window.zettLoadDaftarCabangProfil === 'function' &&
       document.getElementById('tableDaftarOutlet')
     ) {
-      return window.zettLoadDaftarCabangProfil();
+      return window.zettLoadDaftarCabangProfil(forceFresh === true);
     }
 
     window.zettForceLoadDashboardData();
