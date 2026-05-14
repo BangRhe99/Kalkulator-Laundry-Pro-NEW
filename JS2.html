@@ -653,12 +653,99 @@ function showOmniConfirm(title, message) {
   });
 }
 
+// [PROFIL OPERASIONAL - INPUT OUTLET BARU] Premium validation alert tanpa browser alert().
+function showOutletValidationAlert(errors) {
+  const items = Array.isArray(errors) ? errors.filter(Boolean) : [];
+  if (items.length === 0) return;
+
+  const escapeHtml = (str) => String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+  const existing = document.getElementById('outlet-validation-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'outlet-validation-overlay';
+  overlay.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/55 backdrop-blur-md opacity-0 transition-opacity duration-300';
+
+  const box = document.createElement('div');
+  box.className = 'w-full max-w-md rounded-[2rem] border border-white/70 bg-white/95 p-6 shadow-[0_28px_80px_rgba(15,23,42,0.28)] backdrop-blur-xl transform scale-95 translate-y-3 opacity-0 transition-all duration-300';
+
+  box.innerHTML = `
+    <div class="flex items-start gap-4">
+      <div class="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 ring-1 ring-amber-100">
+        <span class="absolute inset-0 rounded-2xl bg-amber-300/30 animate-ping"></span>
+        <i class="ph ph-warning-circle relative text-3xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h3 class="text-lg font-black tracking-tight text-slate-900">Data Outlet Belum Lengkap</h3>
+        <p class="mt-1 text-sm font-semibold leading-relaxed text-slate-500">Mohon lengkapi data berikut sebelum menyimpan outlet baru.</p>
+      </div>
+    </div>
+    <div class="mt-5 max-h-[42vh] overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+      <ul class="space-y-2">
+        ${items.map(item => `
+          <li class="flex items-start gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-bold leading-snug text-slate-700 shadow-sm ring-1 ring-slate-100">
+            <i class="ph ph-dot-outline mt-0.5 text-lg text-amber-500"></i>
+            <span>${escapeHtml(item)}</span>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+    <button type="button" id="outlet-validation-close" class="mt-5 w-full rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-black text-white shadow-[0_14px_28px_rgba(15,23,42,0.22)] transition-all hover:-translate-y-0.5 hover:bg-slate-800 active:scale-[0.98]">
+      Lengkapi Data
+    </button>
+  `;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.classList.remove('opacity-0');
+    box.classList.remove('scale-95', 'translate-y-3', 'opacity-0');
+  });
+
+  const close = () => {
+    overlay.classList.add('opacity-0');
+    box.classList.add('scale-95', 'translate-y-3', 'opacity-0');
+    setTimeout(() => overlay.remove(), 280);
+  };
+
+  document.getElementById('outlet-validation-close').onclick = close;
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) close();
+  });
+}
+
+// [PROFIL OPERASIONAL - INPUT OUTLET BARU] Error modal khusus kegagalan simpan outlet baru.
+function showOutletSaveErrorAlert(message) {
+  const safeMessage = String(message || 'Outlet baru belum berhasil disimpan. Periksa koneksi lalu coba lagi.');
+  showOutletValidationAlert([safeMessage]);
+  const overlay = document.getElementById('outlet-validation-overlay');
+  if (!overlay) return;
+  const title = overlay.querySelector('h3');
+  const desc = overlay.querySelector('p');
+  const icon = overlay.querySelector('.ph-warning-circle');
+  const button = overlay.querySelector('#outlet-validation-close');
+  if (title) title.innerText = 'Outlet Belum Tersimpan';
+  if (desc) desc.innerText = 'Terjadi kendala saat menyimpan outlet baru. Data yang sudah Anda isi tetap dipertahankan.';
+  if (icon) {
+    icon.classList.remove('text-amber-500');
+    icon.classList.add('text-rose-500');
+  }
+  if (button) button.innerText = 'Coba Lagi';
+}
+
 function setBtnState(btnId, state) {
   const btn = document.getElementById(btnId); const formArea = document.getElementById('kapasitas-form-container');
   if(!btn) return;
   if(state === 'loading') {
     if(!btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
-    btn.style.width = btn.offsetWidth + 'px'; btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-xl"></i> Memproses...';
+    btn.style.width = btn.offsetWidth + 'px'; btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-xl"></i> Menyimpan...';
     btn.classList.add('opacity-80', 'pointer-events-none', 'scale-95');
     if(formArea) { formArea.style.pointerEvents = 'none'; formArea.style.opacity = '0.7'; formArea.style.transition = 'opacity 0.4s ease'; }
   } else if(state === 'success') {
@@ -1457,6 +1544,114 @@ function _extractMesin(tipe) {
   return data;
 }
 
+// [PROFIL OPERASIONAL - INPUT OUTLET BARU] Validator khusus outlet baru.
+function validateOutletBaruForm() {
+    const errors = [];
+    const byId = (id) => document.getElementById(id);
+    const valueOf = (id) => {
+        const el = byId(id);
+        return el ? String(el.value || '').trim() : '';
+    };
+    const selectValue = (id) => {
+        const el = byId(id);
+        if (!el || el.disabled) return '';
+        return String(el.value || '').trim();
+    };
+    const positiveNumber = (value) => {
+        if (value === null || value === undefined) return false;
+        const raw = String(value).trim();
+        if (!raw) return false;
+        const num = Number(raw.replace(',', '.'));
+        return Number.isFinite(num) && num > 0;
+    };
+    const firstMachine = (tipe) => {
+        const list = _extractMesin(tipe);
+        return list[0] || { unit: '', durasi: '', max_kg: '' };
+    };
+    const category = valueOf('inputKategori');
+    const categoryLower = category.toLowerCase();
+    const isHybrid = categoryLower.includes('hybrid');
+    const isSelfService = categoryLower.includes('self service');
+    const isDropOff = categoryLower.includes('drop off') || categoryLower.includes('drop') || categoryLower.includes('kiloan');
+    const isJemur = categoryLower.includes('jemur');
+    const dryerOn = isPakaiPengering();
+
+    if (!valueOf('inputNama')) errors.push('Nama outlet wajib diisi.');
+    if (!category) errors.push('Kategori laundry wajib dipilih.');
+
+    const jamBuka = valueOf('inputJamBuka');
+    const jamTutup = valueOf('inputJamTutup');
+    if (byId('inputJamBuka') && byId('inputJamTutup')) {
+        if (!jamBuka || !jamTutup) errors.push('Jam operasional wajib diisi lengkap: jam buka dan jam tutup.');
+    } else if (!jamBuka && !jamTutup && byId('inputJamOperasional')) {
+        if (!valueOf('inputJamOperasional')) errors.push('Jam operasional wajib diisi.');
+    }
+
+    const cuci = firstMachine('cuci');
+    if (!positiveNumber(cuci.unit)) errors.push('Jumlah unit mesin cuci wajib diisi dan harus lebih dari 0.');
+    if (!positiveNumber(cuci.durasi)) errors.push('Durasi cuci wajib diisi dan harus lebih dari 0.');
+    if (!positiveNumber(cuci.max_kg)) errors.push('Max kg mesin cuci wajib diisi dan harus lebih dari 0.');
+    if (!selectValue('jenisMesinCuci')) errors.push('Tipe mesin cuci wajib dipilih.');
+
+    const dryerRequired = isHybrid || isSelfService || ((isDropOff || isJemur) && dryerOn);
+    if (dryerRequired) {
+        const kering = firstMachine('pengering');
+        const context = (isHybrid || isSelfService) ? ' untuk kategori Hybrid/Self Service' : ' karena pengering diaktifkan';
+        const dryerStartErrorCount = errors.length;
+        if (!positiveNumber(kering.unit)) errors.push('Jumlah unit mesin pengering wajib diisi' + context + '.');
+        if (!positiveNumber(kering.durasi)) errors.push('Durasi pengering wajib diisi' + context + '.');
+        if (!positiveNumber(kering.max_kg)) errors.push('Max kg mesin pengering wajib diisi' + context + '.');
+        if (!selectValue('jenisMesinPengering')) errors.push('Tipe mesin pengering wajib dipilih.');
+        if (isJemur && errors.length > dryerStartErrorCount) {
+            errors.push('Untuk Drop Off System Jemur, data pengering boleh kosong hanya jika tombol pengering dalam kondisi OFF.');
+        }
+    }
+
+    const ironRequired = isHybrid || (isDropOff && !isSelfService) || isJemur;
+    if (ironRequired) {
+        const setrika = firstMachine('setrika');
+        if (!positiveNumber(setrika.unit)) errors.push('Jumlah unit setrika wajib diisi untuk kategori Hybrid/Drop Off.');
+        if (!positiveNumber(setrika.durasi)) errors.push('Durasi setrika wajib diisi untuk kategori Hybrid/Drop Off.');
+        if (!positiveNumber(setrika.max_kg)) errors.push('Max kg setrika wajib diisi untuk kategori Hybrid/Drop Off.');
+        if (!selectValue('jenisSetrikaUtama')) errors.push('Pilihan jenis setrika wajib dipilih: Setrika Uap atau Setrika Listrik.');
+    }
+
+    return errors;
+}
+
+// [PROFIL OPERASIONAL - INPUT OUTLET BARU] Commit cepat ke state/cache frontend tanpa reload server berat.
+function commitOutletBaruToLocalState(outletData) {
+    const normalized = normalizeKapasitasRow(outletData);
+    const outletName = String(normalized.namaOutlet || '').trim().toLowerCase();
+    if (!outletName) return;
+
+    const existingIndex = masterDataCabang.findIndex(c => String(c.namaOutlet || '').trim().toLowerCase() === outletName);
+    if (existingIndex >= 0) {
+        masterDataCabang = masterDataCabang.map((item, index) => index === existingIndex ? normalized : item);
+    } else {
+        masterDataCabang = [normalized].concat(masterDataCabang);
+    }
+
+    hasLoadedInitialData = true;
+    if (APP_STATE.data.master && APP_STATE.data.master.status === 'success') {
+        APP_STATE.data.master = {...APP_STATE.data.master, kapasitas: masterDataCabang};
+    } else {
+        APP_STATE.data.master = { status: 'success', kapasitas: masterDataCabang, hpp: masterDataHPP, transactions: dashboardRawData };
+    }
+
+    try {
+        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
+        const cached = cachedStr ? JSON.parse(cachedStr) : {};
+        const data = cached && cached.data && cached.data.status === 'success' ? cached.data : APP_STATE.data.master;
+        data.kapasitas = masterDataCabang;
+        localStorage.setItem(APP_STATE.cache.key, JSON.stringify({ data: data, expiry: Date.now() + APP_STATE.cache.ttl }));
+    } catch (e) {
+        console.warn('Gagal memperbarui cache outlet lokal:', e);
+    }
+
+    applyCabangUIData();
+}
+
 function toggleKategoriLaundry() {
     const cat = document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : '';
     const cardSetrikaMesin = document.getElementById('cardSetrikaMesin');
@@ -1596,12 +1791,23 @@ async function prosesSimpanKapasitas() {
     if(!StateMachine.acquireLock('saveKapasitas')) return;
     
     const nama = document.getElementById('inputNama').value.trim();
+    const isUpdate = !document.getElementById('btnUpdateKapasitas').classList.contains('hidden');
+
+    // [PROFIL OPERASIONAL - INPUT OUTLET BARU] Validasi premium hanya untuk outlet baru.
+    if (!isUpdate) {
+        const validationErrors = validateOutletBaruForm();
+        if (validationErrors.length > 0) {
+            StateMachine.releaseLock('saveKapasitas');
+            showOutletValidationAlert(validationErrors);
+            return;
+        }
+    }
+
     if(!nama) {
         StateMachine.releaseLock('saveKapasitas');
         return showOmniToast('Nama Outlet wajib diisi!', 'error');
     }
 
-    const isUpdate = !document.getElementById('btnUpdateKapasitas').classList.contains('hidden');
     const btnId = isUpdate ? 'btnUpdateKapasitas' : 'btnSimpanKapasitas';
     let previousCabang = null;
 
@@ -1645,10 +1851,23 @@ async function prosesSimpanKapasitas() {
             setrikaKg: exSetrika.max_kg
         };
 
+        // [PROFIL OPERASIONAL - INPUT OUTLET BARU] Tunggu response sukses, lalu render dari state lokal tanpa reload berat.
+        if (!isUpdate) {
+            const response = await runServer('saveKapasitasPremium', payload);
+            const responseOutlet = response && (response.outlet || response.data || response.kapasitas || response.row);
+            const outletBaru = responseOutlet && !Array.isArray(responseOutlet) ? responseOutlet : payload;
+
+            commitOutletBaruToLocalState(outletBaru);
+            setBtnState(btnId, 'success');
+            hideFormKapasitas();
+            setBtnState(btnId, 'idle');
+            showOmniToast('Outlet baru berhasil disimpan.', 'success');
+            return;
+        }
+
         previousCabang = masterDataCabang.slice();
         const optimisticRow = normalizeKapasitasRow(payload);
         const existingIndex = masterDataCabang.findIndex(c => String(c.namaOutlet).trim().toLowerCase() === nama.toLowerCase());
-
         if (existingIndex >= 0) {
             masterDataCabang = masterDataCabang.map((c, idx) => idx === existingIndex ? optimisticRow : c);
         } else {
@@ -1679,7 +1898,11 @@ async function prosesSimpanKapasitas() {
             applyCabangUIData();
         }
         setBtnState(btnId, 'idle');
-        showOmniToast(error.message, 'error');
+        if (!isUpdate) {
+            showOutletSaveErrorAlert(error.message);
+        } else {
+            showOmniToast(error.message, 'error');
+        }
     } finally {
         StateMachine.releaseLock('saveKapasitas');
     }
