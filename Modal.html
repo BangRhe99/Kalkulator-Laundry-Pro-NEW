@@ -486,13 +486,14 @@
       </div>
 
       <!-- Card: Listrik -->
-      <div onclick="openHPPForm('listrik', 'Analisa Biaya Listrik')" class="hpp-card-dash bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+      <div id="hpp-card-listrik-wrap" onclick="openHPPForm('listrik', 'Analisa Biaya Listrik')" class="hpp-card-dash bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
         <div class="w-10 h-10 md:w-11 md:h-11 bg-amber-50 rounded-[0.9rem] flex items-center justify-center text-amber-500 transition-transform duration-200 group-hover:scale-105">
           <i class="ph ph-lightning text-2xl drop-shadow-sm"></i>
         </div>
-        <div>
+        <div class="w-full">
           <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Listrik</h3>
           <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-amber-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] " id="dash-card-listrik">Rp 0</p>
+          <div id="dash-card-listrik-details" class="zett-electric-card-details"></div>
         </div>
       </div>
 
@@ -650,10 +651,15 @@
     <!-- ================= TAB 2: LISTRIK ================= -->
     <div id="tab-listrik" class="tab-content hidden animate-fade-in bento-grid">
       <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
-        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-lightning text-amber-500 text-2xl"></i> Parameter Beban Listrik</h3>
+        <div class="zett-electric-form-header">
+          <button type="button" onclick="closeHPPForm()" class="zett-electric-back-btn" aria-label="Kembali ke Struktur Biaya">
+            <i class="ph ph-arrow-left text-xl"></i>
+          </button>
+          <h3 class="omni-title" style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-lightning text-amber-500 text-2xl"></i> Analisa Biaya Listrik</h3>
+        </div>
         
         <!-- TDL -->
-        <div style="background: var(--omni-bg); border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; margin-bottom: 1.5rem;">
+        <div class="zett-electric-tdl-wrap" style="background: var(--omni-bg); border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; margin-bottom: 1.5rem;">
           <label class="omni-label">Tarif Dasar Listrik (TDL) per kWh (Rp)</label>
           <input type="text" id="inputTDL" inputmode="numeric" class="omni-input" style="font-size: 1.25rem;" value="1.700" oninput="formatRupiahInput(this); calculateListrik()">
           <p style="font-size: 0.7rem; color: var(--omni-navy-light); margin-top: 0.5rem; font-weight: 600;">*Bisa diubah menyesuaikan golongan daya listrik laundry Anda.</p>
@@ -661,55 +667,55 @@
 
         <div class="bento-grid">
           <!-- Mesin Cuci -->
-          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+          <div class="bento-col-6 zett-electric-panel" data-electric-panel="cuci" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
             <div style="position: absolute; top: 0; right: 0; background: rgba(59, 130, 246, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-drop text-blue-500 text-xl"></i></div>
             <h4 style="font-size: 0.9rem; font-weight: 800; color: #3b82f6; margin-bottom: 1rem;">Mesin Cuci</h4>
             <label class="omni-label" style="font-size: 0.7rem;">Daya / Mesin (Watt)</label>
             <input type="number" id="inputListrikCuciWatt" class="omni-input" style="padding: 0.75rem 1.25rem; margin-bottom: 1.25rem;" value="450" oninput="calculateListrik()">
             <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+              <div class="zett-electric-metric-row" data-electric-field="cuciLoad" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
                 <span>Estimasi / Load:</span> <span id="dispListrikCuciLoad" style="color: var(--omni-navy);">Rp 0</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(59, 130, 246, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #2563eb;">
+              <div class="zett-electric-metric-row" data-electric-field="cuciKg" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(59, 130, 246, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #2563eb;">
                 <span>Estimasi / Kg:</span> <span id="dispListrikCuciKg">Rp 0</span>
               </div>
             </div>
           </div>
 
           <!-- Mesin Pengering -->
-          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+          <div class="bento-col-6 zett-electric-panel" data-electric-panel="kering" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
             <div style="position: absolute; top: 0; right: 0; background: rgba(249, 115, 22, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-wind text-orange-500 text-xl"></i></div>
             <h4 style="font-size: 0.9rem; font-weight: 800; color: #f97316; margin-bottom: 1rem;">Mesin Pengering</h4>
             <label class="omni-label" style="font-size: 0.7rem;">Daya / Mesin (Watt)</label>
             <input type="number" id="inputListrikPengeringWatt" class="omni-input" style="padding: 0.75rem 1.25rem; margin-bottom: 1.25rem;" value="450" oninput="calculateListrik()">
             <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+              <div class="zett-electric-metric-row" data-electric-field="keringLoad" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
                 <span>Estimasi / Load:</span> <span id="dispListrikPengeringLoad" style="color: var(--omni-navy);">Rp 0</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(249, 115, 22, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #c2410c;">
+              <div class="zett-electric-metric-row" data-electric-field="keringKg" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(249, 115, 22, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #c2410c;">
                 <span>Estimasi / Kg:</span> <span id="dispListrikPengeringKg">Rp 0</span>
               </div>
             </div>
           </div>
 
           <!-- Pompa Air -->
-          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+          <div class="bento-col-6 zett-electric-panel" data-electric-panel="pompa" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
             <div style="position: absolute; top: 0; right: 0; background: rgba(6, 182, 212, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-waves text-cyan-500 text-xl"></i></div>
             <h4 style="font-size: 0.9rem; font-weight: 800; color: #0891b2; margin-bottom: 1rem;">Pompa Air</h4>
             <label class="omni-label" style="font-size: 0.7rem;">Daya Total (Watt)</label>
             <input type="number" id="inputListrikPompaWatt" class="omni-input" style="padding: 0.75rem 1.25rem; margin-bottom: 1.25rem;" value="280" oninput="calculateListrik()">
             <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+              <div class="zett-electric-metric-row" data-electric-field="pompaLoad" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
                 <span>Beban / Mesin Cuci:</span> <span id="dispListrikPompaLoad" style="color: var(--omni-navy);">Rp 0</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(6, 182, 212, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #0e7490;">
+              <div class="zett-electric-metric-row" data-electric-field="pompaKg" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(6, 182, 212, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #0e7490;">
                 <span>Estimasi / Kg:</span> <span id="dispListrikPompaKg">Rp 0</span>
               </div>
             </div>
           </div>
 
           <!-- Setrika Listrik -->
-          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+          <div class="bento-col-6 zett-electric-panel" data-electric-panel="setrika" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
             <div style="position: absolute; top: 0; right: 0; background: rgba(168, 85, 247, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-thermometer-hot text-purple-500 text-xl"></i></div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; position: relative; z-index: 10;">
               <h4 style="font-size: 0.9rem; font-weight: 800; color: #9333ea; margin: 0;">Setrika Listrik</h4>
@@ -728,10 +734,10 @@
                   <p style="font-size: 0.65rem; color: var(--omni-navy-light); margin-top: 0.5rem; font-weight: 600;">*Kapasitas kecepatan setrika diambil otomatis dari Master Profil Operasional.</p>
               </div>
               <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                <div class="zett-electric-metric-row" data-electric-field="setrikaJam" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
                   <span>Estimasi / Jam:</span> <span id="dispListrikSetrikaJam" style="color: var(--omni-navy);">Rp 0</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(168, 85, 247, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #7e22ce;">
+                <div class="zett-electric-metric-row" data-electric-field="setrikaKg" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(168, 85, 247, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #7e22ce;">
                   <span>Estimasi / Kg:</span> <span id="dispListrikSetrikaKg">Rp 0</span>
                 </div>
               </div>
@@ -2487,7 +2493,7 @@
 
       if (titleEl) titleEl.textContent = title || 'Analisa Biaya';
       const outerHeader = titleEl ? titleEl.closest('.flex.items-center.gap-5') : null;
-      if (outerHeader) outerHeader.style.display = type === 'gas' ? 'none' : '';
+      if (outerHeader) outerHeader.style.display = (type === 'gas' || type === 'listrik') ? 'none' : '';
 
       hideEl(dashboard);
       showEl(formView, 'block');
@@ -2516,6 +2522,12 @@
         setTimeout(function() {
           window.zettRenderGasAnalysisForm();
           if (typeof window.zettRenderGasLpgCard === 'function') window.zettRenderGasLpgCard();
+        }, 30);
+      }
+      if (type === 'listrik' && typeof window.zettRenderElectricAnalysisForm === 'function') {
+        setTimeout(function() {
+          window.zettRenderElectricAnalysisForm();
+          if (typeof window.calculateListrik === 'function') window.calculateListrik();
         }, 30);
       }
 
@@ -2731,6 +2743,71 @@
 
   #view-hpp #tab-gas .zett-gas-field {
     transition: opacity 220ms cubic-bezier(0.16,1,0.3,1), transform 220ms cubic-bezier(0.16,1,0.3,1);
+  }
+
+  #view-hpp .zett-electric-card-details {
+    width: 100%;
+    display: grid;
+    gap: 0.28rem;
+    margin-top: 0.55rem;
+    text-align: left;
+  }
+
+  #view-hpp .zett-electric-card-details div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    padding: 0.34rem 0.52rem;
+    border-radius: 0.78rem;
+    background: rgba(255, 251, 235, 0.62);
+    border: 1px solid rgba(253, 230, 138, 0.54);
+  }
+
+  #view-hpp .zett-electric-card-details span {
+    color: #64748b;
+    font-size: 0.64rem;
+    font-weight: 850;
+    line-height: 1.15;
+  }
+
+  #view-hpp .zett-electric-card-details strong {
+    color: #0f172a;
+    font-size: 0.68rem;
+    font-weight: 950;
+    white-space: nowrap;
+  }
+
+  #view-hpp .zett-electric-form-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.35rem;
+  }
+
+  #view-hpp .zett-electric-back-btn {
+    width: 2.85rem;
+    height: 2.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.82);
+    background: rgba(255, 255, 255, 0.94);
+    color: #475569;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    transition: transform 180ms cubic-bezier(0.16,1,0.3,1), color 180ms ease, background 180ms ease;
+  }
+
+  #view-hpp .zett-electric-back-btn:hover {
+    color: #0f172a;
+    background: #f8fafc;
+    transform: translateY(-1px);
+  }
+
+  #view-hpp .zett-electric-panel,
+  #view-hpp .zett-electric-metric-row {
+    transition: opacity 220ms cubic-bezier(0.16,1,0.3,1), transform 220ms cubic-bezier(0.16,1,0.3,1), filter 220ms ease;
   }
 </style>
 
@@ -3819,6 +3896,276 @@ window.saveGasHPPData = function(event) {
     document.addEventListener('input', function(event) {
       if (event.target && ['inputGasPerLoadManual', 'inputGasJam', 'inputGasSetrikaJam', 'inputGasSetrikaKg'].includes(event.target.id)) {
         requestAnimationFrame(zettRenderGasLpgCard);
+      }
+    });
+  });
+})();
+
+/* Electricity operational UI: scoped to Struktur Biaya > Analisa Biaya Listrik. */
+(function zettElectricOperationalUi20260515() {
+  const FIELD_CONFIG = {
+    pompaLoad: { label: 'Listrik Pompa /Load', source: 'inputListrikPompaWatt' },
+    pompaKg: { label: 'Listrik Pompa /Kg', source: 'inputListrikPompaWatt' },
+    cuciLoad: { label: 'Listrik Cuci /Load', source: 'inputListrikCuciWatt' },
+    cuciKg: { label: 'Listrik Cuci /Kg', source: 'inputListrikCuciWatt' },
+    keringLoad: { label: 'Listrik Kering /Load', source: 'inputListrikPengeringWatt' },
+    keringKg: { label: 'Listrik Kering /Kg', source: 'inputListrikPengeringWatt' },
+    setrikaJam: { label: 'Listrik Setrika /Jam', source: 'inputListrikSetrikaWatt' },
+    setrikaKg: { label: 'Listrik Setrika /Kg', source: 'inputListrikSetrikaWatt' }
+  };
+
+  function byId(id) { return document.getElementById(id); }
+  function norm(value) { return String(value || '').trim().toLowerCase(); }
+  function clean(value) { return typeof zettCleanNumber === 'function' ? zettCleanNumber(value) : (Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0); }
+  function rupiah(value) {
+    if (typeof formatRupiah === 'function') return formatRupiah(Math.round(Number(value) || 0));
+    return 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
+  }
+  function outletName() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+  function getOutlet() {
+    const name = norm(outletName());
+    const sources = [];
+    if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) sources.push(masterDataCabang);
+    if (window.APP_STATE?.data?.master?.cabang) sources.push(window.APP_STATE.data.master.cabang);
+    for (const rows of sources) {
+      const found = rows.find(item => norm(item?.namaOutlet || item?.['Nama Outlet']) === name);
+      if (found) return found;
+    }
+    return null;
+  }
+  function getRow() {
+    if (typeof zettFindActiveHPPRow === 'function') return zettFindActiveHPPRow() || {};
+    return {};
+  }
+
+  function zettGetElectricUsageContext() {
+    const outlet = getOutlet() || {};
+    const row = getRow();
+    const kategoriRaw = outlet.kategori || row['Kategori Laundry'] || 'Laundry Drop Off';
+    const kategori = norm(kategoriRaw);
+    const setrikaType = norm(outlet.tipeSetrikaUtama || outlet.tipeSetrika || row['Tipe Setrika'] || '');
+    const dryerUnit = clean(outlet.pengeringUnit || row['Mesin Kering'] || row['Mesin Pengering']);
+    const dryerKg = clean(outlet.pengeringKg || row['Kap Kering']);
+    const explicitDryerOff = outlet.pakaiPengering === false || String(outlet.pakaiPengering).toLowerCase() === 'false' || norm(outlet.metodePengeringan).includes('jemur');
+    const isSelfService = kategori.includes('self');
+    const isHybrid = kategori.includes('hybrid');
+    const pakaiMesinPengering = (isSelfService || isHybrid)
+      ? !explicitDryerOff
+      : (!explicitDryerOff && (dryerUnit > 0 || dryerKg > 0 || !Object.prototype.hasOwnProperty.call(outlet, 'pakaiPengering')));
+    const pakaiSetrikaListrik = setrikaType.includes('listrik');
+
+    return {
+      kategoriBisnis: kategoriRaw,
+      isSelfService,
+      isDropOff: kategori.includes('drop') || kategori.includes('kiloan'),
+      isHybrid,
+      pakaiMesinPengering,
+      pakaiSetrikaListrik,
+      pakaiSetrikaUap: !pakaiSetrikaListrik
+    };
+  }
+
+  function zettGetVisibleElectricInputFields(context) {
+    const c = context || zettGetElectricUsageContext();
+    if (c.isSelfService) return ['pompaLoad', 'cuciLoad', 'keringLoad'];
+    if (c.isHybrid) {
+      const base = ['pompaLoad', 'cuciLoad', 'cuciKg', 'keringLoad', 'keringKg'];
+      return c.pakaiSetrikaListrik ? base.concat(['setrikaJam', 'setrikaKg']) : base;
+    }
+    const base = ['pompaKg', 'cuciKg'];
+    if (c.pakaiMesinPengering) base.push('keringKg');
+    if (c.pakaiSetrikaListrik) base.push('setrikaJam', 'setrikaKg');
+    return base;
+  }
+
+  function capacities() {
+    const outlet = getOutlet() || {};
+    const row = getRow();
+    return {
+      cuciKg: clean(outlet.cuciKg || row['Kap Cuci']) || 1,
+      keringKg: clean(outlet.pengeringKg || row['Kap Kering']) || 1,
+      setrikaKg: clean(outlet.setrikaKg || row['Kap Setrika']) || 1
+    };
+  }
+
+  function electricValues() {
+    const row = getRow();
+    const cap = capacities();
+    const tdl = clean(byId('inputTDL')?.value);
+    const hasCuciInput = String(byId('inputListrikCuciWatt')?.value || '').trim() !== '' && tdl > 0;
+    const hasKeringInput = String(byId('inputListrikPengeringWatt')?.value || '').trim() !== '' && tdl > 0;
+    const hasPompaInput = String(byId('inputListrikPompaWatt')?.value || '').trim() !== '' && tdl > 0;
+    const hasSetrikaInput = String(byId('inputListrikSetrikaWatt')?.value || '').trim() !== '' && tdl > 0;
+    const cuciLoad = hasCuciInput ? (clean(byId('inputListrikCuciWatt')?.value) / 1000) * tdl : clean(row['Cuci Per Load']);
+    const keringLoad = hasKeringInput ? (clean(byId('inputListrikPengeringWatt')?.value) / 1000) * tdl : clean(row['Kering Per Load']);
+    const pompaLoad = hasPompaInput ? (clean(byId('inputListrikPompaWatt')?.value) / 1000) * tdl : 0;
+    const setrikaJam = hasSetrikaInput ? (clean(byId('inputListrikSetrikaWatt')?.value) / 1000) * tdl : clean(row['Listrik Setrika Jam']);
+    return {
+      pompaLoad,
+      pompaKg: cap.cuciKg > 0 ? pompaLoad / cap.cuciKg : 0,
+      cuciLoad,
+      cuciKg: hasCuciInput ? (cap.cuciKg > 0 ? cuciLoad / cap.cuciKg : 0) : clean(row['Cuci Per Kg']),
+      keringLoad,
+      keringKg: hasKeringInput ? (cap.keringKg > 0 ? keringLoad / cap.keringKg : 0) : clean(row['Kering Per Kg']),
+      setrikaJam,
+      setrikaKg: hasSetrikaInput ? (cap.setrikaKg > 0 ? setrikaJam / cap.setrikaKg : 0) : clean(row['Listrik Setrika Kg'])
+    };
+  }
+
+  function zettGetVisibleElectricMetrics(context) {
+    const visible = zettGetVisibleElectricInputFields(context);
+    const values = electricValues();
+    return visible.map(key => ({ key, label: FIELD_CONFIG[key].label, value: values[key] || 0 }));
+  }
+
+  function zettGetElectricDashboardValue() {
+    return zettGetVisibleElectricMetrics().reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+  }
+
+  function zettRenderElectricAnalysisForm() {
+    const visible = new Set(zettGetVisibleElectricInputFields());
+    document.querySelectorAll('#tab-listrik .zett-electric-metric-row').forEach(row => {
+      const active = visible.has(row.dataset.electricField);
+      row.classList.toggle('hidden', !active);
+      row.style.display = active ? 'flex' : 'none';
+    });
+    const panels = { cuci: ['cuciLoad', 'cuciKg'], kering: ['keringLoad', 'keringKg'], pompa: ['pompaLoad', 'pompaKg'], setrika: ['setrikaJam', 'setrikaKg'] };
+    Object.keys(panels).forEach(name => {
+      const panel = document.querySelector('#tab-listrik [data-electric-panel="' + name + '"]');
+      if (!panel) return;
+      const active = panels[name].some(key => visible.has(key));
+      panel.classList.toggle('hidden', !active);
+      panel.style.display = active ? '' : 'none';
+    });
+    const toggle = byId('toggleSetrikaListrik');
+    if (toggle) toggle.checked = visible.has('setrikaJam') || visible.has('setrikaKg');
+    if (typeof window.toggleSetrikaInputs === 'function') window.toggleSetrikaInputs();
+  }
+
+  function zettRenderElectricCard() {
+    if (window.__zettElectricRendering) return;
+    window.__zettElectricRendering = true;
+    try {
+      const metrics = zettGetVisibleElectricMetrics();
+      const value = metrics.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+      const valueEl = byId('dash-card-listrik');
+      const detail = byId('dash-card-listrik-details');
+      if (valueEl) valueEl.textContent = rupiah(value);
+      if (detail) {
+        detail.innerHTML = metrics.map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`).join('');
+      }
+      if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('listrik', value);
+      zettRenderElectricAnalysisForm();
+    } finally {
+      window.__zettElectricRendering = false;
+    }
+  }
+
+  function setText(id, value) {
+    const el = byId(id);
+    if (el) el.textContent = rupiah(value);
+  }
+
+  window.calculateListrik = function() {
+    const v = electricValues();
+    setText('dispListrikCuciLoad', v.cuciLoad);
+    setText('dispListrikCuciKg', v.cuciKg);
+    setText('dispListrikPengeringLoad', v.keringLoad);
+    setText('dispListrikPengeringKg', v.keringKg);
+    setText('dispListrikPompaLoad', v.pompaLoad);
+    setText('dispListrikPompaKg', v.pompaKg);
+    setText('dispListrikSetrikaJam', v.setrikaJam);
+    setText('dispListrikSetrikaKg', v.setrikaKg);
+    const total = zettGetElectricDashboardValue();
+    setText('displayBiayaListrikTotalKg', total);
+    zettRenderElectricCard();
+    if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('gsheet');
+    return v;
+  };
+
+  function zettValidateElectricAnalysisForm() {
+    const missing = [];
+    if (!outletName()) missing.push('Outlet');
+    if (!String(byId('inputTDL')?.value || '').trim()) missing.push('Tarif Dasar Listrik');
+    const sourceIds = new Map();
+    zettGetVisibleElectricInputFields().forEach(key => sourceIds.set(FIELD_CONFIG[key].source, true));
+    sourceIds.forEach((_, id) => {
+      const el = byId(id);
+      if (!el || String(el.value || '').trim() === '') {
+        const labels = zettGetVisibleElectricInputFields()
+          .filter(key => FIELD_CONFIG[key].source === id)
+          .map(key => FIELD_CONFIG[key].label);
+        missing.push(labels[0] || id);
+      }
+    });
+    return { valid: missing.length === 0, missing };
+  }
+
+  function zettShowElectricValidation(missing) {
+    const text = 'Harap lengkapi: ' + missing.join(', ');
+    if (window.Swal && typeof window.Swal.fire === 'function') {
+      return window.Swal.fire({
+        icon: 'warning',
+        title: 'Data belum lengkap',
+        text,
+        confirmButtonText: 'OK',
+        buttonsStyling: false,
+        customClass: {
+          popup: 'rounded-[1.75rem] border border-slate-200/70 shadow-[0_28px_90px_rgba(15,23,42,0.22)]',
+          title: 'text-slate-900 font-black tracking-tight',
+          htmlContainer: 'text-slate-500 font-semibold',
+          confirmButton: 'bg-slate-950 hover:bg-slate-800 text-white px-7 py-3 rounded-full font-extrabold shadow-[0_14px_30px_rgba(15,23,42,0.22)] transition-all active:scale-[0.98]'
+        }
+      });
+    }
+    if (typeof showOmniToast === 'function') showOmniToast(text, 'warning');
+  }
+
+  function zettResetElectricFormForCreate() {
+    ['inputTDL', 'inputListrikCuciWatt', 'inputListrikPengeringWatt', 'inputListrikPompaWatt', 'inputListrikSetrikaWatt'].forEach(id => {
+      const el = byId(id);
+      if (el) el.value = '';
+    });
+    const toggle = byId('toggleSetrikaListrik');
+    if (toggle) toggle.checked = false;
+  }
+
+  function zettApplyElectricRowToForm(row) {
+    if (!row || !(row['TDL'] || row['Watt Cuci'] || row['Watt Kering'] || row['Watt Pompa'] || row['Watt Setrika'])) {
+      zettResetElectricFormForCreate();
+      zettRenderElectricAnalysisForm();
+      return;
+    }
+    const set = (id, value) => { const el = byId(id); if (el) el.value = value == null ? '' : value; };
+    set('inputTDL', row['TDL'] || '');
+    set('inputListrikCuciWatt', row['Watt Cuci'] || '');
+    set('inputListrikPengeringWatt', row['Watt Kering'] || '');
+    set('inputListrikPompaWatt', row['Watt Pompa'] || '');
+    set('inputListrikSetrikaWatt', row['Watt Setrika'] || '');
+    if (typeof formatRupiahInput === 'function') {
+      const tdl = byId('inputTDL');
+      if (tdl && tdl.value) formatRupiahInput(tdl);
+    }
+    zettRenderElectricAnalysisForm();
+  }
+
+  window.zettGetElectricUsageContext = zettGetElectricUsageContext;
+  window.zettGetVisibleElectricInputFields = zettGetVisibleElectricInputFields;
+  window.zettGetVisibleElectricMetrics = zettGetVisibleElectricMetrics;
+  window.zettGetElectricDashboardValue = zettGetElectricDashboardValue;
+  window.zettRenderElectricAnalysisForm = zettRenderElectricAnalysisForm;
+  window.zettRenderElectricCard = zettRenderElectricCard;
+  window.zettValidateElectricAnalysisForm = zettValidateElectricAnalysisForm;
+  window.zettShowElectricValidation = zettShowElectricValidation;
+  window.zettResetElectricFormForCreate = zettResetElectricFormForCreate;
+  window.zettApplyElectricRowToForm = zettApplyElectricRowToForm;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    zettRenderElectricAnalysisForm();
+    setTimeout(function() { if (typeof window.calculateListrik === 'function') window.calculateListrik(); }, 80);
+    document.addEventListener('change', function(event) {
+      if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori')) {
+        setTimeout(function() { zettRenderElectricAnalysisForm(); window.calculateListrik(); }, 60);
       }
     });
   });

@@ -1241,11 +1241,11 @@ function resetFormHPP() {
     if(document.getElementById('inputCentralGas')) document.getElementById('inputCentralGas').checked = false;
     if(document.getElementById('inputGasMenit')) document.getElementById('inputGasMenit').value = '';
 
-    if(document.getElementById('inputTDL')) document.getElementById('inputTDL').value = '1.700';
-    if(document.getElementById('inputListrikCuciWatt')) document.getElementById('inputListrikCuciWatt').value = '450';
-    if(document.getElementById('inputListrikPengeringWatt')) document.getElementById('inputListrikPengeringWatt').value = '450';
-    if(document.getElementById('inputListrikPompaWatt')) document.getElementById('inputListrikPompaWatt').value = '280';
-    if(document.getElementById('inputListrikSetrikaWatt')) document.getElementById('inputListrikSetrikaWatt').value = '300';
+    if(document.getElementById('inputTDL')) document.getElementById('inputTDL').value = '';
+    if(document.getElementById('inputListrikCuciWatt')) document.getElementById('inputListrikCuciWatt').value = '';
+    if(document.getElementById('inputListrikPengeringWatt')) document.getElementById('inputListrikPengeringWatt').value = '';
+    if(document.getElementById('inputListrikPompaWatt')) document.getElementById('inputListrikPompaWatt').value = '';
+    if(document.getElementById('inputListrikSetrikaWatt')) document.getElementById('inputListrikSetrikaWatt').value = '';
     if(document.getElementById('toggleSetrikaListrik')) document.getElementById('toggleSetrikaListrik').checked = false;
     
     safeSetSelect('inputAirSumber', 'pdam');
@@ -1320,11 +1320,11 @@ function populateFormHPP(namaCabang) {
     if(document.getElementById('inputCentralGas')) document.getElementById('inputCentralGas').checked = (hppData['Central Gas'] === 'Ya');
     if(document.getElementById('inputGasMenit')) document.getElementById('inputGasMenit').value = hppData['Menit Gas'] ? `${hppData['Menit Gas']} Menit` : '0 Menit';
 
-    if(document.getElementById('inputTDL')) document.getElementById('inputTDL').value = hppData['TDL'] || '1.700';
-    if(document.getElementById('inputListrikCuciWatt')) document.getElementById('inputListrikCuciWatt').value = hppData['Watt Cuci'] || '450';
-    if(document.getElementById('inputListrikPengeringWatt')) document.getElementById('inputListrikPengeringWatt').value = hppData['Watt Kering'] || '450';
-    if(document.getElementById('inputListrikPompaWatt')) document.getElementById('inputListrikPompaWatt').value = hppData['Watt Pompa'] || '280';
-    if(document.getElementById('inputListrikSetrikaWatt')) document.getElementById('inputListrikSetrikaWatt').value = hppData['Watt Setrika'] || '300';
+    if(document.getElementById('inputTDL')) document.getElementById('inputTDL').value = hppData['TDL'] || '';
+    if(document.getElementById('inputListrikCuciWatt')) document.getElementById('inputListrikCuciWatt').value = hppData['Watt Cuci'] || '';
+    if(document.getElementById('inputListrikPengeringWatt')) document.getElementById('inputListrikPengeringWatt').value = hppData['Watt Kering'] || '';
+    if(document.getElementById('inputListrikPompaWatt')) document.getElementById('inputListrikPompaWatt').value = hppData['Watt Pompa'] || '';
+    if(document.getElementById('inputListrikSetrikaWatt')) document.getElementById('inputListrikSetrikaWatt').value = hppData['Watt Setrika'] || '';
     
     const isSetrikaListrikActive = parseFloat(hppData['Watt Setrika']) > 0;
     if(document.getElementById('toggleSetrikaListrik')) document.getElementById('toggleSetrikaListrik').checked = isSetrikaListrikActive;
@@ -2095,6 +2095,16 @@ function simpanDataHPP(e) {
     const nama = document.getElementById('inputNamaHPP').value.trim();
     if(!nama) return showOmniToast('Silakan pilih cabang di pojok kanan atas terlebih dahulu!', 'error');
 
+    const activeHPPType = typeof window.zettGetActiveHPPType === 'function' ? window.zettGetActiveHPPType() : '';
+    if (activeHPPType === 'listrik' && typeof window.zettValidateElectricAnalysisForm === 'function') {
+        const validation = window.zettValidateElectricAnalysisForm();
+        if (!validation.valid) {
+            if (typeof window.zettShowElectricValidation === 'function') window.zettShowElectricValidation(validation.missing);
+            else showOmniToast('Harap lengkapi: ' + validation.missing.join(', '), 'warning');
+            return;
+        }
+    }
+
     if(!StateMachine.acquireLock('simpanHPP')) return;
 
     const isUpdate = document.getElementById('btnUpdateHPP') && !document.getElementById('btnUpdateHPP').classList.contains('hidden');
@@ -2124,6 +2134,12 @@ function simpanDataHPP(e) {
     if(jmlKeringUI === 0) jmlKeringUI = 1; 
     let costPerMenitUI = (menitGasUI > 0 && hargaGasUI > 0) ? (hargaGasUI / menitGasUI) : 0;
     let gasPerLoadUI = costPerMenitUI * durasiKeringUI;
+    const visibleElectricFields = (typeof window.zettGetVisibleElectricInputFields === 'function')
+        ? window.zettGetVisibleElectricInputFields()
+        : [];
+    const electricFieldVisible = (key) => visibleElectricFields.length === 0 || visibleElectricFields.includes(key);
+    const includeElectricDryer = electricFieldVisible('keringLoad') || electricFieldVisible('keringKg');
+    const includeElectricIron = electricFieldVisible('setrikaJam') || electricFieldVisible('setrikaKg');
 
     const payload = {
         namaOutlet: nama,
@@ -2139,9 +2155,9 @@ function simpanDataHPP(e) {
         
         listrikTDL: document.getElementById('inputTDL') ? document.getElementById('inputTDL').value : '',
         listrikCuci: document.getElementById('inputListrikCuciWatt') ? document.getElementById('inputListrikCuciWatt').value : '',
-        listrikPengering: document.getElementById('inputListrikPengeringWatt') ? document.getElementById('inputListrikPengeringWatt').value : '',
+        listrikPengering: includeElectricDryer && document.getElementById('inputListrikPengeringWatt') ? document.getElementById('inputListrikPengeringWatt').value : '',
         listrikPompa: document.getElementById('inputListrikPompaWatt') ? document.getElementById('inputListrikPompaWatt').value : '',
-        listrikSetrika: document.getElementById('inputListrikSetrikaWatt') ? document.getElementById('inputListrikSetrikaWatt').value : '',
+        listrikSetrika: includeElectricIron && document.getElementById('inputListrikSetrikaWatt') ? document.getElementById('inputListrikSetrikaWatt').value : '',
         
         airSumber: document.getElementById('inputAirSumber') ? document.getElementById('inputAirSumber').value : '',
         airHargaM3: document.getElementById('inputAirHargaM3') ? document.getElementById('inputAirHargaM3').value : '',
@@ -2406,11 +2422,11 @@ async function prosesSimpanBEP() {
       });
     }
 
-    zettSetVal('inputTDL', zettPick(hppData, ['TDL'], '1.700'));
-    zettSetVal('inputListrikCuciWatt', zettPick(hppData, ['Watt Cuci'], '450'));
-    zettSetVal('inputListrikPengeringWatt', zettPick(hppData, ['Watt Kering'], '450'));
-    zettSetVal('inputListrikPompaWatt', zettPick(hppData, ['Watt Pompa'], '280'));
-    zettSetVal('inputListrikSetrikaWatt', zettPick(hppData, ['Watt Setrika'], '300'));
+    zettSetVal('inputTDL', zettPick(hppData, ['TDL'], ''));
+    zettSetVal('inputListrikCuciWatt', zettPick(hppData, ['Watt Cuci'], ''));
+    zettSetVal('inputListrikPengeringWatt', zettPick(hppData, ['Watt Kering'], ''));
+    zettSetVal('inputListrikPompaWatt', zettPick(hppData, ['Watt Pompa'], ''));
+    zettSetVal('inputListrikSetrikaWatt', zettPick(hppData, ['Watt Setrika'], ''));
     zettSetCheck('toggleSetrikaListrik', parseFloat(zettPick(hppData, ['Watt Setrika'], 0)) > 0);
 
     if (typeof safeSetSelect === 'function') safeSetSelect('inputAirSumber', zettPick(hppData, ['Sumber Air', 'Air_Sumber'], 'pdam'));
