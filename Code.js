@@ -948,6 +948,8 @@ function saveGasHPPData(payload) {
       'Central Gas': String(payload.centralGas || 'Tidak') === 'Ya' ? 'Ya' : 'Tidak',
       'Gas Per Load': zettToNumber_(payload.gasPerLoad),
       'Gas Per Kg': zettToNumber_(payload.gasPerKg),
+      'Setrika Per Jam': zettToNumber_(payload.setrikaPerJam),
+      'Setrika Per Kg': zettToNumber_(payload.setrikaPerKg),
       'Timestamp': Utilities.formatDate(new Date(), 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss')
     };
 

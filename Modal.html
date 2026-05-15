@@ -471,13 +471,17 @@
     <div class="grid grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-4 md:gap-5">
       
       <!-- Card: Gas -->
-      <div onclick="openHPPForm('gas', 'Analisa Biaya Gas')" class="hpp-card-dash bg-white border border-rose-100/70 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+      <div id="hpp-card-gas-wrap" onclick="openHPPForm('gas', 'Analisa Biaya Gas')" class="hpp-card-dash bg-white border border-rose-100/70 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
         <div class="w-10 h-10 md:w-11 md:h-11 bg-rose-50 rounded-[0.9rem] flex items-center justify-center text-rose-500 transition-transform duration-200 group-hover:scale-105">
           <i class="ph ph-fire text-2xl drop-shadow-sm"></i>
         </div>
-        <div>
-          <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Gas LPG</h3>
+        <div class="w-full">
+          <div class="flex items-center justify-center gap-2 mb-1">
+            <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em]">Gas LPG</h3>
+            <button type="button" id="toggleGasManualHPP" class="zett-gas-mode-toggle" aria-label="Toggle Gas LPG" onclick="event.preventDefault(); event.stopPropagation(); if (window.zettToggleGasManualMode) window.zettToggleGasManualMode();">ON</button>
+          </div>
           <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-rose-500 tracking-tight tabular-nums [font-feature-settings:'tnum']" id="dash-card-gas">Rp 0</p>
+          <div id="dash-card-gas-details" class="zett-gas-card-details"></div>
         </div>
       </div>
 
@@ -553,11 +557,22 @@
     <!-- ================= TAB 1: GAS ================= -->
     <div id="tab-gas" class="tab-content hidden animate-fade-in bento-grid">
       <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
-        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-fire text-rose-500 text-2xl"></i> Parameter Gas Lpg</h3>
+        <div class="zett-gas-form-header">
+          <button type="button" onclick="closeHPPForm()" class="zett-gas-back-btn" aria-label="Kembali ke Struktur Biaya">
+            <i class="ph ph-arrow-left text-xl"></i>
+          </button>
+          <h3 class="omni-title" style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-fire text-rose-500 text-2xl"></i> Analisa Biaya Gas</h3>
+        </div>
         
         <div class="bento-grid">
+          <div class="bento-col-6 zett-gas-field" data-gas-field="gasLoad">
+            <label class="omni-label">Gas Kering /Load</label>
+            <div class="omni-input-wrapper">
+              <input type="text" id="inputGasPerLoadManual" inputmode="numeric" class="omni-input" placeholder="Masukkan biaya gas kering per load" oninput="formatRupiahInput(this); calculateGas()">
+            </div>
+          </div>
           <!-- Kapasitas LPG -->
-          <div class="bento-col-6">
+          <div class="bento-col-6 zett-gas-base-field">
             <label class="omni-label">Kapasitas Gas Lpg</label>
             <div class="omni-input-wrapper">
               <select id="inputGasKapasitas" class="omni-input" onchange="updateGasDefault(); calculateGas()">
@@ -571,17 +586,29 @@
             </div>
           </div>
           <!-- Harga -->
-          <div class="bento-col-6">
+          <div class="bento-col-6 zett-gas-base-field">
             <label class="omni-label">Harga Per Tabung (Rp)</label>
             <div class="omni-input-wrapper">
               <input type="text" id="inputGasHarga" inputmode="numeric" class="omni-input" placeholder="Misal: 20.000" oninput="formatRupiahInput(this); calculateGas()">
             </div>
           </div>
           <!-- Estimasi Jam (Editable) -->
-          <div class="bento-col-6">
-            <label class="omni-label">Estimasi Pemakaian (Jam)</label>
+          <div class="bento-col-6 zett-gas-field" data-gas-field="gasJam">
+            <label class="omni-label">Gas Kering /Jam</label>
             <div class="omni-input-wrapper">
-              <input type="number" id="inputGasJam" step="0.1" class="omni-input" style="background: rgba(16, 185, 129, 0.05); border-color: var(--omni-emerald-border);" placeholder="Otomatis / Edit manual" oninput="calculateGas()">
+              <input type="number" id="inputGasJam" step="0.1" class="omni-input" style="background: rgba(16, 185, 129, 0.05); border-color: var(--omni-emerald-border);" placeholder="Masukkan estimasi pemakaian per jam" oninput="calculateGas()">
+            </div>
+          </div>
+          <div class="bento-col-6 zett-gas-field" data-gas-field="setrikaJam">
+            <label class="omni-label">Setrika /Jam</label>
+            <div class="omni-input-wrapper">
+              <input type="text" id="inputGasSetrikaJam" inputmode="numeric" class="omni-input" placeholder="Masukkan biaya setrika per jam" oninput="formatRupiahInput(this); calculateGas()">
+            </div>
+          </div>
+          <div class="bento-col-6 zett-gas-field" data-gas-field="setrikaKg">
+            <label class="omni-label">Setrika /Kg</label>
+            <div class="omni-input-wrapper">
+              <input type="text" id="inputGasSetrikaKg" inputmode="numeric" class="omni-input" placeholder="Masukkan biaya setrika per kg" oninput="formatRupiahInput(this); calculateGas()">
             </div>
           </div>
           <!-- Konversi Menit (Readonly) -->
@@ -2459,6 +2486,8 @@
       if (!formView) return;
 
       if (titleEl) titleEl.textContent = title || 'Analisa Biaya';
+      const outerHeader = titleEl ? titleEl.closest('.flex.items-center.gap-5') : null;
+      if (outerHeader) outerHeader.style.display = type === 'gas' ? 'none' : '';
 
       hideEl(dashboard);
       showEl(formView, 'block');
@@ -2483,6 +2512,12 @@
       if (type === 'gas' && typeof window.zettRefreshActiveHPPRowFromServer === 'function') {
         window.zettRefreshActiveHPPRowFromServer(getCurrentHppOutlet(), { openType: 'gas' });
       }
+      if (type === 'gas' && typeof window.zettRenderGasAnalysisForm === 'function') {
+        setTimeout(function() {
+          window.zettRenderGasAnalysisForm();
+          if (typeof window.zettRenderGasLpgCard === 'function') window.zettRenderGasLpgCard();
+        }, 30);
+      }
 
       const scroller = byId('mainViewScroller') || document.querySelector('.custom-scroll');
       if (scroller && typeof scroller.scrollTo === 'function') {
@@ -2493,6 +2528,9 @@
     function closeFormSmooth() {
       const dashboard = byId('hpp-dashboard-view');
       const formView = byId('hpp-form-view');
+      const titleEl = byId('hpp-form-title-text');
+      const outerHeader = titleEl ? titleEl.closest('.flex.items-center.gap-5') : null;
+      if (outerHeader) outerHeader.style.display = '';
       hideEl(formView);
       document.querySelectorAll('#view-hpp .tab-content').forEach(tab => hideEl(tab));
       showEl(dashboard, 'block');
@@ -2597,6 +2635,104 @@
     else boot();
   })();
 </script>
+
+<style id="zett-gas-lpg-operational-ui-css">
+  #view-hpp .zett-gas-mode-toggle {
+    min-width: 2.45rem;
+    height: 1.35rem;
+    padding: 0 0.55rem;
+    border-radius: 999px;
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    background: rgba(255, 241, 242, 0.92);
+    color: #e11d48;
+    font-size: 0.64rem;
+    line-height: 1;
+    font-weight: 950;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 6px 14px rgba(225, 29, 72, 0.1);
+    transition: transform 180ms cubic-bezier(0.16,1,0.3,1), background 180ms ease, color 180ms ease;
+  }
+
+  #view-hpp .zett-gas-mode-toggle:hover {
+    transform: translateY(-1px);
+  }
+
+  #view-hpp .zett-gas-mode-toggle.is-off {
+    border-color: rgba(148, 163, 184, 0.32);
+    background: rgba(248, 250, 252, 0.92);
+    color: #64748b;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 6px 14px rgba(15, 23, 42, 0.06);
+  }
+
+  #view-hpp .hpp-card-dash.zett-gas-off {
+    opacity: 0.62 !important;
+    filter: grayscale(0.55) saturate(0.85) !important;
+    border-color: rgba(203, 213, 225, 0.78) !important;
+  }
+
+  #view-hpp .zett-gas-card-details {
+    width: 100%;
+    display: grid;
+    gap: 0.28rem;
+    margin-top: 0.55rem;
+    text-align: left;
+  }
+
+  #view-hpp .zett-gas-card-details div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    padding: 0.34rem 0.52rem;
+    border-radius: 0.78rem;
+    background: rgba(248, 250, 252, 0.74);
+    border: 1px solid rgba(226, 232, 240, 0.72);
+  }
+
+  #view-hpp .zett-gas-card-details span {
+    color: #64748b;
+    font-size: 0.64rem;
+    font-weight: 850;
+    line-height: 1.15;
+  }
+
+  #view-hpp .zett-gas-card-details strong {
+    color: #0f172a;
+    font-size: 0.68rem;
+    font-weight: 950;
+    white-space: nowrap;
+  }
+
+  #view-hpp .zett-gas-form-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.35rem;
+  }
+
+  #view-hpp .zett-gas-back-btn {
+    width: 2.85rem;
+    height: 2.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.82);
+    background: rgba(255, 255, 255, 0.94);
+    color: #475569;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    transition: transform 180ms cubic-bezier(0.16,1,0.3,1), color 180ms ease, background 180ms ease;
+  }
+
+  #view-hpp .zett-gas-back-btn:hover {
+    color: #0f172a;
+    background: #f8fafc;
+    transform: translateY(-1px);
+  }
+
+  #view-hpp #tab-gas .zett-gas-field {
+    transition: opacity 220ms cubic-bezier(0.16,1,0.3,1), transform 220ms cubic-bezier(0.16,1,0.3,1);
+  }
+</style>
 
 <!-- ========================================================================= -->
 <!-- ZETTBOT PATCH: HPP ACTION BUTTON VISIBILITY & SAVE-BAR SAFETY              -->
@@ -2744,7 +2880,7 @@
       btnSimpan.style.display = 'flex';
       const isGas = (window.zettGetActiveHPPType && window.zettGetActiveHPPType() === 'gas');
       btnSimpan.innerHTML = isGas
-        ? '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Gas'
+        ? '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru'
         : '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru';
       btnSimpan.onclick = function(event) {
         event.preventDefault();
@@ -3314,14 +3450,22 @@ window.calculateGas = function() {
   let durasiKering = zettCleanNumber(row['Durasi Kering']); if (!durasiKering) { durasiKering = 1; console.warn('Durasi Kering kosong, fallback=1'); }
   let kapKering = zettCleanNumber(row['Kap Kering']); if (!kapKering) { kapKering = 1; console.warn('Kap Kering kosong, fallback=1'); }
 
-  const gasPerLoad = (harga > 0 && menit > 0) ? (harga / menit) * durasiKering * mesinKering : 0;
+  const manualGasPerLoad = zettCleanNumber(document.getElementById('inputGasPerLoadManual')?.value);
+  const gasPerLoad = manualGasPerLoad > 0 ? manualGasPerLoad : ((harga > 0 && menit > 0) ? (harga / menit) * durasiKering * mesinKering : 0);
   const gasPerKg = (gasPerLoad > 0 && kapKering > 0) ? gasPerLoad / kapKering : 0;
   const out = Math.round(gasPerKg);
+  const setrikaPerJamManual = zettCleanNumber(document.getElementById('inputGasSetrikaJam')?.value);
+  const setrikaPerKgManual = zettCleanNumber(document.getElementById('inputGasSetrikaKg')?.value);
+  let kapSetrika = zettCleanNumber(row['Kap Setrika']); if (!kapSetrika) kapSetrika = 1;
+  const setrikaPerJam = setrikaPerJamManual > 0 ? setrikaPerJamManual : ((harga > 0 && jam > 0) ? harga / jam : 0);
+  const setrikaPerKg = setrikaPerKgManual > 0 ? setrikaPerKgManual : (kapSetrika > 0 ? setrikaPerJam / kapSetrika : 0);
 
   const display = document.getElementById('displayBiayaGasMenit');
   if (display) display.textContent = 'Rp ' + out.toLocaleString('id-ID');
 
-  return { gasPerLoad, gasPerKg: out, menitGas: menit };
+  if (typeof window.zettRenderGasLpgCard === 'function') window.zettRenderGasLpgCard();
+
+  return { gasPerLoad, gasPerKg: out, menitGas: menit, setrikaPerJam, setrikaPerKg };
 };
 
 window.saveGasHPPData = function(event) {
@@ -3335,7 +3479,7 @@ window.saveGasHPPData = function(event) {
     btnSimpan.classList.toggle('zett-gas-saving', isSaving);
     btnSimpan.innerHTML = isSaving
       ? '<i class="ph ph-spinner-gap text-xl animate-spin"></i> Menyimpan...'
-      : originalButtonHtml || '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Gas';
+      : originalButtonHtml || '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru';
   };
 
   const showGasResult = function(type, title, text, options) {
@@ -3375,14 +3519,20 @@ window.saveGasHPPData = function(event) {
   const calc = window.calculateGas();
   const centralGas = document.getElementById('inputCentralGas')?.checked ? 'Ya' : 'Tidak';
 
-  if (!namaOutlet || !kapGas || hargaGas <= 0 || jamGas <= 0 || !calc.menitGas) {
-    showGasResult('warning', 'Data Belum Lengkap', 'Lengkapi input Gas terlebih dahulu.');
+  if (typeof window.zettValidateGasAnalysisForm === 'function') {
+    const validation = window.zettValidateGasAnalysisForm();
+    if (!validation.valid) {
+      showGasResult('warning', 'Data belum lengkap', 'Harap lengkapi: ' + validation.missing.join(', '));
+      return;
+    }
+  } else if (!namaOutlet || !kapGas || hargaGas <= 0 || jamGas <= 0 || !calc.menitGas) {
+    showGasResult('warning', 'Data belum lengkap', 'Lengkapi input Gas terlebih dahulu.');
     return;
   }
 
   setSavingState(true);
 
-  const payload = { namaOutlet, kapGas, hargaGas, jamGas, menitGas: calc.menitGas, centralGas, gasPerLoad: calc.gasPerLoad, gasPerKg: calc.gasPerKg };
+  const payload = { namaOutlet, kapGas, hargaGas, jamGas, menitGas: calc.menitGas, centralGas, gasPerLoad: calc.gasPerLoad, gasPerKg: calc.gasPerKg, setrikaPerJam: calc.setrikaPerJam, setrikaPerKg: calc.setrikaPerKg };
   zettPatchActiveHPPRow({
     'Kap Gas': kapGas,
     'Harga Gas': zettFormatNumberID(hargaGas),
@@ -3390,11 +3540,13 @@ window.saveGasHPPData = function(event) {
     'Menit Gas': calc.menitGas,
     'Central Gas': centralGas,
     'Gas Per Load': calc.gasPerLoad,
-    'Gas Per Kg': calc.gasPerKg
+    'Gas Per Kg': calc.gasPerKg,
+    'Setrika Per Jam': calc.setrikaPerJam,
+    'Setrika Per Kg': calc.setrikaPerKg
   });
 
   if (typeof window.zettHPPSetStateValue === 'function') {
-    window.zettHPPSetStateValue('gas', calc.gasPerKg);
+    window.zettHPPSetStateValue('gas', typeof window.zettGetGasDashboardValue === 'function' ? window.zettGetGasDashboardValue() : calc.gasPerKg);
   }
   if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
     window.zettHPPUpdateDashboardFromState('gas-save');
@@ -3423,6 +3575,254 @@ window.saveGasHPPData = function(event) {
     })
     .saveGasHPPData(payload);
 };
+
+/* Gas LPG operational UI: scoped to Struktur Biaya > Analisa Biaya Gas. */
+(function zettGasLpgOperationalUi20260515() {
+  const FIELD_CONFIG = {
+    gasLoad: { id: 'inputGasPerLoadManual', label: 'Gas Kering /Load' },
+    gasJam: { id: 'inputGasJam', label: 'Gas Kering /Jam' },
+    setrikaJam: { id: 'inputGasSetrikaJam', label: 'Setrika /Jam' },
+    setrikaKg: { id: 'inputGasSetrikaKg', label: 'Setrika /Kg' }
+  };
+
+  function byId(id) { return document.getElementById(id); }
+  function norm(value) { return String(value || '').trim().toLowerCase(); }
+  function clean(value) { return typeof zettCleanNumber === 'function' ? zettCleanNumber(value) : (Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0); }
+  function rupiah(value) {
+    if (typeof formatRupiah === 'function') return formatRupiah(Math.round(Number(value) || 0));
+    return 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
+  }
+  function outletName() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+  function manualKey() { return 'zett_gas_manual_mode_' + norm(outletName()).replace(/\s+/g, '_'); }
+  function getManualMode() {
+    try {
+      const value = localStorage.getItem(manualKey());
+      return value === 'on' ? true : (value === 'off' ? false : null);
+    } catch (error) {
+      return null;
+    }
+  }
+  function setManualMode(active) {
+    try { localStorage.setItem(manualKey(), active ? 'on' : 'off'); } catch (error) {}
+  }
+  function getOutlet() {
+    const name = norm(outletName());
+    const sources = [];
+    if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) sources.push(masterDataCabang);
+    if (window.APP_STATE?.data?.master?.cabang) sources.push(window.APP_STATE.data.master.cabang);
+    for (const rows of sources) {
+      const found = rows.find(item => norm(item?.namaOutlet || item?.['Nama Outlet']) === name);
+      if (found) return found;
+    }
+    return null;
+  }
+  function getRow() {
+    if (typeof zettFindActiveHPPRow === 'function') return zettFindActiveHPPRow() || {};
+    return {};
+  }
+
+  function zettGetGasUsageContext() {
+    const outlet = getOutlet() || {};
+    const row = getRow();
+    const kategoriRaw = outlet.kategori || row['Kategori Laundry'] || 'Laundry Drop Off';
+    const kategori = norm(kategoriRaw);
+    const setrikaType = norm(outlet.tipeSetrikaUtama || outlet.tipeSetrika || row['Tipe Setrika'] || '');
+    const dryerType = norm(outlet.tipeMesinPengering || row['Tipe Mesin Pengering'] || '');
+    const dryerUnit = clean(outlet.pengeringUnit || row['Mesin Kering'] || row['Mesin Pengering']);
+    const dryerKg = clean(outlet.pengeringKg || row['Kap Kering']);
+    const explicitDryerOff = outlet.pakaiPengering === false || String(outlet.pakaiPengering).toLowerCase() === 'false' || norm(outlet.metodePengeringan).includes('jemur');
+    const pakaiMesinPengering = !explicitDryerOff && (dryerUnit > 0 || dryerKg > 0 || !Object.prototype.hasOwnProperty.call(outlet, 'pakaiPengering'));
+    const pakaiSetrikaListrik = setrikaType.includes('listrik');
+    const pakaiSetrikaUap = !pakaiSetrikaListrik;
+    const gasDefaultOff = !pakaiMesinPengering && !pakaiSetrikaUap;
+    const manual = getManualMode();
+    const gasActive = manual === null ? !gasDefaultOff : manual;
+
+    return {
+      kategoriBisnis: kategoriRaw,
+      isSelfService: kategori.includes('self'),
+      isDropOff: kategori.includes('drop') || kategori.includes('kiloan'),
+      isHybrid: kategori.includes('hybrid'),
+      pakaiMesinPengering,
+      pakaiSetrikaUap,
+      pakaiSetrikaListrik,
+      dryerUsesGas: pakaiMesinPengering && (dryerType.includes('gas') || dryerType.includes('konversi') || dryerType === ''),
+      gasManualEnabled: manual === true,
+      gasDefaultOff,
+      gasActive
+    };
+  }
+
+  function getVisibleGasInputFields(context) {
+    const c = context || zettGetGasUsageContext();
+    if (c.isSelfService) return ['gasLoad', 'gasJam'];
+    if (c.isHybrid) return c.pakaiSetrikaUap ? ['gasLoad', 'gasJam', 'setrikaJam', 'setrikaKg'] : ['gasLoad', 'gasJam'];
+    if (c.isDropOff && c.pakaiMesinPengering && c.pakaiSetrikaUap) return ['gasJam', 'setrikaJam', 'setrikaKg'];
+    if (c.isDropOff && c.pakaiMesinPengering && c.pakaiSetrikaListrik) return ['gasJam'];
+    if (c.isDropOff && !c.pakaiMesinPengering && c.pakaiSetrikaUap) return ['setrikaJam', 'setrikaKg'];
+    return c.gasActive ? ['gasLoad', 'gasJam'] : [];
+  }
+
+  function getGasValues() {
+    const row = getRow();
+    const calc = typeof window.calculateGas === 'function' && !window.__zettGasRendering ? window.calculateGas() : {};
+    const kapKering = clean(row['Kap Kering']) || clean(getOutlet()?.pengeringKg) || 1;
+    const gasLoad = clean(byId('inputGasPerLoadManual')?.value) || clean(calc.gasPerLoad) || clean(row['Gas Per Load']);
+    const gasKg = clean(calc.gasPerKg) || (gasLoad > 0 && kapKering > 0 ? Math.round(gasLoad / kapKering) : 0) || clean(row['Gas Per Kg']);
+    return {
+      gasLoad,
+      gasKg,
+      setrikaJam: clean(byId('inputGasSetrikaJam')?.value) || clean(calc.setrikaPerJam) || clean(row['Setrika Per Jam']),
+      setrikaKg: clean(byId('inputGasSetrikaKg')?.value) || clean(calc.setrikaPerKg) || clean(row['Setrika Per Kg'])
+    };
+  }
+
+  function getVisibleGasMetrics(context) {
+    const c = context || zettGetGasUsageContext();
+    if (!c.gasActive) return [];
+    const v = getGasValues();
+    if (c.isSelfService) return [{ label: 'Gas Kering /Load', value: v.gasLoad }];
+    if (c.isHybrid && c.pakaiSetrikaUap) return [
+      { label: 'Gas Kering /Load', value: v.gasLoad },
+      { label: 'Gas Kering /Kg', value: v.gasKg },
+      { label: 'Gas Setrika /Jam', value: v.setrikaJam },
+      { label: 'Gas Setrika /Kg', value: v.setrikaKg }
+    ];
+    if (c.isHybrid) return [
+      { label: 'Gas Kering /Load', value: v.gasLoad },
+      { label: 'Gas Kering /Kg', value: v.gasKg }
+    ];
+    if (c.isDropOff && c.pakaiMesinPengering && c.pakaiSetrikaUap) return [
+      { label: 'Gas Kering /Kg', value: v.gasKg },
+      { label: 'Gas Setrika /Jam', value: v.setrikaJam },
+      { label: 'Gas Setrika /Kg', value: v.setrikaKg }
+    ];
+    if (c.isDropOff && c.pakaiMesinPengering) return [{ label: 'Gas Kering /Kg', value: v.gasKg }];
+    if (c.isDropOff && c.pakaiSetrikaUap) return [
+      { label: 'Gas Setrika /Jam', value: v.setrikaJam },
+      { label: 'Gas Setrika /Kg', value: v.setrikaKg }
+    ];
+    return [{ label: 'Gas Kering /Load', value: v.gasLoad }];
+  }
+
+  function zettGetGasDashboardValue() {
+    const c = zettGetGasUsageContext();
+    if (!c.gasActive) return 0;
+    const v = getGasValues();
+    if (c.isSelfService) return v.gasLoad || 0;
+    return (v.gasKg || 0) + (v.setrikaKg || 0);
+  }
+
+  function zettRenderGasAnalysisForm() {
+    const c = zettGetGasUsageContext();
+    const visible = new Set(getVisibleGasInputFields(c));
+    document.querySelectorAll('#tab-gas .zett-gas-field').forEach(wrap => {
+      const active = visible.has(wrap.dataset.gasField);
+      wrap.classList.toggle('hidden', !active);
+      wrap.style.display = active ? '' : 'none';
+    });
+    document.querySelectorAll('#tab-gas .zett-gas-base-field').forEach(wrap => {
+      const active = visible.has('gasJam') || visible.has('gasLoad');
+      wrap.classList.toggle('hidden', !active);
+      wrap.style.display = active ? '' : 'none';
+    });
+  }
+
+  function zettRenderGasLpgCard() {
+    if (window.__zettGasRendering) return;
+    window.__zettGasRendering = true;
+    try {
+      const c = zettGetGasUsageContext();
+      const card = byId('hpp-card-gas-wrap') || byId('dash-card-gas')?.closest('.hpp-card-dash');
+      const toggle = byId('toggleGasManualHPP');
+      const detail = byId('dash-card-gas-details');
+      const valueEl = byId('dash-card-gas');
+      const dashboardValue = zettGetGasDashboardValue();
+
+      if (toggle) {
+        toggle.textContent = c.gasActive ? 'ON' : 'OFF';
+        toggle.classList.toggle('is-off', !c.gasActive);
+      }
+      if (card) {
+        card.classList.toggle('zett-gas-off', !c.gasActive);
+        card.style.pointerEvents = 'auto';
+        card.style.opacity = '';
+        card.style.filter = '';
+      }
+      if (detail) {
+        detail.innerHTML = c.gasActive
+          ? getVisibleGasMetrics(c).map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`).join('')
+          : '<div><span>Gas tidak dihitung</span><strong>Rp 0</strong></div>';
+      }
+      if (valueEl) valueEl.textContent = rupiah(dashboardValue);
+      if (typeof window.zettHPPSetStateValue === 'function') {
+        window.zettHPPSetStateValue('gas', dashboardValue);
+      }
+      zettRenderGasAnalysisForm();
+    } finally {
+      window.__zettGasRendering = false;
+    }
+  }
+
+  function zettValidateGasAnalysisForm() {
+    const visible = getVisibleGasInputFields();
+    const missing = [];
+    visible.forEach(key => {
+      const config = FIELD_CONFIG[key];
+      const el = config ? byId(config.id) : null;
+      if (!el || String(el.value || '').trim() === '') missing.push(config.label);
+    });
+    if (!outletName()) missing.unshift('Outlet');
+    return { valid: missing.length === 0, missing };
+  }
+
+  function clearGasInputsForNewData() {
+    ['inputGasPerLoadManual', 'inputGasKapasitas', 'inputGasHarga', 'inputGasJam', 'inputGasSetrikaJam', 'inputGasSetrikaKg'].forEach(id => {
+      const el = byId(id);
+      if (el) el.value = '';
+    });
+    const menit = byId('inputGasMenit');
+    if (menit) menit.value = '';
+  }
+
+  function syncNewOrExistingGasForm() {
+    const row = getRow();
+    if (row && (row['Gas Per Load'] || row['Gas Per Kg'] || row['Harga Gas'] || row['Jam Gas'])) {
+      if (byId('inputGasPerLoadManual')) byId('inputGasPerLoadManual').value = row['Gas Per Load'] ? rupiah(row['Gas Per Load']).replace(/^Rp\s?/, '') : '';
+      if (byId('inputGasSetrikaJam')) byId('inputGasSetrikaJam').value = row['Setrika Per Jam'] ? rupiah(row['Setrika Per Jam']).replace(/^Rp\s?/, '') : '';
+      if (byId('inputGasSetrikaKg')) byId('inputGasSetrikaKg').value = row['Setrika Per Kg'] ? rupiah(row['Setrika Per Kg']).replace(/^Rp\s?/, '') : '';
+    } else if (window.zettGetActiveHPPType && window.zettGetActiveHPPType() === 'gas') {
+      clearGasInputsForNewData();
+    }
+    zettRenderGasLpgCard();
+  }
+
+  window.zettGetGasUsageContext = zettGetGasUsageContext;
+  window.zettGetVisibleGasInputFields = getVisibleGasInputFields;
+  window.zettGetVisibleGasMetrics = getVisibleGasMetrics;
+  window.zettGetGasDashboardValue = zettGetGasDashboardValue;
+  window.zettRenderGasAnalysisForm = zettRenderGasAnalysisForm;
+  window.zettRenderGasLpgCard = zettRenderGasLpgCard;
+  window.zettValidateGasAnalysisForm = zettValidateGasAnalysisForm;
+  window.zettToggleGasManualMode = function() {
+    const c = zettGetGasUsageContext();
+    setManualMode(!c.gasActive);
+    zettRenderGasLpgCard();
+    if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('gas-toggle');
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    syncNewOrExistingGasForm();
+    document.addEventListener('change', function(event) {
+      if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori')) setTimeout(syncNewOrExistingGasForm, 60);
+    });
+    document.addEventListener('input', function(event) {
+      if (event.target && ['inputGasPerLoadManual', 'inputGasJam', 'inputGasSetrikaJam', 'inputGasSetrikaKg'].includes(event.target.id)) {
+        requestAnimationFrame(zettRenderGasLpgCard);
+      }
+    });
+  });
+})();
 
 function zettSetInputValue(id, value) {
   const el = document.getElementById(id);
@@ -3616,6 +4016,15 @@ function zettApplyHPPRowToForm(row) {
   zettSetInputValue('inputGasJam', row['Jam Gas']);
   zettSetInputValue('inputGasMenit', row['Menit Gas']);
   zettSetInputValue('inputCentralGas', row['Central Gas']);
+  zettSetInputValue('inputGasPerLoadManual', row['Gas Per Load']);
+  zettSetInputValue('inputGasSetrikaJam', row['Setrika Per Jam']);
+  zettSetInputValue('inputGasSetrikaKg', row['Setrika Per Kg']);
+  if (typeof formatRupiahInput === 'function') {
+    ['inputGasPerLoadManual', 'inputGasSetrikaJam', 'inputGasSetrikaKg'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el && el.value) formatRupiahInput(el);
+    });
+  }
 
   /* LISTRIK */
   zettSetInputValue('inputTDL', row['TDL']);
