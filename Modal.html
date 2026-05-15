@@ -3602,9 +3602,68 @@
       updateDashboardFromState('manual-input');
     };
 
-    window.loadHPPDashboard = function() {
+    window.hppLoadState = window.hppLoadState || {
+      isLoading: false,
+      loaded: false,
+      lastOutletId: null,
+      lastLoadedAt: 0,
+      data: null
+    };
+
+    function getActiveOutletName() {
+      return String(byId('inputNamaHPP')?.value || '').trim();
+    }
+
+    function setHppSkeletonState(isActive) {
+      const dashboard = byId('hpp-dashboard-view');
+      if (dashboard) dashboard.classList.toggle('hpp-loading-lite', !!isActive);
+    }
+
+    function renderCachedHPPDashboard(sourceTag) {
+      const state = window.hppLoadState || {};
+      if (state.data) {
+        HPP_TYPES.forEach(type => setStateValue(type, state.data[type]));
+      }
+      updateDashboardFromState(sourceTag || 'cache');
+      syncSimpleInputsIfPresent();
+    }
+
+    window.loadHPPDashboard = function(options) {
+      const config = options || {};
+      const outlet = getActiveOutletName();
+      const state = window.hppLoadState;
+      const now = Date.now();
+
       if (window.__HPP_GSHEET_SYNC_LOCKED === true) {
         console.log('HPP dashboard update skipped because GSheet sync is locked');
+        return;
+      }
+
+      if (state.loaded && state.lastOutletId === outlet && state.data) {
+        renderCachedHPPDashboard('cache');
+        if (!config.force && now - state.lastLoadedAt < 45000) return;
+      }
+
+      if (state.isLoading) {
+        renderCachedHPPDashboard('loading-cache');
+        return;
+      }
+
+      if (!outlet) {
+        updateDashboardFromState('no-outlet');
+        setHppSkeletonState(false);
+        return;
+      }
+
+      if (
+        outlet &&
+        typeof window.zettSyncHPPFromGSheet === 'function' &&
+        window.zettSyncHPPFromGSheet()
+      ) {
+        state.loaded = true;
+        state.lastOutletId = outlet;
+        state.lastLoadedAt = Date.now();
+        setHppSkeletonState(false);
         return;
       }
 
@@ -3613,8 +3672,18 @@
         return;
       }
 
+      state.isLoading = true;
+      state.lastOutletId = outlet;
+      if (!state.loaded || !state.data) setHppSkeletonState(true);
+
       google.script.run
         .withSuccessHandler(function(data) {
+          state.isLoading = false;
+          state.loaded = true;
+          state.lastOutletId = outlet;
+          state.lastLoadedAt = Date.now();
+          state.data = data || state.data || null;
+          setHppSkeletonState(false);
           if (data) {
             HPP_TYPES.forEach(type => setStateValue(type, data[type]));
           }
@@ -3622,10 +3691,17 @@
           syncSimpleInputsIfPresent();
         })
         .withFailureHandler(function(error) {
+          state.isLoading = false;
+          setHppSkeletonState(false);
           console.error('GAGAL LOAD HPP:', error);
           updateDashboardFromState('load-dashboard');
         })
         .getHPPDashboardData();
+    };
+
+    window.zettEnsureHPPDashboardLoaded = function(options) {
+      renderCachedHPPDashboard('ensure-cache');
+      window.loadHPPDashboard(options || {});
     };
 
     window.zettHPPRefreshDashboard = function() {
@@ -3679,7 +3755,10 @@
 
     function boot() {
       updateDashboardFromState('boot');
-      window.loadHPPDashboard();
+      const hppView = byId('view-hpp');
+      if (hppView && !hppView.classList.contains('hidden')) {
+        window.zettEnsureHPPDashboardLoaded();
+      }
       setTimeout(() => updateDashboardFromState('boot'), 350);
       setTimeout(() => updateDashboardFromState('boot'), 1200);
     }
@@ -4648,13 +4727,36 @@ function zettStoreFreshHPPRow(row) {
 function zettRefreshActiveHPPRowFromServer(outletName, options) {
   const outlet = String(outletName || document.getElementById('inputNamaHPP')?.value || '').trim();
   const config = options || {};
+  window.hppLoadState = window.hppLoadState || {
+    isLoading: false,
+    loaded: false,
+    lastOutletId: null,
+    lastLoadedAt: 0,
+    data: null
+  };
+  window.__ZETT_HPP_ROW_LOADS = window.__ZETT_HPP_ROW_LOADS || {};
+  const normalizedOutlet = zettNormalizeName(outlet);
+  const cachedRow = (Array.isArray(window.__ZETT_FRESH_HPP_ROWS) ? window.__ZETT_FRESH_HPP_ROWS : [])
+    .find(item => zettNormalizeName(item?.namaOutlet || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '') === normalizedOutlet);
 
   if (!outlet || typeof google === 'undefined' || !google.script || !google.script.run) {
     return;
   }
 
+  if (cachedRow && !config.force) {
+    zettApplyHPPRowToForm(cachedRow);
+    zettRunHPPCalculationAfterSync();
+  }
+
+  const inflight = window.__ZETT_HPP_ROW_LOADS[normalizedOutlet];
+  if (inflight && Date.now() - inflight < 12000 && !config.force) {
+    return;
+  }
+  window.__ZETT_HPP_ROW_LOADS[normalizedOutlet] = Date.now();
+
   google.script.run
     .withSuccessHandler(function(response) {
+      delete window.__ZETT_HPP_ROW_LOADS[normalizedOutlet];
       if (!response || response.status !== 'success' || !response.data) return;
       const activeOutlet = document.getElementById('inputNamaHPP')?.value || '';
       if (zettNormalizeName(activeOutlet) !== zettNormalizeName(outlet)) return;
@@ -4673,7 +4775,9 @@ function zettRefreshActiveHPPRowFromServer(outletName, options) {
         }
       }
     })
-    .withFailureHandler(function() {})
+    .withFailureHandler(function() {
+      delete window.__ZETT_HPP_ROW_LOADS[normalizedOutlet];
+    })
     .getHPPRowByOutlet(outlet);
 }
 
@@ -4897,33 +5001,39 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 </script>
 
 <style id="zett-hpp-mobile-premium-order-guard-last-20260515">
+  /* [HPP MOBILE FINAL PATCH - 2026-05-15] */
   @media (max-width: 767px) {
-    html,
-    body,
-    #app,
-    .app,
-    .main-app,
-    .main-layout,
-    .main-view,
-    .page-wrapper,
-    .page-content,
-    #mainViewScroller,
+    body.hpp-mobile-active,
+    body.hpp-mobile-active #app,
+    body.hpp-mobile-active .app,
+    body.hpp-mobile-active .main-app,
+    body.hpp-mobile-active .main-layout,
+    body.hpp-mobile-active .main-view,
+    body.hpp-mobile-active .page-wrapper,
+    body.hpp-mobile-active .page-content,
+    body.hpp-mobile-active #mainViewScroller,
     #view-hpp.hpp-page,
     #view-hpp {
       min-height: 100dvh !important;
-      background: #EAF4FF !important;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(125, 211, 252, 0.28) 0, rgba(125, 211, 252, 0) 32%),
+        linear-gradient(180deg, #EFF7FF 0%, #E7F2FF 42%, #DCEBFA 100%) !important;
     }
 
-    #mainViewScroller {
+    body.hpp-mobile-active #mainViewScroller {
       overflow-x: hidden !important;
-      background: #EAF4FF !important;
-      padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(125, 211, 252, 0.28) 0, rgba(125, 211, 252, 0) 32%),
+        linear-gradient(180deg, #EFF7FF 0%, #E7F2FF 42%, #DCEBFA 100%) !important;
+      padding: 0 0 max(72px, env(safe-area-inset-bottom)) !important;
     }
 
     #view-hpp {
       min-height: 100dvh !important;
-      background: #EAF4FF !important;
-      padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
+      background: transparent !important;
+      padding: 0 12px max(72px, env(safe-area-inset-bottom)) !important;
+      margin-top: 0 !important;
+      overflow: visible !important;
     }
 
     #view-hpp #hpp-dashboard-view,
@@ -4933,29 +5043,38 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
 
     #view-hpp #hpp-dashboard-view {
-      min-height: calc(100dvh - 104px) !important;
-      gap: 10px !important;
+      min-height: calc(100dvh - 96px) !important;
+      gap: 12px !important;
+      width: 100% !important;
+      max-width: 100% !important;
     }
 
     #view-hpp .hpp-grid,
     #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
       display: grid !important;
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      gap: 10px !important;
-      padding: 10px !important;
+      gap: 12px !important;
+      padding: 12px 0 max(24px, env(safe-area-inset-bottom)) !important;
       background: transparent !important;
     }
 
     #view-hpp .hpp-cost-card,
     #view-hpp .hpp-card-dash {
-      min-height: 150px !important;
-      padding: 12px 10px !important;
-      border-radius: 18px !important;
-      background: #0F6CBD !important;
-      border: 1px solid rgba(255, 255, 255, 0.18) !important;
-      box-shadow: 0 10px 24px rgba(15, 108, 189, 0.20) !important;
+      position: relative !important;
+      min-height: 164px !important;
+      padding: 14px 12px 12px !important;
+      border-radius: 22px !important;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255,255,255,0.22) 0, rgba(255,255,255,0) 28%),
+        linear-gradient(145deg, #0EA5E9 0%, #0284C7 46%, #2563EB 100%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.28) !important;
+      box-shadow: 0 14px 28px -18px rgba(2, 84, 164, 0.72), inset 0 1px 0 rgba(255,255,255,0.24) !important;
       color: #FFFFFF !important;
       overflow: hidden !important;
+      justify-content: flex-start !important;
+      align-items: stretch !important;
+      gap: 8px !important;
+      transform: translateZ(0) !important;
     }
 
     #view-hpp .hpp-cost-card::before,
@@ -4967,15 +5086,21 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       background: none !important;
     }
 
+    #view-hpp .hpp-card-dash > div:last-child {
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+
     #view-hpp .hpp-cost-icon,
     #view-hpp .hpp-card-dash > .w-10,
     #view-hpp .hpp-card-dash > .w-12 {
-      width: 42px !important;
-      height: 42px !important;
-      border-radius: 14px !important;
-      margin: 0 auto !important;
+      flex: 0 0 auto !important;
+      width: 46px !important;
+      height: 46px !important;
+      border-radius: 15px !important;
+      margin: 0 !important;
       background: rgba(255,255,255,0.92) !important;
-      box-shadow: 0 5px 12px rgba(16,42,67,0.13) !important;
+      box-shadow: 0 8px 18px rgba(15, 77, 126, 0.16), inset 0 1px 0 rgba(255,255,255,0.72) !important;
     }
 
     #view-hpp #hpp-card-gas-wrap > .w-10,
@@ -4999,41 +5124,43 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     #view-hpp .hpp-cost-label,
     #view-hpp .hpp-card-dash h3 {
-      margin-top: 14px !important;
-      color: rgba(255,255,255,0.86) !important;
-      font-size: 10px !important;
+      margin: 8px 0 4px !important;
+      color: rgba(236, 248, 255, 0.88) !important;
+      font-size: 11px !important;
       font-weight: 800 !important;
-      letter-spacing: 0.10em !important;
-      line-height: 1.05 !important;
+      letter-spacing: 0.12em !important;
+      line-height: 1.1 !important;
       text-align: center !important;
       text-transform: uppercase !important;
     }
 
     #view-hpp .hpp-cost-value,
     #view-hpp [id^="dash-card-"] {
-      margin-top: 3px !important;
+      margin-top: 0 !important;
       color: #FFFFFF !important;
-      font-size: 20px !important;
-      line-height: 1.05 !important;
-      font-weight: 900 !important;
+      font-size: 22px !important;
+      line-height: 1.08 !important;
+      font-weight: 850 !important;
       letter-spacing: 0 !important;
       text-align: center !important;
       text-shadow: none !important;
+      white-space: nowrap !important;
     }
 
     #view-hpp .hpp-card-percent,
     #view-hpp .hpp-cost-percent {
       min-width: 58px !important;
-      margin: 5px auto 0 !important;
-      padding: 3px 10px !important;
+      width: fit-content !important;
+      margin: 6px auto 0 !important;
+      padding: 4px 11px !important;
       border-radius: 999px !important;
-      background: rgba(255,255,255,0.94) !important;
-      color: #6D7F93 !important;
-      border: none !important;
-      font-size: 11px !important;
-      line-height: 1 !important;
+      background: rgba(255,255,255,0.9) !important;
+      color: #4B6582 !important;
+      border: 1px solid rgba(191, 219, 254, 0.54) !important;
+      font-size: 12px !important;
+      line-height: 1.05 !important;
       font-weight: 800 !important;
-      box-shadow: 0 2px 8px rgba(16,42,67,0.08) !important;
+      box-shadow: 0 5px 12px rgba(15, 77, 126, 0.12) !important;
     }
 
     #view-hpp #hpp-dashboard-view h2,
@@ -5062,14 +5189,14 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       align-items: center !important;
       justify-content: space-between !important;
       flex-wrap: nowrap !important;
-      gap: 8px !important;
-      min-height: 24px !important;
-      padding: 4px 9px !important;
-      margin-top: 5px !important;
+      gap: 7px !important;
+      min-height: 31px !important;
+      padding: 6px 10px !important;
+      margin-top: 6px !important;
       border-radius: 999px !important;
-      background: rgba(255,255,255,0.96) !important;
-      border: 1px solid rgba(16,42,67,0.06) !important;
-      box-shadow: 0 2px 8px rgba(16,42,67,0.08) !important;
+      background: rgba(239, 248, 255, 0.92) !important;
+      border: 1px solid rgba(219, 234, 254, 0.78) !important;
+      box-shadow: 0 5px 14px rgba(15,77,126,0.12) !important;
       white-space: nowrap !important;
       overflow: hidden !important;
     }
@@ -5082,10 +5209,10 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       display: inline !important;
       flex: 1 1 auto !important;
       min-width: 0 !important;
-      color: #35506B !important;
-      font-size: 10px !important;
-      line-height: 1 !important;
-      font-weight: 700 !important;
+      color: #4D6684 !important;
+      font-size: 11px !important;
+      line-height: 1.05 !important;
+      font-weight: 750 !important;
       white-space: nowrap !important;
       overflow: hidden !important;
       text-overflow: ellipsis !important;
@@ -5098,16 +5225,34 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     #view-hpp .hpp-cost-detail-value {
       display: inline !important;
       flex: 0 0 auto !important;
-      color: #102A43 !important;
-      font-size: 10.5px !important;
-      font-weight: 800 !important;
-      line-height: 1 !important;
+      color: #0F2035 !important;
+      font-size: 12px !important;
+      font-weight: 850 !important;
+      line-height: 1.05 !important;
       white-space: nowrap !important;
     }
 
     #view-hpp .zett-gas-card-details br,
     #view-hpp .zett-electric-card-details br {
       display: none !important;
+    }
+
+    #view-hpp .hpp-loading-lite .hpp-card-dash {
+      pointer-events: none !important;
+    }
+
+    #view-hpp .hpp-loading-lite .hpp-card-dash::after {
+      display: block !important;
+      content: "" !important;
+      position: absolute !important;
+      inset: 0 !important;
+      background: linear-gradient(100deg, rgba(255,255,255,0) 18%, rgba(255,255,255,0.16) 42%, rgba(255,255,255,0) 64%) !important;
+      transform: translateX(-110%) !important;
+      animation: hppLiteSkeletonSweep 1.15s ease-in-out infinite !important;
+    }
+
+    @keyframes hppLiteSkeletonSweep {
+      to { transform: translateX(110%); }
     }
 
   }
@@ -5121,8 +5266,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     #view-hpp .hpp-cost-card,
     #view-hpp .hpp-card-dash {
-      min-height: 144px !important;
-      padding: 11px 9px !important;
+      min-height: 156px !important;
+      padding: 12px 10px 11px !important;
     }
 
     #view-hpp .hpp-cost-value,

@@ -560,6 +560,7 @@
 
     function switchMainTab(tabName) {
       setActiveMenu(tabName);
+      document.body.classList.toggle('hpp-mobile-active', tabName === 'hpp');
       if (window.innerWidth < 768) {
         closeSidebarMobile();
       }
@@ -656,6 +657,10 @@
           typeof window.HPPStateMachine.calculateTotal === 'function'
         ) {
           window.HPPStateMachine.calculateTotal();
+        }
+
+        if (typeof window.zettEnsureHPPDashboardLoaded === 'function') {
+          window.zettEnsureHPPDashboardLoaded();
         }
 
       }
