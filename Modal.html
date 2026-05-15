@@ -2648,6 +2648,290 @@
   })();
 </script>
 
+<style id="zett-hpp-mobile-premium-final-20260515">
+  @media (max-width: 767px) {
+    #view-hpp.hpp-page,
+    #view-hpp {
+      min-height: 100dvh !important;
+      margin-top: 0 !important;
+      padding-bottom: 16px !important;
+      background: linear-gradient(180deg, #F7FAFF 0%, #EEF5FF 100%) !important;
+      color: #0f172a !important;
+    }
+
+    #mainViewScroller:has(#view-hpp:not(.hidden)) {
+      background: linear-gradient(180deg, #F7FAFF 0%, #EEF5FF 100%) !important;
+    }
+
+    #view-hpp #hpp-dashboard-view {
+      min-height: calc(100dvh - 112px) !important;
+      width: 100% !important;
+      gap: 14px !important;
+      padding-bottom: 8px !important;
+      background: transparent !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > .bg-white,
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      background: rgba(255, 255, 255, 0.94) !important;
+      border-color: rgba(147, 197, 253, 0.38) !important;
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08) !important;
+    }
+
+    #view-hpp .hpp-grid,
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 14px !important;
+      padding: 2px 0 0 !important;
+      align-items: stretch !important;
+    }
+
+    #view-hpp .hpp-cost-card,
+    #view-hpp .hpp-card-dash {
+      position: relative !important;
+      overflow: hidden !important;
+      min-height: 176px !important;
+      height: 100% !important;
+      padding: 18px 12px 14px !important;
+      border-radius: 22px !important;
+      border: 1px solid rgba(96, 165, 250, 0.22) !important;
+      background: linear-gradient(145deg, #0F1B33 0%, #172A46 45%, #20385C 100%) !important;
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18) !important;
+      color: #F8FAFC !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 8px !important;
+      transition: transform 200ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms ease, border-color 200ms ease !important;
+    }
+
+    #view-hpp .hpp-cost-card::before,
+    #view-hpp .hpp-card-dash::before {
+      content: "" !important;
+      position: absolute !important;
+      inset: 0 !important;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 42%) !important;
+      pointer-events: none !important;
+    }
+
+    #view-hpp .hpp-card-dash::after {
+      content: none !important;
+    }
+
+    #view-hpp .hpp-cost-card:hover,
+    #view-hpp .hpp-card-dash:hover {
+      transform: translate3d(0, -2px, 0) !important;
+      border-color: rgba(125, 211, 252, 0.34) !important;
+      box-shadow: 0 20px 46px rgba(15, 23, 42, 0.2) !important;
+    }
+
+    #view-hpp .hpp-cost-card:active,
+    #view-hpp .hpp-card-dash:active,
+    #view-hpp .hpp-card-dash.zett-hpp-card-pressed {
+      transform: translate3d(0, 0, 0) scale(0.985) !important;
+    }
+
+    #view-hpp .hpp-cost-icon,
+    #view-hpp .hpp-card-dash > .w-10,
+    #view-hpp .hpp-card-dash > .w-12 {
+      position: relative !important;
+      z-index: 1 !important;
+      width: 54px !important;
+      height: 54px !important;
+      border-radius: 18px !important;
+      box-shadow: 0 10px 24px rgba(15,23,42,0.16) !important;
+      flex: 0 0 auto !important;
+    }
+
+    #view-hpp #hpp-card-gas-wrap > .w-10,
+    #view-hpp #hpp-card-gas-wrap > .w-12 { background: #FFF1F2 !important; color: #FF4D6D !important; }
+    #view-hpp #hpp-card-listrik-wrap > .w-10,
+    #view-hpp #hpp-card-listrik-wrap > .w-12 { background: #FFF7ED !important; color: #F59E0B !important; }
+    #view-hpp .hpp-card-dash:nth-child(3) > .w-10,
+    #view-hpp .hpp-card-dash:nth-child(3) > .w-12 { background: #ECFEFF !important; color: #06B6D4 !important; }
+    #view-hpp .hpp-card-dash:nth-child(4) > .w-10,
+    #view-hpp .hpp-card-dash:nth-child(4) > .w-12 { background: #EEF2FF !important; color: #6366F1 !important; }
+    #view-hpp .hpp-card-dash:nth-child(5) > .w-10,
+    #view-hpp .hpp-card-dash:nth-child(5) > .w-12 { background: #ECFDF5 !important; color: #10B981 !important; }
+    #view-hpp .hpp-card-dash:nth-child(6) > .w-10,
+    #view-hpp .hpp-card-dash:nth-child(6) > .w-12 { background: #F8FAFC !important; color: #64748B !important; }
+
+    #view-hpp .hpp-cost-icon i,
+    #view-hpp .hpp-card-dash > .w-10 i,
+    #view-hpp .hpp-card-dash > .w-12 i {
+      font-size: 26px !important;
+    }
+
+    #view-hpp .hpp-card-dash > div:not([class*="w-10"]):not([class*="w-12"]) {
+      position: relative !important;
+      z-index: 1 !important;
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      min-width: 0 !important;
+    }
+
+    #view-hpp .hpp-cost-label,
+    #view-hpp .hpp-card-dash h3 {
+      position: relative !important;
+      z-index: 1 !important;
+      margin: 16px 0 2px !important;
+      color: #BFD3F7 !important;
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.08em !important;
+      line-height: 1.15 !important;
+      text-align: center !important;
+      text-transform: uppercase !important;
+    }
+
+    #view-hpp .hpp-cost-value,
+    #view-hpp [id^="dash-card-"] {
+      position: relative !important;
+      z-index: 1 !important;
+      color: #F8FAFC !important;
+      font-size: 25px !important;
+      line-height: 1.1 !important;
+      font-weight: 900 !important;
+      letter-spacing: 0 !important;
+      text-align: center !important;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.18) !important;
+      max-width: 100% !important;
+      overflow-wrap: anywhere !important;
+    }
+
+    #view-hpp .hpp-cost-percent,
+    #view-hpp .hpp-card-percent {
+      position: relative !important;
+      z-index: 1 !important;
+      width: fit-content !important;
+      min-width: 76px !important;
+      margin: 4px auto 0 !important;
+      padding: 4px 14px !important;
+      border-radius: 999px !important;
+      background: rgba(255,255,255,0.88) !important;
+      border: 1px solid rgba(255,255,255,0.75) !important;
+      color: #64748B !important;
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      line-height: 1.15 !important;
+      text-align: center !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 8px 16px rgba(15,23,42,0.12) !important;
+      white-space: nowrap !important;
+    }
+
+    #view-hpp .hpp-cost-detail-pill,
+    #view-hpp .zett-gas-card-details > div,
+    #view-hpp .zett-electric-card-details > div {
+      position: relative !important;
+      z-index: 1 !important;
+      width: 100% !important;
+      margin-top: 8px !important;
+      padding: 8px 10px !important;
+      border-radius: 999px !important;
+      background: linear-gradient(180deg, #F8FBFF 0%, #E8F1FF 100%) !important;
+      border: 1px solid rgba(147, 197, 253, 0.55) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 8px !important;
+      box-shadow: 0 8px 18px rgba(15,23,42,0.12) !important;
+    }
+
+    #view-hpp .hpp-cost-detail-label,
+    #view-hpp .zett-gas-card-details span,
+    #view-hpp .zett-electric-card-details span {
+      color: #52657F !important;
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      line-height: 1.15 !important;
+    }
+
+    #view-hpp .hpp-cost-detail-value,
+    #view-hpp .zett-gas-card-details strong,
+    #view-hpp .zett-electric-card-details strong {
+      color: #0F172A !important;
+      font-size: 13px !important;
+      font-weight: 900 !important;
+      line-height: 1.15 !important;
+      white-space: nowrap !important;
+    }
+  }
+
+  @media (max-width: 380px) {
+    #view-hpp .hpp-grid,
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      gap: 10px !important;
+    }
+
+    #view-hpp .hpp-cost-card,
+    #view-hpp .hpp-card-dash {
+      min-height: 168px !important;
+      padding: 16px 10px 12px !important;
+      border-radius: 20px !important;
+    }
+
+    #view-hpp .hpp-cost-value,
+    #view-hpp [id^="dash-card-"] {
+      font-size: 22px !important;
+    }
+
+    #view-hpp .hpp-cost-detail-label,
+    #view-hpp .zett-gas-card-details span,
+    #view-hpp .zett-electric-card-details span {
+      font-size: 11px !important;
+    }
+
+    #view-hpp .hpp-cost-detail-value,
+    #view-hpp .zett-gas-card-details strong,
+    #view-hpp .zett-electric-card-details strong {
+      font-size: 12px !important;
+    }
+  }
+</style>
+
+<script id="zett-hpp-mobile-premium-class-map-20260515">
+  (function zettHppMobilePremiumClassMap() {
+    function applyHppPremiumClasses() {
+      const page = document.getElementById('view-hpp');
+      const dashboard = document.getElementById('hpp-dashboard-view');
+      if (!page || !dashboard) return;
+
+      page.classList.add('hpp-page');
+      const grid = dashboard.querySelector('.grid.grid-cols-2');
+      if (grid) grid.classList.add('hpp-grid');
+
+      dashboard.querySelectorAll('.hpp-card-dash').forEach((card) => {
+        card.classList.add('hpp-cost-card');
+        const icon = Array.from(card.children).find((child) =>
+          child.classList && (child.classList.contains('w-10') || child.classList.contains('w-12'))
+        );
+        if (icon) icon.classList.add('hpp-cost-icon');
+        const label = card.querySelector('h3');
+        if (label) label.classList.add('hpp-cost-label');
+        const value = card.querySelector('[id^="dash-card-"]');
+        if (value) value.classList.add('hpp-cost-value');
+        const percent = card.querySelector('.hpp-card-percent');
+        if (percent) percent.classList.add('hpp-cost-percent');
+        card.querySelectorAll('.zett-gas-card-details > div, .zett-electric-card-details > div').forEach((pill) => {
+          pill.classList.add('hpp-cost-detail-pill');
+          const labelEl = pill.querySelector('span');
+          const valueEl = pill.querySelector('strong');
+          if (labelEl) labelEl.classList.add('hpp-cost-detail-label');
+          if (valueEl) valueEl.classList.add('hpp-cost-detail-value');
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', applyHppPremiumClasses);
+    document.addEventListener('hpp:dashboard-updated', applyHppPremiumClasses);
+    window.setTimeout(applyHppPremiumClasses, 400);
+  })();
+</script>
+
 <style id="zett-gas-lpg-operational-ui-css">
   #view-hpp .zett-gas-mode-toggle {
     min-width: 2.45rem;
@@ -4557,3 +4841,42 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   run();
 }
 </script>
+
+<style id="zett-hpp-mobile-premium-order-guard-last-20260515">
+  @media (max-width: 767px) {
+    html,
+    body,
+    #mainViewScroller,
+    #view-hpp.hpp-page,
+    #view-hpp {
+      background: linear-gradient(180deg, #F7FAFF 0%, #EEF5FF 100%) !important;
+    }
+
+    #view-hpp {
+      min-height: 100dvh !important;
+      padding-bottom: 16px !important;
+    }
+
+    #view-hpp #hpp-dashboard-view,
+    #view-hpp #hpp-form-view {
+      padding-bottom: 0 !important;
+    }
+
+    #view-hpp .hpp-card-dash {
+      min-height: 176px !important;
+      background: linear-gradient(145deg, #0F1B33 0%, #172A46 45%, #20385C 100%) !important;
+      border-color: rgba(96, 165, 250, 0.22) !important;
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18) !important;
+      color: #F8FAFC !important;
+    }
+
+    #view-hpp .hpp-card-dash h3 {
+      color: #BFD3F7 !important;
+    }
+
+    #view-hpp [id^="dash-card-"] {
+      color: #F8FAFC !important;
+      letter-spacing: 0 !important;
+    }
+  }
+</style>

@@ -25,9 +25,30 @@
        BASE UI
     ========================================================= */
 
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #f5f8ff;
+      overflow-x: hidden;
+    }
+
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #f8fafc;
+      min-height: 100dvh;
+      background-color: #f5f8ff;
+    }
+
+    #app,
+    .app,
+    .main-wrapper,
+    .page-wrapper,
+    .content-wrapper,
+    .main-content {
+      min-height: 100dvh;
+      background: #f5f8ff;
     }
 
     .glass-effect {
@@ -38,6 +59,22 @@
 
     #sidebar {
       background: #0b1120;
+      transition: transform 220ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease;
+      will-change: transform;
+    }
+
+    #sidebarOverlay {
+      background: rgba(15, 23, 42, 0.64);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms ease;
+    }
+
+    #sidebarOverlay.sidebar-overlay-active {
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .nav-btn {
@@ -49,7 +86,29 @@
     }
 
     #mainViewScroller {
-      background: transparent;
+      min-height: 100dvh;
+      background: #f5f8ff;
+    }
+
+    @media (max-width: 767px) {
+      body {
+        height: 100dvh;
+        overflow: hidden;
+      }
+
+      body.sidebar-mobile-open {
+        overflow: hidden;
+      }
+
+      body > .flex-1,
+      #mainViewScroller,
+      .main-view {
+        background: #f5f8ff;
+      }
+
+      #mainViewScroller {
+        padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+      }
     }
 
     /* =========================================================
@@ -321,8 +380,8 @@
   <!-- OVERLAY -->
   <div
     id="sidebarOverlay"
-    class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-40 hidden md:hidden"
-    onclick="toggleSidebar()"
+    class="fixed inset-0 z-40 hidden md:hidden"
+    onclick="closeSidebarMobile()"
   ></div>
 
   <!-- =========================================================
@@ -406,17 +465,96 @@
 
   <script>
 
-    function toggleSidebar() {
+    const SIDEBAR_CLOSE_MS = 220;
 
+    function openSidebar() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('sidebarOverlay');
+      if (!sidebar || !overlay) return;
 
-      sidebar.classList.toggle('-translate-x-full');
-      overlay.classList.toggle('hidden');
+      overlay.classList.remove('hidden');
+      sidebar.classList.remove('-translate-x-full');
+      document.body.classList.add('sidebar-mobile-open');
 
+      requestAnimationFrame(() => {
+        overlay.classList.add('sidebar-overlay-active');
+      });
+    }
+
+    function closeSidebarMobile() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (!sidebar || !overlay) return;
+
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.remove('sidebar-overlay-active');
+      document.body.classList.remove('sidebar-mobile-open');
+
+      window.clearTimeout(window.__sidebarOverlayCloseTimer);
+      window.__sidebarOverlayCloseTimer = window.setTimeout(() => {
+        if (sidebar.classList.contains('-translate-x-full')) {
+          overlay.classList.add('hidden');
+        }
+      }, SIDEBAR_CLOSE_MS);
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar) return;
+
+      if (sidebar.classList.contains('-translate-x-full')) {
+        openSidebar();
+      } else {
+        closeSidebarMobile();
+      }
+    }
+
+    function setActiveMenu(tabName) {
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+
+        btn.classList.remove(
+          'bg-gradient-to-r',
+          'from-blue-600',
+          'to-indigo-600',
+          'shadow-lg',
+          'shadow-indigo-900/30',
+          'text-white',
+          'font-bold'
+        );
+
+        btn.classList.add(
+          'text-slate-400',
+          'hover:bg-white/5',
+          'hover:text-slate-100',
+          'font-semibold'
+        );
+
+      });
+
+      const activeNav = document.getElementById('nav-' + tabName);
+
+      if (activeNav) {
+
+        activeNav.classList.add(
+          'bg-gradient-to-r',
+          'from-blue-600',
+          'to-indigo-600',
+          'shadow-lg',
+          'shadow-indigo-900/30',
+          'text-white',
+          'font-bold'
+        );
+
+        activeNav.classList.remove('text-slate-400');
+
+      }
     }
 
     function switchMainTab(tabName) {
+      setActiveMenu(tabName);
+      if (window.innerWidth < 768) {
+        closeSidebarMobile();
+      }
 
       document.querySelectorAll('.main-view').forEach(view => {
         view.classList.add('hidden');
@@ -458,9 +596,15 @@
           try { applyCabangUIData(); } catch (error) { console.error('applyCabangUIData error:', error); }
         }
 
-        if (typeof window.zettLoadDaftarCabangProfil === 'function') {
+        const hasCabangState =
+          (Array.isArray(window.masterDataCabang) && window.masterDataCabang.length > 0) ||
+          (window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.master &&
+            Array.isArray(window.APP_STATE.data.master.kapasitas) &&
+            window.APP_STATE.data.master.kapasitas.length > 0);
+
+        if (!hasCabangState && typeof window.zettLoadDaftarCabangProfil === 'function') {
           try { window.zettLoadDaftarCabangProfil(); } catch (error) { console.error('zettLoadDaftarCabangProfil error:', error); }
-        } else if (typeof loadDaftarCabang === 'function') {
+        } else if (!hasCabangState && typeof loadDaftarCabang === 'function') {
           try { loadDaftarCabang(); } catch (error) { console.error('loadDaftarCabang error:', error); }
         }
 
@@ -505,43 +649,6 @@
         ) {
           window.HPPStateMachine.calculateTotal();
         }
-
-      }
-
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-
-        btn.classList.remove(
-          'bg-gradient-to-r',
-          'from-blue-600',
-          'to-indigo-600',
-          'shadow-lg',
-          'shadow-indigo-900/30',
-          'text-white',
-          'font-bold'
-        );
-
-        btn.classList.add(
-          'text-slate-400',
-          'hover:bg-white/5',
-          'hover:text-slate-100',
-          'font-semibold'
-        );
-
-      });
-
-      const activeNav = document.getElementById('nav-' + tabName);
-
-      if (activeNav) {
-
-        activeNav.classList.add(
-          'bg-gradient-to-r',
-          'from-blue-600',
-          'to-indigo-600',
-          'shadow-lg',
-          'shadow-indigo-900/30',
-          'text-white',
-          'font-bold'
-        );
 
       }
 

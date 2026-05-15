@@ -35,6 +35,49 @@
     if (el) el.innerText = value;
   }
 
+  function openSidebarMobile() {
+    var sidebar = $('sidebar');
+    var overlay = $('sidebarOverlay');
+    if (!sidebar || !overlay) return;
+
+    overlay.classList.remove('hidden');
+    sidebar.classList.remove('-translate-x-full');
+    document.body.classList.add('sidebar-mobile-open');
+
+    window.requestAnimationFrame(function () {
+      overlay.classList.add('sidebar-overlay-active');
+    });
+  }
+
+  function closeSidebarMobile() {
+    var sidebar = $('sidebar');
+    var overlay = $('sidebarOverlay');
+    if (!sidebar || !overlay) return;
+
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.remove('sidebar-overlay-active');
+    document.body.classList.remove('sidebar-mobile-open');
+
+    window.clearTimeout(window.__sidebarOverlayCloseTimer);
+    window.__sidebarOverlayCloseTimer = window.setTimeout(function () {
+      if (sidebar.classList.contains('-translate-x-full')) overlay.classList.add('hidden');
+    }, 220);
+  }
+
+  function setActiveMenu(tabName) {
+    var buttons = document.querySelectorAll('.nav-btn');
+    for (var j = 0; j < buttons.length; j++) {
+      buttons[j].classList.remove('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-indigo-900/30', 'text-white', 'font-bold');
+      buttons[j].classList.add('text-slate-400', 'hover:bg-white/5', 'hover:text-slate-100', 'font-semibold');
+    }
+
+    var active = $('nav-' + tabName);
+    if (active) {
+      active.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-indigo-900/30', 'text-white', 'font-bold');
+      active.classList.remove('text-slate-400');
+    }
+  }
+
   function escapeHtml(str) {
     return String(str)
       .replace(/&/g, '&amp;')
@@ -286,12 +329,18 @@
 
   window.toggleSidebar = function () {
     var sidebar = $('sidebar');
-    var overlay = $('sidebarOverlay');
     if (!sidebar) return;
 
-    sidebar.classList.toggle('-translate-x-full');
-    if (overlay) overlay.classList.toggle('hidden');
+    if (sidebar.classList.contains('-translate-x-full')) {
+      openSidebarMobile();
+    } else {
+      closeSidebarMobile();
+    }
   };
+
+  window.openSidebar = openSidebarMobile;
+  window.closeSidebarMobile = closeSidebarMobile;
+  window.setActiveMenu = setActiveMenu;
 
   window.switchMainTab = function (tab) {
     try {
@@ -307,6 +356,9 @@
         target = $('view-dashboard');
         if (!target) return;
       }
+
+      setActiveMenu(requestedTab);
+      if (window.innerWidth < 768) closeSidebarMobile();
 
       var views = document.querySelectorAll('.main-view');
       for (var i = 0; i < views.length; i++) {
@@ -344,7 +396,7 @@
           try { applyCabangUIData(); } catch(eApply) { console.error('[ZETTBOT PATCH] applyCabangUIData gagal:', eApply); }
         }
 
-        if (typeof loadDaftarCabang === 'function') {
+        if (getOutlets().length === 0 && typeof loadDaftarCabang === 'function') {
           try { loadDaftarCabang(false); } catch(eLoad) { console.error('[ZETTBOT PATCH] loadDaftarCabang gagal:', eLoad); }
         }
       }
@@ -359,23 +411,6 @@
         'cost-structure': 'Dashboard Biaya Premium'
       };
       setText('headerTitle', titleMap[requestedTab] || 'Dashboard Eksekutif');
-
-      var buttons = document.querySelectorAll('.nav-btn');
-      for (var j = 0; j < buttons.length; j++) {
-        buttons[j].classList.remove('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-indigo-900/30', 'text-white');
-        buttons[j].classList.add('text-slate-400');
-      }
-
-      var active = $('nav-' + requestedTab);
-      if (active) {
-        active.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-indigo-900/30', 'text-white');
-        active.classList.remove('text-slate-400');
-      }
-
-      var sidebar = $('sidebar');
-      var overlay = $('sidebarOverlay');
-      if (window.innerWidth < 768 && sidebar) sidebar.classList.add('-translate-x-full');
-      if (overlay) overlay.classList.add('hidden');
 
       if (requestedTab === 'dashboard') window.renderSingleOutletDashboard();
       if ((requestedTab === 'bep' || requestedTab === 'roi') && typeof calculateAll === 'function') calculateAll();
