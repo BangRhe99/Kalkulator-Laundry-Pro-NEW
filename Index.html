@@ -29,26 +29,31 @@
     body {
       width: 100%;
       min-height: 100%;
-      margin: 0;
-      padding: 0;
-      background: #f5f8ff;
-      overflow-x: hidden;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #EEF5FF !important;
+      overflow-x: hidden !important;
     }
 
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      min-height: 100dvh;
-      background-color: #f5f8ff;
+      min-height: 100dvh !important;
+      background-color: #EEF5FF !important;
     }
 
     #app,
     .app,
+    .main-app,
+    .main-layout,
+    .main-view,
     .main-wrapper,
     .page-wrapper,
+    .page-content,
     .content-wrapper,
-    .main-content {
-      min-height: 100dvh;
-      background: #f5f8ff;
+    .main-content,
+    #mainViewScroller {
+      min-height: 100dvh !important;
+      background: #EEF5FF !important;
     }
 
     .glass-effect {
@@ -86,28 +91,30 @@
     }
 
     #mainViewScroller {
-      min-height: 100dvh;
-      background: #f5f8ff;
+      overflow-x: hidden !important;
+      background: #EEF5FF !important;
+      padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
     }
 
     @media (max-width: 767px) {
       body {
-        height: 100dvh;
-        overflow: hidden;
+        height: 100dvh !important;
+        overflow: hidden !important;
       }
 
       body.sidebar-mobile-open {
-        overflow: hidden;
+        overflow: hidden !important;
       }
 
       body > .flex-1,
       #mainViewScroller,
       .main-view {
-        background: #f5f8ff;
+        min-height: 100dvh !important;
+        background: #EEF5FF !important;
       }
 
       #mainViewScroller {
-        padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+        padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
       }
     }
 
