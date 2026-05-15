@@ -4911,94 +4911,235 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     #view-hpp.hpp-page,
     #view-hpp {
       min-height: 100dvh !important;
-      background: #EEF5FF !important;
+      background: #EAF4FF !important;
     }
 
     #mainViewScroller {
       overflow-x: hidden !important;
-      padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
+      background: #EAF4FF !important;
+      padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
     }
 
     #view-hpp {
       min-height: 100dvh !important;
-      background: linear-gradient(180deg, #F7FAFF 0%, #EEF5FF 100%) !important;
-      padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
+      background: #EAF4FF !important;
+      padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
     }
 
     #view-hpp #hpp-dashboard-view,
     #view-hpp #hpp-form-view {
       padding-bottom: 0 !important;
+      background: transparent !important;
     }
 
+    #view-hpp #hpp-dashboard-view {
+      min-height: calc(100dvh - 104px) !important;
+      gap: 10px !important;
+    }
+
+    #view-hpp .hpp-grid,
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 10px !important;
+      padding: 10px !important;
+      background: transparent !important;
+    }
+
+    #view-hpp .hpp-cost-card,
     #view-hpp .hpp-card-dash {
-      min-height: 164px !important;
-      padding: 14px 12px !important;
-      border-radius: 20px !important;
-      background:
-        radial-gradient(circle at 18% 12%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 28%, transparent 48%),
-        linear-gradient(145deg, #DFF0FF 0%, #BFDFFF 42%, #8DBEF5 100%) !important;
-      border-color: rgba(255,255,255,0.78) !important;
-      box-shadow:
-        0 16px 34px rgba(59,130,246,0.18),
-        inset 0 1px 0 rgba(255,255,255,0.82) !important;
-      color: #10233F !important;
+      min-height: 150px !important;
+      padding: 12px 10px !important;
+      border-radius: 18px !important;
+      background: #0F6CBD !important;
+      border: 1px solid rgba(255, 255, 255, 0.18) !important;
+      box-shadow: 0 10px 24px rgba(15, 108, 189, 0.20) !important;
+      color: #FFFFFF !important;
+      overflow: hidden !important;
     }
 
+    #view-hpp .hpp-cost-card::before,
+    #view-hpp .hpp-card-dash::before,
+    #view-hpp .hpp-cost-card::after,
+    #view-hpp .hpp-card-dash::after {
+      display: none !important;
+      content: none !important;
+      background: none !important;
+    }
+
+    #view-hpp .hpp-cost-icon,
+    #view-hpp .hpp-card-dash > .w-10,
+    #view-hpp .hpp-card-dash > .w-12 {
+      width: 42px !important;
+      height: 42px !important;
+      border-radius: 14px !important;
+      margin: 0 auto !important;
+      background: rgba(255,255,255,0.92) !important;
+      box-shadow: 0 5px 12px rgba(16,42,67,0.13) !important;
+    }
+
+    #view-hpp #hpp-card-gas-wrap > .w-10,
+    #view-hpp #hpp-card-gas-wrap > .w-12 { background: #FFEFF3 !important; color: #FF5B7F !important; }
+    #view-hpp #hpp-card-listrik-wrap > .w-10,
+    #view-hpp #hpp-card-listrik-wrap > .w-12 { background: #FFF6DF !important; color: #F5B000 !important; }
+    #view-hpp .hpp-card-dash:nth-child(3) > .w-10,
+    #view-hpp .hpp-card-dash:nth-child(3) > .w-12 { background: #E9FBFF !important; color: #1AB6D9 !important; }
+    #view-hpp .hpp-card-dash:nth-child(4) > .w-10,
+    #view-hpp .hpp-card-dash:nth-child(4) > .w-12 { background: #EEF0FF !important; color: #6B6FF5 !important; }
+    #view-hpp .hpp-card-dash:nth-child(5) > .w-10,
+    #view-hpp .hpp-card-dash:nth-child(5) > .w-12 { background: #EAFBF2 !important; color: #18B977 !important; }
+    #view-hpp .hpp-card-dash:nth-child(6) > .w-10,
+    #view-hpp .hpp-card-dash:nth-child(6) > .w-12 { background: #F4F7FA !important; color: #708399 !important; }
+
+    #view-hpp .hpp-cost-icon i,
+    #view-hpp .hpp-card-dash > .w-10 i,
+    #view-hpp .hpp-card-dash > .w-12 i {
+      font-size: 22px !important;
+    }
+
+    #view-hpp .hpp-cost-label,
     #view-hpp .hpp-card-dash h3 {
-      color: #31577E !important;
-      font-size: 10.5px !important;
-      font-weight: 900 !important;
-      letter-spacing: 0.14em !important;
+      margin-top: 14px !important;
+      color: rgba(255,255,255,0.86) !important;
+      font-size: 10px !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.10em !important;
+      line-height: 1.05 !important;
+      text-align: center !important;
+      text-transform: uppercase !important;
     }
 
+    #view-hpp .hpp-cost-value,
     #view-hpp [id^="dash-card-"] {
-      color: #10233F !important;
-      font-size: 23px !important;
+      margin-top: 3px !important;
+      color: #FFFFFF !important;
+      font-size: 20px !important;
+      line-height: 1.05 !important;
+      font-weight: 900 !important;
       letter-spacing: 0 !important;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.42) !important;
+      text-align: center !important;
+      text-shadow: none !important;
     }
 
     #view-hpp .hpp-card-percent,
     #view-hpp .hpp-cost-percent {
-      min-width: 64px !important;
-      margin-top: 6px !important;
-      padding: 3px 11px !important;
-      background: rgba(255,255,255,0.82) !important;
-      color: #7B8BA1 !important;
-      border-color: rgba(255,255,255,0.88) !important;
-      font-size: 12px !important;
+      min-width: 58px !important;
+      margin: 5px auto 0 !important;
+      padding: 3px 10px !important;
+      border-radius: 999px !important;
+      background: rgba(255,255,255,0.94) !important;
+      color: #6D7F93 !important;
+      border: none !important;
+      font-size: 11px !important;
+      line-height: 1 !important;
+      font-weight: 800 !important;
+      box-shadow: 0 2px 8px rgba(16,42,67,0.08) !important;
+    }
+
+    #view-hpp #hpp-dashboard-view h2,
+    #view-hpp #hpp-dashboard-view p,
+    #view-hpp #dash-hpp-total + span,
+    #view-hpp .hpp-variable-title,
+    #view-hpp .hpp-variable-label,
+    #view-hpp .hpp-variable-subtitle,
+    #view-hpp .section-title,
+    #view-hpp .section-subtitle {
+      color: #45617D !important;
+      font-weight: 700 !important;
+    }
+
+    #view-hpp #dash-hpp-total {
+      color: #102A43 !important;
+      text-shadow: none !important;
     }
 
     #view-hpp .zett-gas-card-details > div,
     #view-hpp .zett-electric-card-details > div,
+    #view-hpp .zett-gas-card-details .detail-item,
+    #view-hpp .zett-electric-card-details .detail-item,
     #view-hpp .hpp-cost-detail-pill {
-      margin-top: 6px !important;
-      padding: 5px 9px !important;
-      min-height: 28px !important;
-      background: rgba(255,255,255,0.82) !important;
-      border-color: rgba(255,255,255,0.9) !important;
-      gap: 6px !important;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.9),
-        0 6px 12px rgba(59,130,246,0.12) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+      gap: 8px !important;
+      min-height: 24px !important;
+      padding: 4px 9px !important;
+      margin-top: 5px !important;
+      border-radius: 999px !important;
+      background: rgba(255,255,255,0.96) !important;
+      border: 1px solid rgba(16,42,67,0.06) !important;
+      box-shadow: 0 2px 8px rgba(16,42,67,0.08) !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
     }
 
     #view-hpp .zett-gas-card-details span,
     #view-hpp .zett-electric-card-details span,
+    #view-hpp .zett-gas-card-details .label,
+    #view-hpp .zett-electric-card-details .label,
     #view-hpp .hpp-cost-detail-label {
-      color: #4B6380 !important;
-      font-size: 10.5px !important;
-      font-weight: 850 !important;
-      line-height: 1.05 !important;
+      display: inline !important;
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      color: #35506B !important;
+      font-size: 10px !important;
+      line-height: 1 !important;
+      font-weight: 700 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
     }
 
     #view-hpp .zett-gas-card-details strong,
     #view-hpp .zett-electric-card-details strong,
+    #view-hpp .zett-gas-card-details .value,
+    #view-hpp .zett-electric-card-details .value,
     #view-hpp .hpp-cost-detail-value {
-      color: #10233F !important;
-      font-size: 11.5px !important;
-      font-weight: 950 !important;
+      display: inline !important;
+      flex: 0 0 auto !important;
+      color: #102A43 !important;
+      font-size: 10.5px !important;
+      font-weight: 800 !important;
       line-height: 1 !important;
+      white-space: nowrap !important;
+    }
+
+    #view-hpp .zett-gas-card-details br,
+    #view-hpp .zett-electric-card-details br {
+      display: none !important;
+    }
+
+  }
+
+  @media (max-width: 380px) {
+    #view-hpp .hpp-grid,
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      gap: 8px !important;
+      padding: 8px !important;
+    }
+
+    #view-hpp .hpp-cost-card,
+    #view-hpp .hpp-card-dash {
+      min-height: 144px !important;
+      padding: 11px 9px !important;
+    }
+
+    #view-hpp .hpp-cost-value,
+    #view-hpp [id^="dash-card-"] {
+      font-size: 18px !important;
+    }
+
+    #view-hpp .hpp-cost-detail-label,
+    #view-hpp .zett-gas-card-details span,
+    #view-hpp .zett-electric-card-details span {
+      font-size: 9.5px !important;
+    }
+
+    #view-hpp .hpp-cost-detail-value,
+    #view-hpp .zett-gas-card-details strong,
+    #view-hpp .zett-electric-card-details strong {
+      font-size: 10px !important;
     }
   }
 </style>
