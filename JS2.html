@@ -407,7 +407,19 @@ function applyCabangUIData() {
         <div class="kapasitas-outlet-card bg-white border-b border-l border-r border-slate-200 ${topBorderClass} rounded-[1.5rem] p-5 shadow-sm hover:shadow-md transition-all cursor-pointer relative flex flex-col group overflow-hidden" onclick="pilihCabang('${safeNama}', this);">
             <div class="flex justify-between items-start mb-5">
                 <div class="w-12 h-12 ${iconClass} rounded-xl flex items-center justify-center border shrink-0 group-hover:scale-105 transition-transform">
-                    <i class="ph ph-buildings text-2xl"></i>
+                    <svg class="laundry-outlet-icon w-7 h-7" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                      <path d="M14 28H50" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                      <path d="M18 28L23 16H41L46 28" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                      <path d="M18 28V50H46V28" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                      <path d="M13 50H51" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                      <path d="M22 50V36C22 33.8 23.8 32 26 32H30C32.2 32 34 33.8 34 36V50" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                      <rect x="37" y="34" width="9" height="12" rx="2" stroke="currentColor" stroke-width="3"/>
+                      <circle cx="41.5" cy="40" r="2.5" stroke="currentColor" stroke-width="2.5"/>
+                      <path d="M20 28C20 33 16 33 14 28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                      <path d="M30 28C30 33 24 33 24 28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                      <path d="M40 28C40 33 34 33 34 28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                      <path d="M50 28C48 33 44 33 44 28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
                 </div>
                 <div class="${badgeClass} text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
                     ${kategoriLabel}
