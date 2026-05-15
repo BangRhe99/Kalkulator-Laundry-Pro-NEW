@@ -5288,3 +5288,290 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
   }
 </style>
+
+<style id="zett-hpp-mobile-card-light-compact-true-last-20260515">
+  /* [HPP MOBILE CARD LIGHT COMPACT PATCH - 2026-05-15] */
+  @media (max-width: 768px) {
+    body.hpp-mobile-active,
+    body.hpp-mobile-active #app,
+    body.hpp-mobile-active .app,
+    body.hpp-mobile-active .main-app,
+    body.hpp-mobile-active .main-layout,
+    body.hpp-mobile-active .main-view,
+    body.hpp-mobile-active .page-wrapper,
+    body.hpp-mobile-active .page-content,
+    body.hpp-mobile-active #mainViewScroller {
+      background: linear-gradient(180deg, #0EA5E9 0%, #0284C7 100%) !important;
+    }
+
+    body.hpp-mobile-active #mainViewScroller {
+      overflow-x: hidden !important;
+      padding: 0 0 max(72px, env(safe-area-inset-bottom)) !important;
+    }
+
+    #view-hpp {
+      min-height: 100dvh !important;
+      margin-top: 0 !important;
+      padding: 10px 10px max(72px, env(safe-area-inset-bottom)) !important;
+      background: transparent !important;
+      overflow: visible !important;
+    }
+
+    #view-hpp #hpp-dashboard-view {
+      width: 100% !important;
+      max-width: 100% !important;
+      min-height: calc(100dvh - 96px) !important;
+      gap: 10px !important;
+      background: transparent !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > .bg-white,
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      display: none !important;
+    }
+
+    #view-hpp .hpp-grid,
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      width: 100% !important;
+      padding: 0 0 14px !important;
+      margin: 0 !important;
+      background: transparent !important;
+    }
+
+    #view-hpp .hpp-card-dash,
+    #view-hpp .hpp-cost-card {
+      position: relative !important;
+      display: block !important;
+      min-height: 112px !important;
+      width: 100% !important;
+      padding: 10px 12px 12px !important;
+      border-radius: 12px !important;
+      background: linear-gradient(180deg, #FFFEF5 0%, #FFFDF3 100%) !important;
+      border: 1px solid rgba(254, 240, 138, 0.82) !important;
+      box-shadow: 0 8px 20px -16px rgba(15, 23, 42, 0.34) !important;
+      color: #111827 !important;
+      overflow: hidden !important;
+      transform: translateZ(0) !important;
+    }
+
+    #view-hpp .hpp-card-dash::before,
+    #view-hpp .hpp-cost-card::before,
+    #view-hpp .hpp-card-dash::after,
+    #view-hpp .hpp-cost-card::after {
+      display: none !important;
+      content: none !important;
+    }
+
+    #view-hpp .hpp-card-dash > div:last-child {
+      width: 100% !important;
+      min-width: 0 !important;
+      padding-top: 40px !important;
+    }
+
+    #view-hpp .hpp-card-dash > .w-10,
+    #view-hpp .hpp-card-dash > .w-12,
+    #view-hpp .hpp-cost-icon {
+      position: absolute !important;
+      top: 10px !important;
+      left: 12px !important;
+      width: 28px !important;
+      height: 28px !important;
+      min-width: 28px !important;
+      border-radius: 8px !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+      border: 1px solid rgba(226, 232, 240, 0.62) !important;
+    }
+
+    #view-hpp .hpp-card-dash > .w-10 i,
+    #view-hpp .hpp-card-dash > .w-12 i,
+    #view-hpp .hpp-cost-icon i {
+      font-size: 18px !important;
+      line-height: 1 !important;
+    }
+
+    #view-hpp .hpp-card-dash h3,
+    #view-hpp .hpp-cost-label {
+      position: absolute !important;
+      top: 15px !important;
+      left: 48px !important;
+      right: 72px !important;
+      margin: 0 !important;
+      color: #1F2937 !important;
+      font-size: 13px !important;
+      line-height: 1.1 !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.08em !important;
+      text-align: left !important;
+      text-transform: uppercase !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    #view-hpp #hpp-card-gas-wrap > .w-full > .flex {
+      position: absolute !important;
+      top: 15px !important;
+      left: 48px !important;
+      right: 72px !important;
+      justify-content: flex-start !important;
+      gap: 6px !important;
+      margin: 0 !important;
+      min-width: 0 !important;
+    }
+
+    #view-hpp #hpp-card-gas-wrap > .w-full > .flex h3 {
+      position: static !important;
+      flex: 0 1 auto !important;
+      min-width: 0 !important;
+    }
+
+    #view-hpp .zett-gas-mode-toggle {
+      height: 18px !important;
+      min-width: 32px !important;
+      padding: 0 7px !important;
+      font-size: 9px !important;
+      box-shadow: none !important;
+    }
+
+    #view-hpp .hpp-card-percent,
+    #view-hpp .hpp-cost-percent {
+      position: absolute !important;
+      top: 10px !important;
+      right: 12px !important;
+      z-index: 2 !important;
+      min-width: 42px !important;
+      width: auto !important;
+      max-width: 62px !important;
+      margin: 0 !important;
+      padding: 3px 8px !important;
+      border-radius: 999px !important;
+      background: #F8FAFC !important;
+      border: 1px solid #E2E8F0 !important;
+      color: #475569 !important;
+      font-size: 10.5px !important;
+      line-height: 1.1 !important;
+      font-weight: 800 !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+      box-shadow: none !important;
+    }
+
+    #view-hpp .hpp-cost-value,
+    #view-hpp [id^="dash-card-"] {
+      display: block !important;
+      margin: 0 0 8px !important;
+      color: #111827 !important;
+      font-size: 26px !important;
+      line-height: 1.1 !important;
+      font-weight: 700 !important;
+      letter-spacing: -0.02em !important;
+      text-align: center !important;
+      text-shadow: none !important;
+      white-space: nowrap !important;
+    }
+
+    #view-hpp .zett-gas-card-details,
+    #view-hpp .zett-electric-card-details {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 4px !important;
+      width: 100% !important;
+      margin-top: 6px !important;
+      text-align: left !important;
+    }
+
+    #view-hpp .zett-gas-card-details > div,
+    #view-hpp .zett-electric-card-details > div,
+    #view-hpp .zett-gas-card-details .detail-item,
+    #view-hpp .zett-electric-card-details .detail-item,
+    #view-hpp .hpp-cost-detail-pill {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 8px !important;
+      width: 100% !important;
+      min-height: 24px !important;
+      height: 24px !important;
+      padding: 0 8px !important;
+      margin: 0 !important;
+      border-radius: 999px !important;
+      background: #FFFBEA !important;
+      border: 1px solid rgba(250, 204, 21, 0.58) !important;
+      box-shadow: none !important;
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+    }
+
+    #view-hpp .zett-gas-card-details span,
+    #view-hpp .zett-electric-card-details span,
+    #view-hpp .zett-gas-card-details .label,
+    #view-hpp .zett-electric-card-details .label,
+    #view-hpp .hpp-cost-detail-label {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      color: #64748B !important;
+      font-size: 10.5px !important;
+      line-height: 1 !important;
+      font-weight: 650 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    #view-hpp .zett-gas-card-details strong,
+    #view-hpp .zett-electric-card-details strong,
+    #view-hpp .zett-gas-card-details .value,
+    #view-hpp .zett-electric-card-details .value,
+    #view-hpp .hpp-cost-detail-value {
+      flex: 0 0 auto !important;
+      margin-left: 8px !important;
+      color: #111827 !important;
+      font-size: 10.5px !important;
+      line-height: 1 !important;
+      font-weight: 850 !important;
+      white-space: nowrap !important;
+    }
+
+    #view-hpp #hpp-card-gas-wrap,
+    #view-hpp #hpp-card-listrik-wrap {
+      min-height: 178px !important;
+    }
+
+    #view-hpp .hpp-loading-lite .hpp-card-dash::after {
+      display: block !important;
+      content: "" !important;
+      position: absolute !important;
+      inset: 0 !important;
+      background: linear-gradient(100deg, rgba(255,255,255,0) 18%, rgba(14,165,233,0.08) 42%, rgba(255,255,255,0) 64%) !important;
+      transform: translateX(-110%) !important;
+      animation: hppLiteSkeletonSweep 1.15s ease-in-out infinite !important;
+    }
+  }
+
+  @media (min-width: 481px) and (max-width: 768px) {
+    #view-hpp .hpp-grid,
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    #view-hpp .hpp-cost-value,
+    #view-hpp [id^="dash-card-"] {
+      font-size: 23px !important;
+    }
+
+    #view-hpp .zett-gas-card-details span,
+    #view-hpp .zett-electric-card-details span,
+    #view-hpp .hpp-cost-detail-label,
+    #view-hpp .zett-gas-card-details strong,
+    #view-hpp .zett-electric-card-details strong,
+    #view-hpp .hpp-cost-detail-value {
+      font-size: 10px !important;
+    }
+  }
+</style>
