@@ -227,10 +227,6 @@
 
   </style>
 
-  <!-- MODULE CSS -->
-  <style>
-    <?!= HtmlService.createHtmlOutputFromFile('V5.styles').getContent(); ?>
-  </style>
   <?!= HtmlService.createHtmlOutputFromFile('JS4').getContent(); ?>
 
 </head>
@@ -347,17 +343,6 @@
         <span>Proyeksi ROI</span>
       </button>
 
-      <button
-        type="button"
-        onclick="switchMainTab('cost-structure')"
-        id="nav-cost-structure"
-        class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl
-        text-slate-400 hover:bg-white/5 hover:text-slate-100 font-semibold"
-      >
-        <i class="ph ph-wallet text-xl"></i>
-        <span>Dashboard Biaya</span>
-      </button>
-
     </div>
 
     <!-- USER -->
@@ -451,7 +436,6 @@
       <?!= HtmlService.createHtmlOutputFromFile('V2').getContent(); ?>
       <?!= HtmlService.createHtmlOutputFromFile('V3').getContent(); ?>
       <?!= HtmlService.createHtmlOutputFromFile('V4').getContent(); ?>
-      <?!= HtmlService.createHtmlOutputFromFile('V5').getContent(); ?>
       <?!= HtmlService.createHtmlOutputFromFile('Modal').getContent(); ?>
 
     </div>
@@ -671,8 +655,7 @@
         hpp: 'Struktur Biaya (HPP)',
         harga: 'Katalog Layanan',
         bep: 'Target Titik Impas',
-        roi: 'Proyeksi ROI',
-        'cost-structure': 'Dashboard Biaya'
+        roi: 'Proyeksi ROI'
       };
 
       const headerTitle = document.getElementById('headerTitle');
@@ -733,70 +716,12 @@
     }
 
     /* =========================================================
-       V5 INIT
-    ========================================================= */
-
-    function initV5Dashboard() {
-
-      const v5View = document.getElementById('view-cost-structure');
-
-      if (!v5View) {
-        console.error('V5 view not found!');
-        return;
-      }
-
-      // Keep default tab state controlled by switchMainTab().
-      // Do not force V5 view visible on startup.
-
-    }
-
-    /* =========================================================
-       HPP SYNC
-    ========================================================= */
-
-    function syncHPPData() {
-
-      const ids = [
-        'gas',
-        'listrik',
-        'air',
-        'packing',
-        'bahan',
-        'nota'
-      ];
-
-      ids.forEach(id => {
-
-        const source = document.getElementById(`dash-card-${id}`);
-        const target = document.getElementById(`dash-card-${id}-v5`);
-
-        if (source && target) {
-          target.textContent = source.textContent;
-        }
-
-      });
-
-    }
-
-    /* =========================================================
        INIT
     ========================================================= */
 
     document.addEventListener('DOMContentLoaded', () => {
 
       switchMainTab('dashboard');
-
-      initV5Dashboard();
-
-      setInterval(() => {
-
-        const v5View = document.getElementById('view-cost-structure');
-
-        if (v5View && !v5View.classList.contains('hidden')) {
-          syncHPPData();
-        }
-
-      }, 1000);
 
     });
 
