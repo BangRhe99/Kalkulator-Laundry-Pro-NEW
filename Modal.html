@@ -6657,3 +6657,732 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
   }
 </style>
+
+<style id="hpp-desktop-tablet-premium-dashboard-patch">
+  /* [HPP DESKTOP/TABLET PREMIUM DASHBOARD PATCH]
+     Scope ketat: Struktur Biaya (HPP) pada tablet/desktop saja. */
+  @media (min-width: 769px) {
+    #mainViewScroller:has(#view-hpp:not(.hidden)) {
+      background: linear-gradient(135deg, #f6f9ff 0%, #eef5ff 45%, #ffffff 100%) !important;
+    }
+
+    #view-hpp {
+      margin-top: 0 !important;
+      padding: clamp(1.05rem, 2vw, 1.7rem) clamp(1rem, 2.6vw, 2rem) 2rem !important;
+      background: linear-gradient(135deg, #f6f9ff 0%, #eef5ff 45%, #ffffff 100%) !important;
+      color: #1e293b !important;
+    }
+
+    #view-hpp #hpp-dashboard-view {
+      width: min(100%, 1120px) !important;
+      max-width: 1120px !important;
+      margin-inline: auto !important;
+      padding: 0 !important;
+      gap: clamp(1.05rem, 1.8vw, 1.4rem) !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > * + * {
+      margin-top: clamp(1.05rem, 1.8vw, 1.4rem) !important;
+    }
+
+    #view-hpp .hpp-hero-dashboard,
+    #view-hpp #hpp-dashboard-view > .bg-white,
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr) !important;
+      align-items: stretch !important;
+      gap: clamp(1.25rem, 2.3vw, 2rem) !important;
+      min-height: clamp(250px, 25vw, 300px) !important;
+      padding: clamp(1.6rem, 3vw, 2.35rem) !important;
+      border-radius: 30px !important;
+      border: 1px solid rgba(148, 163, 184, 0.18) !important;
+      background: rgba(255, 255, 255, 0.92) !important;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.86) !important;
+      overflow: hidden !important;
+    }
+
+    #view-hpp .hpp-hero-dashboard::before,
+    #view-hpp #hpp-dashboard-view > .bg-white::before,
+    #view-hpp #hpp-dashboard-view > .bg-white\/95::before {
+      display: none !important;
+      content: none !important;
+    }
+
+    #view-hpp .hpp-hero-dashboard > .flex-1 {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: flex-start !important;
+      text-align: left !important;
+      gap: 0.95rem !important;
+      min-width: 0 !important;
+    }
+
+    #view-hpp .hpp-hero-dashboard .inline-flex {
+      display: none !important;
+    }
+
+    #view-hpp #hpp-dashboard-view h2 {
+      color: #0f2f66 !important;
+      font-size: clamp(1.25rem, 2.25vw, 1.82rem) !important;
+      line-height: 1.05 !important;
+      letter-spacing: 0.13em !important;
+      font-weight: 950 !important;
+    }
+
+    #view-hpp #dash-hpp-total {
+      color: #2f80d1 !important;
+      font-size: clamp(4.8rem, 8.8vw, 7.25rem) !important;
+      line-height: 0.9 !important;
+      letter-spacing: 0 !important;
+      text-shadow: 0 12px 28px rgba(47, 128, 209, 0.13) !important;
+    }
+
+    #view-hpp #dash-hpp-total + span {
+      color: #1f6fbe !important;
+      font-size: clamp(1rem, 1.55vw, 1.25rem) !important;
+      font-weight: 900 !important;
+    }
+
+    #view-hpp #hpp-dashboard-view p {
+      max-width: 520px !important;
+      color: #1e293b !important;
+      font-size: clamp(0.98rem, 1.32vw, 1.12rem) !important;
+      line-height: 1.42 !important;
+      font-weight: 750 !important;
+    }
+
+    #view-hpp .hpp-composition-panel {
+      width: 100% !important;
+      min-width: 0 !important;
+      padding: clamp(1rem, 1.8vw, 1.35rem) !important;
+      border-radius: 24px !important;
+      border: 1px solid rgba(148, 163, 184, 0.2) !important;
+      background: rgba(255, 255, 255, 0.76) !important;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+      display: grid !important;
+      grid-template-columns: minmax(140px, 0.9fr) minmax(150px, 1fr) !important;
+      grid-template-rows: auto 1fr !important;
+      align-items: center !important;
+      gap: 0.8rem 1rem !important;
+    }
+
+    #view-hpp .hpp-composition-title {
+      grid-column: 1 / -1 !important;
+      margin: 0 !important;
+      color: #0f2f66 !important;
+      font-size: 0.78rem !important;
+      line-height: 1.1 !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      font-weight: 950 !important;
+    }
+
+    #view-hpp .hpp-donut-wrap {
+      width: clamp(142px, 16vw, 184px) !important;
+      height: clamp(142px, 16vw, 184px) !important;
+      margin: 0 !important;
+    }
+
+    #view-hpp .hpp-donut {
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 999px !important;
+      box-shadow: 0 12px 26px rgba(47, 128, 209, 0.16) !important;
+    }
+
+    #view-hpp .hpp-donut-center {
+      width: 46% !important;
+      height: 46% !important;
+      border-radius: 999px !important;
+      background: #ffffff !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 8px 20px rgba(15,23,42,0.08) !important;
+    }
+
+    #view-hpp .hpp-donut-center i {
+      display: none !important;
+    }
+
+    #view-hpp .hpp-donut-center .hpp-donut-total-label {
+      display: block !important;
+      color: #64748b !important;
+      font-size: 0.58rem !important;
+      font-weight: 950 !important;
+      letter-spacing: 0.09em !important;
+      text-transform: uppercase !important;
+      line-height: 1 !important;
+    }
+
+    #view-hpp .hpp-donut-center .hpp-donut-total-value {
+      display: block !important;
+      margin-top: 0.18rem !important;
+      color: #0f2f66 !important;
+      font-size: clamp(1rem, 1.55vw, 1.22rem) !important;
+      font-weight: 950 !important;
+      line-height: 1 !important;
+    }
+
+    #view-hpp #hpp-donut-labels > div {
+      color: #0f2f66 !important;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.8) !important;
+      filter: none !important;
+      font-size: 0.7rem !important;
+    }
+
+    #view-hpp .hpp-composition-list {
+      display: grid !important;
+      gap: 0.48rem !important;
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+
+    #view-hpp .hpp-composition-row {
+      display: grid !important;
+      grid-template-columns: auto minmax(68px, 1fr) auto auto !important;
+      align-items: center !important;
+      gap: 0.42rem !important;
+      min-width: 0 !important;
+      color: #1e293b !important;
+      font-size: 0.74rem !important;
+      font-weight: 850 !important;
+    }
+
+    #view-hpp .hpp-composition-dot {
+      width: 0.56rem !important;
+      height: 0.56rem !important;
+      border-radius: 999px !important;
+      box-shadow: 0 0 0 3px rgba(148,163,184,0.12) !important;
+    }
+
+    #view-hpp .hpp-composition-row[data-hpp-type="gas"] .hpp-composition-dot { background: #ef4444 !important; }
+    #view-hpp .hpp-composition-row[data-hpp-type="listrik"] .hpp-composition-dot { background: #f59e0b !important; }
+    #view-hpp .hpp-composition-row[data-hpp-type="air"] .hpp-composition-dot { background: #2563eb !important; }
+    #view-hpp .hpp-composition-row[data-hpp-type="packing"] .hpp-composition-dot { background: #7c3aed !important; }
+    #view-hpp .hpp-composition-row[data-hpp-type="bahan"] .hpp-composition-dot { background: #14b8a6 !important; }
+    #view-hpp .hpp-composition-row[data-hpp-type="nota"] .hpp-composition-dot { background: #0891b2 !important; }
+
+    #view-hpp .hpp-composition-name {
+      min-width: 0 !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    #view-hpp .hpp-composition-amount,
+    #view-hpp .hpp-composition-pct {
+      color: #0f172a !important;
+      font-size: 0.72rem !important;
+      font-weight: 950 !important;
+      text-align: right !important;
+      white-space: nowrap !important;
+    }
+
+    #view-hpp .hpp-grid,
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: clamp(1rem, 1.7vw, 1.25rem) !important;
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    #view-hpp .hpp-card-dash,
+    #view-hpp .hpp-cost-card {
+      position: relative !important;
+      align-items: stretch !important;
+      text-align: left !important;
+      gap: 0 !important;
+      min-height: 234px !important;
+      padding: 1.28rem 1.28rem 1.05rem !important;
+      border-radius: 24px !important;
+      border: 1px solid rgba(148, 163, 184, 0.18) !important;
+      background: rgba(255, 255, 255, 0.94) !important;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+      overflow: hidden !important;
+      cursor: pointer !important;
+    }
+
+    #view-hpp .hpp-card-dash:hover,
+    #view-hpp .hpp-cost-card:hover {
+      transform: translateY(-4px) !important;
+      box-shadow: 0 24px 54px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255,255,255,0.95) !important;
+    }
+
+    #view-hpp .hpp-card-dash::before,
+    #view-hpp .hpp-cost-card::before {
+      display: block !important;
+      content: "" !important;
+      position: absolute !important;
+      inset: 0 auto 0 0 !important;
+      width: 5px !important;
+      background: var(--hpp-card-accent, #2f80d1) !important;
+      opacity: 0.88 !important;
+    }
+
+    #view-hpp .hpp-card-dash::after,
+    #view-hpp .hpp-cost-card::after {
+      display: none !important;
+      content: none !important;
+    }
+
+    #view-hpp .hpp-card-dash[data-hpp-type="gas"] { --hpp-card-accent: #ef4444; }
+    #view-hpp .hpp-card-dash[data-hpp-type="listrik"] { --hpp-card-accent: #f59e0b; }
+    #view-hpp .hpp-card-dash[data-hpp-type="air"] { --hpp-card-accent: #2563eb; }
+    #view-hpp .hpp-card-dash[data-hpp-type="packing"] { --hpp-card-accent: #7c3aed; }
+    #view-hpp .hpp-card-dash[data-hpp-type="bahan"] { --hpp-card-accent: #14b8a6; }
+    #view-hpp .hpp-card-dash[data-hpp-type="nota"] { --hpp-card-accent: #0891b2; }
+
+    #view-hpp .hpp-card-dash > .w-10,
+    #view-hpp .hpp-card-dash > .w-12,
+    #view-hpp .hpp-cost-icon {
+      position: absolute !important;
+      top: 1.18rem !important;
+      left: 1.28rem !important;
+      width: 42px !important;
+      height: 42px !important;
+      min-width: 42px !important;
+      margin: 0 !important;
+      border-radius: 15px !important;
+      background: color-mix(in srgb, var(--hpp-card-accent, #2f80d1) 11%, #ffffff) !important;
+      color: var(--hpp-card-accent, #2f80d1) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.92), 0 10px 24px rgba(15,23,42,0.08) !important;
+    }
+
+    #view-hpp .hpp-card-dash > .w-full,
+    #view-hpp .hpp-card-dash > div:not([class*="w-10"]):not([class*="w-12"]) {
+      width: 100% !important;
+      min-width: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 100% !important;
+      flex: 1 1 auto !important;
+    }
+
+    #view-hpp .hpp-card-dash h3,
+    #view-hpp .hpp-cost-label {
+      margin: 0 4.2rem 0.78rem 3.25rem !important;
+      min-height: 42px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      color: #0f2f66 !important;
+      font-size: 0.82rem !important;
+      line-height: 1.15 !important;
+      letter-spacing: 0 !important;
+      text-transform: none !important;
+      font-weight: 950 !important;
+      text-align: left !important;
+      white-space: normal !important;
+    }
+
+    #view-hpp #hpp-card-gas-wrap > .w-full > .flex {
+      position: static !important;
+      justify-content: flex-start !important;
+      gap: 0.38rem !important;
+      margin: 0 4.2rem 0.78rem 3.25rem !important;
+      min-height: 42px !important;
+    }
+
+    #view-hpp #hpp-card-gas-wrap > .w-full > .flex h3 {
+      margin: 0 !important;
+      min-height: 0 !important;
+      color: #0f2f66 !important;
+      font-size: 0.82rem !important;
+      letter-spacing: 0 !important;
+      text-transform: none !important;
+      text-align: left !important;
+    }
+
+    #view-hpp .zett-gas-mode-toggle {
+      transform: scale(0.9) !important;
+      transform-origin: left center !important;
+    }
+
+    #view-hpp .hpp-card-percent,
+    #view-hpp .hpp-cost-percent {
+      position: absolute !important;
+      top: 1.2rem !important;
+      right: 1.18rem !important;
+      min-width: 48px !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0.34rem 0.58rem !important;
+      border-radius: 999px !important;
+      background: var(--hpp-card-accent, #2f80d1) !important;
+      color: #ffffff !important;
+      font-size: 0.78rem !important;
+      line-height: 1 !important;
+      font-weight: 950 !important;
+      letter-spacing: 0 !important;
+      text-align: center !important;
+      box-shadow: 0 9px 20px color-mix(in srgb, var(--hpp-card-accent, #2f80d1) 24%, transparent) !important;
+    }
+
+    #view-hpp .hpp-cost-value,
+    #view-hpp [id^="dash-card-"] {
+      color: #020617 !important;
+      font-size: clamp(1.82rem, 2.8vw, 2.42rem) !important;
+      line-height: 0.95 !important;
+      font-weight: 950 !important;
+      letter-spacing: 0 !important;
+      text-align: left !important;
+      white-space: nowrap !important;
+      margin: 0 0 0.95rem !important;
+    }
+
+    #view-hpp .hpp-cost-value::after,
+    #view-hpp [id^="dash-card-"]:not([id$="-pct"])::after {
+      content: " /Kg" !important;
+      color: #334155 !important;
+      font-size: 0.82rem !important;
+      font-weight: 900 !important;
+      letter-spacing: 0 !important;
+    }
+
+    #view-hpp #dash-hpp-total::after,
+    #view-hpp [id$="-pct"]::after {
+      content: none !important;
+    }
+
+    #view-hpp .zett-gas-card-details,
+    #view-hpp .zett-electric-card-details,
+    #view-hpp .hpp-premium-lite-details {
+      display: grid !important;
+      gap: 0.38rem !important;
+      width: 100% !important;
+      margin: 0.15rem 0 0 !important;
+    }
+
+    #view-hpp .zett-gas-card-details > div,
+    #view-hpp .zett-electric-card-details > div,
+    #view-hpp .hpp-premium-lite-details > div {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      gap: 0.75rem !important;
+      width: 100% !important;
+      min-height: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      color: #64748b !important;
+      font-size: 0.78rem !important;
+      line-height: 1.15 !important;
+      font-weight: 800 !important;
+    }
+
+    #view-hpp .zett-gas-card-details span,
+    #view-hpp .zett-electric-card-details span,
+    #view-hpp .hpp-premium-lite-details span {
+      color: #334155 !important;
+      font-weight: 800 !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    #view-hpp .zett-gas-card-details strong,
+    #view-hpp .zett-electric-card-details strong,
+    #view-hpp .hpp-premium-lite-details strong {
+      color: #0f172a !important;
+      font-weight: 950 !important;
+      white-space: nowrap !important;
+    }
+
+    #view-hpp .hpp-show-detail {
+      margin-top: auto !important;
+      padding-top: 0.9rem !important;
+      align-self: flex-end !important;
+      border: 0 !important;
+      background: transparent !important;
+      color: var(--hpp-card-accent, #2f80d1) !important;
+      font-size: 0.78rem !important;
+      line-height: 1 !important;
+      font-weight: 950 !important;
+      cursor: pointer !important;
+    }
+
+    #view-hpp #actionAreaHPP {
+      width: min(100%, 1120px) !important;
+      margin: clamp(1.1rem, 2vw, 1.55rem) auto 0 !important;
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    #view-hpp .hpp-hero-dashboard,
+    #view-hpp #hpp-dashboard-view > .bg-white,
+    #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      grid-template-columns: 1fr !important;
+      min-height: 0 !important;
+    }
+
+    #view-hpp .hpp-composition-panel {
+      grid-template-columns: minmax(150px, 0.78fr) minmax(0, 1fr) !important;
+    }
+
+    #view-hpp .hpp-grid,
+    #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+</style>
+
+<script id="hpp-desktop-tablet-premium-dashboard-patch-js">
+  /* [HPP DESKTOP/TABLET PREMIUM DASHBOARD PATCH]
+     UI-only bridge: menambah wrapper/label visual HPP tanpa mengubah kalkulasi,
+     backend, database, schema, atau handler onclick existing. */
+  (function hppDesktopTabletPremiumDashboardPatch() {
+    const TYPES = [
+      { key: 'gas', label: 'Gas LPG', color: '#ef4444', title: 'Analisa Biaya Gas' },
+      { key: 'listrik', label: 'Listrik', color: '#f59e0b', title: 'Analisa Biaya Listrik' },
+      { key: 'air', label: 'Air PDAM', color: '#2563eb', title: 'Analisa Biaya Air' },
+      { key: 'packing', label: 'Packing', color: '#7c3aed', title: 'Analisa Biaya Packing' },
+      { key: 'bahan', label: 'Chemical', color: '#14b8a6', title: 'Analisa Biaya Chemical' },
+      { key: 'nota', label: 'Admin/Nota', color: '#0891b2', title: 'Analisa Biaya Nota & Kasir' }
+    ];
+
+    const desktopQuery = window.matchMedia('(min-width: 769px)');
+    let updateTimer = null;
+    let originalDonutCenter = null;
+
+    function byId(id) {
+      return document.getElementById(id);
+    }
+
+    function parseCurrency(text) {
+      return Number(String(text || '').replace(/[^0-9.-]/g, '')) || 0;
+    }
+
+    function formatMoney(value) {
+      const n = Number(value) || 0;
+      if (typeof window.formatRupiah === 'function') {
+        try { return window.formatRupiah(n); } catch (error) {}
+      }
+      return 'Rp ' + n.toLocaleString('id-ID');
+    }
+
+    function getValues() {
+      const store =
+        (window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.hpp) ||
+        (typeof APP_STATE !== 'undefined' && APP_STATE.data && APP_STATE.data.hpp) ||
+        window.hppDataState ||
+        {};
+
+      const values = {};
+      TYPES.forEach(item => {
+        const domValue = byId('dash-card-' + item.key);
+        values[item.key] = Number(store[item.key]);
+        if (!Number.isFinite(values[item.key]) || values[item.key] < 0) {
+          values[item.key] = parseCurrency(domValue ? domValue.textContent : 0);
+        }
+      });
+      values.total = Number(store.total);
+      if (!Number.isFinite(values.total) || values.total <= 0) {
+        values.total = TYPES.reduce((sum, item) => sum + (Number(values[item.key]) || 0), 0);
+      }
+      return values;
+    }
+
+    function ensureScaffold() {
+      const page = byId('view-hpp');
+      const dashboard = byId('hpp-dashboard-view');
+      if (!page || !dashboard) return;
+
+      page.classList.add('hpp-desktop-premium');
+
+      const hero = dashboard.firstElementChild;
+      if (hero) hero.classList.add('hpp-hero-dashboard');
+
+      const grid = dashboard.querySelector('.grid.grid-cols-2, .hpp-grid');
+      if (grid) grid.classList.add('hpp-grid');
+
+      const donut = byId('hpp-donut-chart');
+      const donutWrap = donut ? donut.closest('.hpp-donut-wrap') : null;
+      const compositionPanel = donutWrap ? donutWrap.parentElement : null;
+      if (compositionPanel) {
+        compositionPanel.classList.add('hpp-composition-panel');
+
+        let title = compositionPanel.querySelector('.hpp-composition-title');
+        if (!title) {
+          title = document.createElement('h3');
+          title.className = 'hpp-composition-title';
+          title.textContent = 'Komposisi Biaya Variabel';
+          compositionPanel.insertBefore(title, compositionPanel.firstChild);
+        }
+
+        let list = compositionPanel.querySelector('.hpp-composition-list');
+        if (!list) {
+          list = document.createElement('div');
+          list.className = 'hpp-composition-list';
+          compositionPanel.appendChild(list);
+        }
+
+        const center = compositionPanel.querySelector('.hpp-donut-center');
+        if (center && originalDonutCenter === null) originalDonutCenter = center.innerHTML;
+      }
+
+      TYPES.forEach(item => {
+        const valueEl = byId('dash-card-' + item.key);
+        const card = valueEl ? valueEl.closest('.hpp-card-dash') : null;
+        if (!card) return;
+
+        card.dataset.hppType = item.key;
+        card.classList.add('hpp-premium-card');
+        card.style.setProperty('--hpp-card-accent', item.color);
+
+        const icon = Array.from(card.children).find(child =>
+          child.classList && (child.classList.contains('w-10') || child.classList.contains('w-12'))
+        );
+        if (icon) icon.classList.add('hpp-cost-icon');
+
+        const label = card.querySelector('h3');
+        if (label) label.classList.add('hpp-cost-label');
+        if (valueEl) valueEl.classList.add('hpp-cost-value');
+
+        let detail = card.querySelector('.zett-gas-card-details, .zett-electric-card-details, .hpp-premium-lite-details');
+        if (!detail) {
+          detail = document.createElement('div');
+          detail.className = 'hpp-premium-lite-details';
+          valueEl.insertAdjacentElement('afterend', detail);
+        }
+
+        let show = card.querySelector('.hpp-show-detail');
+        if (!show) {
+          show = document.createElement('button');
+          show.type = 'button';
+          show.className = 'hpp-show-detail';
+          show.textContent = 'Show Details';
+          show.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof window.openHPPForm === 'function') {
+              window.openHPPForm(item.key, item.title);
+            }
+          });
+          card.appendChild(show);
+        }
+      });
+    }
+
+    function setDesktopOnlyState() {
+      const isDesktop = desktopQuery.matches;
+      const panel = document.querySelector('#view-hpp .hpp-composition-panel');
+      const title = panel ? panel.querySelector('.hpp-composition-title') : null;
+      const list = panel ? panel.querySelector('.hpp-composition-list') : null;
+      const center = panel ? panel.querySelector('.hpp-donut-center') : null;
+
+      if (title) title.hidden = !isDesktop;
+      if (list) list.hidden = !isDesktop;
+
+      document.querySelectorAll('#view-hpp .hpp-show-detail, #view-hpp .hpp-premium-lite-details').forEach(el => {
+        el.hidden = !isDesktop;
+      });
+
+      if (center) {
+        if (isDesktop) {
+          const desktopCenterHtml = '<span class="hpp-donut-total-label">Total</span><span class="hpp-donut-total-value">100%</span>';
+          if (center.innerHTML !== desktopCenterHtml) center.innerHTML = desktopCenterHtml;
+        } else if (originalDonutCenter !== null) {
+          if (center.innerHTML !== originalDonutCenter) center.innerHTML = originalDonutCenter;
+        }
+      }
+    }
+
+    function updateComposition() {
+      const values = getValues();
+      const total = Number(values.total) || 0;
+      const list = document.querySelector('#view-hpp .hpp-composition-list');
+      if (list) {
+        const nextListHtml = TYPES.map(item => {
+          const value = Number(values[item.key]) || 0;
+          const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+          return [
+            '<div class="hpp-composition-row" data-hpp-type="' + item.key + '">',
+            '<span class="hpp-composition-dot"></span>',
+            '<span class="hpp-composition-name">' + item.label + '</span>',
+            '<span class="hpp-composition-amount">' + formatMoney(value) + '</span>',
+            '<span class="hpp-composition-pct">' + pct + '%</span>',
+            '</div>'
+          ].join('');
+        }).join('');
+        if (list.innerHTML !== nextListHtml) list.innerHTML = nextListHtml;
+      }
+
+      TYPES.forEach(item => {
+        const value = Number(values[item.key]) || 0;
+        const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+        const pctEl = byId('dash-card-' + item.key + '-pct');
+        if (pctEl && pctEl.textContent !== pct + '%') pctEl.textContent = pct + '%';
+
+        const valueEl = byId('dash-card-' + item.key);
+        const card = valueEl ? valueEl.closest('.hpp-card-dash') : null;
+        const detail = card ? card.querySelector('.hpp-premium-lite-details') : null;
+        if (detail) {
+          const nextDetailHtml = '<div><span>Biaya /Kg</span><strong>' + formatMoney(value) + '</strong></div>';
+          if (detail.innerHTML !== nextDetailHtml) detail.innerHTML = nextDetailHtml;
+        }
+      });
+    }
+
+    function refreshPremiumUi() {
+      ensureScaffold();
+      setDesktopOnlyState();
+      updateComposition();
+    }
+
+    function scheduleRefresh() {
+      window.clearTimeout(updateTimer);
+      updateTimer = window.setTimeout(refreshPremiumUi, 60);
+    }
+
+    function wrapDashboardUpdate() {
+      if (window.__hppDesktopPremiumDashboardPatchWrapped) return;
+      window.__hppDesktopPremiumDashboardPatchWrapped = true;
+
+      const originalZettUpdate = window.zettHPPUpdateDashboardFromState;
+      if (typeof originalZettUpdate === 'function') {
+        window.zettHPPUpdateDashboardFromState = function() {
+          const result = originalZettUpdate.apply(this, arguments);
+          scheduleRefresh();
+          return result;
+        };
+      }
+
+      try {
+        if (typeof StateMachine !== 'undefined' && StateMachine.renderDashboard && !StateMachine.renderDashboard.__hppDesktopPremiumWrapped) {
+          const originalRender = StateMachine.renderDashboard.bind(StateMachine);
+          const wrappedRender = function() {
+            const result = originalRender.apply(this, arguments);
+            scheduleRefresh();
+            return result;
+          };
+          wrappedRender.__hppDesktopPremiumWrapped = true;
+          StateMachine.renderDashboard = wrappedRender;
+        }
+      } catch (error) {}
+    }
+
+    function boot() {
+      refreshPremiumUi();
+      wrapDashboardUpdate();
+      scheduleRefresh();
+      window.setTimeout(refreshPremiumUi, 350);
+      window.setTimeout(refreshPremiumUi, 1200);
+
+      const dashboard = byId('hpp-dashboard-view');
+      if (dashboard && window.MutationObserver) {
+        const observer = new MutationObserver(scheduleRefresh);
+        observer.observe(dashboard, { childList: true, subtree: true, characterData: true });
+      }
+    }
+
+    if (desktopQuery.addEventListener) desktopQuery.addEventListener('change', refreshPremiumUi);
+    else if (desktopQuery.addListener) desktopQuery.addListener(refreshPremiumUi);
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+    else boot();
+  })();
+</script>
