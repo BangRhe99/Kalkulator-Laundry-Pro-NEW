@@ -7386,3 +7386,88 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     else boot();
   })();
 </script>
+
+<style id="hpp-desktop-tablet-spacing-donut-refinement-patch">
+  /* [HPP DESKTOP/TABLET SPACING AND DONUT REFINEMENT PATCH]
+     Scope: desktop/tablet HPP only. Card biaya dikunci: tidak mengubah visual internal card. */
+  @media (min-width: 769px) {
+    #view-hpp.hpp-desktop-premium,
+    #view-hpp {
+      padding-top: clamp(0.35rem, 0.9vw, 0.72rem) !important;
+    }
+
+    #view-hpp #hpp-dashboard-view {
+      margin-top: 0 !important;
+      gap: 0 !important;
+    }
+
+    #view-hpp #hpp-dashboard-view > * + * {
+      margin-top: 0 !important;
+    }
+
+    #view-hpp .hpp-hero-dashboard {
+      margin-top: 0 !important;
+      margin-bottom: clamp(1.15rem, 1.75vw, 1.55rem) !important;
+    }
+
+    #view-hpp .hpp-grid {
+      margin-top: 0 !important;
+      row-gap: clamp(1rem, 1.65vw, 1.25rem) !important;
+      column-gap: clamp(1rem, 1.7vw, 1.25rem) !important;
+    }
+
+    #view-hpp .hpp-composition-panel {
+      align-content: center !important;
+      grid-template-columns: minmax(172px, 0.92fr) minmax(160px, 1fr) !important;
+    }
+
+    #view-hpp .hpp-donut-wrap {
+      width: clamp(168px, 14.5vw, 184px) !important;
+      height: clamp(168px, 14.5vw, 184px) !important;
+      justify-self: center !important;
+    }
+
+    #view-hpp .hpp-donut {
+      -webkit-mask-image: radial-gradient(circle, transparent 52%, black 53%) !important;
+      mask-image: radial-gradient(circle, transparent 52%, black 53%) !important;
+      box-shadow: 0 14px 30px rgba(47, 128, 209, 0.16), inset 0 0 0 1px rgba(255,255,255,0.5) !important;
+    }
+
+    #view-hpp .hpp-donut-center {
+      width: 50% !important;
+      height: 50% !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 10px 24px rgba(15,23,42,0.1) !important;
+    }
+
+    #view-hpp #hpp-donut-labels {
+      width: 240px !important;
+      height: 240px !important;
+      inset: auto !important;
+      left: 50% !important;
+      top: 50% !important;
+      transform: translate(-50%, -50%) scale(0.72) !important;
+      transform-origin: center center !important;
+    }
+
+    #view-hpp #hpp-donut-labels > div {
+      font-size: 0.66rem !important;
+      color: #0f2f66 !important;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.92), 0 5px 12px rgba(15,23,42,0.12) !important;
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    #view-hpp .hpp-composition-panel {
+      grid-template-columns: minmax(170px, 0.72fr) minmax(0, 1fr) !important;
+    }
+
+    #view-hpp .hpp-donut-wrap {
+      width: clamp(158px, 22vw, 176px) !important;
+      height: clamp(158px, 22vw, 176px) !important;
+    }
+
+    #view-hpp #hpp-donut-labels {
+      transform: translate(-50%, -50%) scale(0.68) !important;
+    }
+  }
+</style>
