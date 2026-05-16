@@ -4468,7 +4468,9 @@ window.calculateGas = function() {
   const mesinKering = zettCleanNumber(context.mesinKering || row['Mesin Kering'] || row['Mesin Pengering']);
   const durasiKering = zettCleanNumber(context.durasiKering || row['Durasi Kering']);
   const kapKering = zettCleanNumber(context.kapKering || row['Kap Kering']) || 1;
+  const kapSetrika = zettCleanNumber(context.kapSetrika || row['Kap Setrika']);
   const shouldCalculateLoad = !!context.requiresGasDryerLoad;
+  const shouldCalculateIron = !!context.requiresGasSteamIron;
   const gasPerJam = (harga > 0 && jam > 0) ? harga / jam : 0;
   const gasPerMenit = (harga > 0 && menit > 0) ? harga / menit : 0;
   const estimasiLoadGas = (shouldCalculateLoad && menit > 0 && durasiKering > 0 && mesinKering > 0)
@@ -4478,6 +4480,8 @@ window.calculateGas = function() {
     ? gasPerMenit * durasiKering
     : 0;
   const gasPerKg = (estimasiBiayaGas > 0 && kapKering > 0) ? estimasiBiayaGas / kapKering : 0;
+  const setrikaPerJam = shouldCalculateIron ? gasPerJam : '';
+  const setrikaPerKg = shouldCalculateIron && gasPerJam > 0 && kapSetrika > 0 ? gasPerJam / kapSetrika : '';
 
   const loadEl = document.getElementById('inputGasPerLoadManual');
   if (loadEl) loadEl.value = estimasiLoadGas > 0 ? Number(estimasiLoadGas.toFixed(2)) : '';
@@ -4499,8 +4503,8 @@ window.calculateGas = function() {
     gasPerLoad: estimasiBiayaGas,
     gasPerKg,
     menitGas: menit,
-    setrikaPerJam: 0,
-    setrikaPerKg: 0,
+    setrikaPerJam,
+    setrikaPerKg,
     needsProfileGasData: shouldCalculateLoad && (!durasiKering || !mesinKering)
   };
 };
@@ -4668,16 +4672,21 @@ window.saveGasHPPData = function(event) {
     const kategoriRaw = byId('inputKategori')?.value || outlet.kategori || row['Kategori Laundry'] || 'Laundry Drop Off';
     const kategori = norm(kategoriRaw);
     const dryerType = norm(outlet.tipeMesinPengering || row['Tipe Mesin Pengering'] || '');
+    const setrikaType = norm(outlet.tipeSetrikaUtama || outlet.tipeSetrika || row['Tipe Setrika'] || '');
     const dryerUnit = clean(outlet.pengeringUnit || row['Mesin Kering'] || row['Mesin Pengering']);
     const dryerDuration = clean(outlet.pengeringDurasi || row['Durasi Kering']);
     const dryerKg = clean(outlet.pengeringKg || row['Kap Kering']);
+    const setrikaKg = clean(outlet.setrikaKg || row['Kap Setrika']);
     const explicitDryerOff = outlet.pakaiPengering === false || String(outlet.pakaiPengering).toLowerCase() === 'false' || norm(outlet.metodePengeringan).includes('jemur');
     const isSelfService = kategori.includes('self');
     const isDropOff = kategori.includes('drop') || kategori.includes('kiloan');
     const isHybrid = kategori.includes('hybrid');
     const pakaiMesinPengering = !explicitDryerOff && (dryerUnit > 0 || dryerKg > 0 || isSelfService || isHybrid);
-    const dryerUsesGas = pakaiMesinPengering && (dryerType.includes('gas') || dryerType.includes('konversi') || dryerType === '');
+    const dryerUsesGas = pakaiMesinPengering;
     const requiresGasDryerLoad = isSelfService || isHybrid || (isDropOff && dryerUsesGas);
+    const usesSteamIron = !isSelfService && (setrikaType.includes('uap') || setrikaType.includes('steam') || setrikaType.includes('gas'));
+    const requiresGasSteamIron = (isDropOff || isHybrid) && usesSteamIron;
+    const gasActive = isSelfService || isHybrid || (isDropOff && pakaiMesinPengering) || requiresGasSteamIron;
 
     return {
       kategoriBisnis: kategoriRaw,
@@ -4685,12 +4694,15 @@ window.saveGasHPPData = function(event) {
       isDropOff,
       isHybrid,
       pakaiMesinPengering,
+      usesSteamIron,
       dryerUsesGas,
       requiresGasDryerLoad,
-      gasActive: requiresGasDryerLoad,
+      requiresGasSteamIron,
+      gasActive,
       mesinKering: dryerUnit,
       durasiKering: dryerDuration,
-      kapKering: dryerKg
+      kapKering: dryerKg,
+      kapSetrika: setrikaKg
     };
   }
 
@@ -4713,8 +4725,8 @@ window.saveGasHPPData = function(event) {
       gasPerJam: clean(calc.gasPerJam) || clean(row['Gas Per Jam']),
       gasPerMenit: clean(calc.gasPerMenit) || clean(row['Gas Per Menit']),
       estimasiLoadGas: clean(calc.estimasiLoadGas) || clean(row['Estimasi Load Gas']),
-      setrikaJam: clean(row['Setrika Per Jam']),
-      setrikaKg: clean(row['Setrika Per Kg'])
+      setrikaJam: clean(calc.setrikaPerJam) || clean(row['Setrika Per Jam']),
+      setrikaKg: clean(calc.setrikaPerKg) || clean(row['Setrika Per Kg'])
     };
   }
 
@@ -4722,20 +4734,26 @@ window.saveGasHPPData = function(event) {
     const c = context || zettGetGasUsageContext();
     const v = getGasValues();
     if (c.isSelfService) return [{ label: 'Gas Kering /Load', value: v.gasLoad }];
-    if (c.isHybrid) return [
-      { label: 'Gas Kering /Load', value: v.gasLoad },
-      { label: 'Gas Kering /Kg', value: v.gasKg }
-    ];
-    if (c.isDropOff && c.pakaiMesinPengering) return [{ label: 'Gas Kering /Kg', value: v.gasKg }];
-    return [{ label: 'Gas Kering /Load', value: v.gasLoad }];
+    const metrics = [];
+    if (c.isHybrid) {
+      metrics.push({ label: 'Gas Kering /Load', value: v.gasLoad });
+      metrics.push({ label: 'Gas Kering /Kg', value: v.gasKg });
+    } else if (c.isDropOff && c.pakaiMesinPengering) {
+      metrics.push({ label: 'Gas Kering /Kg', value: v.gasKg });
+    }
+    if (c.requiresGasSteamIron) {
+      metrics.push({ label: 'Gas Setrika /Jam', value: v.setrikaJam });
+      metrics.push({ label: 'Gas Setrika /Kg', value: v.setrikaKg });
+    }
+    return metrics;
   }
 
   function zettGetGasDashboardValue() {
     const c = zettGetGasUsageContext();
-    if (!c.requiresGasDryerLoad) return 0;
+    if (!c.gasActive) return 0;
     const v = getGasValues();
     if (c.isSelfService) return v.gasLoad || 0;
-    return (v.gasKg || 0) + (v.setrikaKg || 0);
+    return (c.requiresGasDryerLoad ? (v.gasKg || 0) : 0) + (c.requiresGasSteamIron ? (v.setrikaKg || 0) : 0);
   }
 
   function zettRenderGasAnalysisForm() {
@@ -4765,17 +4783,17 @@ window.saveGasHPPData = function(event) {
       const dashboardValue = zettGetGasDashboardValue();
 
       if (toggle) {
-        toggle.textContent = c.requiresGasDryerLoad ? 'ON' : 'OFF';
-        toggle.classList.toggle('is-off', !c.requiresGasDryerLoad);
+        toggle.textContent = c.gasActive ? 'ON' : 'OFF';
+        toggle.classList.toggle('is-off', !c.gasActive);
       }
       if (card) {
-        card.classList.toggle('zett-gas-off', !c.requiresGasDryerLoad);
+        card.classList.toggle('zett-gas-off', !c.gasActive);
         card.style.pointerEvents = 'auto';
         card.style.opacity = '';
         card.style.filter = '';
       }
       if (detail) {
-        detail.innerHTML = c.requiresGasDryerLoad
+        detail.innerHTML = c.gasActive
           ? getVisibleGasMetrics(c).map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`).join('')
           : '<div><span>Gas tidak dihitung</span><strong>Rp 0</strong></div>';
       }
@@ -4793,14 +4811,14 @@ window.saveGasHPPData = function(event) {
     const c = zettGetGasUsageContext();
     const missing = [];
     if (!outletName()) missing.unshift('Outlet');
-    if (!c.requiresGasDryerLoad) return { valid: missing.length === 0, missing };
+    if (!c.gasActive) return { valid: missing.length === 0, missing };
     ['kapGas', 'hargaGas', 'gasJam'].forEach(key => {
       const config = FIELD_CONFIG[key];
       const el = config ? byId(config.id) : null;
       const value = key === 'hargaGas' ? clean(el?.value) : Number(el?.value || 0);
       if (!el || String(el.value || '').trim() === '' || (key !== 'kapGas' && value <= 0)) missing.push(config.label);
     });
-    if (!c.durasiKering || !c.mesinKering) {
+    if (c.requiresGasDryerLoad && (!c.durasiKering || !c.mesinKering)) {
       return {
         valid: false,
         missing,
@@ -7463,5 +7481,28 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     #view-hpp #hpp-donut-labels {
       transform: translate(-50%, -50%) scale(0.68) !important;
     }
+  }
+</style>
+
+<style id="zett-hpp-action-area-flow-last-20260516">
+  #view-hpp #actionAreaHPP,
+  #actionAreaHPP {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    top: auto !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    clear: both !important;
+    margin-top: clamp(1.35rem, 2.4vw, 2.25rem) !important;
+    margin-bottom: 0 !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  #view-hpp #hpp-dashboard-view,
+  #view-hpp #hpp-form-view {
+    padding-bottom: 0 !important;
   }
 </style>

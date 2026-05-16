@@ -652,6 +652,8 @@ function saveStrukturBiaya(payload) {
     let kategoriLaundry = 'Drop Off/Kiloan';
     let kapKering = 1;
     let kapSetrika = 1;
+    let tipeSetrika = '';
+    let pakaiMesinPengering = true;
 
     if (checkColName1 !== null) {
       for (let i = 1; i < dataHPP1.length; i++) {
@@ -665,6 +667,10 @@ function saveStrukturBiaya(payload) {
           if ('Kap Setrika' in colMapHPP1) {
             kapSetrika = parseFloat(String(dataHPP1[i][colMapHPP1['Kap Setrika']]).replace(/[^\d.-]/g, '')) || 1;
           }
+          if ('Tipe Setrika' in colMapHPP1) {
+            tipeSetrika = String(dataHPP1[i][colMapHPP1['Tipe Setrika']] || '');
+          }
+          pakaiMesinPengering = zettDryerActiveFromRow_(dataHPP1[i], colMapHPP1);
           break;
         }
       }
@@ -696,18 +702,20 @@ function saveStrukturBiaya(payload) {
     let setrikaPerJamStr = "";
     let setrikaPerKgStr = "";
 
-    if (kategoriLaundry.toLowerCase().includes('self service')) {
+    if (zettIsSelfServiceCategory_(kategoriLaundry)) {
       gasPerKgStr = "";
       setrikaPerJamStr = "";
       setrikaPerKgStr = "";
     } else {
       const gasPerKg = kapKering > 0 ? gasPerLoad / kapKering : 0;
-      const setrikaPerJam = gasJam > 0 ? gasHarga / gasJam : 0;
-      const setrikaPerKg = kapSetrika > 0 ? setrikaPerJam / kapSetrika : 0;
 
-      gasPerKgStr = gasPerKg;
-      setrikaPerJamStr = setrikaPerJam;
-      setrikaPerKgStr = setrikaPerKg;
+      gasPerKgStr = (zettIsHybridCategory_(kategoriLaundry) || (zettIsDropOffCategory_(kategoriLaundry) && pakaiMesinPengering)) ? gasPerKg : "";
+      if (zettGasIronRelevant_(kategoriLaundry, tipeSetrika)) {
+        const setrikaPerJam = gasPerJam;
+        const setrikaPerKg = kapSetrika > 0 ? setrikaPerJam / kapSetrika : "";
+        setrikaPerJamStr = setrikaPerJam;
+        setrikaPerKgStr = setrikaPerKg;
+      }
     }
     
     const applyHPP1 = (rowArr, isUpdate, rNum) => {
@@ -715,6 +723,8 @@ function saveStrukturBiaya(payload) {
         if (key in colMap1) {
           if (isUpdate) sheet1.getRange(rNum, colMap1[key] + 1).setValue(val);
           else rowArr[colMap1[key]] = val;
+        } else if (key === 'Setrika Per Jam' || key === 'Setrika Per Kg') {
+          zettWarnMissingHeader_(key, SHEET_HPP_1);
         }
       };
       
@@ -952,6 +962,27 @@ function saveGasHPPData(payload) {
     const jamGas = zettToNumber_(payload.jamGas);
     const menitGas = zettToNumber_(payload.menitGas);
     const estimasiBiayaGas = zettToNumber_(payload.estimasiBiayaGas);
+    let kategoriLaundry = '';
+    let tipeSetrika = '';
+    let kapSetrika = 0;
+    let kapKering = 0;
+    let pakaiMesinPengering = true;
+    if (targetRow > 0) {
+      const row = data[targetRow - 1] || [];
+      if (typeof headerMap['Kategori Laundry'] === 'number') kategoriLaundry = String(row[headerMap['Kategori Laundry']] || '');
+      if (typeof headerMap['Tipe Setrika'] === 'number') tipeSetrika = String(row[headerMap['Tipe Setrika']] || '');
+      if (typeof headerMap['Kap Setrika'] === 'number') kapSetrika = zettToNumber_(row[headerMap['Kap Setrika']]);
+      if (typeof headerMap['Kap Kering'] === 'number') kapKering = zettToNumber_(row[headerMap['Kap Kering']]);
+      pakaiMesinPengering = zettDryerActiveFromRow_(row, headerMap);
+    }
+    const gasPerJamValue = zettToNumber_(payload.gasPerJam) || (jamGas > 0 ? hargaGas / jamGas : 0);
+    const steamIronRelevant = zettGasIronRelevant_(kategoriLaundry, tipeSetrika);
+    const setrikaPerJamValue = steamIronRelevant ? gasPerJamValue : '';
+    const setrikaPerKgValue = steamIronRelevant && kapSetrika > 0 ? setrikaPerJamValue / kapSetrika : '';
+    const dryerGasRelevant = zettIsSelfServiceCategory_(kategoriLaundry) || zettIsHybridCategory_(kategoriLaundry) || (zettIsDropOffCategory_(kategoriLaundry) && pakaiMesinPengering);
+    const gasPerKgValue = dryerGasRelevant
+      ? (zettToNumber_(payload.gasPerKg) || (kapKering > 0 ? (estimasiBiayaGas || zettToNumber_(payload.gasPerLoad)) / kapKering : ''))
+      : '';
     const values = {
       'Nama Outlet': String(payload.namaOutlet || '').trim(),
       'Kap Gas': payload.kapGas,
@@ -960,12 +991,12 @@ function saveGasHPPData(payload) {
       'Menit Gas': menitGas,
       'Estimasi Load Gas': zettToNumber_(payload.estimasiLoadGas),
       'Estimasi Biaya Gas': estimasiBiayaGas,
-      'Gas Per Jam': zettToNumber_(payload.gasPerJam) || (jamGas > 0 ? hargaGas / jamGas : 0),
+      'Gas Per Jam': gasPerJamValue,
       'Gas Per Menit': zettToNumber_(payload.gasPerMenit) || (menitGas > 0 ? hargaGas / menitGas : 0),
       'Gas Per Load': estimasiBiayaGas || zettToNumber_(payload.gasPerLoad),
-      'Gas Per Kg': zettToNumber_(payload.gasPerKg),
-      'Setrika Per Jam': zettToNumber_(payload.setrikaPerJam),
-      'Setrika Per Kg': zettToNumber_(payload.setrikaPerKg),
+      'Gas Per Kg': gasPerKgValue,
+      'Setrika Per Jam': setrikaPerJamValue,
+      'Setrika Per Kg': setrikaPerKgValue,
       'Timestamp': Utilities.formatDate(new Date(), 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss')
     };
 
@@ -973,12 +1004,14 @@ function saveGasHPPData(payload) {
       Object.keys(values).forEach((k) => {
         const c = col(k);
         if (c > 0) sheet.getRange(targetRow, c).setValue(values[k]);
+        else if (k === 'Setrika Per Jam' || k === 'Setrika Per Kg') zettWarnMissingHeader_(k, SHEET_HPP_1);
       });
     } else {
       const row = new Array(sheet.getLastColumn()).fill('');
       Object.keys(values).forEach((k) => {
         const idx = headerMap[k];
         if (typeof idx === 'number') row[idx] = values[k];
+        else if (k === 'Setrika Per Jam' || k === 'Setrika Per Kg') zettWarnMissingHeader_(k, SHEET_HPP_1);
       });
       sheet.appendRow(row);
       targetRow = sheet.getLastRow();
@@ -1505,6 +1538,48 @@ function getHPPRowByOutlet(namaOutlet) {
   }
 }
 
+function zettIsSelfServiceCategory_(kategori) {
+  return String(kategori || '').toLowerCase().includes('self');
+}
+
+function zettIsHybridCategory_(kategori) {
+  return String(kategori || '').toLowerCase().includes('hybrid');
+}
+
+function zettIsDropOffCategory_(kategori) {
+  const text = String(kategori || '').toLowerCase();
+  return text.includes('drop') || text.includes('kiloan');
+}
+
+function zettUsesSteamIron_(tipeSetrika) {
+  const text = String(tipeSetrika || '').toLowerCase();
+  return text.includes('uap') || text.includes('steam') || text.includes('gas');
+}
+
+function zettGasIronRelevant_(kategori, tipeSetrika) {
+  return !zettIsSelfServiceCategory_(kategori)
+    && (zettIsDropOffCategory_(kategori) || zettIsHybridCategory_(kategori))
+    && zettUsesSteamIron_(tipeSetrika);
+}
+
+function zettDryerActiveFromRow_(row, colMap) {
+  if (!row || !colMap) return true;
+  const get = (key) => (key in colMap ? row[colMap[key]] : '');
+  const pakaiRaw = String(get('Pakai Pengering') || '').trim().toLowerCase();
+  const metodeRaw = String(get('Metode Pengeringan') || '').trim().toLowerCase();
+  if (pakaiRaw === 'tidak' || pakaiRaw === 'false' || pakaiRaw === '0' || metodeRaw === 'jemur') return false;
+  const mesin = zettToNumber_(get('Mesin Pengering') || get('Mesin Kering'));
+  const kap = zettToNumber_(get('Kap Kering'));
+  if ((('Mesin Pengering' in colMap) || ('Mesin Kering' in colMap)) && ('Kap Kering' in colMap) && mesin <= 0 && kap <= 0) return false;
+  return true;
+}
+
+function zettWarnMissingHeader_(headerName, sheetName) {
+  try {
+    Logger.log('[HPP] Header "%s" tidak ditemukan di %s. Field dilewati.', headerName, sheetName || SHEET_HPP_1);
+  } catch (e) {}
+}
+
 function saveStrukturBiaya(payload) {
   try {
     const ss = _getSpreadsheet();
@@ -1545,11 +1620,15 @@ function saveStrukturBiaya(payload) {
     let kategoriLaundry = 'Drop Off/Kiloan';
     let kapKering = 1;
     let kapSetrika = 1;
+    let tipeSetrika = '';
+    let pakaiMesinPengering = true;
     if (targetRow !== -1) {
       const row = data[targetRow - 1];
       if ('Kategori Laundry' in colMap) kategoriLaundry = String(row[colMap['Kategori Laundry']] || kategoriLaundry);
       if ('Kap Kering' in colMap) kapKering = zettToNumber_(row[colMap['Kap Kering']]) || 1;
       if ('Kap Setrika' in colMap) kapSetrika = zettToNumber_(row[colMap['Kap Setrika']]) || 1;
+      if ('Tipe Setrika' in colMap) tipeSetrika = String(row[colMap['Tipe Setrika']] || '');
+      pakaiMesinPengering = zettDryerActiveFromRow_(row, colMap);
     }
 
     const gasJam = zettToNumber_(payload.gasJam);
@@ -1564,10 +1643,14 @@ function saveStrukturBiaya(payload) {
     let setrikaPerJamStr = '';
     let setrikaPerKgStr = '';
 
-    if (!kategoriLaundry.toLowerCase().includes('self service')) {
-      gasPerKgStr = kapKering > 0 ? gasPerLoad / kapKering : 0;
-      setrikaPerJamStr = gasJam > 0 ? gasHarga / gasJam : 0;
-      setrikaPerKgStr = kapSetrika > 0 ? setrikaPerJamStr / kapSetrika : 0;
+    if (!zettIsSelfServiceCategory_(kategoriLaundry)) {
+      gasPerKgStr = (zettIsHybridCategory_(kategoriLaundry) || (zettIsDropOffCategory_(kategoriLaundry) && pakaiMesinPengering))
+        ? (kapKering > 0 ? gasPerLoad / kapKering : 0)
+        : '';
+      if (zettGasIronRelevant_(kategoriLaundry, tipeSetrika)) {
+        setrikaPerJamStr = gasPerJam;
+        setrikaPerKgStr = kapSetrika > 0 ? setrikaPerJamStr / kapSetrika : '';
+      }
     }
 
     const ppHarga = zettToNumber_(payload.packPPHarga);
@@ -1742,13 +1825,17 @@ function saveStrukturBiaya(payload) {
       newRow[nameCol] = payload.namaOutlet;
       Object.keys(mapping).forEach(function(key) {
         if (key in colMap) newRow[colMap[key]] = resolveFormula(mapping[key], rowNum);
+        else if (key === 'Setrika Per Jam' || key === 'Setrika Per Kg') zettWarnMissingHeader_(key, SHEET_HPP_1);
       });
       sheet.appendRow(newRow);
     } else {
       const updatedRow = sheet.getRange(rowNum, 1, 1, sheet.getLastColumn()).getValues()[0];
       if ('Timestamp' in colMap) updatedRow[colMap['Timestamp']] = timestamp;
       Object.keys(mapping).forEach(function(key) {
-        if (!(key in colMap)) return;
+        if (!(key in colMap)) {
+          if (key === 'Setrika Per Jam' || key === 'Setrika Per Kg') zettWarnMissingHeader_(key, SHEET_HPP_1);
+          return;
+        }
         updatedRow[colMap[key]] = resolveFormula(mapping[key], rowNum);
       });
       sheet.getRange(rowNum, 1, 1, updatedRow.length).setValues([updatedRow]);

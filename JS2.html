@@ -2145,6 +2145,7 @@ function simpanDataHPP(e) {
     let gasPerMenitUI = (menitGasUI > 0 && hargaGasUI > 0) ? (hargaGasUI / menitGasUI) : 0;
     let estimasiLoadGasUI = (menitGasUI > 0 && durasiKeringUI > 0 && jmlKeringUI > 0) ? (menitGasUI / durasiKeringUI / jmlKeringUI) : 0;
     let estimasiBiayaGasUI = (gasPerMenitUI > 0 && durasiKeringUI > 0) ? (gasPerMenitUI * durasiKeringUI) : 0;
+    const gasCalcUI = (typeof window.calculateGas === 'function') ? window.calculateGas() : {};
     const visibleElectricFields = (typeof window.zettGetVisibleElectricInputFields === 'function')
         ? window.zettGetVisibleElectricInputFields()
         : [];
@@ -2166,6 +2167,9 @@ function simpanDataHPP(e) {
         gasPerMenit: gasPerMenitUI,
         estimasiBiayaGas: estimasiBiayaGasUI,
         gasPerLoad: estimasiBiayaGasUI,
+        gasPerKg: gasCalcUI.gasPerKg !== undefined ? gasCalcUI.gasPerKg : '',
+        setrikaPerJam: gasCalcUI.setrikaPerJam !== undefined ? gasCalcUI.setrikaPerJam : '',
+        setrikaPerKg: gasCalcUI.setrikaPerKg !== undefined ? gasCalcUI.setrikaPerKg : '',
         
         listrikTDL: document.getElementById('inputTDL') ? document.getElementById('inputTDL').value : '',
         listrikCuci: document.getElementById('inputListrikCuciWatt') ? document.getElementById('inputListrikCuciWatt').value : '',
