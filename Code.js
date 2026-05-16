@@ -294,7 +294,8 @@ function setupDatabase() {
       'Mesin Cuci', 'Kap Cuci', 'Durasi Cuci', 
       'Mesin Pengering', 'Kap Kering', 'Durasi Kering', 
       'Alat Setrika', 'Kap Setrika', 'Durasi Setrika', 'Tipe Setrika', 
-      'Kap Gas', 'Harga Gas', 'Jam Gas', 'Menit Gas', 'Central Gas', 
+      'Kap Gas', 'Harga Gas', 'Jam Gas', 'Menit Gas',
+      'Estimasi Load Gas', 'Estimasi Biaya Gas', 'Gas Per Jam', 'Gas Per Menit',
       'Gas Per Load', 'Gas Per Kg', 'Setrika Per Jam', 'Setrika Per Kg',
       'TDL', 'Watt Cuci', 'kW Watt Cuci', 'Watt Kering', 'kW Watt Kering', 'Watt Pompa', 'kW Watt Pompa', 'Watt Setrika', 'kW Watt Setrika',
       'Cuci Per Load', 'Cuci Per Kg', 'Kering Per Load', 'Kering Per Kg', 'Listrik Setrika Jam', 'Listrik Setrika Kg',
@@ -685,6 +686,11 @@ function saveStrukturBiaya(payload) {
     const gasJam = parseFloat(payload.gasJam) || 0;
     const gasHarga = parseFloat(payload.gasHarga) || 0;
     const gasPerLoad = parseFloat(payload.gasPerLoad) || 0;
+    const gasMenit = zettToNumber_(payload.gasMenit);
+    const gasPerJam = zettToNumber_(payload.gasPerJam) || (gasJam > 0 ? gasHarga / gasJam : 0);
+    const gasPerMenit = zettToNumber_(payload.gasPerMenit) || (gasMenit > 0 ? gasHarga / gasMenit : 0);
+    const estimasiLoadGas = zettToNumber_(payload.estimasiLoadGas);
+    const estimasiBiayaGas = zettToNumber_(payload.estimasiBiayaGas) || gasPerLoad;
     
     let gasPerKgStr = "";
     let setrikaPerJamStr = "";
@@ -735,9 +741,12 @@ function saveStrukturBiaya(payload) {
       setVal('Kap Gas', payload.gasKapasitas);
       setVal('Harga Gas', payload.gasHarga);
       setVal('Jam Gas', payload.gasJam);
-      setVal('Menit Gas', payload.gasMenit);
-      setVal('Central Gas', payload.gasCentral);
-      setVal('Gas Per Load', payload.gasPerLoad);
+      setVal('Menit Gas', gasMenit);
+      setVal('Estimasi Load Gas', estimasiLoadGas);
+      setVal('Estimasi Biaya Gas', estimasiBiayaGas);
+      setVal('Gas Per Jam', gasPerJam);
+      setVal('Gas Per Menit', gasPerMenit);
+      setVal('Gas Per Load', estimasiBiayaGas || payload.gasPerLoad);
       setVal('Gas Per Kg', gasPerKgStr);
       setVal('Setrika Per Jam', setrikaPerJamStr);
       setVal('Setrika Per Kg', setrikaPerKgStr);
@@ -939,14 +948,21 @@ function saveGasHPPData(payload) {
     }
 
     const col = (key) => (typeof headerMap[key] === 'number' ? headerMap[key] + 1 : 0);
+    const hargaGas = zettToNumber_(payload.hargaGas);
+    const jamGas = zettToNumber_(payload.jamGas);
+    const menitGas = zettToNumber_(payload.menitGas);
+    const estimasiBiayaGas = zettToNumber_(payload.estimasiBiayaGas);
     const values = {
       'Nama Outlet': String(payload.namaOutlet || '').trim(),
       'Kap Gas': payload.kapGas,
-      'Harga Gas': zettToNumber_(payload.hargaGas),
-      'Jam Gas': zettToNumber_(payload.jamGas),
-      'Menit Gas': zettToNumber_(payload.menitGas),
-      'Central Gas': String(payload.centralGas || 'Tidak') === 'Ya' ? 'Ya' : 'Tidak',
-      'Gas Per Load': zettToNumber_(payload.gasPerLoad),
+      'Harga Gas': hargaGas,
+      'Jam Gas': jamGas,
+      'Menit Gas': menitGas,
+      'Estimasi Load Gas': zettToNumber_(payload.estimasiLoadGas),
+      'Estimasi Biaya Gas': estimasiBiayaGas,
+      'Gas Per Jam': zettToNumber_(payload.gasPerJam) || (jamGas > 0 ? hargaGas / jamGas : 0),
+      'Gas Per Menit': zettToNumber_(payload.gasPerMenit) || (menitGas > 0 ? hargaGas / menitGas : 0),
+      'Gas Per Load': estimasiBiayaGas || zettToNumber_(payload.gasPerLoad),
       'Gas Per Kg': zettToNumber_(payload.gasPerKg),
       'Setrika Per Jam': zettToNumber_(payload.setrikaPerJam),
       'Setrika Per Kg': zettToNumber_(payload.setrikaPerKg),
@@ -1286,7 +1302,8 @@ function zettCombinedHPPHeaders_() {
     'Mesin Cuci', 'Kap Cuci', 'Durasi Cuci',
     'Mesin Pengering', 'Kap Kering', 'Durasi Kering',
     'Alat Setrika', 'Kap Setrika', 'Durasi Setrika', 'Tipe Setrika',
-    'Kap Gas', 'Harga Gas', 'Jam Gas', 'Menit Gas', 'Central Gas',
+    'Kap Gas', 'Harga Gas', 'Jam Gas', 'Menit Gas',
+    'Estimasi Load Gas', 'Estimasi Biaya Gas', 'Gas Per Jam', 'Gas Per Menit',
     'Gas Per Load', 'Gas Per Kg', 'Setrika Per Jam', 'Setrika Per Kg',
     'TDL', 'Watt Cuci', 'kW Watt Cuci', 'Watt Kering', 'kW Watt Kering',
     'Watt Pompa', 'kW Watt Pompa', 'Watt Setrika', 'kW Watt Setrika',
@@ -1537,7 +1554,12 @@ function saveStrukturBiaya(payload) {
 
     const gasJam = zettToNumber_(payload.gasJam);
     const gasHarga = zettToNumber_(payload.gasHarga);
-    const gasPerLoad = zettToNumber_(payload.gasPerLoad);
+    const gasMenit = zettToNumber_(payload.gasMenit);
+    const gasPerJam = zettToNumber_(payload.gasPerJam) || (gasJam > 0 ? gasHarga / gasJam : 0);
+    const gasPerMenit = zettToNumber_(payload.gasPerMenit) || (gasMenit > 0 ? gasHarga / gasMenit : 0);
+    const estimasiLoadGas = zettToNumber_(payload.estimasiLoadGas);
+    const estimasiBiayaGas = zettToNumber_(payload.estimasiBiayaGas) || zettToNumber_(payload.gasPerLoad);
+    const gasPerLoad = estimasiBiayaGas;
     let gasPerKgStr = '';
     let setrikaPerJamStr = '';
     let setrikaPerKgStr = '';
@@ -1571,9 +1593,12 @@ function saveStrukturBiaya(payload) {
       'Kap Gas': payload.gasKapasitas,
       'Harga Gas': gasHarga,
       'Jam Gas': gasJam,
-      'Menit Gas': zettToNumber_(payload.gasMenit),
-      'Central Gas': payload.gasCentral,
-      'Gas Per Load': gasPerLoad,
+      'Menit Gas': gasMenit,
+      'Estimasi Load Gas': estimasiLoadGas,
+      'Estimasi Biaya Gas': estimasiBiayaGas,
+      'Gas Per Jam': gasPerJam,
+      'Gas Per Menit': gasPerMenit,
+      'Gas Per Load': estimasiBiayaGas,
       'Gas Per Kg': gasPerKgStr,
       'Setrika Per Jam': setrikaPerJamStr,
       'Setrika Per Kg': setrikaPerKgStr,
