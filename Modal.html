@@ -4669,7 +4669,7 @@ window.saveGasHPPData = function(event) {
   function zettGetGasUsageContext() {
     const outlet = getOutlet() || {};
     const row = getRow();
-    const kategoriRaw = byId('inputKategori')?.value || outlet.kategori || row['Kategori Laundry'] || 'Laundry Drop Off';
+    const kategoriRaw = outlet.kategori || row['Kategori Laundry'] || byId('inputKategori')?.value || 'Laundry Drop Off';
     const kategori = norm(kategoriRaw);
     const dryerType = norm(outlet.tipeMesinPengering || row['Tipe Mesin Pengering'] || '');
     const setrikaType = norm(outlet.tipeSetrikaUtama || outlet.tipeSetrika || row['Tipe Setrika'] || '');
@@ -4793,8 +4793,9 @@ window.saveGasHPPData = function(event) {
         card.style.filter = '';
       }
       if (detail) {
+        const metrics = getVisibleGasMetrics(c).filter(item => String(item.label || '').trim());
         detail.innerHTML = c.gasActive
-          ? getVisibleGasMetrics(c).map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`).join('')
+          ? metrics.map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`).join('')
           : '<div><span>Gas tidak dihitung</span><strong>Rp 0</strong></div>';
       }
       if (valueEl) valueEl.textContent = rupiah(dashboardValue);
@@ -5022,7 +5023,10 @@ window.saveGasHPPData = function(event) {
       const detail = byId('dash-card-listrik-details');
       if (valueEl) valueEl.textContent = rupiah(value);
       if (detail) {
-        detail.innerHTML = metrics.map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`).join('');
+        detail.innerHTML = metrics
+          .filter(item => String(item.label || '').trim())
+          .map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`)
+          .join('');
       }
       if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('listrik', value);
       zettRenderElectricAnalysisForm();
@@ -7044,7 +7048,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
 
     #view-hpp .hpp-cost-value::after,
-    #view-hpp [id^="dash-card-"]:not([id$="-pct"])::after {
+    #view-hpp [id^="dash-card-"]:not([id$="-pct"]):not([id$="-details"])::after {
       content: " /Kg" !important;
       color: #334155 !important;
       font-size: 0.82rem !important;

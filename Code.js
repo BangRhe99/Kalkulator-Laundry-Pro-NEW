@@ -1106,6 +1106,9 @@ function saveKapasitas(payload) {
       sheet.appendRow(newRow);
     }
 
+    // [PROFIL->HPP SYNC] Jaga field operasional HPP tetap sama dengan Master_Kapasitas_V2.
+    zettSyncOperationalProfileToHPP_(payload, timestamp);
+
     SpreadsheetApp.flush();
     clearServerCache(); // <--- Reset server cache after update
     return { status: 'success', message: 'Data Kapasitas berhasil disimpan ke Cloud!' };
@@ -1116,6 +1119,113 @@ function saveKapasitas(payload) {
 
 function saveKapasitasPremium(payload) {
   return saveKapasitas(payload);
+}
+
+function zettBuildOperationalHPPValues_(payload, timestamp) {
+  const pick = function() {
+    for (let i = 0; i < arguments.length; i++) {
+      const key = arguments[i];
+      if (payload && payload[key] !== undefined && payload[key] !== null && payload[key] !== '') return payload[key];
+    }
+    return '';
+  };
+  const pakaiPengering = payload && (payload.pakaiPengering === false || String(payload.pakaiPengering).toLowerCase() === 'false') ? 'Tidak' : 'Ya';
+  const values = {
+    'Timestamp': timestamp,
+    'Nama Outlet': pick('namaOutlet'),
+    'Kategori Laundry': pick('kategori', 'kategoriLaundry'),
+    'Mesin Cuci': pick('cuciUnit', 'mesinCuci'),
+    'Kap Cuci': pick('cuciKg', 'kapCuci'),
+    'Durasi Cuci': pick('cuciDurasi', 'durasiCuci'),
+    'Mesin Pengering': pakaiPengering === 'Tidak' ? 0 : pick('pengeringUnit', 'mesinPengering'),
+    'Kap Kering': pakaiPengering === 'Tidak' ? 0 : pick('pengeringKg', 'kapKering'),
+    'Durasi Kering': pakaiPengering === 'Tidak' ? 0 : pick('pengeringDurasi', 'durasiKering'),
+    'Alat Setrika': pick('setrikaUnit', 'alatSetrika'),
+    'Kap Setrika': pick('setrikaKg', 'kapSetrika'),
+    'Durasi Setrika': pick('setrikaDurasi', 'durasiSetrika'),
+    'Tipe Setrika': pick('tipeSetrikaUtama', 'tipeSetrika'),
+    'Pakai Pengering': pakaiPengering,
+    'Metode Pengeringan': pakaiPengering === 'Tidak' ? 'jemur' : (pick('metodePengeringan') || 'mesin')
+  };
+  Object.keys(values).forEach(function(key) {
+    if (values[key] === undefined || values[key] === null) values[key] = '';
+  });
+  return values;
+}
+
+function zettGetOperationalProfileForHPP_(namaOutlet, timestamp) {
+  const ss = _getSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_KAPASITAS);
+  if (!sheet || sheet.getLastRow() < 2) return {};
+
+  const data = sheet.getDataRange().getDisplayValues();
+  const map = getHeaderMap(sheet);
+  const nameCol = ('Nama Outlet' in map) ? map['Nama Outlet'] : (('Nama Cabang/Outlet' in map) ? map['Nama Cabang/Outlet'] : null);
+  if (nameCol === null) return {};
+
+  const target = String(namaOutlet || '').trim().toLowerCase();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][nameCol] || '').trim().toLowerCase() !== target) continue;
+    const row = data[i];
+    const get = function(header) { return header in map ? row[map[header]] : ''; };
+    return zettBuildOperationalHPPValues_({
+      namaOutlet: get('Nama Outlet') || get('Nama Cabang/Outlet') || namaOutlet,
+      kategori: get('Kategori Laundry'),
+      cuciUnit: get('Mesin Cuci'),
+      cuciKg: get('Kap Cuci'),
+      cuciDurasi: get('Durasi Cuci'),
+      pengeringUnit: get('Mesin Pengering'),
+      pengeringKg: get('Kap Kering'),
+      pengeringDurasi: get('Durasi Kering'),
+      setrikaUnit: get('Alat Setrika'),
+      setrikaKg: get('Kap Setrika'),
+      setrikaDurasi: get('Durasi Setrika'),
+      tipeSetrika: get('Tipe Setrika'),
+      pakaiPengering: String(get('Pakai Pengering') || '').toLowerCase() === 'tidak' ? false : true,
+      metodePengeringan: get('Metode Pengeringan')
+    }, timestamp || get('Timestamp'));
+  }
+  return {};
+}
+
+function zettSyncOperationalProfileToHPP_(payload, timestamp) {
+  const ss = _getSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_HPP_1);
+  if (!sheet) sheet = ss.insertSheet(SHEET_HPP_1);
+  if (sheet.getLastColumn() === 0) {
+    sheet.getRange(1, 1, 1, zettCombinedHPPHeaders_().length).setValues([zettCombinedHPPHeaders_()]);
+    sheet.setFrozenRows(1);
+  } else {
+    zettEnsureHeaders_(sheet, zettCombinedHPPHeaders_());
+  }
+
+  const map = zettGetHeaderMap_(sheet);
+  const nameCol = ('Nama Outlet' in map) ? map['Nama Outlet'] : null;
+  if (nameCol === null) throw new Error('Header "Nama Outlet" tidak ditemukan di Struktur_Biaya_1.');
+
+  const values = zettBuildOperationalHPPValues_(payload, timestamp);
+  const target = String(values['Nama Outlet'] || '').trim().toLowerCase();
+  if (!target) return;
+
+  const data = sheet.getDataRange().getDisplayValues();
+  const headerRow = zettHppHeaderRow_(sheet);
+  let rowNum = -1;
+  for (let i = headerRow; i < data.length; i++) {
+    if (String(data[i][nameCol] || '').trim().toLowerCase() === target) {
+      rowNum = i + 1;
+      break;
+    }
+  }
+
+  if (rowNum === -1) rowNum = sheet.getLastRow() + 1;
+  const row = rowNum <= sheet.getLastRow()
+    ? sheet.getRange(rowNum, 1, 1, sheet.getLastColumn()).getValues()[0]
+    : new Array(sheet.getLastColumn()).fill('');
+
+  Object.keys(values).forEach(function(header) {
+    if (header in map) row[map[header]] = values[header];
+  });
+  sheet.getRange(rowNum, 1, 1, row.length).setValues([row]);
 }
 
 
@@ -1617,18 +1727,36 @@ function saveStrukturBiaya(payload) {
       }
     }
 
+    const operationalValues = zettGetOperationalProfileForHPP_(payload.namaOutlet, timestamp);
+    const payloadOperationalValues = zettBuildOperationalHPPValues_(payload, timestamp);
+    Object.keys(payloadOperationalValues).forEach(function(key) {
+      if ((key === 'Pakai Pengering' || key === 'Metode Pengeringan') &&
+          payload.pakaiPengering === undefined && payload.metodePengeringan === undefined) return;
+      if (key === 'Timestamp' || key === 'Nama Outlet' || payloadOperationalValues[key] !== '') {
+        operationalValues[key] = payloadOperationalValues[key];
+      }
+    });
+
     let kategoriLaundry = 'Drop Off/Kiloan';
     let kapKering = 1;
     let kapSetrika = 1;
     let tipeSetrika = '';
     let pakaiMesinPengering = true;
+    if (operationalValues['Kategori Laundry']) kategoriLaundry = String(operationalValues['Kategori Laundry']);
+    if (operationalValues['Kap Kering'] !== '') kapKering = zettToNumber_(operationalValues['Kap Kering']) || 1;
+    if (operationalValues['Kap Setrika'] !== '') kapSetrika = zettToNumber_(operationalValues['Kap Setrika']) || 1;
+    if (operationalValues['Tipe Setrika']) tipeSetrika = String(operationalValues['Tipe Setrika']);
+    if (operationalValues['Pakai Pengering'] || operationalValues['Metode Pengeringan']) {
+      pakaiMesinPengering = String(operationalValues['Pakai Pengering'] || '').toLowerCase() !== 'tidak'
+        && String(operationalValues['Metode Pengeringan'] || '').toLowerCase() !== 'jemur';
+    }
     if (targetRow !== -1) {
       const row = data[targetRow - 1];
-      if ('Kategori Laundry' in colMap) kategoriLaundry = String(row[colMap['Kategori Laundry']] || kategoriLaundry);
-      if ('Kap Kering' in colMap) kapKering = zettToNumber_(row[colMap['Kap Kering']]) || 1;
-      if ('Kap Setrika' in colMap) kapSetrika = zettToNumber_(row[colMap['Kap Setrika']]) || 1;
-      if ('Tipe Setrika' in colMap) tipeSetrika = String(row[colMap['Tipe Setrika']] || '');
-      pakaiMesinPengering = zettDryerActiveFromRow_(row, colMap);
+      if (!operationalValues['Kategori Laundry'] && 'Kategori Laundry' in colMap) kategoriLaundry = String(row[colMap['Kategori Laundry']] || kategoriLaundry);
+      if (operationalValues['Kap Kering'] === '' && 'Kap Kering' in colMap) kapKering = zettToNumber_(row[colMap['Kap Kering']]) || 1;
+      if (operationalValues['Kap Setrika'] === '' && 'Kap Setrika' in colMap) kapSetrika = zettToNumber_(row[colMap['Kap Setrika']]) || 1;
+      if (!operationalValues['Tipe Setrika'] && 'Tipe Setrika' in colMap) tipeSetrika = String(row[colMap['Tipe Setrika']] || '');
+      if (!operationalValues['Pakai Pengering'] && !operationalValues['Metode Pengeringan']) pakaiMesinPengering = zettDryerActiveFromRow_(row, colMap);
     }
 
     const gasJam = zettToNumber_(payload.gasJam);
@@ -1673,6 +1801,20 @@ function saveStrukturBiaya(payload) {
     const totalPacking = kategoriLaundry.toLowerCase().includes('self service') ? 0 : (ppKg + hdKg + jKg);
 
     const mapping = {
+      'Kategori Laundry': kategoriLaundry,
+      'Mesin Cuci': operationalValues['Mesin Cuci'],
+      'Kap Cuci': operationalValues['Kap Cuci'],
+      'Durasi Cuci': operationalValues['Durasi Cuci'],
+      'Mesin Pengering': operationalValues['Mesin Pengering'],
+      'Kap Kering': operationalValues['Kap Kering'],
+      'Durasi Kering': operationalValues['Durasi Kering'],
+      'Alat Setrika': operationalValues['Alat Setrika'],
+      'Kap Setrika': operationalValues['Kap Setrika'],
+      'Durasi Setrika': operationalValues['Durasi Setrika'],
+      'Tipe Setrika': tipeSetrika,
+      'Pakai Pengering': operationalValues['Pakai Pengering'],
+      'Metode Pengeringan': operationalValues['Metode Pengeringan'],
+
       'Kap Gas': payload.gasKapasitas,
       'Harga Gas': gasHarga,
       'Jam Gas': gasJam,

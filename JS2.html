@@ -75,6 +75,40 @@ function normalizeKapasitasRow(item) {
 
 window.normalizeKapasitasRow = normalizeKapasitasRow;
 
+function zettPatchOperationalProfileToLocalHPP(outlet) {
+    if (!outlet) return;
+    const row = normalizeKapasitasRow(outlet);
+    const name = String(row.namaOutlet || '').trim();
+    if (!name) return;
+    const normalized = name.toLowerCase();
+    const patch = {
+        namaOutlet: name,
+        'Nama Outlet': name,
+        'Kategori Laundry': row.kategori,
+        'Mesin Cuci': row.cuciUnit,
+        'Kap Cuci': row.cuciKg,
+        'Durasi Cuci': row.cuciDurasi,
+        'Mesin Pengering': row.pakaiPengering ? row.pengeringUnit : 0,
+        'Kap Kering': row.pakaiPengering ? row.pengeringKg : 0,
+        'Durasi Kering': row.pakaiPengering ? row.pengeringDurasi : 0,
+        'Alat Setrika': row.setrikaUnit,
+        'Kap Setrika': row.setrikaKg,
+        'Durasi Setrika': row.setrikaDurasi,
+        'Tipe Setrika': row.tipeSetrikaUtama || row.tipeSetrika || 'uap',
+        'Pakai Pengering': row.pakaiPengering ? 'Ya' : 'Tidak',
+        'Metode Pengeringan': row.pakaiPengering ? 'mesin' : 'jemur'
+    };
+    if (!Array.isArray(masterDataHPP)) masterDataHPP = [];
+    const idx = masterDataHPP.findIndex(h => String(h.namaOutlet || h['Nama Outlet'] || '').trim().toLowerCase() === normalized);
+    masterDataHPP[idx >= 0 ? idx : masterDataHPP.length] = Object.assign({}, idx >= 0 ? masterDataHPP[idx] : {}, patch);
+    window.masterDataHPP = masterDataHPP;
+    if (typeof window.zettPatchActiveHPPRow === 'function' && document.getElementById('inputNamaHPP')?.value === name) {
+        window.zettPatchActiveHPPRow(patch);
+    }
+}
+
+window.zettPatchOperationalProfileToLocalHPP = zettPatchOperationalProfileToLocalHPP;
+
 function formatJamOperasional(value) {
     const raw = String(value || '').trim();
     if (!raw) return '--:--';
@@ -1052,6 +1086,8 @@ function filterCabang() {
 }
 
 function pilihCabang(namaCabang, cardEl) {
+    const switchToken = Date.now() + ':' + String(namaCabang || '');
+    window.__zettBranchSwitchToken = switchToken;
     if (cardEl) {
         cardEl.style.transform = 'scale(0.985)';
         cardEl.style.boxShadow = '0 18px 34px -24px rgba(37, 99, 235, 0.55)';
@@ -1063,6 +1099,7 @@ function pilihCabang(namaCabang, cardEl) {
 
     const cabang = masterDataCabang.find(c => String(c.namaOutlet) === namaCabang);
     if(!cabang) return;
+    zettPatchOperationalProfileToLocalHPP(cabang);
 
     document.getElementById('inputNama').value = cabang.namaOutlet;
     const globalHeaderDropdown = document.getElementById('inputNamaHPP');
@@ -1098,7 +1135,15 @@ function pilihCabang(namaCabang, cardEl) {
     document.getElementById('dropdownCabangResult').classList.add('hidden');
     updateNavName();
     
-    if (typeof populateFormHPP === 'function') populateFormHPP(namaCabang);
+    if (typeof populateFormHPP === 'function') {
+        requestAnimationFrame(() => {
+            if (window.__zettBranchSwitchToken !== switchToken) return;
+            populateFormHPP(namaCabang);
+            if (typeof window.zettRefreshActiveHPPRowFromServer === 'function') {
+                window.zettRefreshActiveHPPRowFromServer(namaCabang);
+            }
+        });
+    }
     toggleActionButtons(); toggleKategoriLaundry(); syncDryerToggleVisibility(); calculateCapacity(); 
     showFormKapasitas(false);
     if (typeof checkHPPLock === 'function') checkHPPLock();
@@ -1434,12 +1479,27 @@ if (!window.__zettHPPSelectListenerBound) {
     document.addEventListener('change', function(e) {
         if (!e.target || e.target.id !== 'inputNamaHPP') return;
         const outletName = String(e.target.value || '').trim();
+        const switchToken = Date.now() + ':' + outletName;
+        window.__zettBranchSwitchToken = switchToken;
+        const cabang = masterDataCabang.find(c => String(c.namaOutlet || '').trim() === outletName);
 
         if (!outletName) {
             if (typeof resetHPPDashboardToZero === 'function') resetHPPDashboardToZero();
-        } else if (typeof populateFormHPP === 'function') {
-            populateFormHPP(outletName);
-            if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(outletName);
+        } else {
+            if (cabang) {
+                zettPatchOperationalProfileToLocalHPP(cabang);
+                const inputNama = document.getElementById('inputNama');
+                const inputKategori = document.getElementById('inputKategori');
+                if (inputNama) inputNama.value = cabang.namaOutlet;
+                if (inputKategori) inputKategori.value = cabang.kategori || 'Drop Off/Kiloan';
+                if (typeof updateNavName === 'function') updateNavName();
+            }
+            requestAnimationFrame(() => {
+                if (window.__zettBranchSwitchToken !== switchToken) return;
+                if (typeof populateFormHPP === 'function') populateFormHPP(outletName);
+                if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(outletName);
+                if (typeof window.zettRefreshActiveHPPRowFromServer === 'function') window.zettRefreshActiveHPPRowFromServer(outletName);
+            });
         }
 
         if (typeof toggleActionButtons === 'function') toggleActionButtons();
@@ -2037,6 +2097,7 @@ async function prosesSimpanKapasitas() {
         } else {
             masterDataCabang = [optimisticRow].concat(masterDataCabang);
         }
+        zettPatchOperationalProfileToLocalHPP(optimisticRow);
 
         persistCabangToClientCache();
         applyCabangUIData();
@@ -2045,6 +2106,7 @@ async function prosesSimpanKapasitas() {
         showOmniToast('Perubahan outlet diterapkan. Sinkronisasi cloud berjalan...', 'success');
 
         const response = await runServer('saveKapasitasPremium', payload);
+        zettPatchOperationalProfileToLocalHPP(optimisticRow);
         persistCabangToClientCache();
         setBtnState(btnId, 'idle');
         showOmniToast(response.message, 'success');
