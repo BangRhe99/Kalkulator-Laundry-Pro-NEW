@@ -502,9 +502,10 @@
         <div class="w-10 h-10 md:w-11 md:h-11 bg-cyan-50 rounded-[0.9rem] flex items-center justify-center text-cyan-500 transition-transform duration-200 group-hover:scale-105">
           <i class="ph ph-drop text-2xl drop-shadow-sm"></i>
         </div>
-        <div>
+        <div class="w-full">
           <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Air PDAM</h3>
           <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-cyan-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] " id="dash-card-air">Rp 0</p>
+          <div id="dash-card-air-details" class="zett-water-card-details"></div>
         </div>
       </div>
 
@@ -734,7 +735,12 @@
     <!-- ================= TAB 3: AIR ================= -->
     <div id="tab-air" class="tab-content hidden animate-fade-in bento-grid">
       <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
-        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-drop text-cyan-500 text-2xl"></i> Parameter Sumber Air</h3>
+        <div class="zett-air-form-header">
+          <button type="button" onclick="closeHPPForm()" class="zett-electric-back-btn" aria-label="Kembali ke Struktur Biaya">
+            <i class="ph ph-arrow-left text-xl"></i>
+          </button>
+          <h3 class="omni-title" style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-drop text-cyan-500 text-2xl"></i> Analisa Biaya Air</h3>
+        </div>
 
         <!-- Sumber Air Utama -->
         <div style="background: var(--omni-bg); border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.5rem; margin-bottom: 1.5rem;">
@@ -2475,7 +2481,7 @@
 
       if (titleEl) titleEl.textContent = title || 'Analisa Biaya';
       const outerHeader = titleEl ? titleEl.closest('.flex.items-center.gap-5') : null;
-      if (outerHeader) outerHeader.style.display = (type === 'gas' || type === 'listrik') ? 'none' : '';
+      if (outerHeader) outerHeader.style.display = (type === 'gas' || type === 'listrik' || type === 'air') ? 'none' : '';
 
       hideEl(dashboard);
       showEl(formView, 'block');
@@ -3611,7 +3617,8 @@
     }
   }
 
-  #view-hpp .zett-electric-card-details {
+  #view-hpp .zett-electric-card-details,
+  #view-hpp .zett-water-card-details {
     width: 100%;
     display: grid;
     gap: 0.28rem;
@@ -3619,7 +3626,8 @@
     text-align: left;
   }
 
-  #view-hpp .zett-electric-card-details div {
+  #view-hpp .zett-electric-card-details div,
+  #view-hpp .zett-water-card-details div {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -3630,14 +3638,16 @@
     border: 1px solid rgba(253, 230, 138, 0.54);
   }
 
-  #view-hpp .zett-electric-card-details span {
+  #view-hpp .zett-electric-card-details span,
+  #view-hpp .zett-water-card-details span {
     color: #64748b;
     font-size: 0.64rem;
     font-weight: 850;
     line-height: 1.15;
   }
 
-  #view-hpp .zett-electric-card-details strong {
+  #view-hpp .zett-electric-card-details strong,
+  #view-hpp .zett-water-card-details strong {
     color: #0f172a;
     font-size: 0.68rem;
     font-weight: 950;
@@ -3649,6 +3659,13 @@
     align-items: center;
     gap: 0.85rem;
     margin-bottom: 1.35rem;
+  }
+
+  #view-hpp .zett-air-form-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
   }
 
   #view-hpp .zett-electric-back-btn {
@@ -5140,6 +5157,167 @@ window.saveGasHPPData = function(event) {
     document.addEventListener('change', function(event) {
       if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori')) {
         setTimeout(function() { zettRenderElectricAnalysisForm(); window.calculateListrik(); }, 60);
+      }
+    });
+  });
+})();
+
+/* Air operational UI: scoped to Struktur Biaya > Analisa Biaya Air. */
+(function zettWaterOperationalUi20260517() {
+  function byId(id) { return document.getElementById(id); }
+  function norm(value) { return String(value || '').trim().toLowerCase(); }
+  function clean(value) { return typeof zettCleanNumber === 'function' ? zettCleanNumber(value) : (Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0); }
+  function rupiah(value) {
+    if (typeof formatRupiah === 'function') return formatRupiah(Math.round(Number(value) || 0));
+    return 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
+  }
+  function outletName() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+  function getOutlet() {
+    const name = norm(outletName());
+    const sources = [];
+    if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) sources.push(masterDataCabang);
+    if (window.APP_STATE?.data?.master?.cabang) sources.push(window.APP_STATE.data.master.cabang);
+    for (const rows of sources) {
+      const found = rows.find(item => norm(item?.namaOutlet || item?.['Nama Outlet']) === name);
+      if (found) return found;
+    }
+    return null;
+  }
+  function getRow() {
+    if (typeof zettFindActiveHPPRow === 'function') return zettFindActiveHPPRow() || {};
+    return {};
+  }
+  function setText(id, value) {
+    const el = byId(id);
+    if (el) el.textContent = rupiah(value);
+  }
+
+  function zettGetWaterUsageContext() {
+    const outlet = getOutlet() || {};
+    const row = getRow();
+    const kategoriRaw = outlet.kategori || row['Kategori Laundry'] || byId('inputKategori')?.value || 'Drop Off/Kiloan';
+    const kategori = norm(kategoriRaw);
+    return {
+      kategoriBisnis: kategoriRaw,
+      isSelfService: kategori.includes('self'),
+      isDropOff: kategori.includes('drop') || kategori.includes('kiloan'),
+      isHybrid: kategori.includes('hybrid')
+    };
+  }
+
+  function zettWaterValues() {
+    const row = getRow();
+    const outlet = getOutlet() || {};
+    const source = norm(byId('inputAirSumber')?.value || row['Sumber Air'] || 'pdam');
+    const boilerSource = norm(byId('inputAirBoilerSumber')?.value || row['Sumber Setrika'] || 'sama');
+    const hargaAir = source === 'pdam' ? clean(byId('inputAirHargaM3')?.value || row['Harga Air']) : 0;
+    const hargaTangki = source === 'tangki' ? clean(byId('inputAirHargaTangki')?.value || row['Harga Tangki']) : 0;
+    const literTangki = source === 'tangki' ? clean(byId('inputAirLiterTangki')?.value || row['Liter Tangki']) : 0;
+    const airCuci = clean(byId('inputAirCuciLiter')?.value || row['Air Cuci']);
+    const kapCuci = clean(outlet.cuciKg || row['Kap Cuci']) || 1;
+    const galonSetrika = boilerSource === 'galon' ? clean(byId('inputAirHargaGalon')?.value || row['Galon Setrika']) : 0;
+    const volSetrika = boilerSource === 'galon' ? clean(byId('inputAirLiterGalon')?.value || row['Vol Setrika']) : 0;
+    const literSetrika = clean(byId('inputAirBoilerLiter')?.value || row['Liter Setrika']);
+    const jamSetrika = clean(byId('inputAirBoilerJam')?.value || row['Jam Setrika']);
+    const kgSetrika = clean(byId('inputAirBoilerKgJam')?.value || row['Kg Setrika']);
+
+    const mainRate = source === 'pdam'
+      ? hargaAir / 1000
+      : (source === 'tangki' && literTangki > 0 ? hargaTangki / literTangki : 0);
+    const boilerRate = boilerSource === 'galon'
+      ? (volSetrika > 0 ? galonSetrika / volSetrika : 0)
+      : mainRate;
+    const airLoad = mainRate * airCuci;
+    const airKg = kapCuci > 0 ? airLoad / kapCuci : 0;
+    const setrikaJam = jamSetrika > 0 ? boilerRate * (literSetrika / jamSetrika) : 0;
+    const setrikaKg = kgSetrika > 0 ? setrikaJam / kgSetrika : 0;
+
+    return {
+      source,
+      boilerSource,
+      airLoad: clean(row['Air Per Load']) || airLoad || 0,
+      airKg: clean(row['Air Per Kg']) || airKg || 0,
+      setrikaJam: clean(row['Air Setrika Jam']) || setrikaJam || 0,
+      setrikaKg: clean(row['Air Setrika Kg']) || setrikaKg || 0
+    };
+  }
+
+  function zettGetVisibleWaterMetrics(context) {
+    const c = context || zettGetWaterUsageContext();
+    const v = zettWaterValues();
+    if (c.isSelfService) return [{ label: 'Air Cuci /Load', value: v.airLoad }];
+    if (c.isHybrid) {
+      return [
+        { label: 'Air Cuci /Load', value: v.airLoad },
+        { label: 'Air Cuci /Kg', value: v.airKg },
+        { label: 'Air Setrika /Jam', value: v.setrikaJam },
+        { label: 'Air Setrika /Kg', value: v.setrikaKg }
+      ];
+    }
+    return [
+      { label: 'Air Cuci /Kg', value: v.airKg },
+      { label: 'Air Setrika /Jam', value: v.setrikaJam },
+      { label: 'Air Setrika /Kg', value: v.setrikaKg }
+    ];
+  }
+
+  function zettGetWaterDashboardValue() {
+    const c = zettGetWaterUsageContext();
+    const v = zettWaterValues();
+    if (c.isSelfService) return v.airLoad || 0;
+    if (c.isHybrid) return (v.airLoad || 0) + (v.airKg || 0) + (v.setrikaKg || 0);
+    return (v.airKg || 0) + (v.setrikaKg || 0);
+  }
+
+  function zettRenderWaterCard() {
+    const detail = byId('dash-card-air-details');
+    const valueEl = byId('dash-card-air');
+    const metrics = zettGetVisibleWaterMetrics().filter(item => String(item.label || '').trim());
+    const value = zettGetWaterDashboardValue();
+    if (valueEl) valueEl.textContent = rupiah(value);
+    if (detail) {
+      detail.innerHTML = metrics.map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`).join('');
+    }
+    if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('air', value);
+  }
+
+  window.calculateAir = function() {
+    const v = zettWaterValues();
+    const airCuci = clean(byId('inputAirCuciLiter')?.value);
+    const sumberAir = norm(byId('inputAirSumber')?.value);
+    const sumberBoiler = norm(byId('inputAirBoilerSumber')?.value);
+
+    if (sumberAir === 'pdam') {
+      ['inputAirHargaTangki', 'inputAirLiterTangki'].forEach(id => { const el = byId(id); if (el) el.value = ''; });
+    } else if (sumberAir === 'sumur') {
+      ['inputAirHargaM3', 'inputAirHargaTangki', 'inputAirLiterTangki'].forEach(id => { const el = byId(id); if (el) el.value = ''; });
+    }
+    if (sumberBoiler === 'sama') {
+      ['inputAirHargaGalon', 'inputAirLiterGalon'].forEach(id => { const el = byId(id); if (el) el.value = ''; });
+    }
+
+    const m3El = byId('dispAirCuciM3');
+    if (m3El) m3El.textContent = ((airCuci || 0) / 1000).toFixed(3);
+    setText('dispAirCuciLoad', v.airLoad);
+    setText('dispAirCuciKg', v.airKg);
+    setText('dispAirBoilerJam', v.setrikaJam);
+    setText('dispAirBoilerKg', v.setrikaKg);
+    setText('displayBiayaAirTotalKg', zettGetWaterDashboardValue());
+    zettRenderWaterCard();
+    return v;
+  };
+
+  window.zettGetWaterUsageContext = zettGetWaterUsageContext;
+  window.zettGetVisibleWaterMetrics = zettGetVisibleWaterMetrics;
+  window.zettGetWaterDashboardValue = zettGetWaterDashboardValue;
+  window.zettRenderWaterCard = zettRenderWaterCard;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof window.toggleAirInputs === 'function') window.toggleAirInputs();
+    window.calculateAir();
+    document.addEventListener('change', function(event) {
+      if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori')) {
+        setTimeout(window.calculateAir, 60);
       }
     });
   });
@@ -7063,6 +7241,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     #view-hpp .zett-gas-card-details,
     #view-hpp .zett-electric-card-details,
+    #view-hpp .zett-water-card-details,
     #view-hpp .hpp-premium-lite-details {
       display: grid !important;
       gap: 0.38rem !important;
@@ -7072,6 +7251,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     #view-hpp .zett-gas-card-details > div,
     #view-hpp .zett-electric-card-details > div,
+    #view-hpp .zett-water-card-details > div,
     #view-hpp .hpp-premium-lite-details > div {
       display: flex !important;
       justify-content: space-between !important;
@@ -7092,6 +7272,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     #view-hpp .zett-gas-card-details span,
     #view-hpp .zett-electric-card-details span,
+    #view-hpp .zett-water-card-details span,
     #view-hpp .hpp-premium-lite-details span {
       color: #334155 !important;
       font-weight: 800 !important;
@@ -7102,6 +7283,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     #view-hpp .zett-gas-card-details strong,
     #view-hpp .zett-electric-card-details strong,
+    #view-hpp .zett-water-card-details strong,
     #view-hpp .hpp-premium-lite-details strong {
       color: #0f172a !important;
       font-weight: 950 !important;
@@ -7258,7 +7440,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         if (label) label.classList.add('hpp-cost-label');
         if (valueEl) valueEl.classList.add('hpp-cost-value');
 
-        let detail = card.querySelector('.zett-gas-card-details, .zett-electric-card-details, .hpp-premium-lite-details');
+        let detail = card.querySelector('.zett-gas-card-details, .zett-electric-card-details, .zett-water-card-details, .hpp-premium-lite-details');
         if (!detail) {
           detail = document.createElement('div');
           detail.className = 'hpp-premium-lite-details';

@@ -1039,11 +1039,11 @@ function saveKapasitas(payload) {
     const data = sheet.getDataRange().getDisplayValues();
     let checkColName = 'Nama Outlet' in colMap ? colMap['Nama Outlet'] : ('Nama Cabang/Outlet' in colMap ? colMap['Nama Cabang/Outlet'] : null);
     
-    const sanitizedNama = String(payload.namaOutlet).trim().toLowerCase();
+    const sanitizedNama = zettNormalizeOutletName_(payload.namaOutlet);
 
     if (checkColName !== null) {
       for (let i = 1; i < data.length; i++) {
-        if (String(data[i][checkColName]).trim().toLowerCase() === sanitizedNama) {
+        if (zettNormalizeOutletName_(data[i][checkColName]) === sanitizedNama) {
           targetRow = i + 1;
           break;
         }
@@ -1163,9 +1163,9 @@ function zettGetOperationalProfileForHPP_(namaOutlet, timestamp) {
   const nameCol = ('Nama Outlet' in map) ? map['Nama Outlet'] : (('Nama Cabang/Outlet' in map) ? map['Nama Cabang/Outlet'] : null);
   if (nameCol === null) return {};
 
-  const target = String(namaOutlet || '').trim().toLowerCase();
+  const target = zettNormalizeOutletName_(namaOutlet);
   for (let i = 1; i < data.length; i++) {
-    if (String(data[i][nameCol] || '').trim().toLowerCase() !== target) continue;
+    if (zettNormalizeOutletName_(data[i][nameCol]) !== target) continue;
     const row = data[i];
     const get = function(header) { return header in map ? row[map[header]] : ''; };
     return zettBuildOperationalHPPValues_({
@@ -1204,18 +1204,20 @@ function zettSyncOperationalProfileToHPP_(payload, timestamp) {
   if (nameCol === null) throw new Error('Header "Nama Outlet" tidak ditemukan di Struktur_Biaya_1.');
 
   const values = zettBuildOperationalHPPValues_(payload, timestamp);
-  const target = String(values['Nama Outlet'] || '').trim().toLowerCase();
+  const target = zettNormalizeOutletName_(values['Nama Outlet']);
   if (!target) return;
 
   const data = sheet.getDataRange().getDisplayValues();
   const headerRow = zettHppHeaderRow_(sheet);
   let rowNum = -1;
+  let duplicateCount = 0;
   for (let i = headerRow; i < data.length; i++) {
-    if (String(data[i][nameCol] || '').trim().toLowerCase() === target) {
-      rowNum = i + 1;
-      break;
+    if (zettNormalizeOutletName_(data[i][nameCol]) === target) {
+      duplicateCount++;
+      if (rowNum === -1) rowNum = i + 1;
     }
   }
+  if (duplicateCount > 1) Logger.log('[HPP SYNC] Duplikat Nama Outlet "%s" di %s. Hanya row pertama yang disinkronkan.', values['Nama Outlet'], SHEET_HPP_1);
 
   if (rowNum === -1) rowNum = sheet.getLastRow() + 1;
   const row = rowNum <= sheet.getLastRow()
@@ -1493,6 +1495,10 @@ function zettFirst_(obj, names, fallback) {
   return fallback;
 }
 
+function zettNormalizeOutletName_(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
 function setupDatabase() {
   try {
     const ss = _getSpreadsheet();
@@ -1710,7 +1716,7 @@ function saveStrukturBiaya(payload) {
     }
 
     const timestamp = Utilities.formatDate(new Date(), 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss');
-    const sanitizedNama = String(payload.namaOutlet || '').trim().toLowerCase();
+    const sanitizedNama = zettNormalizeOutletName_(payload.namaOutlet);
     if (!sanitizedNama) throw new Error('Nama outlet kosong. Pilih cabang terlebih dahulu.');
 
     const data = sheet.getDataRange().getDisplayValues();
@@ -1721,7 +1727,7 @@ function saveStrukturBiaya(payload) {
     let targetRow = -1;
     const headerRow = zettHppHeaderRow_(sheet);
     for (let i = headerRow; i < data.length; i++) {
-      if (String(data[i][nameCol]).trim().toLowerCase() === sanitizedNama) {
+      if (zettNormalizeOutletName_(data[i][nameCol]) === sanitizedNama) {
         targetRow = i + 1;
         break;
       }
@@ -1799,6 +1805,13 @@ function saveStrukturBiaya(payload) {
     const jLembar = jHarga / jIsi;
     const jKg = payload.packJinjingActive ? (jLembar / jKap) : 0;
     const totalPacking = kategoriLaundry.toLowerCase().includes('self service') ? 0 : (ppKg + hdKg + jKg);
+    const sumberAir = String(payload.airSumber || '').trim().toLowerCase() || 'pdam';
+    const sumberSetrika = String(payload.airBoilerSumber || '').trim().toLowerCase() || 'sama';
+    const hargaAir = sumberAir === 'pdam' ? payload.airHargaM3 : '';
+    const hargaTangki = sumberAir === 'tangki' ? payload.airHargaTangki : '';
+    const literTangki = sumberAir === 'tangki' ? payload.airLiterTangki : '';
+    const galonSetrika = sumberSetrika === 'galon' ? payload.airHargaGalon : '';
+    const volSetrika = sumberSetrika === 'galon' ? payload.airLiterGalon : '';
 
     const mapping = {
       'Kategori Laundry': kategoriLaundry,
@@ -1844,20 +1857,20 @@ function saveStrukturBiaya(payload) {
       'Listrik Setrika Jam': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:kW Watt Setrika}{ROW}="");""; {COL:kW Watt Setrika}{ROW}*{COL:TDL}{ROW}*1)',
       'Listrik Setrika Kg': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Listrik Setrika Jam}{ROW}="");""; {COL:Listrik Setrika Jam}{ROW}/{COL:Kap Setrika}{ROW})',
 
-      'Sumber Air': payload.airSumber,
-      'Harga Air': payload.airHargaM3,
-      'Harga Tangki': payload.airHargaTangki,
-      'Liter Tangki': payload.airLiterTangki,
+      'Sumber Air': sumberAir,
+      'Harga Air': hargaAir,
+      'Harga Tangki': hargaTangki,
+      'Liter Tangki': literTangki,
       'Air Cuci': payload.airCuciLiter,
-      'Sumber Setrika': payload.airBoilerSumber,
-      'Galon Setrika': payload.airHargaGalon,
-      'Vol Setrika': payload.airLiterGalon,
+      'Sumber Setrika': sumberSetrika,
+      'Galon Setrika': galonSetrika,
+      'Vol Setrika': volSetrika,
       'Liter Setrika': payload.airBoilerLiter,
       'Jam Setrika': payload.airBoilerJam,
       'Kg Setrika': payload.airBoilerKgJam,
-      'Air Per Load': '=IF({COL:Sumber Air}{ROW}="pdam"; {COL:Harga Air}{ROW}/1000; IF({COL:Sumber Air}{ROW}="tangki"; {COL:Harga Tangki}{ROW}/{COL:Liter Tangki}{ROW}; 0)) * {COL:Air Cuci}{ROW}',
+      'Air Per Load': '=IF({COL:Sumber Air}{ROW}="pdam"; {COL:Harga Air}{ROW}/1000; IF(AND({COL:Sumber Air}{ROW}="tangki"; {COL:Liter Tangki}{ROW}>0); {COL:Harga Tangki}{ROW}/{COL:Liter Tangki}{ROW}; 0)) * {COL:Air Cuci}{ROW}',
       'Air Per Kg': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Air Per Load}{ROW}="");""; {COL:Air Per Load}{ROW}/{COL:Kap Cuci}{ROW})',
-      'Air Setrika Jam': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Liter Setrika}{ROW}="");""; IF({COL:Sumber Setrika}{ROW}="galon"; {COL:Galon Setrika}{ROW}/{COL:Vol Setrika}{ROW}; IF({COL:Sumber Air}{ROW}="pdam"; {COL:Harga Air}{ROW}/1000; IF({COL:Sumber Air}{ROW}="tangki"; {COL:Harga Tangki}{ROW}/{COL:Liter Tangki}{ROW}; 0))) * ({COL:Liter Setrika}{ROW} / {COL:Jam Setrika}{ROW}))',
+      'Air Setrika Jam': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Liter Setrika}{ROW}=""; {COL:Jam Setrika}{ROW}<=0);""; IF(AND({COL:Sumber Setrika}{ROW}="galon"; {COL:Vol Setrika}{ROW}>0); {COL:Galon Setrika}{ROW}/{COL:Vol Setrika}{ROW}; IF({COL:Sumber Air}{ROW}="pdam"; {COL:Harga Air}{ROW}/1000; IF(AND({COL:Sumber Air}{ROW}="tangki"; {COL:Liter Tangki}{ROW}>0); {COL:Harga Tangki}{ROW}/{COL:Liter Tangki}{ROW}; 0))) * ({COL:Liter Setrika}{ROW} / {COL:Jam Setrika}{ROW}))',
       'Air Setrika Kg': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Air Setrika Jam}{ROW}="");""; {COL:Air Setrika Jam}{ROW} / {COL:Kg Setrika}{ROW})',
 
       'Plastik PP': payload.packPPActive ? 'Ya' : 'Tidak',
