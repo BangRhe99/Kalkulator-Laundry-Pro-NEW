@@ -855,7 +855,12 @@
     <!-- ================= TAB 4: PACKING ================= -->
     <div id="tab-packing" class="tab-content hidden animate-fade-in bento-grid">
       <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
-        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-package text-indigo-500 text-2xl"></i> Parameter Biaya Packing</h3>
+        <div class="zett-packing-form-header">
+          <button type="button" onclick="closeHPPForm()" class="zett-electric-back-btn" aria-label="Kembali ke Struktur Biaya">
+            <i class="ph ph-arrow-left text-xl"></i>
+          </button>
+          <h3 class="omni-title" style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-package text-indigo-500 text-2xl"></i> Analisa Biaya Packing</h3>
+        </div>
 
         <div class="bento-grid">
           <!-- Plastik PP Bening -->
@@ -874,11 +879,12 @@
                 <label class="omni-label" style="font-size: 0.7rem;">Ukuran (Referensi)</label>
                 <input type="text" id="inputPackingPPUkuran" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" placeholder="Misal: 35x50 cm" oninput="saveHPPDraftToLocal && saveHPPDraftToLocal()">
               </div>
-              <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+              <div class="zett-x-input-row" style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
                 <div style="flex: 1;">
                   <label class="omni-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
                   <input type="text" id="inputPackingPPHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="25.000" oninput="formatRupiahInput(this); calculatePacking()">
                 </div>
+                <span class="zett-input-x">X</span>
                 <div style="flex: 1;">
                   <label class="omni-label" style="font-size: 0.7rem;">Isi (Lembar)</label>
                   <input type="number" id="inputPackingPPIsi" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="100" oninput="calculatePacking()">
@@ -911,11 +917,12 @@
               </label>
             </div>
             <div id="wrapPackingHD" style="transition: opacity 0.3s; display: flex; flex-direction: column; height: calc(100% - 3rem);">
-              <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+              <div class="zett-x-input-row" style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
                 <div style="flex: 1;">
                   <label class="omni-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
                   <input type="text" id="inputPackingHDHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="15.000" oninput="formatRupiahInput(this); calculatePacking()">
                 </div>
+                <span class="zett-input-x">X</span>
                 <div style="flex: 1;">
                   <label class="omni-label" style="font-size: 0.7rem;">Isi (Lembar)</label>
                   <input type="number" id="inputPackingHDIsi" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="50" oninput="calculatePacking()">
@@ -957,6 +964,7 @@
                   <label class="omni-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
                   <input type="text" id="inputPackingJinjingHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="35.000" oninput="formatRupiahInput(this); calculatePacking()">
                 </div>
+                <span class="zett-input-x">X</span>
                 <div style="flex: 1; min-width: 90px;">
                   <label class="omni-label" style="font-size: 0.7rem;">Isi (Lbr)</label>
                   <input type="number" id="inputPackingJinjingIsi" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="100" oninput="calculatePacking()">
@@ -976,6 +984,48 @@
               </div>
             </div>
           </div>
+
+          <!-- Solasi -->
+          <div class="bento-col-12" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <h4 style="font-size: 0.9rem; font-weight: 800; color: #0f766e; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-tape text-lg"></i> Solasi</h4>
+              <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
+                <div style="position: relative;">
+                  <input type="checkbox" id="togglePackingSolasi" class="omni-toggle-input sr-only" style="display: none;" onchange="if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
+                  <div class="omni-toggle-track" style="width: 2.5rem; height: 1.4rem; background: #cbd5e1;"><div class="omni-toggle-thumb" style="width: 1rem; height: 1rem; top: 0.2rem; left: 0.2rem;"></div></div>
+                </div>
+              </label>
+            </div>
+            <div id="wrapPackingSolasi" style="opacity: 0.4; pointer-events: none; transition: opacity 0.3s;">
+              <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <div style="flex: 1; min-width: 120px;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Ukuran</label>
+                  <input type="text" id="inputPackingSolasiUkuran" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" placeholder="Misal: 2 inch" oninput="saveHPPDraftToLocal && saveHPPDraftToLocal()">
+                </div>
+                <div style="flex: 1; min-width: 120px;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Harga / Roll (Rp)</label>
+                  <input type="text" id="inputPackingSolasiHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="" oninput="formatRupiahInput(this); if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
+                </div>
+                <span class="zett-input-x">X</span>
+                <div style="flex: 1; min-width: 90px;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Estimasi Pakai</label>
+                  <input type="number" id="inputPackingSolasiPakai" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="" oninput="if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
+                </div>
+                <div style="flex: 1; min-width: 90px;">
+                  <label class="omni-label" style="font-size: 0.7rem;">Untuk (Kg)</label>
+                  <input type="number" id="inputPackingSolasiKg" step="0.1" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="" oninput="if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
+                </div>
+              </div>
+              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-wrap: wrap; gap: 1.25rem;">
+                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                  <span>Harga / Pakai:</span> <span id="dispPackingSolasiPakai" style="color: var(--omni-navy);">Rp 0</span>
+                </div>
+                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 800; background: rgba(20, 184, 166, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #0f766e;">
+                  <span>Biaya Solasi / Kg:</span> <span id="dispPackingSolasiKg">Rp 0</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div style="display:none;" id="displayBiayaPackingTotalKg">Rp 0</div>
@@ -985,7 +1035,12 @@
     <!-- ================= TAB 5: BAHAN BAKU (CHEMICAL) ================= -->
     <div id="tab-bahan" class="tab-content hidden animate-fade-in bento-grid">
       <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
-        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-flask text-emerald-500 text-2xl"></i> Parameter Chemical</h3>
+        <div class="zett-chemical-form-header">
+          <button type="button" onclick="closeHPPForm()" class="zett-electric-back-btn" aria-label="Kembali ke Struktur Biaya">
+            <i class="ph ph-arrow-left text-xl"></i>
+          </button>
+          <h3 class="omni-title" style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-flask text-emerald-500 text-2xl"></i> Analisa Biaya Chemical</h3>
+        </div>
 
         <div class="bento-grid">
           
@@ -1015,11 +1070,12 @@
               </div>
 
               <div id="wrapDetBulk" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; gap: 0.75rem;">
+                <div class="zett-x-input-row" style="display: flex; gap: 0.75rem;">
                   <div style="flex: 1;">
                     <label class="omni-label" style="font-size: 0.7rem;">Harga Total (Rp)</label>
                     <input type="text" id="bahanDetHargaBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="100.000" oninput="formatRupiahInput(this); calculateBahanBaku()">
                   </div>
+                  <span class="zett-input-x">X</span>
                   <div style="flex: 1;">
                     <label class="omni-label" style="font-size: 0.7rem;">Kap. (<span id="lblDetKap1">L</span>)</label>
                     <input type="number" id="bahanDetKapasitasBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
@@ -1083,11 +1139,12 @@
               </div>
 
               <div id="wrapSofBulk" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; gap: 0.75rem;">
+                <div class="zett-x-input-row" style="display: flex; gap: 0.75rem;">
                   <div style="flex: 1;">
                     <label class="omni-label" style="font-size: 0.7rem;">Harga Total (Rp)</label>
                     <input type="text" id="bahanSofHargaBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="80.000" oninput="formatRupiahInput(this); calculateBahanBaku()">
                   </div>
+                  <span class="zett-input-x">X</span>
                   <div style="flex: 1;">
                     <label class="omni-label" style="font-size: 0.7rem;">Kap. (Liter)</label>
                     <input type="number" id="bahanSofKapasitasBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
@@ -1141,11 +1198,12 @@
             </div>
             
             <div id="wrapParMain" style="transition: opacity 0.3s; flex: 1; display: flex; flex-direction: column; gap: 0.75rem;">
-              <div style="display: flex; gap: 0.75rem;">
+              <div class="zett-x-input-row" style="display: flex; gap: 0.75rem;">
                 <div style="flex: 1;">
                   <label class="omni-label" style="font-size: 0.7rem;">Harga Jerigen (Rp)</label>
                   <input type="text" id="bahanParHargaBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="150.000" oninput="formatRupiahInput(this); calculateBahanBaku()">
                 </div>
+                <span class="zett-input-x">X</span>
                 <div style="flex: 1;">
                   <label class="omni-label" style="font-size: 0.7rem;">Kap. (Liter)</label>
                   <input type="number" id="bahanParKapasitasBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
@@ -1173,7 +1231,7 @@
           </div>
 
           <!-- 4. PELICIN -->
-          <div id="wrapBahanPelicin" class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative; display: none;">
+          <div id="wrapBahanPelicin" class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative; display: flex; flex-direction: column;">
             <div style="position: absolute; top: 0; right: 0; background: rgba(168, 85, 247, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-thermometer-hot text-purple-500 text-xl"></i></div>
             
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; position: relative; z-index: 10;">
@@ -1199,11 +1257,12 @@
               </div>
 
               <div id="wrapPelBulk" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; gap: 0.75rem;">
+                <div class="zett-x-input-row" style="display: flex; gap: 0.75rem;">
                   <div style="flex: 1;">
                     <label class="omni-label" style="font-size: 0.7rem;">Harga Total (Rp)</label>
                     <input type="text" id="bahanPelHargaBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="50.000" oninput="formatRupiahInput(this); calculateBahanBaku()">
                   </div>
+                  <span class="zett-input-x">X</span>
                   <div style="flex: 1;">
                     <label class="omni-label" style="font-size: 0.7rem;">Kap. (Liter)</label>
                     <input type="number" id="bahanPelKapasitasBulk" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
@@ -1251,7 +1310,12 @@
     <!-- ================= TAB 6: NOTA & KASIR ================= -->
     <div id="tab-nota" class="tab-content hidden animate-fade-in bento-grid">
       <div class="bento-card bento-col-12 border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-8">
-        <h3 class="omni-title" style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-receipt text-sky-500 text-2xl"></i> Parameter Admin & Nota</h3>
+        <div class="zett-nota-form-header">
+          <button type="button" onclick="closeHPPForm()" class="zett-electric-back-btn" aria-label="Kembali ke Struktur Biaya">
+            <i class="ph ph-arrow-left text-xl"></i>
+          </button>
+          <h3 class="omni-title" style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-receipt text-sky-500 text-2xl"></i> Analisa Biaya Nota & Kasir</h3>
+        </div>
 
         <div style="background: var(--omni-bg); border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.5rem; margin-bottom: 1.5rem;">
            <label class="omni-label">Pilih Sistem Kasir / Nota</label>
@@ -2481,7 +2545,7 @@
 
       if (titleEl) titleEl.textContent = title || 'Analisa Biaya';
       const outerHeader = titleEl ? titleEl.closest('.flex.items-center.gap-5') : null;
-      if (outerHeader) outerHeader.style.display = (type === 'gas' || type === 'listrik' || type === 'air') ? 'none' : '';
+      if (outerHeader) outerHeader.style.display = (type === 'gas' || type === 'listrik' || type === 'air' || type === 'packing' || type === 'bahan' || type === 'nota') ? 'none' : '';
 
       hideEl(dashboard);
       showEl(formView, 'block');
@@ -3668,6 +3732,15 @@
     margin-bottom: 1.25rem;
   }
 
+  #view-hpp .zett-packing-form-header,
+  #view-hpp .zett-chemical-form-header,
+  #view-hpp .zett-nota-form-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
   #view-hpp .zett-electric-back-btn {
     width: 2.85rem;
     height: 2.85rem;
@@ -3691,6 +3764,50 @@
   #view-hpp .zett-electric-panel,
   #view-hpp .zett-electric-metric-row {
     transition: opacity 220ms cubic-bezier(0.16,1,0.3,1), transform 220ms cubic-bezier(0.16,1,0.3,1), filter 220ms ease;
+  }
+
+  #view-hpp .zett-x-input-row {
+    align-items: end;
+  }
+
+  #view-hpp .zett-input-x {
+    align-self: center;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 950;
+    line-height: 1;
+    padding-top: 1.2rem;
+  }
+
+  #view-hpp .zett-packing-toggle-locked {
+    opacity: 0.45;
+    filter: grayscale(1);
+    cursor: not-allowed;
+  }
+
+  #view-hpp .zett-hpp-outlet-soft-loading {
+    opacity: 0.72;
+    transform: translate3d(0, 4px, 0);
+    transition: opacity 180ms cubic-bezier(0.16,1,0.3,1), transform 180ms cubic-bezier(0.16,1,0.3,1);
+  }
+
+  #view-hpp .zett-hpp-outlet-soft-ready {
+    animation: zettHppOutletSoftReady 260ms cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes zettHppOutletSoftReady {
+    from { opacity: 0.72; transform: translate3d(0, 5px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+
+  @media (max-width: 640px) {
+    #view-hpp .zett-x-input-row {
+      gap: 0.55rem !important;
+    }
+
+    #view-hpp .zett-input-x {
+      padding-top: 1.05rem;
+    }
   }
 </style>
 

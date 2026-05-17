@@ -2318,6 +2318,11 @@ function simpanDataHPP(e) {
         
         loadDaftarCabang(); 
         StateMachine.releaseLock('simpanHPP');
+        if (activeHPPType === 'air' && typeof window.openHPPForm === 'function') {
+            window.openHPPForm('packing', 'Analisa Biaya Packing');
+        } else if (activeHPPType === 'bahan' && typeof window.openHPPForm === 'function') {
+            window.openHPPForm('nota', 'Analisa Biaya Nota & Kasir');
+        }
     }, 1200);
     } catch (error) {
         setBtnState(btnId, 'idle');
@@ -2604,6 +2609,144 @@ async function prosesSimpanBEP() {
       StateMachine.toggleHPPBalok(type);
     }
   };
+})();
+
+/* =====================================================================
+ * HPP UI alignment patch: Packing, Chemical, Nota, and outlet switching.
+ * Scope only frontend form behavior; no database/schema/formula mapping.
+ * ===================================================================== */
+(function zettHppCostStructureUiPolish20260517() {
+  function byId(id) { return document.getElementById(id); }
+  function norm(value) { return String(value || '').trim().toLowerCase(); }
+  function clean(value) {
+    if (typeof zettCleanNumber === 'function') return zettCleanNumber(value);
+    return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
+  }
+  function rupiah(value) {
+    if (typeof formatRupiah === 'function') return formatRupiah(Math.round(Number(value) || 0));
+    return 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
+  }
+  function outletName() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+  function getOutlet() {
+    var name = norm(outletName());
+    var sources = [];
+    if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) sources.push(masterDataCabang);
+    if (window.APP_STATE?.data?.master?.cabang) sources.push(window.APP_STATE.data.master.cabang);
+    for (var s = 0; s < sources.length; s++) {
+      var found = sources[s].find(function(item) {
+        return norm(item?.namaOutlet || item?.['Nama Outlet']) === name;
+      });
+      if (found) return found;
+    }
+    return null;
+  }
+  function getKategori() {
+    var outlet = getOutlet() || {};
+    var row = typeof zettFindActiveHPPRow === 'function' ? (zettFindActiveHPPRow() || {}) : {};
+    return norm(outlet.kategori || row['Kategori Laundry'] || byId('inputKategori')?.value || '');
+  }
+  function setPackingControl(toggleId, wrapId, enabled, checkedValue) {
+    var toggle = byId(toggleId);
+    var wrap = byId(wrapId);
+    var label = toggle ? toggle.closest('label') : null;
+    if (toggle && typeof checkedValue === 'boolean') toggle.checked = checkedValue;
+    if (toggle) toggle.disabled = !enabled;
+    if (label) label.classList.toggle('zett-packing-toggle-locked', !enabled);
+    if (wrap) {
+      var active = !!(toggle && toggle.checked && enabled);
+      wrap.style.opacity = active ? '1' : '0.4';
+      wrap.style.pointerEvents = active ? 'auto' : 'none';
+      wrap.querySelectorAll('input, select, button').forEach(function(el) {
+        el.disabled = !active;
+      });
+    }
+  }
+  function applyPackingBusinessRules() {
+    var kategori = getKategori();
+    var selfService = kategori.includes('self');
+    var outlet = outletName();
+    var outletChanged = window.__zettLastPackingPolicyOutlet !== outlet;
+    window.__zettLastPackingPolicyOutlet = outlet;
+    if (selfService) {
+      setPackingControl('togglePackingPP', 'wrapPackingPP', false, false);
+      setPackingControl('togglePackingHD', 'wrapPackingHD', true, outletChanged ? false : undefined);
+      setPackingControl('togglePackingJinjing', 'wrapPackingJinjing', false, false);
+    } else {
+      setPackingControl('togglePackingPP', 'wrapPackingPP', true);
+      setPackingControl('togglePackingHD', 'wrapPackingHD', true);
+      setPackingControl('togglePackingJinjing', 'wrapPackingJinjing', true);
+    }
+    togglePackingSolasi();
+  }
+  function togglePackingSolasi() {
+    var toggle = byId('togglePackingSolasi');
+    var wrap = byId('wrapPackingSolasi');
+    var active = !!(toggle && toggle.checked);
+    if (wrap) {
+      wrap.style.opacity = active ? '1' : '0.4';
+      wrap.style.pointerEvents = active ? 'auto' : 'none';
+      wrap.querySelectorAll('input, select, button').forEach(function(el) {
+        el.disabled = !active;
+      });
+    }
+    var harga = clean(byId('inputPackingSolasiHarga')?.value);
+    var pakai = clean(byId('inputPackingSolasiPakai')?.value);
+    var kg = clean(byId('inputPackingSolasiKg')?.value);
+    var perPakai = active && pakai > 0 ? harga / pakai : 0;
+    var perKg = active && kg > 0 ? perPakai / kg : 0;
+    var dispPakai = byId('dispPackingSolasiPakai');
+    var dispKg = byId('dispPackingSolasiKg');
+    if (dispPakai) dispPakai.textContent = rupiah(perPakai);
+    if (dispKg) dispKg.textContent = rupiah(perKg);
+  }
+  function showOutletSoftLoading() {
+    var targets = [byId('hpp-dashboard-view'), byId('hpp-form-view')].filter(Boolean);
+    targets.forEach(function(el) {
+      el.classList.remove('zett-hpp-outlet-soft-ready');
+      el.classList.add('zett-hpp-outlet-soft-loading');
+    });
+  }
+  function clearOutletSoftLoading() {
+    var targets = [byId('hpp-dashboard-view'), byId('hpp-form-view')].filter(Boolean);
+    targets.forEach(function(el) {
+      el.classList.remove('zett-hpp-outlet-soft-loading');
+      el.classList.add('zett-hpp-outlet-soft-ready');
+    });
+  }
+  function patchCalculators() {
+    if (typeof window.calculatePacking === 'function' && !window.calculatePacking.__zettPackingRulesPatched) {
+      var oldCalculatePacking = window.calculatePacking;
+      window.calculatePacking = function() {
+        var result = oldCalculatePacking.apply(this, arguments);
+        applyPackingBusinessRules();
+        return result;
+      };
+      window.calculatePacking.__zettPackingRulesPatched = true;
+    }
+    window.zettTogglePackingSolasi = togglePackingSolasi;
+    window.zettApplyPackingBusinessRules = applyPackingBusinessRules;
+  }
+  function bindOutletTransition() {
+    document.addEventListener('change', function(event) {
+      if (!event.target || event.target.id !== 'inputNamaHPP') return;
+      showOutletSoftLoading();
+      window.setTimeout(function() {
+        applyPackingBusinessRules();
+        clearOutletSoftLoading();
+      }, 180);
+    });
+  }
+  function init() {
+    patchCalculators();
+    applyPackingBusinessRules();
+    togglePackingSolasi();
+    bindOutletTransition();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 })();
 
 </script>
