@@ -6079,20 +6079,27 @@ function zettApplyHPPRowToForm(row) {
   zettSetInputValue('inputAirBoilerKgJam', row['Kg Setrika']);
 
   /* PACKING */
-  zettSetInputValue('togglePackingPP', row['Packing_PP_Active']);
-  zettSetInputValue('inputPackingPPHarga', row['Packing_PP_Harga']);
-  zettSetInputValue('inputPackingPPIsi', row['Packing_PP_Isi']);
-  zettSetInputValue('inputPackingPPKg', row['Packing_PP_Kg']);
+  // [PACKING HEADER MIGRATION ONLY - 2026-05-18]
+  zettSetInputValue('togglePackingPP', row['Packing_PP_Active'] || row['PP Aktif']);
+  zettSetInputValue('inputPackingPPUkuran', row['Packing_PP_Ukuran'] || row['Ukr PP'] || row['Ukr Plastik']);
+  zettSetInputValue('inputPackingPPHarga', row['Packing_PP_Harga'] || row['PP Harga/Pack (Rp)']);
+  zettSetInputValue('inputPackingPPIsi', row['Packing_PP_Isi'] || row['PP Isi/Pack (Lembar)']);
+  zettSetInputValue('inputPackingPPKg', row['Packing_PP_Kg'] || row['PP Kapasitas (Kg/Lembar)']);
 
-  zettSetInputValue('togglePackingHD', row['Packing_HD_Active']);
-  zettSetInputValue('inputPackingHDHarga', row['Packing_HD_Harga']);
-  zettSetInputValue('inputPackingHDIsi', row['Packing_HD_Isi']);
-  zettSetInputValue('inputPackingHDKg', row['Packing_HD_Kg']);
+  zettSetInputValue('togglePackingHD', row['Packing_HD_Active'] || row['HD Aktif']);
+  zettSetInputValue('inputPackingHDHarga', row['Packing_HD_Harga'] || row['HD Harga/Pack (Rp)']);
+  zettSetInputValue('inputPackingHDIsi', row['Packing_HD_Isi'] || row['HD Isi/Pack (Lembar)']);
+  zettSetInputValue('inputPackingHDKg', row['Packing_HD_Kg'] || row['HD Kapasitas (Kg/Lembar)']);
 
-  zettSetInputValue('togglePackingJinjing', row['Packing_Jinjing_Active']);
-  zettSetInputValue('inputPackingJinjingHarga', row['Packing_Jinjing_Harga']);
-  zettSetInputValue('inputPackingJinjingIsi', row['Packing_Jinjing_Isi']);
-  zettSetInputValue('inputPackingJinjingKg', row['Packing_Jinjing_Kg']);
+  zettSetInputValue('togglePackingJinjing', row['Packing_Jinjing_Active'] || row['Jinjing Aktif']);
+  zettSetInputValue('inputPackingJinjingUkuran', row['Packing_Jinjing_Ukuran'] || row['Ukr Jinjing'] || row['Ukur Jinjing']);
+  zettSetInputValue('inputPackingJinjingHarga', row['Packing_Jinjing_Harga'] || row['Jinjing Harga/Pack (Rp)']);
+  zettSetInputValue('inputPackingJinjingIsi', row['Packing_Jinjing_Isi'] || row['Jinjing Isi/Pack (Lembar)']);
+  zettSetInputValue('inputPackingJinjingKg', row['Packing_Jinjing_Kg'] || row['Jinjing Kapasitas (Kg/Lembar)']);
+  zettSetInputValue('togglePackingSolasi', row['Solasi Aktif']);
+  zettSetInputValue('inputPackingSolasiHarga', row['Solasi Harga/Roll (Rp)']);
+  zettSetInputValue('inputPackingSolasiUkuran', row['Solasi Panjang/Roll (Meter)']);
+  zettSetInputValue('inputPackingSolasiPakai', row['Solasi Pemakaian/Kg (Meter)']);
 
   /* CHEMICAL */
   zettSetInputValue('toggleDetergen', row['Chem_Det_Active']);

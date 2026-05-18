@@ -2252,6 +2252,7 @@ function simpanDataHPP(e) {
         airBoilerKgJam: document.getElementById('inputAirBoilerKgJam') ? document.getElementById('inputAirBoilerKgJam').value : '',
 
         packPPActive: document.getElementById('togglePackingPP') ? document.getElementById('togglePackingPP').checked : false,
+        packPPUkuran: document.getElementById('inputPackingPPUkuran') ? document.getElementById('inputPackingPPUkuran').value : '',
         packPPHarga: document.getElementById('inputPackingPPHarga') ? document.getElementById('inputPackingPPHarga').value : '',
         packPPIsi: document.getElementById('inputPackingPPIsi') ? document.getElementById('inputPackingPPIsi').value : '',
         packPPKg: document.getElementById('inputPackingPPKg') ? document.getElementById('inputPackingPPKg').value : '',
@@ -2262,9 +2263,15 @@ function simpanDataHPP(e) {
         packHDKg: document.getElementById('inputPackingHDKg') ? document.getElementById('inputPackingHDKg').value : '',
 
         packJinjingActive: document.getElementById('togglePackingJinjing') ? document.getElementById('togglePackingJinjing').checked : false,
+        packJinjingUkuran: document.getElementById('inputPackingJinjingUkuran') ? document.getElementById('inputPackingJinjingUkuran').value : '',
         packJinjingHarga: document.getElementById('inputPackingJinjingHarga') ? document.getElementById('inputPackingJinjingHarga').value : '',
         packJinjingIsi: document.getElementById('inputPackingJinjingIsi') ? document.getElementById('inputPackingJinjingIsi').value : '',
         packJinjingKg: document.getElementById('inputPackingJinjingKg') ? document.getElementById('inputPackingJinjingKg').value : '',
+        // [PACKING HEADER MIGRATION ONLY - 2026-05-18]
+        packSolasiActive: document.getElementById('togglePackingSolasi') ? document.getElementById('togglePackingSolasi').checked : false,
+        packSolasiHarga: document.getElementById('inputPackingSolasiHarga') ? document.getElementById('inputPackingSolasiHarga').value : '',
+        packSolasiPanjang: document.getElementById('inputPackingSolasiUkuran') ? document.getElementById('inputPackingSolasiUkuran').value : '',
+        packSolasiPemakaian: document.getElementById('inputPackingSolasiPakai') ? document.getElementById('inputPackingSolasiPakai').value : '',
 
         chemDetActive: document.getElementById('toggleBahanDet') ? document.getElementById('toggleBahanDet').checked : false,
         chemDetType: document.getElementById('bahanDetType') ? document.getElementById('bahanDetType').value : '',
@@ -2525,22 +2532,27 @@ async function prosesSimpanBEP() {
     zettSetVal('inputAirBoilerJam', zettPick(hppData, ['Jam Setrika', 'Air_BoilerJam'], '4'));
     zettSetVal('inputAirBoilerKgJam', zettPick(hppData, ['Kg Setrika', 'Air_BoilerKgJam'], '10'));
 
-    zettSetCheck('togglePackingPP', zettPick(hppData, ['Packing_PP_Active', 'Plastik PP'], true));
+    // [PACKING HEADER MIGRATION ONLY - 2026-05-18]
+    zettSetCheck('togglePackingPP', zettPick(hppData, ['Packing_PP_Active', 'PP Aktif', 'Plastik PP'], ''));
     zettSetVal('inputPackingPPUkuran', zettPick(hppData, ['Packing_PP_Ukuran', 'Ukr PP', 'Ukr Plastik'], ''));
-    zettSetVal('inputPackingPPHarga', zettPick(hppData, ['Packing_PP_Harga', 'Harga PP', 'Harga Plastik'], '25.000'));
-    zettSetVal('inputPackingPPIsi', zettPick(hppData, ['Packing_PP_Isi', 'Isi PP', 'Isi Plastik'], '100'));
-    zettSetVal('inputPackingPPKg', zettPick(hppData, ['Packing_PP_Kg', 'Kap PP', 'Isi Per Lembar'], '3'));
+    zettSetVal('inputPackingPPHarga', zettPick(hppData, ['Packing_PP_Harga', 'PP Harga/Pack (Rp)', 'Harga PP', 'Harga Plastik'], '25.000'));
+    zettSetVal('inputPackingPPIsi', zettPick(hppData, ['Packing_PP_Isi', 'PP Isi/Pack (Lembar)', 'Isi PP', 'Isi Plastik'], '100'));
+    zettSetVal('inputPackingPPKg', zettPick(hppData, ['Packing_PP_Kg', 'PP Kapasitas (Kg/Lembar)', 'Kap PP', 'Isi Per Lembar'], '3'));
 
-    zettSetCheck('togglePackingHD', zettPick(hppData, ['Packing_HD_Active', 'Plastik HD'], true));
-    zettSetVal('inputPackingHDHarga', zettPick(hppData, ['Packing_HD_Harga', 'Harga HD'], '15.000'));
-    zettSetVal('inputPackingHDIsi', zettPick(hppData, ['Packing_HD_Isi', 'Isi HD'], '50'));
-    zettSetVal('inputPackingHDKg', zettPick(hppData, ['Packing_HD_Kg', 'Kap HD', 'Isi HD Per Lbr'], '5'));
+    zettSetCheck('togglePackingHD', zettPick(hppData, ['Packing_HD_Active', 'HD Aktif', 'Plastik HD'], ''));
+    zettSetVal('inputPackingHDHarga', zettPick(hppData, ['Packing_HD_Harga', 'HD Harga/Pack (Rp)', 'Harga HD'], '15.000'));
+    zettSetVal('inputPackingHDIsi', zettPick(hppData, ['Packing_HD_Isi', 'HD Isi/Pack (Lembar)', 'Isi HD'], '50'));
+    zettSetVal('inputPackingHDKg', zettPick(hppData, ['Packing_HD_Kg', 'HD Kapasitas (Kg/Lembar)', 'Kap HD', 'Isi HD Per Lbr'], '5'));
 
-    zettSetCheck('togglePackingJinjing', zettPick(hppData, ['Packing_Jinjing_Active', 'Plastik Jinjing'], false));
+    zettSetCheck('togglePackingJinjing', zettPick(hppData, ['Packing_Jinjing_Active', 'Jinjing Aktif', 'Plastik Jinjing'], false));
     zettSetVal('inputPackingJinjingUkuran', zettPick(hppData, ['Packing_Jinjing_Ukuran', 'Ukr Jinjing'], ''));
-    zettSetVal('inputPackingJinjingHarga', zettPick(hppData, ['Packing_Jinjing_Harga', 'Harga Jinjing'], '35.000'));
-    zettSetVal('inputPackingJinjingIsi', zettPick(hppData, ['Packing_Jinjing_Isi', 'Isi Jinjing'], '100'));
-    zettSetVal('inputPackingJinjingKg', zettPick(hppData, ['Packing_Jinjing_Kg', 'Kap Jinjing', 'Isi Jinjing Per Lbr'], '4'));
+    zettSetVal('inputPackingJinjingHarga', zettPick(hppData, ['Packing_Jinjing_Harga', 'Jinjing Harga/Pack (Rp)', 'Harga Jinjing'], '35.000'));
+    zettSetVal('inputPackingJinjingIsi', zettPick(hppData, ['Packing_Jinjing_Isi', 'Jinjing Isi/Pack (Lembar)', 'Isi Jinjing'], '100'));
+    zettSetVal('inputPackingJinjingKg', zettPick(hppData, ['Packing_Jinjing_Kg', 'Jinjing Kapasitas (Kg/Lembar)', 'Kap Jinjing', 'Isi Jinjing Per Lbr'], '4'));
+    zettSetCheck('togglePackingSolasi', zettPick(hppData, ['Solasi Aktif'], false));
+    zettSetVal('inputPackingSolasiHarga', zettPick(hppData, ['Solasi Harga/Roll (Rp)'], ''));
+    zettSetVal('inputPackingSolasiUkuran', zettPick(hppData, ['Solasi Panjang/Roll (Meter)'], ''));
+    zettSetVal('inputPackingSolasiPakai', zettPick(hppData, ['Solasi Pemakaian/Kg (Meter)'], ''));
 
     zettSetCheck('toggleBahanDet', zettPick(hppData, ['Chem_Det_Active'], true));
     if (typeof safeSetSelect === 'function') safeSetSelect('bahanDetType', zettPick(hppData, ['Chem_Det_Type'], 'cair'));

@@ -1426,7 +1426,13 @@ function zettEnsureHeaders_(sheet, headers) {
   if (!sheet) return;
   const headerRow = zettHppHeaderRow_(sheet);
   let colMap = zettGetHeaderMap_(sheet);
-  const missing = headers.filter(function(h) { return !(h in colMap); });
+  const packingNewHeaders = zettPackingHeaders20260518_();
+  const packingOldHeaders = zettPackingOldHeaders20260518_();
+  const hasOldPackingBlock = packingOldHeaders.some(function(h) { return h in colMap; });
+  const missing = headers.filter(function(h) {
+    if (hasOldPackingBlock && packingNewHeaders.indexOf(h) >= 0) return false;
+    return !(h in colMap);
+  });
   if (missing.length === 0) return;
 
   const startCol = sheet.getLastColumn() + 1;
@@ -1459,11 +1465,9 @@ function zettCombinedHPPHeaders_() {
     'Jam Setrika', 'Kg Setrika', 'Air Per Load', 'Air Per Kg',
     'Air Setrika Jam', 'Air Setrika Kg',
 
-    // Packing - nama baru yang dipakai di sheet tunggal
-    'Plastik PP', 'Ukr PP', 'Harga PP', 'Isi PP', 'Kap PP', 'PP Lembar', 'Plastik Per Kg',
-    'Plastik HD', 'Harga HD', 'Isi HD', 'Kap HD', 'HD Lembar', 'HD Per Kg',
-    'Plastik Jinjing', 'Ukr Jinjing', 'Harga Jinjing', 'Isi Jinjing', 'Kap Jinjing', 'Jinjing Lembar', 'Jinjing Per Kg',
-    'Total Biaya Packing',
+    // [PACKING HEADER MIGRATION ONLY - 2026-05-18]
+    // Packing memakai header utama baru. Alias lama tetap dibaca/ditulis secara kondisional di mapping.
+    ...zettPackingHeaders20260518_(),
 
     // Chemical dan Nota tetap memakai nama field stabil agar frontend lama tetap terbaca
     'Chem_Det_Active', 'Chem_Det_Type', 'Chem_Det_Harga', 'Chem_Det_Kapasitas', 'Chem_Det_Pemakaian',
@@ -1495,8 +1499,325 @@ function zettFirst_(obj, names, fallback) {
   return fallback;
 }
 
+// [PACKING HEADER MIGRATION ONLY - 2026-05-18]
+function zettPackingHeaders20260518_() {
+  return [
+    'PP Aktif',
+    'PP Lebar (cm)',
+    'PP Panjang (cm)',
+    'PP Harga/Pack (Rp)',
+    'PP Isi/Pack (Lembar)',
+    'PP Kapasitas (Kg/Lembar)',
+    'PP Biaya/Lembar (Rp)',
+    'PP Biaya/Kg (Rp)',
+    'HD Aktif',
+    'HD Lebar (cm)',
+    'HD Panjang (cm)',
+    'HD Harga/Pack (Rp)',
+    'HD Isi/Pack (Lembar)',
+    'HD Kapasitas (Kg/Lembar)',
+    'HD Biaya/Lembar (Rp)',
+    'HD Biaya/Kg (Rp)',
+    'Jinjing Aktif',
+    'Jinjing Lebar (cm)',
+    'Jinjing Panjang (cm)',
+    'Jinjing Harga/Pack (Rp)',
+    'Jinjing Isi/Pack (Lembar)',
+    'Jinjing Kapasitas (Kg/Lembar)',
+    'Jinjing Biaya/Lembar (Rp)',
+    'Jinjing Biaya/Kg (Rp)',
+    'Solasi Aktif',
+    'Solasi Harga/Roll (Rp)',
+    'Solasi Panjang/Roll (Meter)',
+    'Solasi Pemakaian/Kg (Meter)',
+    'Solasi Biaya/Meter (Rp)',
+    'Solasi Biaya/Kg (Rp)',
+    'Total Biaya Packing/Kg (Rp)'
+  ];
+}
+
+function zettPackingOldHeaders20260518_() {
+  return [
+    'Plastik PP', 'Ukr PP', 'Ukr Plastik', 'Harga PP', 'Harga Plastik', 'Isi PP', 'Isi Plastik',
+    'Kap PP', 'Isi Per Lembar', 'PP Lembar', 'Plastik Per Lbr', 'Plastik Per Kg', 'Packing Per Kg',
+    'Plastik HD', 'Ukr HD', 'Ukur HD', 'Harga HD', 'Isi HD', 'Kap HD', 'Isi HD Per Lbr',
+    'HD Lembar Per Kg', 'HD Lembar', 'HD Per Lbr', 'HD Per Kg',
+    'Plastik Jinjing', 'Ukr Jinjing', 'Ukur Jinjing', 'Harga Jinjing', 'Isi Jinjing',
+    'Kap Jinjing', 'Isi Jinjing Per Lbr', 'Jinjing Lembar', 'Jinjing Per Lbr', 'Jinjing Per Kg',
+    'Solasi Aktif', 'Solasi Harga/Roll (Rp)', 'Solasi Panjang/Roll (Meter)',
+    'Solasi Pemakaian/Kg (Meter)', 'Solasi Biaya/Meter (Rp)', 'Solasi Biaya/Kg (Rp)',
+    'Total Biaya Packing', 'Total Biaya Packing Kg'
+  ];
+}
+
+function zettSplitPackingSize20260518_(value, context) {
+  const raw = String(value || '').trim();
+  if (!raw) return { width: '', length: '' };
+  const match = raw.match(/(\d+(?:[.,]\d+)?)\s*[xX×]\s*(\d+(?:[.,]\d+)?)/);
+  if (!match) {
+    Logger.log('[PACKING HEADER MIGRATION ONLY - 2026-05-18] Ukuran tidak valid%s: "%s"', context ? ' ' + context : '', raw);
+    return { width: '', length: '' };
+  }
+  return {
+    width: match[1].replace(',', '.'),
+    length: match[2].replace(',', '.')
+  };
+}
+
+function zettJoinPackingSize20260518_(width, length, fallback) {
+  const w = String(width || '').trim();
+  const l = String(length || '').trim();
+  if (w && l) return w + 'x' + l;
+  return fallback || '';
+}
+
+function zettAddPackingAliases20260518_(obj) {
+  if (!obj) return obj;
+
+  const ppSize = zettJoinPackingSize20260518_(
+    zettFirst_(obj, ['PP Lebar (cm)'], ''),
+    zettFirst_(obj, ['PP Panjang (cm)'], ''),
+    zettFirst_(obj, ['Ukr PP', 'Ukr Plastik', 'Packing_PP_Ukuran'], '')
+  );
+  const hdSize = zettJoinPackingSize20260518_(
+    zettFirst_(obj, ['HD Lebar (cm)'], ''),
+    zettFirst_(obj, ['HD Panjang (cm)'], ''),
+    zettFirst_(obj, ['Ukr HD', 'Ukur HD', 'Packing_HD_Ukuran'], '')
+  );
+  const jinjingSize = zettJoinPackingSize20260518_(
+    zettFirst_(obj, ['Jinjing Lebar (cm)'], ''),
+    zettFirst_(obj, ['Jinjing Panjang (cm)'], ''),
+    zettFirst_(obj, ['Ukr Jinjing', 'Ukur Jinjing', 'Packing_Jinjing_Ukuran'], '')
+  );
+
+  obj['Packing_PP_Active'] = zettFirst_(obj, ['PP Aktif', 'Packing_PP_Active', 'Plastik PP'], obj['Plastik PP'] || '');
+  obj['Packing_PP_Ukuran'] = ppSize;
+  obj['Packing_PP_Harga'] = zettFirst_(obj, ['PP Harga/Pack (Rp)', 'Packing_PP_Harga', 'Harga PP', 'Harga Plastik'], '');
+  obj['Packing_PP_Isi'] = zettFirst_(obj, ['PP Isi/Pack (Lembar)', 'Packing_PP_Isi', 'Isi PP', 'Isi Plastik'], '');
+  obj['Packing_PP_Kg'] = zettFirst_(obj, ['PP Kapasitas (Kg/Lembar)', 'Packing_PP_Kg', 'Kap PP', 'Isi Per Lembar'], '');
+  obj['Packing_PP_Lembar'] = zettFirst_(obj, ['PP Biaya/Lembar (Rp)', 'Packing_PP_Lembar', 'PP Lembar', 'Plastik Per Lbr'], '');
+  obj['Packing_PP_PerKg'] = zettFirst_(obj, ['PP Biaya/Kg (Rp)', 'Packing_PP_PerKg', 'Plastik Per Kg', 'Packing Per Kg'], '');
+
+  obj['Packing_HD_Active'] = zettFirst_(obj, ['HD Aktif', 'Packing_HD_Active', 'Plastik HD'], obj['Plastik HD'] || '');
+  obj['Packing_HD_Ukuran'] = hdSize;
+  obj['Packing_HD_Harga'] = zettFirst_(obj, ['HD Harga/Pack (Rp)', 'Packing_HD_Harga', 'Harga HD'], '');
+  obj['Packing_HD_Isi'] = zettFirst_(obj, ['HD Isi/Pack (Lembar)', 'Packing_HD_Isi', 'Isi HD'], '');
+  obj['Packing_HD_Kg'] = zettFirst_(obj, ['HD Kapasitas (Kg/Lembar)', 'Packing_HD_Kg', 'Kap HD', 'Isi HD Per Lbr'], '');
+  obj['Packing_HD_Lembar'] = zettFirst_(obj, ['HD Biaya/Lembar (Rp)', 'Packing_HD_Lembar', 'HD Lembar Per Kg', 'HD Lembar', 'HD Per Lbr'], '');
+  obj['Packing_HD_PerKg'] = zettFirst_(obj, ['HD Biaya/Kg (Rp)', 'Packing_HD_PerKg', 'HD Per Kg'], '');
+
+  obj['Packing_Jinjing_Active'] = zettFirst_(obj, ['Jinjing Aktif', 'Packing_Jinjing_Active', 'Plastik Jinjing'], obj['Plastik Jinjing'] || '');
+  obj['Packing_Jinjing_Ukuran'] = jinjingSize;
+  obj['Packing_Jinjing_Harga'] = zettFirst_(obj, ['Jinjing Harga/Pack (Rp)', 'Packing_Jinjing_Harga', 'Harga Jinjing'], '');
+  obj['Packing_Jinjing_Isi'] = zettFirst_(obj, ['Jinjing Isi/Pack (Lembar)', 'Packing_Jinjing_Isi', 'Isi Jinjing'], '');
+  obj['Packing_Jinjing_Kg'] = zettFirst_(obj, ['Jinjing Kapasitas (Kg/Lembar)', 'Packing_Jinjing_Kg', 'Kap Jinjing', 'Isi Jinjing Per Lbr'], '');
+  obj['Packing_Jinjing_Lembar'] = zettFirst_(obj, ['Jinjing Biaya/Lembar (Rp)', 'Packing_Jinjing_Lembar', 'Jinjing Lembar', 'Jinjing Per Lbr'], '');
+  obj['Packing_Jinjing_PerKg'] = zettFirst_(obj, ['Jinjing Biaya/Kg (Rp)', 'Packing_Jinjing_PerKg', 'Jinjing Per Kg'], '');
+
+  obj['Total Biaya Packing'] = zettFirst_(obj, ['Total Biaya Packing/Kg (Rp)', 'Total Biaya Packing', 'Total Biaya Packing Kg'], '');
+  return obj;
+}
+
 function zettNormalizeOutletName_(value) {
   return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+// [PACKING HEADER MIGRATION ONLY - 2026-05-18]
+function migratePackingHeadersOnly_20260518() {
+  const ss = _getSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_HPP_1);
+  if (!sheet) throw new Error('Sheet Struktur_Biaya_1 tidak ditemukan. Migrasi Packing dibatalkan.');
+
+  const headerRow = zettHppHeaderRow_(sheet);
+  const groupRow = Math.max(1, headerRow - 1);
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  if (lastCol === 0) throw new Error('Sheet Struktur_Biaya_1 kosong. Migrasi Packing dibatalkan.');
+
+  const headers = sheet.getRange(headerRow, 1, 1, lastCol).getDisplayValues()[0].map(function(h) { return String(h || '').trim(); });
+  const groupHeaders = sheet.getRange(groupRow, 1, 1, lastCol).getDisplayValues()[0].map(function(h) { return String(h || '').trim(); });
+  const newHeaders = zettPackingHeaders20260518_();
+  const oldHeaders = zettPackingOldHeaders20260518_();
+  const allPackingHeaders = newHeaders.concat(oldHeaders);
+
+  const existingNewIndexes = newHeaders
+    .map(function(h) { return headers.indexOf(h); })
+    .filter(function(index) { return index >= 0; });
+  const hasCompleteNew = existingNewIndexes.length === newHeaders.length;
+  const contiguousNewStart = hasCompleteNew ? existingNewIndexes[0] : -1;
+  const hasContiguousNew = hasCompleteNew && newHeaders.every(function(h, offset) {
+    return headers[contiguousNewStart + offset] === h;
+  });
+  if (hasContiguousNew) {
+    const duplicateNew = newHeaders.filter(function(h) {
+      return headers.filter(function(header) { return header === h; }).length > 1;
+    });
+    if (duplicateNew.length > 0) {
+      throw new Error('Header Packing baru sudah ada tetapi duplikat ditemukan: ' + duplicateNew.join(', '));
+    }
+    Logger.log('[PACKING HEADER MIGRATION ONLY - 2026-05-18] Header Packing sudah sesuai. Tidak ada kolom baru dibuat.');
+    return {
+      status: 'skipped',
+      message: 'Header Packing sudah sesuai.',
+      rowsMigrated: Math.max(0, lastRow - headerRow)
+    };
+  }
+
+  let blockStart = groupHeaders.findIndex(function(value) {
+    return zettNormalizeOutletName_(value) === zettNormalizeOutletName_('Analisa Biaya Packing');
+  });
+  const packingIndexes = [];
+  headers.forEach(function(header, index) {
+    if (allPackingHeaders.indexOf(header) >= 0) packingIndexes.push(index);
+  });
+  if (blockStart < 0 && packingIndexes.length > 0) blockStart = Math.min.apply(null, packingIndexes);
+  if (blockStart < 0) {
+    throw new Error('Grup/header Analisa Biaya Packing tidak ditemukan. Migrasi Packing dibatalkan.');
+  }
+
+  let blockEnd = -1;
+  for (let i = blockStart + 1; i < groupHeaders.length; i++) {
+    const label = String(groupHeaders[i] || '').trim();
+    if (label && zettNormalizeOutletName_(label) !== zettNormalizeOutletName_('Analisa Biaya Packing')) {
+      blockEnd = i - 1;
+      break;
+    }
+  }
+  const maxPackingIndex = packingIndexes.length > 0 ? Math.max.apply(null, packingIndexes) : blockStart;
+  if (blockEnd < maxPackingIndex) blockEnd = maxPackingIndex;
+  if (blockEnd < blockStart) blockEnd = blockStart;
+
+  const blockWidth = blockEnd - blockStart + 1;
+  const dataStartRow = headerRow + 1;
+  const dataRowCount = Math.max(0, lastRow - headerRow);
+  const oldValues = dataRowCount > 0
+    ? sheet.getRange(dataStartRow, blockStart + 1, dataRowCount, blockWidth).getValues()
+    : [];
+  const oldHeaderSlice = headers.slice(blockStart, blockEnd + 1);
+  const oldMap = oldHeaderSlice.reduce(function(acc, header, index) {
+    if (header) acc[header] = index;
+    return acc;
+  }, {});
+
+  let backup;
+  try {
+    const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmm');
+    const backupName = SHEET_HPP_1 + '_BACKUP_BEFORE_PACKING_HEADER_MIGRATION_' + stamp;
+    backup = sheet.copyTo(ss).setName(backupName);
+    ss.setActiveSheet(sheet);
+    Logger.log('[PACKING HEADER MIGRATION ONLY - 2026-05-18] Backup berhasil dibuat: %s', backupName);
+  } catch (error) {
+    throw new Error('Backup sheet gagal dibuat. Migrasi Packing dihentikan. Detail: ' + error.message);
+  }
+  if (!backup) throw new Error('Backup sheet gagal dibuat. Migrasi Packing dihentikan.');
+
+  function readOld(row, names, fallback) {
+    for (let i = 0; i < names.length; i++) {
+      const key = names[i];
+      if (Object.prototype.hasOwnProperty.call(oldMap, key)) {
+        const value = row[oldMap[key]];
+        if (value !== '' && value !== null && value !== undefined) return value;
+      }
+    }
+    return fallback || '';
+  }
+
+  function buildNewRow(row, rowNumber) {
+    const ppSize = zettSplitPackingSize20260518_(readOld(row, ['Ukr PP', 'Ukr Plastik'], ''), 'row ' + rowNumber + ' PP');
+    const hdSize = zettSplitPackingSize20260518_(readOld(row, ['Ukr HD', 'Ukur HD'], ''), 'row ' + rowNumber + ' HD');
+    const jinjingSize = zettSplitPackingSize20260518_(readOld(row, ['Ukr Jinjing', 'Ukur Jinjing'], ''), 'row ' + rowNumber + ' Jinjing');
+    return [
+      readOld(row, ['PP Aktif', 'Plastik PP', 'Packing_PP_Active'], ''),
+      readOld(row, ['PP Lebar (cm)'], ppSize.width),
+      readOld(row, ['PP Panjang (cm)'], ppSize.length),
+      readOld(row, ['PP Harga/Pack (Rp)', 'Harga PP', 'Harga Plastik', 'Packing_PP_Harga'], ''),
+      readOld(row, ['PP Isi/Pack (Lembar)', 'Isi PP', 'Isi Plastik', 'Packing_PP_Isi'], ''),
+      readOld(row, ['PP Kapasitas (Kg/Lembar)', 'Kap PP', 'Isi Per Lembar', 'Packing_PP_Kg'], ''),
+      readOld(row, ['PP Biaya/Lembar (Rp)', 'PP Lembar', 'Plastik Per Lbr', 'Packing_PP_Lembar'], ''),
+      readOld(row, ['PP Biaya/Kg (Rp)', 'Plastik Per Kg', 'Packing Per Kg', 'Packing_PP_PerKg'], ''),
+      readOld(row, ['HD Aktif', 'Plastik HD', 'Packing_HD_Active'], ''),
+      readOld(row, ['HD Lebar (cm)'], hdSize.width),
+      readOld(row, ['HD Panjang (cm)'], hdSize.length),
+      readOld(row, ['HD Harga/Pack (Rp)', 'Harga HD', 'Packing_HD_Harga'], ''),
+      readOld(row, ['HD Isi/Pack (Lembar)', 'Isi HD', 'Packing_HD_Isi'], ''),
+      readOld(row, ['HD Kapasitas (Kg/Lembar)', 'Kap HD', 'Isi HD Per Lbr', 'Packing_HD_Kg'], ''),
+      readOld(row, ['HD Biaya/Lembar (Rp)', 'HD Lembar Per Kg', 'HD Lembar', 'HD Per Lbr', 'Packing_HD_Lembar'], ''),
+      readOld(row, ['HD Biaya/Kg (Rp)', 'HD Per Kg', 'Packing_HD_PerKg'], ''),
+      readOld(row, ['Jinjing Aktif', 'Plastik Jinjing', 'Packing_Jinjing_Active'], ''),
+      readOld(row, ['Jinjing Lebar (cm)'], jinjingSize.width),
+      readOld(row, ['Jinjing Panjang (cm)'], jinjingSize.length),
+      readOld(row, ['Jinjing Harga/Pack (Rp)', 'Harga Jinjing', 'Packing_Jinjing_Harga'], ''),
+      readOld(row, ['Jinjing Isi/Pack (Lembar)', 'Isi Jinjing', 'Packing_Jinjing_Isi'], ''),
+      readOld(row, ['Jinjing Kapasitas (Kg/Lembar)', 'Kap Jinjing', 'Isi Jinjing Per Lbr', 'Packing_Jinjing_Kg'], ''),
+      readOld(row, ['Jinjing Biaya/Lembar (Rp)', 'Jinjing Lembar', 'Jinjing Per Lbr', 'Packing_Jinjing_Lembar'], ''),
+      readOld(row, ['Jinjing Biaya/Kg (Rp)', 'Jinjing Per Kg', 'Packing_Jinjing_PerKg'], ''),
+      readOld(row, ['Solasi Aktif'], ''),
+      readOld(row, ['Solasi Harga/Roll (Rp)'], ''),
+      readOld(row, ['Solasi Panjang/Roll (Meter)'], ''),
+      readOld(row, ['Solasi Pemakaian/Kg (Meter)'], ''),
+      readOld(row, ['Solasi Biaya/Meter (Rp)'], ''),
+      readOld(row, ['Solasi Biaya/Kg (Rp)'], ''),
+      readOld(row, ['Total Biaya Packing/Kg (Rp)', 'Total Biaya Packing', 'Total Biaya Packing Kg'], '')
+    ];
+  }
+
+  const newWidth = newHeaders.length;
+  const widthDiff = newWidth - blockWidth;
+  if (widthDiff > 0) {
+    sheet.insertColumnsAfter(blockEnd + 1, widthDiff);
+  } else if (widthDiff < 0) {
+    sheet.deleteColumns(blockStart + 1 + newWidth, Math.abs(widthDiff));
+  }
+
+  const headerRange = sheet.getRange(headerRow, blockStart + 1, 1, newWidth);
+  headerRange
+    .setValues([newHeaders])
+    .setFontWeight('bold')
+    .setBackground('#0f172a')
+    .setFontColor('#ffffff')
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle')
+    .setWrap(true);
+
+  if (groupRow < headerRow) {
+    const groupRange = sheet.getRange(groupRow, blockStart + 1, 1, newWidth);
+    try { groupRange.breakApart(); } catch (error) {}
+    groupRange
+      .setValue('Analisa Biaya Packing')
+      .setFontWeight('bold')
+      .setBackground('#f97316')
+      .setFontColor('#ffffff')
+      .setHorizontalAlignment('center')
+      .setVerticalAlignment('middle');
+    try { groupRange.mergeAcross(); } catch (error) {}
+  }
+
+  if (dataRowCount > 0) {
+    const migratedValues = oldValues.map(function(row, index) {
+      return buildNewRow(row, dataStartRow + index);
+    });
+    sheet.getRange(dataStartRow, blockStart + 1, dataRowCount, newWidth).setValues(migratedValues);
+  }
+
+  SpreadsheetApp.flush();
+
+  const finalHeaders = sheet.getRange(headerRow, blockStart + 1, 1, newWidth).getDisplayValues()[0].map(function(h) { return String(h || '').trim(); });
+  const missing = newHeaders.filter(function(h) { return finalHeaders.indexOf(h) < 0; });
+  const duplicates = newHeaders.filter(function(h) {
+    return finalHeaders.filter(function(header) { return header === h; }).length > 1;
+  });
+  if (missing.length > 0 || duplicates.length > 0) {
+    throw new Error('Validasi header Packing gagal. Missing: ' + missing.join(', ') + '. Duplikat: ' + duplicates.join(', '));
+  }
+
+  Logger.log('[PACKING HEADER MIGRATION ONLY - 2026-05-18] Migrasi selesai. Row data: %s, kolom lama: %s, kolom baru: %s.', dataRowCount, blockWidth, newWidth);
+  return {
+    status: 'success',
+    message: 'Migrasi header Packing selesai.',
+    rowsMigrated: dataRowCount,
+    oldColumnCount: blockWidth,
+    newColumnCount: newWidth
+  };
 }
 
 function setupDatabase() {
@@ -1572,29 +1893,9 @@ function getAllHPPData() {
         obj[key] = row[map[key]];
       });
 
-      // Alias baca agar frontend lama tetap bisa populate data packing dari header baru.
-      obj['Packing_PP_Active'] = zettFirst_(obj, ['Packing_PP_Active', 'Plastik PP'], obj['Plastik PP'] || '');
-      obj['Packing_PP_Ukuran'] = zettFirst_(obj, ['Packing_PP_Ukuran', 'Ukr PP', 'Ukr Plastik'], '');
-      obj['Packing_PP_Harga'] = zettFirst_(obj, ['Packing_PP_Harga', 'Harga PP', 'Harga Plastik'], '');
-      obj['Packing_PP_Isi'] = zettFirst_(obj, ['Packing_PP_Isi', 'Isi PP', 'Isi Plastik'], '');
-      obj['Packing_PP_Kg'] = zettFirst_(obj, ['Packing_PP_Kg', 'Kap PP', 'Isi Per Lembar'], '');
-      obj['Packing_PP_Lembar'] = zettFirst_(obj, ['Packing_PP_Lembar', 'PP Lembar', 'Plastik Per Lbr'], '');
-      obj['Packing_PP_PerKg'] = zettFirst_(obj, ['Packing_PP_PerKg', 'Plastik Per Kg', 'Packing Per Kg'], '');
-
-      obj['Packing_HD_Active'] = zettFirst_(obj, ['Packing_HD_Active', 'Plastik HD'], obj['Plastik HD'] || '');
-      obj['Packing_HD_Harga'] = zettFirst_(obj, ['Packing_HD_Harga', 'Harga HD'], '');
-      obj['Packing_HD_Isi'] = zettFirst_(obj, ['Packing_HD_Isi', 'Isi HD'], '');
-      obj['Packing_HD_Kg'] = zettFirst_(obj, ['Packing_HD_Kg', 'Kap HD', 'Isi HD Per Lbr'], '');
-      obj['Packing_HD_Lembar'] = zettFirst_(obj, ['Packing_HD_Lembar', 'HD Lembar', 'HD Per Lbr'], '');
-      obj['Packing_HD_PerKg'] = zettFirst_(obj, ['Packing_HD_PerKg', 'HD Per Kg'], '');
-
-      obj['Packing_Jinjing_Active'] = zettFirst_(obj, ['Packing_Jinjing_Active', 'Plastik Jinjing'], obj['Plastik Jinjing'] || '');
-      obj['Packing_Jinjing_Ukuran'] = zettFirst_(obj, ['Packing_Jinjing_Ukuran', 'Ukr Jinjing'], '');
-      obj['Packing_Jinjing_Harga'] = zettFirst_(obj, ['Packing_Jinjing_Harga', 'Harga Jinjing'], '');
-      obj['Packing_Jinjing_Isi'] = zettFirst_(obj, ['Packing_Jinjing_Isi', 'Isi Jinjing'], '');
-      obj['Packing_Jinjing_Kg'] = zettFirst_(obj, ['Packing_Jinjing_Kg', 'Kap Jinjing', 'Isi Jinjing Per Lbr'], '');
-      obj['Packing_Jinjing_Lembar'] = zettFirst_(obj, ['Packing_Jinjing_Lembar', 'Jinjing Lembar', 'Jinjing Per Lbr'], '');
-      obj['Packing_Jinjing_PerKg'] = zettFirst_(obj, ['Packing_Jinjing_PerKg', 'Jinjing Per Kg'], '');
+      // [PACKING HEADER MIGRATION ONLY - 2026-05-18]
+      // Alias baca Packing agar frontend lama tetap aman setelah header utama diganti.
+      zettAddPackingAliases20260518_(obj);
 
       result.push(obj);
     }
@@ -1630,20 +1931,8 @@ function getHPPRowByOutlet(namaOutlet) {
         obj[key] = row[map[key]];
       });
 
-      obj['Packing_PP_Active'] = zettFirst_(obj, ['Packing_PP_Active', 'Plastik PP'], obj['Plastik PP'] || '');
-      obj['Packing_PP_Ukuran'] = zettFirst_(obj, ['Packing_PP_Ukuran', 'Ukr PP', 'Ukr Plastik'], '');
-      obj['Packing_PP_Harga'] = zettFirst_(obj, ['Packing_PP_Harga', 'Harga PP', 'Harga Plastik'], '');
-      obj['Packing_PP_Isi'] = zettFirst_(obj, ['Packing_PP_Isi', 'Isi PP', 'Isi Plastik'], '');
-      obj['Packing_PP_Kg'] = zettFirst_(obj, ['Packing_PP_Kg', 'Kap PP', 'Isi Per Lembar'], '');
-      obj['Packing_HD_Active'] = zettFirst_(obj, ['Packing_HD_Active', 'Plastik HD'], obj['Plastik HD'] || '');
-      obj['Packing_HD_Harga'] = zettFirst_(obj, ['Packing_HD_Harga', 'Harga HD'], '');
-      obj['Packing_HD_Isi'] = zettFirst_(obj, ['Packing_HD_Isi', 'Isi HD'], '');
-      obj['Packing_HD_Kg'] = zettFirst_(obj, ['Packing_HD_Kg', 'Kap HD', 'Isi HD Per Lbr'], '');
-      obj['Packing_Jinjing_Active'] = zettFirst_(obj, ['Packing_Jinjing_Active', 'Plastik Jinjing'], obj['Plastik Jinjing'] || '');
-      obj['Packing_Jinjing_Ukuran'] = zettFirst_(obj, ['Packing_Jinjing_Ukuran', 'Ukr Jinjing'], '');
-      obj['Packing_Jinjing_Harga'] = zettFirst_(obj, ['Packing_Jinjing_Harga', 'Harga Jinjing'], '');
-      obj['Packing_Jinjing_Isi'] = zettFirst_(obj, ['Packing_Jinjing_Isi', 'Isi Jinjing'], '');
-      obj['Packing_Jinjing_Kg'] = zettFirst_(obj, ['Packing_Jinjing_Kg', 'Kap Jinjing', 'Isi Jinjing Per Lbr'], '');
+      // [PACKING HEADER MIGRATION ONLY - 2026-05-18]
+      zettAddPackingAliases20260518_(obj);
 
       return { status: 'success', data: obj };
     }
@@ -1804,6 +2093,17 @@ function saveStrukturBiaya(payload) {
     const jKap = zettToNumber_(payload.packJinjingKg) || 1;
     const jLembar = jHarga / jIsi;
     const jKg = payload.packJinjingActive ? (jLembar / jKap) : 0;
+
+    // [PACKING HEADER MIGRATION ONLY - 2026-05-18]
+    const ppSize = zettSplitPackingSize20260518_(payload.packPPUkuran || payload.packPPSize || '', 'simpan PP');
+    const hdSize = zettSplitPackingSize20260518_(payload.packHDUkuran || payload.packHDSize || '', 'simpan HD');
+    const jinjingSize = zettSplitPackingSize20260518_(payload.packJinjingUkuran || payload.packJinjingSize || '', 'simpan Jinjing');
+    const solasiActive = payload.packSolasiActive === true || String(payload.packSolasiActive || '').toLowerCase() === 'true' || String(payload.packSolasiActive || '').toLowerCase() === 'ya';
+    const solasiHarga = zettToNumber_(payload.packSolasiHarga);
+    const solasiPanjang = zettToNumber_(payload.packSolasiPanjang);
+    const solasiPemakaian = zettToNumber_(payload.packSolasiPemakaian);
+    const solasiBiayaMeter = solasiPanjang > 0 ? solasiHarga / solasiPanjang : 0;
+    const solasiBiayaKg = solasiActive ? solasiBiayaMeter * solasiPemakaian : 0;
     const totalPacking = kategoriLaundry.toLowerCase().includes('self service') ? 0 : (ppKg + hdKg + jKg);
     const sumberAir = String(payload.airSumber || '').trim().toLowerCase() || 'pdam';
     const sumberSetrika = String(payload.airBoilerSumber || '').trim().toLowerCase() || 'sama';
@@ -1873,27 +2173,38 @@ function saveStrukturBiaya(payload) {
       'Air Setrika Jam': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Liter Setrika}{ROW}=""; {COL:Jam Setrika}{ROW}<=0);""; IF(AND({COL:Sumber Setrika}{ROW}="galon"; {COL:Vol Setrika}{ROW}>0); {COL:Galon Setrika}{ROW}/{COL:Vol Setrika}{ROW}; IF({COL:Sumber Air}{ROW}="pdam"; {COL:Harga Air}{ROW}/1000; IF(AND({COL:Sumber Air}{ROW}="tangki"; {COL:Liter Tangki}{ROW}>0); {COL:Harga Tangki}{ROW}/{COL:Liter Tangki}{ROW}; 0))) * ({COL:Liter Setrika}{ROW} / {COL:Jam Setrika}{ROW}))',
       'Air Setrika Kg': '=IF(OR({COL:Kategori Laundry}{ROW}="Self Service"; {COL:Air Setrika Jam}{ROW}="");""; {COL:Air Setrika Jam}{ROW} / {COL:Kg Setrika}{ROW})',
 
-      'Plastik PP': payload.packPPActive ? 'Ya' : 'Tidak',
-      'Ukr PP': payload.packPPUkuran || payload.packPPSize || '',
-      'Harga PP': payload.packPPHarga,
-      'Isi PP': payload.packPPIsi,
-      'Kap PP': payload.packPPKg,
-      'PP Lembar': ppLembar,
-      'Plastik Per Kg': ppKg,
-      'Plastik HD': payload.packHDActive ? 'Ya' : 'Tidak',
-      'Harga HD': payload.packHDHarga,
-      'Isi HD': payload.packHDIsi,
-      'Kap HD': payload.packHDKg,
-      'HD Lembar': hdLembar,
-      'HD Per Kg': hdKg,
-      'Plastik Jinjing': payload.packJinjingActive ? 'Ya' : 'Tidak',
-      'Ukr Jinjing': payload.packJinjingUkuran || payload.packJinjingSize || '',
-      'Harga Jinjing': payload.packJinjingHarga,
-      'Isi Jinjing': payload.packJinjingIsi,
-      'Kap Jinjing': payload.packJinjingKg,
-      'Jinjing Lembar': jLembar,
-      'Jinjing Per Kg': jKg,
-      'Total Biaya Packing': totalPacking,
+      // [PACKING HEADER MIGRATION ONLY - 2026-05-18]
+      'PP Aktif': payload.packPPActive ? 'Ya' : 'Tidak',
+      'PP Lebar (cm)': ppSize.width,
+      'PP Panjang (cm)': ppSize.length,
+      'PP Harga/Pack (Rp)': payload.packPPHarga,
+      'PP Isi/Pack (Lembar)': payload.packPPIsi,
+      'PP Kapasitas (Kg/Lembar)': payload.packPPKg,
+      'PP Biaya/Lembar (Rp)': ppLembar,
+      'PP Biaya/Kg (Rp)': ppKg,
+      'HD Aktif': payload.packHDActive ? 'Ya' : 'Tidak',
+      'HD Lebar (cm)': hdSize.width,
+      'HD Panjang (cm)': hdSize.length,
+      'HD Harga/Pack (Rp)': payload.packHDHarga,
+      'HD Isi/Pack (Lembar)': payload.packHDIsi,
+      'HD Kapasitas (Kg/Lembar)': payload.packHDKg,
+      'HD Biaya/Lembar (Rp)': hdLembar,
+      'HD Biaya/Kg (Rp)': hdKg,
+      'Jinjing Aktif': payload.packJinjingActive ? 'Ya' : 'Tidak',
+      'Jinjing Lebar (cm)': jinjingSize.width,
+      'Jinjing Panjang (cm)': jinjingSize.length,
+      'Jinjing Harga/Pack (Rp)': payload.packJinjingHarga,
+      'Jinjing Isi/Pack (Lembar)': payload.packJinjingIsi,
+      'Jinjing Kapasitas (Kg/Lembar)': payload.packJinjingKg,
+      'Jinjing Biaya/Lembar (Rp)': jLembar,
+      'Jinjing Biaya/Kg (Rp)': jKg,
+      'Solasi Aktif': solasiActive ? 'Ya' : 'Tidak',
+      'Solasi Harga/Roll (Rp)': payload.packSolasiHarga || '',
+      'Solasi Panjang/Roll (Meter)': payload.packSolasiPanjang || '',
+      'Solasi Pemakaian/Kg (Meter)': payload.packSolasiPemakaian || '',
+      'Solasi Biaya/Meter (Rp)': solasiBiayaMeter,
+      'Solasi Biaya/Kg (Rp)': solasiBiayaKg,
+      'Total Biaya Packing/Kg (Rp)': totalPacking,
 
       'Chem_Det_Active': payload.chemDetActive,
       'Chem_Det_Type': payload.chemDetType,
@@ -1926,6 +2237,30 @@ function saveStrukturBiaya(payload) {
       'Nota_RataKg': payload.notaRataKg,
 
       // Alias untuk header packing yang sudah terlanjur ada pada sheet lama/screenshot.
+      'Plastik PP': payload.packPPActive ? 'Ya' : 'Tidak',
+      'Ukr PP': payload.packPPUkuran || payload.packPPSize || '',
+      'Harga PP': payload.packPPHarga,
+      'Isi PP': payload.packPPIsi,
+      'Kap PP': payload.packPPKg,
+      'PP Lembar': ppLembar,
+      'Plastik Per Kg': ppKg,
+      'Plastik HD': payload.packHDActive ? 'Ya' : 'Tidak',
+      'Ukr HD': payload.packHDUkuran || payload.packHDSize || '',
+      'Harga HD': payload.packHDHarga,
+      'Isi HD': payload.packHDIsi,
+      'Kap HD': payload.packHDKg,
+      'HD Lembar': hdLembar,
+      'HD Lembar Per Kg': hdLembar,
+      'HD Per Kg': hdKg,
+      'Plastik Jinjing': payload.packJinjingActive ? 'Ya' : 'Tidak',
+      'Ukr Jinjing': payload.packJinjingUkuran || payload.packJinjingSize || '',
+      'Harga Jinjing': payload.packJinjingHarga,
+      'Isi Jinjing': payload.packJinjingIsi,
+      'Kap Jinjing': payload.packJinjingKg,
+      'Jinjing Lembar': jLembar,
+      'Jinjing Per Kg': jKg,
+      'Total Biaya Packing': totalPacking,
+      'Total Biaya Packing Kg': totalPacking,
       'Harga Plastik': payload.packPPHarga,
       'Isi Plastik': payload.packPPIsi,
       'Ukr Plastik': payload.packPPUkuran || payload.packPPSize || '',
