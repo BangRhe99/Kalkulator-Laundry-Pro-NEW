@@ -862,11 +862,11 @@
           <h3 class="omni-title" style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.75rem;"><i class="ph ph-package text-indigo-500 text-2xl"></i> Analisa Biaya Packing</h3>
         </div>
 
-        <div class="bento-grid">
+        <div class="bento-grid zett-packing-card-list">
           <!-- Plastik PP Bening -->
-          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-              <h4 style="font-size: 0.9rem; font-weight: 800; color: #e11d48; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-envelope-simple text-lg"></i> Plastik PP Bening</h4>
+          <div class="bento-col-6 zett-packing-card zett-packing-card-pp" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
+            <div class="zett-packing-card-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <h4 class="zett-packing-title" style="font-size: 0.9rem; font-weight: 800; color: #e11d48; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-envelope-simple text-lg"></i> Plastik PP Bening</h4>
               <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
                 <div style="position: relative;">
                   <input type="checkbox" id="togglePackingPP" class="omni-toggle-input sr-only" style="display: none;" onchange="calculatePacking()" checked>
@@ -875,30 +875,36 @@
               </label>
             </div>
             <div id="wrapPackingPP" style="transition: opacity 0.3s;">
-              <div style="margin-bottom: 1rem;">
-                <label class="omni-label" style="font-size: 0.7rem;">Ukuran (Referensi)</label>
-                <input type="text" id="inputPackingPPUkuran" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" placeholder="Misal: 35x50 cm" oninput="saveHPPDraftToLocal && saveHPPDraftToLocal()">
-              </div>
-              <div class="zett-x-input-row" style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
-                <div style="flex: 1;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
-                  <input type="text" id="inputPackingPPHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="25.000" oninput="formatRupiahInput(this); calculatePacking()">
-                </div>
-                <span class="zett-input-x">X</span>
-                <div style="flex: 1;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Isi (Lembar)</label>
-                  <input type="number" id="inputPackingPPIsi" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="100" oninput="calculatePacking()">
+              <div class="zett-packing-field">
+                <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Ukuran (Referensi)</label>
+                <div class="zett-packing-size-row">
+                  <input type="text" id="inputPackingPPUkuran" class="omni-input zett-packing-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" placeholder="35" oninput="saveHPPDraftToLocal && saveHPPDraftToLocal()">
+                  <span class="zett-input-x zett-packing-x">x</span>
+                  <input type="text" class="omni-input zett-packing-input zett-packing-ref-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" placeholder="50" aria-label="Ukuran kedua Plastik PP Bening">
                 </div>
               </div>
-              <div style="margin-bottom: 1.25rem;">
-                <label class="omni-label" style="font-size: 0.7rem;">Kapasitas (Kg/Lembar)</label>
-                <input type="number" id="inputPackingPPKg" step="0.1" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="3" oninput="calculatePacking()">
+              <div class="zett-packing-grid zett-packing-grid-2" style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                <div class="zett-packing-field" style="flex: 1;">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
+                  <input type="text" id="inputPackingPPHarga" inputmode="numeric" class="omni-input zett-packing-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="25.000" oninput="formatRupiahInput(this); calculatePacking()">
+                </div>
+                <div class="zett-packing-field" style="flex: 1;">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Isi (Lembar)</label>
+                  <input type="number" id="inputPackingPPIsi" class="omni-input zett-packing-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="100" oninput="calculatePacking()">
+                </div>
               </div>
-              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+              <div class="zett-packing-field">
+                <div class="zett-packing-label-line">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Kapasitas (Kg/Lembar)</label>
+                  <span class="zett-packing-note">*Per lembar bisa di isi berapa kg</span>
+                </div>
+                <input type="number" id="inputPackingPPKg" step="0.1" class="omni-input zett-packing-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="3" oninput="calculatePacking()">
+              </div>
+              <div class="zett-packing-result" style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="zett-packing-result-row" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
                   <span>Harga / Lembar:</span> <span id="dispPackingPPLembar" style="color: var(--omni-navy);">Rp 0</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(225, 29, 72, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #be123c;">
+                <div class="zett-packing-total-row" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(225, 29, 72, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #be123c;">
                   <span>Biaya Packing / Kg:</span> <span id="dispPackingPPKg">Rp 0</span>
                 </div>
               </div>
@@ -906,9 +912,9 @@
           </div>
 
           <!-- Plastik HD -->
-          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-              <h4 style="font-size: 0.9rem; font-weight: 800; color: #10b981; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-shopping-bag text-lg"></i> Plastik HD (Kresek)</h4>
+          <div class="bento-col-6 zett-packing-card zett-packing-card-hd" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
+            <div class="zett-packing-card-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <h4 class="zett-packing-title" style="font-size: 0.9rem; font-weight: 800; color: #10b981; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-shopping-bag text-lg"></i> Plastik HD (Kresek)</h4>
               <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
                 <div style="position: relative;">
                   <input type="checkbox" id="togglePackingHD" class="omni-toggle-input sr-only" style="display: none;" onchange="calculatePacking()" checked>
@@ -917,26 +923,36 @@
               </label>
             </div>
             <div id="wrapPackingHD" style="transition: opacity 0.3s; display: flex; flex-direction: column; height: calc(100% - 3rem);">
-              <div class="zett-x-input-row" style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
-                <div style="flex: 1;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
-                  <input type="text" id="inputPackingHDHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="15.000" oninput="formatRupiahInput(this); calculatePacking()">
-                </div>
-                <span class="zett-input-x">X</span>
-                <div style="flex: 1;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Isi (Lembar)</label>
-                  <input type="number" id="inputPackingHDIsi" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="50" oninput="calculatePacking()">
+              <div class="zett-packing-field">
+                <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Ukuran (Referensi)</label>
+                <div class="zett-packing-size-row">
+                  <input type="text" class="omni-input zett-packing-input zett-packing-ref-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" placeholder="35" aria-label="Ukuran pertama Plastik HD">
+                  <span class="zett-input-x zett-packing-x">x</span>
+                  <input type="text" class="omni-input zett-packing-input zett-packing-ref-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" placeholder="50" aria-label="Ukuran kedua Plastik HD">
                 </div>
               </div>
-              <div style="margin-bottom: 1.25rem;">
-                <label class="omni-label" style="font-size: 0.7rem;">Kapasitas (Kg/Lembar)</label>
-                <input type="number" id="inputPackingHDKg" step="0.1" class="omni-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="5" oninput="calculatePacking()">
+              <div class="zett-packing-grid zett-packing-grid-2" style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                <div class="zett-packing-field" style="flex: 1;">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
+                  <input type="text" id="inputPackingHDHarga" inputmode="numeric" class="omni-input zett-packing-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="15.000" oninput="formatRupiahInput(this); calculatePacking()">
+                </div>
+                <div class="zett-packing-field" style="flex: 1;">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Isi (Lembar)</label>
+                  <input type="number" id="inputPackingHDIsi" class="omni-input zett-packing-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="50" oninput="calculatePacking()">
+                </div>
               </div>
-              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; margin-top: auto; display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+              <div class="zett-packing-field">
+                <div class="zett-packing-label-line">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Kapasitas (Kg/Lembar)</label>
+                  <span class="zett-packing-note">*Per lembar bisa di isi berapa kg</span>
+                </div>
+                <input type="number" id="inputPackingHDKg" step="0.1" class="omni-input zett-packing-input" style="padding: 0.75rem 1rem; font-size: 0.85rem;" value="5" oninput="calculatePacking()">
+              </div>
+              <div class="zett-packing-result" style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; margin-top: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="zett-packing-result-row" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
                   <span>Harga / Lembar:</span> <span id="dispPackingHDLembar" style="color: var(--omni-navy);">Rp 0</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(16, 185, 129, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #047857;">
+                <div class="zett-packing-total-row" style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(16, 185, 129, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #047857;">
                   <span>Biaya Kresek / Kg:</span> <span id="dispPackingHDKg">Rp 0</span>
                 </div>
               </div>
@@ -944,9 +960,9 @@
           </div>
 
           <!-- Plastik Jinjing -->
-          <div class="bento-col-12" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-              <h4 style="font-size: 0.9rem; font-weight: 800; color: #8b5cf6; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-bag text-lg"></i> Plastik Jinjing (Premium)</h4>
+          <div class="bento-col-12 zett-packing-card zett-packing-card-jinjing" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
+            <div class="zett-packing-card-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <h4 class="zett-packing-title" style="font-size: 0.9rem; font-weight: 800; color: #8b5cf6; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-bag text-lg"></i> Plastik Jinjing (Premium)</h4>
               <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
                 <div style="position: relative;">
                   <input type="checkbox" id="togglePackingJinjing" class="omni-toggle-input sr-only" style="display: none;" onchange="calculatePacking()">
@@ -955,30 +971,36 @@
               </label>
             </div>
             <div id="wrapPackingJinjing" style="opacity: 0.4; pointer-events: none; transition: opacity 0.3s;">
-              <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
-                <div style="flex: 1; min-width: 120px;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Ukuran</label>
-                  <input type="text" id="inputPackingJinjingUkuran" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" placeholder="Misal: 40x60" oninput="saveHPPDraftToLocal && saveHPPDraftToLocal()">
-                </div>
-                <div style="flex: 1; min-width: 120px;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
-                  <input type="text" id="inputPackingJinjingHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="35.000" oninput="formatRupiahInput(this); calculatePacking()">
-                </div>
-                <span class="zett-input-x">X</span>
-                <div style="flex: 1; min-width: 90px;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Isi (Lbr)</label>
-                  <input type="number" id="inputPackingJinjingIsi" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="100" oninput="calculatePacking()">
-                </div>
-                <div style="flex: 1; min-width: 90px;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Kap. (Kg)</label>
-                  <input type="number" id="inputPackingJinjingKg" step="0.1" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="4" oninput="calculatePacking()">
+              <div class="zett-packing-field">
+                <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Ukuran (Referensi)</label>
+                <div class="zett-packing-size-row">
+                  <input type="text" id="inputPackingJinjingUkuran" class="omni-input zett-packing-input" style="padding: 0.75rem; font-size: 0.85rem;" placeholder="35" oninput="saveHPPDraftToLocal && saveHPPDraftToLocal()">
+                  <span class="zett-input-x zett-packing-x">x</span>
+                  <input type="text" class="omni-input zett-packing-input zett-packing-ref-input" style="padding: 0.75rem; font-size: 0.85rem;" placeholder="50" aria-label="Ukuran kedua Plastik Jinjing">
                 </div>
               </div>
-              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-wrap: wrap; gap: 1.25rem;">
-                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+              <div class="zett-packing-grid zett-packing-grid-2" style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <div class="zett-packing-field" style="flex: 1; min-width: 120px;">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Harga / Pack (Rp)</label>
+                  <input type="text" id="inputPackingJinjingHarga" inputmode="numeric" class="omni-input zett-packing-input" style="padding: 0.75rem; font-size: 0.85rem;" value="35.000" oninput="formatRupiahInput(this); calculatePacking()">
+                </div>
+                <div class="zett-packing-field" style="flex: 1; min-width: 90px;">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Isi (Lembar)</label>
+                  <input type="number" id="inputPackingJinjingIsi" class="omni-input zett-packing-input" style="padding: 0.75rem; font-size: 0.85rem;" value="100" oninput="calculatePacking()">
+                </div>
+              </div>
+              <div class="zett-packing-field">
+                <div class="zett-packing-label-line">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Kapasitas (Kg/Lembar)</label>
+                  <span class="zett-packing-note">*Per lembar bisa di isi berapa kg</span>
+                </div>
+                <input type="number" id="inputPackingJinjingKg" step="0.1" class="omni-input zett-packing-input" style="padding: 0.75rem; font-size: 0.85rem;" value="4" oninput="calculatePacking()">
+              </div>
+              <div class="zett-packing-result" style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-wrap: wrap; gap: 1.25rem;">
+                <div class="zett-packing-result-row" style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
                   <span>Harga / Lembar:</span> <span id="dispPackingJinjingLembar" style="color: var(--omni-navy);">Rp 0</span>
                 </div>
-                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 800; background: rgba(139, 92, 246, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #6d28d9;">
+                <div class="zett-packing-total-row" style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 800; background: rgba(139, 92, 246, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #6d28d9;">
                   <span>Biaya Jinjing / Kg:</span> <span id="dispPackingJinjingKg">Rp 0</span>
                 </div>
               </div>
@@ -986,9 +1008,9 @@
           </div>
 
           <!-- Solasi -->
-          <div class="bento-col-12" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-              <h4 style="font-size: 0.9rem; font-weight: 800; color: #0f766e; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-tape text-lg"></i> Solasi</h4>
+          <div class="bento-col-12 zett-packing-card zett-packing-card-solasi" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem;">
+            <div class="zett-packing-card-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <h4 class="zett-packing-title" style="font-size: 0.9rem; font-weight: 800; color: #0f766e; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-tape text-lg"></i> Solasi</h4>
               <label class="omni-toggle" style="padding: 0; border: none; box-shadow: none; background: transparent;">
                 <div style="position: relative;">
                   <input type="checkbox" id="togglePackingSolasi" class="omni-toggle-input sr-only" style="display: none;" onchange="if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
@@ -997,30 +1019,40 @@
               </label>
             </div>
             <div id="wrapPackingSolasi" style="opacity: 0.4; pointer-events: none; transition: opacity 0.3s;">
-              <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
-                <div style="flex: 1; min-width: 120px;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Ukuran</label>
-                  <input type="text" id="inputPackingSolasiUkuran" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" placeholder="Misal: 2 inch" oninput="saveHPPDraftToLocal && saveHPPDraftToLocal()">
-                </div>
-                <div style="flex: 1; min-width: 120px;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Harga / Roll (Rp)</label>
-                  <input type="text" id="inputPackingSolasiHarga" inputmode="numeric" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="" oninput="formatRupiahInput(this); if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
-                </div>
-                <span class="zett-input-x">X</span>
-                <div style="flex: 1; min-width: 90px;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Estimasi Pakai</label>
-                  <input type="number" id="inputPackingSolasiPakai" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="" oninput="if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
-                </div>
-                <div style="flex: 1; min-width: 90px;">
-                  <label class="omni-label" style="font-size: 0.7rem;">Untuk (Kg)</label>
-                  <input type="number" id="inputPackingSolasiKg" step="0.1" class="omni-input" style="padding: 0.75rem; font-size: 0.85rem;" value="" oninput="if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
+              <div class="zett-packing-field">
+                <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Ukuran (mm x Yard)</label>
+                <span class="zett-packing-note zett-packing-note-block">*Yard adalah satuan ukuran panjang yang umum digunakan di Amerika Serikat dan Inggris</span>
+                <div class="zett-packing-size-row">
+                  <input type="text" id="inputPackingSolasiUkuran" class="omni-input zett-packing-input" style="padding: 0.75rem; font-size: 0.85rem;" placeholder="24" oninput="saveHPPDraftToLocal && saveHPPDraftToLocal()">
+                  <span class="zett-input-x zett-packing-x">x</span>
+                  <input type="text" class="omni-input zett-packing-input zett-packing-ref-input" style="padding: 0.75rem; font-size: 0.85rem;" placeholder="60" aria-label="Ukuran yard Solasi">
                 </div>
               </div>
-              <div style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-wrap: wrap; gap: 1.25rem;">
-                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
-                  <span>Harga / Pakai:</span> <span id="dispPackingSolasiPakai" style="color: var(--omni-navy);">Rp 0</span>
+              <div class="zett-packing-grid zett-packing-grid-2" style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <div class="zett-packing-field" style="flex: 1; min-width: 120px;">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Harga / Roll / Pcs</label>
+                  <input type="text" id="inputPackingSolasiHarga" inputmode="numeric" class="omni-input zett-packing-input" style="padding: 0.75rem; font-size: 0.85rem;" value="" oninput="formatRupiahInput(this); if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
                 </div>
-                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 800; background: rgba(20, 184, 166, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #0f766e;">
+                <div class="zett-packing-field" style="flex: 1; min-width: 90px;">
+                  <div class="zett-packing-label-line zett-packing-label-line-stack">
+                    <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Kapasitas (Roll/Pcs)</label>
+                    <span class="zett-packing-note">*Per Roll bisa digunakan untuk berapa orderan</span>
+                  </div>
+                  <input type="number" id="inputPackingSolasiPakai" class="omni-input zett-packing-input" style="padding: 0.75rem; font-size: 0.85rem;" value="" oninput="if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
+                </div>
+              </div>
+              <div class="zett-packing-field">
+                <div class="zett-packing-label-line">
+                  <label class="omni-label zett-packing-label" style="font-size: 0.7rem;">Kapasitas</label>
+                  <span class="zett-packing-note">*Per Orderan bisa di isi berapa kg</span>
+                </div>
+                <input type="number" id="inputPackingSolasiKg" step="0.1" class="omni-input zett-packing-input" style="padding: 0.75rem; font-size: 0.85rem;" value="" oninput="if(window.zettTogglePackingSolasi) window.zettTogglePackingSolasi();">
+              </div>
+              <div class="zett-packing-result" style="border-top: 1px dashed var(--omni-border); padding-top: 1rem; display: flex; flex-wrap: wrap; gap: 1.25rem;">
+                <div class="zett-packing-result-row" style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: var(--omni-navy-light);">
+                  <span>Harga /Order</span> <span id="dispPackingSolasiPakai" style="color: var(--omni-navy);">Rp 0</span>
+                </div>
+                <div class="zett-packing-total-row" style="flex: 1; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 800; background: rgba(20, 184, 166, 0.05); padding: 0.6rem 0.75rem; border-radius: 0.75rem; color: #0f766e;">
                   <span>Biaya Solasi / Kg:</span> <span id="dispPackingSolasiKg">Rp 0</span>
                 </div>
               </div>
@@ -1031,6 +1063,332 @@
         <div style="display:none;" id="displayBiayaPackingTotalKg">Rp 0</div>
       </div>
     </div>
+
+    <style id="zett-packing-premium-card-patch-20260518">
+      #view-hpp #tab-packing {
+        overflow-x: hidden;
+      }
+
+      #view-hpp #tab-packing > .bento-card {
+        max-width: 1040px;
+        width: 100%;
+        margin-inline: auto;
+      }
+
+      #view-hpp #tab-packing .zett-packing-card-list {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: clamp(18px, 2.2vw, 24px) !important;
+        max-width: 620px;
+        margin-inline: auto;
+        width: 100%;
+      }
+
+      #view-hpp #tab-packing .zett-packing-card-list > .zett-packing-card {
+        grid-column: 1 / -1 !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-card {
+        --zett-packing-accent: #0f766e;
+        --zett-packing-soft: rgba(20, 184, 166, 0.08);
+        background: #ffffff !important;
+        border: 1px solid rgba(226, 232, 240, 0.92) !important;
+        border-radius: 22px !important;
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.055), 0 2px 8px rgba(15, 23, 42, 0.035) !important;
+        padding: clamp(18px, 2vw, 22px) !important;
+        min-width: 0;
+      }
+
+      #view-hpp #tab-packing .zett-packing-card *,
+      #view-hpp #tab-packing .zett-packing-card *::before,
+      #view-hpp #tab-packing .zett-packing-card *::after {
+        box-sizing: border-box;
+      }
+
+      #view-hpp #tab-packing .zett-packing-card-pp {
+        --zett-packing-accent: #be123c;
+        --zett-packing-soft: rgba(244, 63, 94, 0.08);
+      }
+
+      #view-hpp #tab-packing .zett-packing-card-jinjing {
+        --zett-packing-accent: #7c3aed;
+        --zett-packing-soft: rgba(139, 92, 246, 0.08);
+      }
+
+      #view-hpp #tab-packing .zett-packing-card-hd {
+        --zett-packing-accent: #0f9f7a;
+        --zett-packing-soft: rgba(20, 184, 166, 0.08);
+      }
+
+      #view-hpp #tab-packing .zett-packing-card-solasi {
+        --zett-packing-accent: #0f766e;
+        --zett-packing-soft: rgba(15, 118, 110, 0.08);
+      }
+
+      #view-hpp #tab-packing .zett-packing-card-head {
+        gap: 14px !important;
+        margin-bottom: 20px !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-title {
+        color: var(--zett-packing-accent) !important;
+        font-size: 0.95rem !important;
+        line-height: 1.25 !important;
+        letter-spacing: -0.01em;
+        min-width: 0;
+      }
+
+      #view-hpp #tab-packing .zett-packing-title i {
+        color: var(--zett-packing-accent) !important;
+        font-size: 1rem !important;
+      }
+
+      #view-hpp #tab-packing .omni-toggle {
+        flex: 0 0 auto;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      #view-hpp #tab-packing .omni-toggle-track {
+        width: 42px !important;
+        height: 24px !important;
+        border-radius: 999px !important;
+        background: #cbd5e1 !important;
+        border: 1px solid rgba(148, 163, 184, 0.32) !important;
+        box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.12) !important;
+        transition: background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease !important;
+      }
+
+      #view-hpp #tab-packing .omni-toggle-thumb {
+        width: 18px !important;
+        height: 18px !important;
+        top: 2px !important;
+        left: 2px !important;
+        border-radius: 999px !important;
+        background: #ffffff !important;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2) !important;
+        transition: transform 0.22s ease !important;
+      }
+
+      #view-hpp #tab-packing #togglePackingPP:checked + .omni-toggle-track,
+      #view-hpp #tab-packing #togglePackingHD:checked + .omni-toggle-track,
+      #view-hpp #tab-packing #togglePackingJinjing:checked + .omni-toggle-track,
+      #view-hpp #tab-packing #togglePackingSolasi:checked + .omni-toggle-track {
+        background: var(--zett-packing-accent) !important;
+        border-color: color-mix(in srgb, var(--zett-packing-accent) 65%, #ffffff) !important;
+        box-shadow: 0 6px 14px color-mix(in srgb, var(--zett-packing-accent) 22%, transparent) !important;
+      }
+
+      #view-hpp #tab-packing #togglePackingPP:checked + .omni-toggle-track .omni-toggle-thumb,
+      #view-hpp #tab-packing #togglePackingHD:checked + .omni-toggle-track .omni-toggle-thumb,
+      #view-hpp #tab-packing #togglePackingJinjing:checked + .omni-toggle-track .omni-toggle-thumb,
+      #view-hpp #tab-packing #togglePackingSolasi:checked + .omni-toggle-track .omni-toggle-thumb {
+        transform: translateX(18px) !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+        margin-bottom: 16px !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-label,
+      #view-hpp #tab-packing .zett-packing-label-line .omni-label {
+        color: #64748b !important;
+        font-size: 0.68rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.13em !important;
+        line-height: 1.15 !important;
+        margin: 0 !important;
+        text-transform: uppercase !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-label-line {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      #view-hpp #tab-packing .zett-packing-label-line-stack {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      #view-hpp #tab-packing .zett-packing-note {
+        color: #334155;
+        font-size: 0.68rem;
+        font-style: italic;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        line-height: 1.25;
+      }
+
+      #view-hpp #tab-packing .zett-packing-note-block {
+        display: block;
+        margin-top: -3px;
+      }
+
+      #view-hpp #tab-packing .zett-packing-size-row,
+      #view-hpp #tab-packing .zett-packing-grid-2 {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+        align-items: end !important;
+        gap: 12px !important;
+        margin-bottom: 16px !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-size-row {
+        margin-bottom: 0 !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-grid-2 > .zett-packing-field {
+        margin-bottom: 0 !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-x {
+        align-self: center !important;
+        color: #475569 !important;
+        font-size: 0.95rem !important;
+        font-weight: 950 !important;
+        line-height: 1 !important;
+        margin-top: 0 !important;
+        text-transform: lowercase !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-input {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 46px !important;
+        padding: 0 14px !important;
+        border: 1px solid rgba(203, 213, 225, 0.92) !important;
+        border-radius: 15px !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 0.95rem !important;
+        font-weight: 750 !important;
+        line-height: 1 !important;
+        text-align: center !important;
+        box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.025), 0 1px 2px rgba(15, 23, 42, 0.025) !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-input::placeholder {
+        color: #a8b1bd !important;
+        opacity: 1 !important;
+        font-weight: 650 !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-input:focus {
+        border-color: color-mix(in srgb, var(--zett-packing-accent) 45%, #cbd5e1) !important;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--zett-packing-accent) 13%, transparent) !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-result {
+        border-top-color: rgba(203, 213, 225, 0.78) !important;
+        margin-top: 18px !important;
+        padding-top: 17px !important;
+        gap: 10px !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-result-row,
+      #view-hpp #tab-packing .zett-packing-total-row {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 1 100% !important;
+        align-items: center !important;
+        gap: 14px !important;
+        color: #64748b !important;
+        font-size: 0.82rem !important;
+        line-height: 1.25 !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-result-row span:last-child,
+      #view-hpp #tab-packing .zett-packing-total-row span:last-child {
+        color: #0f172a !important;
+        font-weight: 950 !important;
+        white-space: nowrap;
+      }
+
+      #view-hpp #tab-packing .zett-packing-total-row {
+        min-height: 40px;
+        padding: 0.72rem 0.82rem !important;
+        border-radius: 13px !important;
+        background: var(--zett-packing-soft) !important;
+        color: var(--zett-packing-accent) !important;
+        font-weight: 900 !important;
+      }
+
+      #view-hpp #tab-packing .zett-packing-total-row span {
+        color: var(--zett-packing-accent) !important;
+        font-weight: 950 !important;
+      }
+
+      @media (max-width: 640px) {
+        #view-hpp #tab-packing > .bento-card {
+          padding: 16px !important;
+          border-radius: 22px !important;
+        }
+
+        #view-hpp #tab-packing .zett-packing-form-header {
+          margin-bottom: 14px;
+        }
+
+        #view-hpp #tab-packing .zett-packing-card-list {
+          gap: 18px !important;
+        }
+
+        #view-hpp #tab-packing .zett-packing-card {
+          border-radius: 20px !important;
+          padding: 18px !important;
+        }
+
+        #view-hpp #tab-packing .zett-packing-title {
+          font-size: 0.88rem !important;
+        }
+
+        #view-hpp #tab-packing .zett-packing-size-row {
+          gap: 9px !important;
+        }
+
+        #view-hpp #tab-packing .zett-packing-grid-2 {
+          gap: 10px !important;
+        }
+
+        #view-hpp #tab-packing .zett-packing-input {
+          height: 44px !important;
+          border-radius: 14px !important;
+          font-size: 0.92rem !important;
+          padding-inline: 10px !important;
+        }
+      }
+
+      @media (max-width: 380px) {
+        #view-hpp #tab-packing > .bento-card {
+          padding: 12px !important;
+        }
+
+        #view-hpp #tab-packing .zett-packing-card {
+          padding: 16px !important;
+        }
+
+        #view-hpp #tab-packing .zett-packing-grid-2 {
+          grid-template-columns: 1fr !important;
+        }
+
+        #view-hpp #tab-packing .zett-packing-label-line {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 3px;
+        }
+      }
+    </style>
 
     <!-- ================= TAB 5: BAHAN BAKU (CHEMICAL) ================= -->
     <div id="tab-bahan" class="tab-content hidden animate-fade-in bento-grid">
