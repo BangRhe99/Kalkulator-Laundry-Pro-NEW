@@ -727,6 +727,344 @@
 
   </script>
 
+  <style id="hpp-dashboard-fast-switch-style-20260518">
+    /* [HPP DASHBOARD FAST SWITCH PATCH - 2026-05-18] */
+    #view-hpp #hpp-dashboard-view.hpp-loading-soft {
+      opacity: 0.92 !important;
+      pointer-events: none !important;
+      transition: opacity 160ms ease, filter 160ms ease;
+      filter: saturate(0.98);
+    }
+
+    #view-hpp #hpp-dashboard-view.hpp-loading-soft .hpp-card-dash,
+    #view-hpp #hpp-dashboard-view.hpp-loading-soft .hpp-hero-dashboard,
+    #view-hpp #hpp-dashboard-view.hpp-loading-soft > .bg-white,
+    #view-hpp #hpp-dashboard-view.hpp-loading-soft > .bg-white\/95 {
+      transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+    }
+  </style>
+
+  <script id="hpp-dashboard-fast-switch-patch-20260518">
+    // [HPP DASHBOARD FAST SWITCH PATCH - 2026-05-18]
+    (function hppDashboardFastSwitchPatch20260518() {
+      var HPP_TYPES = ['gas', 'listrik', 'air', 'packing', 'bahan', 'nota'];
+      var originalResetDashboardToZero = window.resetHPPDashboardToZero;
+      var originalPopulateFormHPP = window.populateFormHPP;
+      var originalSwitchMainTab = window.switchMainTab;
+      var activeFetches = {};
+      var allowPopulate = false;
+
+      window.currentHPPOutlet = window.currentHPPOutlet || '';
+      window.hppDashboardCache = window.hppDashboardCache || {};
+      window.hppRenderRequestId = window.hppRenderRequestId || 0;
+      window.hppIsLoading = false;
+
+      function byId(id) { return document.getElementById(id); }
+      function norm(value) { return String(value || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+      function currentOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+      function money(value) {
+        if (typeof formatRupiah === 'function') {
+          try { return formatRupiah(Math.round(Number(value) || 0)); } catch (error) {}
+        }
+        return 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
+      }
+      function clean(value) {
+        if (typeof zettCleanNumber === 'function') return zettCleanNumber(value);
+        if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+        var raw = String(value || '').replace(/[^\d.,-]/g, '');
+        if (raw.indexOf(',') >= 0 && raw.indexOf('.') >= 0) raw = raw.replace(/\./g, '').replace(',', '.');
+        else if (raw.indexOf(',') >= 0) raw = raw.replace(',', '.');
+        return Number(raw) || 0;
+      }
+      function pick(row, keys) {
+        row = row || {};
+        for (var i = 0; i < keys.length; i++) {
+          if (row[keys[i]] !== undefined && row[keys[i]] !== null && row[keys[i]] !== '') return row[keys[i]];
+        }
+        return 0;
+      }
+      function setSoftLoading(active) {
+        window.hppIsLoading = !!active;
+        var dashboard = byId('hpp-dashboard-view');
+        if (dashboard) dashboard.classList.toggle('hpp-loading-soft', !!active);
+      }
+      function syncState(values) {
+        values = values || {};
+        window.hppDataState = window.hppDataState || {};
+        HPP_TYPES.forEach(function(type) {
+          window.hppDataState[type] = Number(values[type]) || 0;
+        });
+        var total = HPP_TYPES.reduce(function(sum, type) { return sum + (Number(values[type]) || 0); }, 0);
+        try {
+          if (window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.hpp) {
+            HPP_TYPES.forEach(function(type) { window.APP_STATE.data.hpp[type] = Number(values[type]) || 0; });
+            window.APP_STATE.data.hpp.total = total;
+          }
+        } catch (error) {}
+        return total;
+      }
+      function readState() {
+        var values = {};
+        var appState = (window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.hpp) || {};
+        var localState = window.hppDataState || {};
+        HPP_TYPES.forEach(function(type) {
+          var appValue = appState[type];
+          values[type] = appValue !== undefined && appValue !== null ? (Number(appValue) || 0) : (Number(localState[type]) || 0);
+        });
+        return values;
+      }
+      function fallbackValuesFromRow(row) {
+        var gas = clean(pick(row, ['Gas Per Kg', 'Gas_Per_Kg'])) ||
+          clean(pick(row, ['Estimasi Biaya Gas', 'Gas Per Load', 'Gas_Per_Load']));
+        var listrik = clean(pick(row, ['Cuci Per Kg', 'Listrik Cuci /Kg', 'Listrik Cuci Per Kg'])) +
+          clean(pick(row, ['Kering Per Kg', 'Listrik Kering /Kg', 'Listrik Kering Per Kg'])) +
+          clean(pick(row, ['Listrik Setrika Kg', 'Setrika Per Kg', 'Listrik Setrika /Kg']));
+        var air = clean(pick(row, ['Air Per Kg', 'Air Cuci /Kg'])) +
+          clean(pick(row, ['Air Setrika Kg', 'Air Setrika /Kg']));
+        var packing = clean(pick(row, ['Total Biaya Packing', 'Packing Per Kg', 'Packing_PP_PerKg'])) ||
+          clean(pick(row, ['Packing_PP_PerKg'])) + clean(pick(row, ['Packing_HD_PerKg'])) + clean(pick(row, ['Packing_Jinjing_PerKg']));
+        var bahan = clean(pick(row, ['Total Biaya Chemical', 'Chemical Per Kg', 'Bahan Per Kg']));
+        var nota = clean(pick(row, ['Total Biaya Nota', 'Nota Per Kg', 'Admin Nota Per Kg']));
+        return { gas: gas, listrik: listrik, air: air, packing: packing, bahan: bahan, nota: nota };
+      }
+      function findRow(outlet) {
+        var name = norm(outlet);
+        var sources = [];
+        if (Array.isArray(window.__ZETT_FRESH_HPP_ROWS)) sources.push(window.__ZETT_FRESH_HPP_ROWS);
+        if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) sources.push(masterDataHPP);
+        if (Array.isArray(window.masterDataHPP)) sources.push(window.masterDataHPP);
+        try {
+          if (window.APP_STATE?.data?.master?.hpp) sources.push(window.APP_STATE.data.master.hpp);
+        } catch (error) {}
+
+        for (var s = 0; s < sources.length; s++) {
+          var found = sources[s].find(function(item) {
+            return norm(item?.namaOutlet || item?.['Nama Outlet'] || item?.['Nama_Outlet']) === name;
+          });
+          if (found) return found;
+        }
+        return null;
+      }
+      function renderValues(values, source) {
+        var total = syncState(values);
+        requestAnimationFrame(function() {
+          if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
+            window.zettHPPUpdateDashboardFromState(source || 'hpp-fast-switch');
+          } else if (window.StateMachine && typeof window.StateMachine.renderDashboard === 'function') {
+            window.StateMachine.renderDashboard();
+          } else {
+            var totalEl = byId('dash-hpp-total');
+            if (totalEl) totalEl.textContent = money(total);
+            HPP_TYPES.forEach(function(type) {
+              var valueEl = byId('dash-card-' + type);
+              var pctEl = byId('dash-card-' + type + '-pct');
+              if (valueEl) valueEl.textContent = money(values[type]);
+              if (pctEl) pctEl.textContent = total > 0 ? Math.round((values[type] / total) * 100) + '%' : '0%';
+            });
+          }
+        });
+      }
+      function captureAndCache(outlet, row, source) {
+        var values = readState();
+        var total = HPP_TYPES.reduce(function(sum, type) { return sum + (Number(values[type]) || 0); }, 0);
+        if (!total && row) values = fallbackValuesFromRow(row);
+        window.hppDashboardCache[norm(outlet)] = {
+          outlet: outlet,
+          row: row || null,
+          values: values,
+          updatedAt: Date.now()
+        };
+        renderValues(values, source || 'hpp-fast-switch');
+      }
+      function runLegacyCalculators() {
+        try { if (typeof toggleAirInputs === 'function') toggleAirInputs(); } catch (error) {}
+        try { if (typeof toggleBahanActive === 'function') toggleBahanActive(); } catch (error) {}
+        try { if (typeof toggleBahanInputs === 'function') toggleBahanInputs(); } catch (error) {}
+        try { if (typeof toggleNotaInputs === 'function') toggleNotaInputs(); } catch (error) {}
+        try { if (typeof calculateGas === 'function') calculateGas(); } catch (error) {}
+        try { if (typeof calculateListrik === 'function') calculateListrik(); } catch (error) {}
+        try { if (typeof calculateAir === 'function') calculateAir(); } catch (error) {}
+        try { if (typeof calculatePacking === 'function') calculatePacking(); } catch (error) {}
+        try { if (typeof calculateBahanBaku === 'function') calculateBahanBaku(); } catch (error) {}
+        try { if (typeof calculateNota === 'function') calculateNota(); } catch (error) {}
+        try { if (window.StateMachine && typeof window.StateMachine.calculateTotal === 'function') window.StateMachine.calculateTotal(); } catch (error) {}
+        try { if (window.HPPStateMachine && typeof window.HPPStateMachine.calculateTotal === 'function') window.HPPStateMachine.calculateTotal(); } catch (error) {}
+      }
+      function applyRowAtomic(outlet, row, requestId, source) {
+        if (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== norm(outlet)) return;
+        window.__HPP_ATOMIC_RENDER_LOCK = true;
+        try {
+          window.currentHPPOutlet = outlet;
+          if (typeof zettStoreFreshHPPRow === 'function' && row) zettStoreFreshHPPRow(row);
+          if (typeof zettApplyHPPRowToForm === 'function' && row) zettApplyHPPRowToForm(row);
+          if (typeof originalPopulateFormHPP === 'function') {
+            allowPopulate = true;
+            originalPopulateFormHPP(outlet);
+            allowPopulate = false;
+          } else {
+            runLegacyCalculators();
+          }
+        } finally {
+          allowPopulate = false;
+          window.__HPP_ATOMIC_RENDER_LOCK = false;
+        }
+        captureAndCache(outlet, row, source);
+      }
+      function fetchOutletRow(outlet, requestId, force) {
+        var normalized = norm(outlet);
+        if (!outlet || typeof google === 'undefined' || !google.script || !google.script.run) {
+          setSoftLoading(false);
+          return;
+        }
+        if (activeFetches[normalized] && !force) return;
+        activeFetches[normalized] = Date.now();
+        setSoftLoading(true);
+        google.script.run
+          .withSuccessHandler(function(response) {
+            delete activeFetches[normalized];
+            if (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== normalized) return;
+            setSoftLoading(false);
+            if (!response || response.status !== 'success' || !response.data) return;
+            applyRowAtomic(outlet, response.data, requestId, 'hpp-server');
+          })
+          .withFailureHandler(function(error) {
+            delete activeFetches[normalized];
+            if (requestId === window.hppRenderRequestId) setSoftLoading(false);
+            console.error('GAGAL LOAD HPP OUTLET:', error);
+          })
+          .getHPPRowByOutlet(outlet);
+      }
+      function renderInitialZero() {
+        window.currentHPPOutlet = '';
+        window.hppRenderRequestId += 1;
+        setSoftLoading(false);
+        if (typeof originalResetDashboardToZero === 'function') {
+          originalResetDashboardToZero();
+        } else {
+          renderValues({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 }, 'hpp-initial-zero');
+        }
+      }
+      function switchOutlet(outlet, options) {
+        var config = options || {};
+        var selected = String(outlet || '').trim();
+        if (!selected) {
+          renderInitialZero();
+          return;
+        }
+
+        var requestId = ++window.hppRenderRequestId;
+        window.currentHPPOutlet = selected;
+        window.__HPP_FAST_SWITCH_ACTIVE = true;
+
+        var normalized = norm(selected);
+        var cached = window.hppDashboardCache[normalized];
+        var row = (cached && cached.row) || findRow(selected);
+
+        if (cached && cached.values) {
+          renderValues(cached.values, 'hpp-cache');
+        }
+
+        if (row) {
+          setSoftLoading(false);
+          applyRowAtomic(selected, row, requestId, cached ? 'hpp-cache-row' : 'hpp-local-row');
+          if (!config.noBackgroundRefresh && (!cached || Date.now() - cached.updatedAt > 45000)) {
+            fetchOutletRow(selected, requestId, false);
+          }
+        } else {
+          setSoftLoading(true);
+          fetchOutletRow(selected, requestId, true);
+        }
+
+        setTimeout(function() {
+          if (requestId === window.hppRenderRequestId) window.__HPP_FAST_SWITCH_ACTIVE = false;
+        }, 350);
+      }
+
+      window.resetHPPDashboardToZero = function() {
+        if (currentOutlet() && window.__HPP_FAST_SWITCH_ACTIVE) return;
+        return originalResetDashboardToZero ? originalResetDashboardToZero.apply(this, arguments) : renderInitialZero();
+      };
+
+      window.populateFormHPP = function(namaCabang) {
+        if (window.__HPP_FAST_SWITCH_ACTIVE && !allowPopulate) return;
+        return originalPopulateFormHPP ? originalPopulateFormHPP.apply(this, arguments) : undefined;
+      };
+
+      window.zettRefreshActiveHPPRowFromServer = function(outletName, options) {
+        var outlet = String(outletName || currentOutlet() || '').trim();
+        if (!outlet) return;
+        var config = options || {};
+        var requestId = window.hppRenderRequestId || ++window.hppRenderRequestId;
+        var cached = window.hppDashboardCache[norm(outlet)];
+        if (cached && cached.row && !config.force) {
+          applyRowAtomic(outlet, cached.row, requestId, 'hpp-refresh-cache');
+          if (Date.now() - cached.updatedAt < 45000) return;
+        }
+        fetchOutletRow(outlet, requestId, !!config.force);
+      };
+
+      window.handleGlobalOutletChange = function(value) {
+        var outlet = String(value || '').trim();
+        window.__HPP_GSHEET_SYNC_LOCKED = false;
+        switchOutlet(outlet);
+        try { if (typeof toggleActionButtons === 'function') toggleActionButtons(); } catch (error) {}
+        try { if (typeof checkHPPLock === 'function') checkHPPLock(); } catch (error) {}
+      };
+
+      window.switchMainTab = function(tabName) {
+        var hppOutletBeforeSwitch = tabName === 'hpp' ? currentOutlet() : '';
+        var originalEnsureHPPDashboardLoaded = window.zettEnsureHPPDashboardLoaded;
+        var shouldSuppressLegacyHppRender = !!hppOutletBeforeSwitch;
+        var result;
+        if (shouldSuppressLegacyHppRender) {
+          window.__HPP_ATOMIC_RENDER_LOCK = true;
+          window.zettEnsureHPPDashboardLoaded = function() {};
+        }
+        try {
+          result = originalSwitchMainTab ? originalSwitchMainTab.apply(this, arguments) : undefined;
+        } finally {
+          if (shouldSuppressLegacyHppRender) {
+            window.zettEnsureHPPDashboardLoaded = originalEnsureHPPDashboardLoaded;
+            window.__HPP_ATOMIC_RENDER_LOCK = false;
+          }
+        }
+        if (tabName === 'hpp') {
+          var outlet = currentOutlet();
+          if (!outlet) renderInitialZero();
+          else switchOutlet(outlet, { noBackgroundRefresh: true });
+        }
+        return result;
+      };
+
+      function wrapRenderers() {
+        if (window.__HPP_FAST_SWITCH_RENDERERS_WRAPPED) return;
+        window.__HPP_FAST_SWITCH_RENDERERS_WRAPPED = true;
+
+        if (window.StateMachine && typeof window.StateMachine.renderDashboard === 'function') {
+          var originalRenderDashboard = window.StateMachine.renderDashboard.bind(window.StateMachine);
+          window.StateMachine.renderDashboard = function() {
+            if (window.__HPP_ATOMIC_RENDER_LOCK) return;
+            return originalRenderDashboard.apply(this, arguments);
+          };
+        }
+
+        if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
+          var originalUpdateDashboard = window.zettHPPUpdateDashboardFromState;
+          window.zettHPPUpdateDashboardFromState = function() {
+            if (window.__HPP_ATOMIC_RENDER_LOCK) return;
+            return originalUpdateDashboard.apply(this, arguments);
+          };
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', wrapRenderers, { once: true });
+      } else {
+        wrapRenderers();
+      }
+    })();
+  </script>
+
   <style id="hyper-premium-fintech-ui-patch-2026">
     /* =========================================================
        [HYPER PREMIUM FINTECH UI PATCH - 2026]
