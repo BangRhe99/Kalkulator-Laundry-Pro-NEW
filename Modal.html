@@ -1330,6 +1330,25 @@
         font-weight: 950 !important;
       }
 
+      @media (min-width: 1024px) {
+        #view-hpp #tab-packing > .bento-card {
+          max-width: min(100%, 1220px);
+        }
+
+        #view-hpp #tab-packing .zett-packing-card-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 28px 30px !important;
+          max-width: none;
+          align-items: start;
+        }
+
+        #view-hpp #tab-packing .zett-packing-card-list > .zett-packing-card {
+          grid-column: auto !important;
+          width: 100%;
+          max-width: none;
+        }
+      }
+
       @media (max-width: 640px) {
         #view-hpp #tab-packing > .bento-card {
           padding: 16px !important;
