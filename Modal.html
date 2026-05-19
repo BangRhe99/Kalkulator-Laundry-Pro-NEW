@@ -8404,42 +8404,6 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     text-transform: uppercase !important;
   }
 
-  #view-hpp .hpp-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: clamp(0.9rem, 1.5vw, 1.2rem) !important;
-  }
-
-  #view-hpp .hpp-card-dash {
-    min-height: 214px !important;
-    border-radius: 24px !important;
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.74) !important;
-    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.075), inset 0 1px 0 rgba(255,255,255,0.92) !important;
-  }
-
-  #view-hpp .hpp-card-dash h3,
-  #view-hpp .hpp-cost-label {
-    color: #12355f !important;
-  }
-
-  #view-hpp .hpp-card-percent,
-  #view-hpp .hpp-cost-percent {
-    font-size: 0.92rem !important;
-    padding: 0.47rem 0.7rem !important;
-    box-shadow: 0 12px 26px color-mix(in srgb, var(--hpp-card-accent, #2563eb) 25%, transparent) !important;
-  }
-
-  #view-hpp .hpp-show-detail,
-  #view-hpp .hpp-premium-lite-details {
-    display: grid !important;
-  }
-
-  #view-hpp .hpp-show-detail {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
   @media (max-width: 1024px) {
     #view-hpp .hpp-hero-dashboard {
       grid-template-columns: 1fr !important;
@@ -8451,8 +8415,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   }
 
   @media (max-width: 900px) {
-    #view-hpp .hpp-process-grid,
-    #view-hpp .hpp-grid {
+    #view-hpp .hpp-process-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
   }
@@ -8474,13 +8437,11 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       letter-spacing: 0.08em !important;
     }
 
-    #view-hpp .hpp-process-grid,
-    #view-hpp .hpp-grid {
+    #view-hpp .hpp-process-grid {
       grid-template-columns: 1fr !important;
     }
 
-    #view-hpp .hpp-process-card,
-    #view-hpp .hpp-card-dash {
+    #view-hpp .hpp-process-card {
       min-height: 0 !important;
     }
 
@@ -8497,8 +8458,283 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   }
 </style>
 
+<style id="hpp-hero-card-typography-premium-polish-20260519">
+  /* [HPP HERO CARD TYPOGRAPHY & PREMIUM POLISH PATCH - 2026-05-19] */
+  #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard {
+    grid-template-columns: minmax(0, 1.32fr) minmax(340px, 0.9fr) !important;
+    gap: clamp(1.15rem, 1.8vw, 1.65rem) !important;
+    padding: clamp(1.45rem, 2.4vw, 1.95rem) !important;
+    border-radius: 30px !important;
+    background:
+      linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.97) 100%) !important;
+    border: 1px solid rgba(210, 220, 234, 0.82) !important;
+    box-shadow:
+      0 24px 70px rgba(15, 23, 42, 0.09),
+      0 1px 0 rgba(255,255,255,0.92) inset !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard > .flex-1 {
+    grid-template-rows: auto auto 1fr !important;
+    gap: 0 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard h2 {
+    max-width: 100% !important;
+    color: #082b63 !important;
+    font-size: clamp(1.62rem, 2.6vw, 2.18rem) !important;
+    line-height: 1.04 !important;
+    letter-spacing: 0.105em !important;
+    font-weight: 950 !important;
+    text-wrap: balance !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard h2 + .flex,
+  #view-hpp .hpp-hero-dashboard .hpp-total-value-row {
+    display: none !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard p {
+    margin-top: 0.85rem !important;
+    margin-bottom: clamp(1.25rem, 1.9vw, 1.65rem) !important;
+    max-width: 680px !important;
+    color: #38506c !important;
+    font-size: clamp(0.82rem, 1.04vw, 0.94rem) !important;
+    line-height: 1.45 !important;
+    font-weight: 820 !important;
+    letter-spacing: 0 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: clamp(0.8rem, 1.15vw, 1rem) !important;
+    align-items: stretch !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-card {
+    min-height: 172px !important;
+    padding: 0.86rem 0.86rem 0.82rem !important;
+    border-radius: 18px !important;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(250,252,255,0.98) 100%) !important;
+    border: 1px solid color-mix(in srgb, var(--process-accent) 22%, #d9e2ef) !important;
+    box-shadow:
+      0 14px 34px rgba(15, 23, 42, 0.075),
+      0 1px 0 rgba(255,255,255,0.95) inset !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-card::before {
+    height: 3px !important;
+    opacity: 0.96 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-head {
+    gap: 0.52rem !important;
+    min-height: 34px !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-icon {
+    width: 32px !important;
+    height: 32px !important;
+    flex-basis: 32px !important;
+    border-radius: 11px !important;
+    background: color-mix(in srgb, var(--process-accent) 10%, #ffffff) !important;
+    box-shadow:
+      0 8px 18px color-mix(in srgb, var(--process-accent) 10%, transparent),
+      inset 0 1px 0 rgba(255,255,255,0.96) !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-icon i {
+    display: grid !important;
+    place-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-size: 1rem !important;
+    line-height: 1 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-card[data-hpp-process="setrika"] .hpp-process-icon i {
+    position: relative !important;
+    font-size: 0 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-card[data-hpp-process="setrika"] .hpp-process-icon i::before {
+    content: "" !important;
+    width: 18px !important;
+    height: 11px !important;
+    border-radius: 4px 7px 4px 4px !important;
+    border: 2px solid currentColor !important;
+    border-top-width: 3px !important;
+    transform: skewX(-12deg) translateY(2px) !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-card[data-hpp-process="setrika"] .hpp-process-icon i::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 8px !important;
+    left: 11px !important;
+    width: 8px !important;
+    height: 4px !important;
+    border-radius: 999px 999px 0 0 !important;
+    border: 2px solid currentColor !important;
+    border-bottom: 0 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-title {
+    color: #123967 !important;
+    font-size: clamp(0.68rem, 0.8vw, 0.78rem) !important;
+    line-height: 1.08 !important;
+    font-weight: 950 !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-main {
+    margin-top: 0.85rem !important;
+    gap: 0.18rem !important;
+    align-items: flex-end !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-value {
+    font-size: clamp(1.38rem, 1.8vw, 1.78rem) !important;
+    line-height: 0.9 !important;
+    color: #0b1628 !important;
+    font-weight: 950 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-unit {
+    transform: translateY(-0.08rem) !important;
+    color: #3f5570 !important;
+    font-size: 0.62rem !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-detail {
+    gap: 0.28rem !important;
+    margin-top: 0.8rem !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-detail-row {
+    gap: 0.52rem !important;
+    color: #566b84 !important;
+    font-size: clamp(0.58rem, 0.67vw, 0.68rem) !important;
+    line-height: 1.25 !important;
+    font-weight: 820 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-detail-row strong {
+    color: #142033 !important;
+    font-size: 0.96em !important;
+    font-weight: 950 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-foot {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 0.62rem !important;
+    padding-top: 0.78rem !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-bar {
+    height: 4px !important;
+    background: #e8eef6 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-pct {
+    color: #203a59 !important;
+    font-size: 0.66rem !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-composition-panel {
+    grid-template-columns: minmax(136px, 0.78fr) minmax(158px, 1fr) !important;
+    gap: 0.7rem 0.95rem !important;
+    padding: clamp(1rem, 1.55vw, 1.28rem) !important;
+    border-radius: 22px !important;
+    background: rgba(255,255,255,0.82) !important;
+    border: 1px solid rgba(210, 220, 234, 0.8) !important;
+    box-shadow: 0 14px 38px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255,255,255,0.94) !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-composition-title {
+    color: #123967 !important;
+    font-size: 0.7rem !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0.085em !important;
+    font-weight: 950 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-donut-wrap {
+    width: clamp(136px, 13vw, 166px) !important;
+    height: clamp(136px, 13vw, 166px) !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-donut-center {
+    width: 48% !important;
+    height: 48% !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-donut-center .hpp-donut-total-label {
+    font-size: 0.52rem !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-donut-center .hpp-donut-total-value {
+    font-size: clamp(0.96rem, 1.25vw, 1.12rem) !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-composition-list {
+    gap: 0.44rem !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-composition-row {
+    grid-template-columns: auto minmax(58px, 1fr) minmax(54px, auto) minmax(28px, auto) !important;
+    gap: 0.38rem !important;
+    font-size: clamp(0.58rem, 0.7vw, 0.7rem) !important;
+    line-height: 1.18 !important;
+    font-weight: 860 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-composition-amount,
+  #view-hpp .hpp-hero-dashboard .hpp-composition-pct {
+    font-size: inherit !important;
+    font-weight: 950 !important;
+  }
+
+  @media (max-width: 1100px) {
+    #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard {
+      grid-template-columns: 1fr !important;
+    }
+
+    #view-hpp .hpp-hero-dashboard .hpp-process-card {
+      min-height: 160px !important;
+    }
+  }
+
+  @media (max-width: 720px) {
+    #view-hpp .hpp-hero-dashboard .hpp-process-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    #view-hpp .hpp-hero-dashboard .hpp-process-card {
+      min-height: 0 !important;
+    }
+
+    #view-hpp .hpp-hero-dashboard .hpp-process-value {
+      font-size: clamp(1.55rem, 8vw, 2rem) !important;
+    }
+
+    #view-hpp .hpp-hero-dashboard .hpp-composition-panel {
+      grid-template-columns: 1fr !important;
+      justify-items: stretch !important;
+    }
+  }
+</style>
+
 <script id="hpp-dashboard-premium-ui-patch-js-20260519">
   // [HPP DASHBOARD PREMIUM UI PATCH - 2026-05-19]
+  // [HPP HERO CARD TYPOGRAPHY & PREMIUM POLISH PATCH - 2026-05-19]
   (function hppDashboardPremiumUiPatch20260519() {
     const PROCESS = [
       {
@@ -8619,15 +8855,6 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         heroText.appendChild(grid);
       }
 
-      const oldGrid = dashboard.querySelector('.grid.grid-cols-2, .hpp-grid');
-      if (oldGrid) oldGrid.classList.add('hpp-grid');
-    }
-
-    function ensureComponentActionsVisible() {
-      document.querySelectorAll('#view-hpp .hpp-show-detail, #view-hpp .hpp-premium-lite-details').forEach(el => {
-        el.hidden = false;
-        el.removeAttribute('hidden');
-      });
     }
 
     function updateProcessCards() {
@@ -8667,7 +8894,6 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     function refresh() {
       ensureProcessCards();
-      ensureComponentActionsVisible();
       updateProcessCards();
     }
 
