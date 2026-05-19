@@ -8186,6 +8186,534 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   }
 </style>
 
+<style id="hpp-dashboard-premium-ui-patch-20260519">
+  /* [HPP DASHBOARD PREMIUM UI PATCH - 2026-05-19] */
+  #view-hpp #hpp-dashboard-view {
+    width: min(100%, 1180px) !important;
+    max-width: 1180px !important;
+    margin-inline: auto !important;
+    padding-bottom: clamp(1rem, 2vw, 1.75rem) !important;
+    color: #102033 !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard {
+    display: grid !important;
+    grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr) !important;
+    gap: clamp(1rem, 1.8vw, 1.45rem) !important;
+    align-items: stretch !important;
+    padding: clamp(1.15rem, 2vw, 1.6rem) !important;
+    border-radius: 28px !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    border: 1px solid rgba(203, 213, 225, 0.72) !important;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.92) !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard > .flex-1 {
+    display: grid !important;
+    grid-template-rows: auto 1fr !important;
+    align-content: start !important;
+    justify-content: stretch !important;
+    justify-items: stretch !important;
+    gap: clamp(0.9rem, 1.4vw, 1.15rem) !important;
+    min-width: 0 !important;
+    text-align: left !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .inline-flex,
+  #view-hpp .hpp-total-value-row {
+    display: none !important;
+  }
+
+  #view-hpp #hpp-dashboard-view h2 {
+    margin: 0 !important;
+    color: #082a5f !important;
+    font-size: clamp(1.4rem, 2.45vw, 2.25rem) !important;
+    line-height: 1.02 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    font-weight: 950 !important;
+  }
+
+  #view-hpp #hpp-dashboard-view .hpp-hero-dashboard p {
+    max-width: 720px !important;
+    margin: 0 !important;
+    color: #35516f !important;
+    font-size: clamp(0.84rem, 1.1vw, 0.98rem) !important;
+    line-height: 1.5 !important;
+    font-weight: 800 !important;
+  }
+
+  #view-hpp .hpp-process-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: clamp(0.75rem, 1.2vw, 1rem) !important;
+    min-width: 0 !important;
+  }
+
+  #view-hpp .hpp-process-card {
+    --process-accent: #2563eb;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    min-height: 205px !important;
+    padding: 1rem !important;
+    border-radius: 22px !important;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%) !important;
+    border: 1px solid rgba(203, 213, 225, 0.7) !important;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07) !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp .hpp-process-card::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 0 auto !important;
+    height: 3px !important;
+    background: var(--process-accent) !important;
+  }
+
+  #view-hpp .hpp-process-head {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.65rem !important;
+    min-width: 0 !important;
+  }
+
+  #view-hpp .hpp-process-icon {
+    width: 38px !important;
+    height: 38px !important;
+    flex: 0 0 38px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 14px !important;
+    color: var(--process-accent) !important;
+    background: color-mix(in srgb, var(--process-accent) 11%, #ffffff) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.94), 0 10px 20px rgba(15,23,42,0.07) !important;
+  }
+
+  #view-hpp .hpp-process-icon i {
+    font-size: 1.22rem !important;
+  }
+
+  #view-hpp .hpp-process-title {
+    color: #0f2f66 !important;
+    font-size: 0.84rem !important;
+    font-weight: 950 !important;
+    line-height: 1.1 !important;
+  }
+
+  #view-hpp .hpp-process-main {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 0.28rem !important;
+    margin-top: 0.95rem !important;
+    min-width: 0 !important;
+  }
+
+  #view-hpp .hpp-process-value {
+    color: #071426 !important;
+    font-size: clamp(1.45rem, 2.05vw, 1.95rem) !important;
+    line-height: 0.95 !important;
+    font-weight: 950 !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  #view-hpp .hpp-process-unit {
+    color: #475569 !important;
+    font-size: 0.74rem !important;
+    font-weight: 950 !important;
+    white-space: nowrap !important;
+  }
+
+  #view-hpp .hpp-process-detail {
+    display: grid !important;
+    gap: 0.32rem !important;
+    margin-top: 0.85rem !important;
+    min-width: 0 !important;
+  }
+
+  #view-hpp .hpp-process-detail-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.6rem !important;
+    min-width: 0 !important;
+    color: #64748b !important;
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+    font-weight: 800 !important;
+  }
+
+  #view-hpp .hpp-process-detail-row span:first-child {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  #view-hpp .hpp-process-detail-row strong {
+    color: #0f172a !important;
+    font-weight: 950 !important;
+    white-space: nowrap !important;
+  }
+
+  #view-hpp .hpp-process-foot {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    margin-top: auto !important;
+    padding-top: 0.9rem !important;
+  }
+
+  #view-hpp .hpp-process-bar {
+    height: 5px !important;
+    overflow: hidden !important;
+    border-radius: 999px !important;
+    background: #e8eef7 !important;
+  }
+
+  #view-hpp .hpp-process-bar span {
+    display: block !important;
+    width: var(--process-width, 0%) !important;
+    height: 100% !important;
+    border-radius: inherit !important;
+    background: var(--process-accent) !important;
+    box-shadow: 0 0 14px color-mix(in srgb, var(--process-accent) 28%, transparent) !important;
+  }
+
+  #view-hpp .hpp-process-pct {
+    color: #0f2f66 !important;
+    font-size: 0.74rem !important;
+    font-weight: 950 !important;
+    white-space: nowrap !important;
+  }
+
+  #view-hpp .hpp-composition-panel {
+    align-self: stretch !important;
+    min-height: 100% !important;
+    border-radius: 24px !important;
+    background: rgba(255,255,255,0.9) !important;
+  }
+
+  #view-hpp .hpp-composition-title {
+    color: #0f2f66 !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+  }
+
+  #view-hpp .hpp-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: clamp(0.9rem, 1.5vw, 1.2rem) !important;
+  }
+
+  #view-hpp .hpp-card-dash {
+    min-height: 214px !important;
+    border-radius: 24px !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(203, 213, 225, 0.74) !important;
+    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.075), inset 0 1px 0 rgba(255,255,255,0.92) !important;
+  }
+
+  #view-hpp .hpp-card-dash h3,
+  #view-hpp .hpp-cost-label {
+    color: #12355f !important;
+  }
+
+  #view-hpp .hpp-card-percent,
+  #view-hpp .hpp-cost-percent {
+    font-size: 0.92rem !important;
+    padding: 0.47rem 0.7rem !important;
+    box-shadow: 0 12px 26px color-mix(in srgb, var(--hpp-card-accent, #2563eb) 25%, transparent) !important;
+  }
+
+  #view-hpp .hpp-show-detail,
+  #view-hpp .hpp-premium-lite-details {
+    display: grid !important;
+  }
+
+  #view-hpp .hpp-show-detail {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  @media (max-width: 1024px) {
+    #view-hpp .hpp-hero-dashboard {
+      grid-template-columns: 1fr !important;
+    }
+
+    #view-hpp .hpp-composition-panel {
+      min-height: 0 !important;
+    }
+  }
+
+  @media (max-width: 900px) {
+    #view-hpp .hpp-process-grid,
+    #view-hpp .hpp-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    #view-hpp {
+      padding-left: 0.85rem !important;
+      padding-right: 0.85rem !important;
+      padding-bottom: 1.35rem !important;
+    }
+
+    #view-hpp .hpp-hero-dashboard {
+      padding: 1rem !important;
+      border-radius: 22px !important;
+    }
+
+    #view-hpp #hpp-dashboard-view h2 {
+      font-size: clamp(1.22rem, 8vw, 1.75rem) !important;
+      letter-spacing: 0.08em !important;
+    }
+
+    #view-hpp .hpp-process-grid,
+    #view-hpp .hpp-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    #view-hpp .hpp-process-card,
+    #view-hpp .hpp-card-dash {
+      min-height: 0 !important;
+    }
+
+    #view-hpp .hpp-composition-panel {
+      grid-template-columns: 1fr !important;
+      justify-items: stretch !important;
+    }
+
+    #view-hpp .hpp-donut-wrap {
+      justify-self: center !important;
+      width: min(68vw, 180px) !important;
+      height: min(68vw, 180px) !important;
+    }
+  }
+</style>
+
+<script id="hpp-dashboard-premium-ui-patch-js-20260519">
+  // [HPP DASHBOARD PREMIUM UI PATCH - 2026-05-19]
+  (function hppDashboardPremiumUiPatch20260519() {
+    const PROCESS = [
+      {
+        key: 'cuci',
+        title: 'HPP Cuci',
+        icon: 'ph-washing-machine',
+        color: '#2563eb',
+        unit: '/Load',
+        details: [
+          { label: 'Listrik Pompa /Load', source: () => readMoneyById('dispListrikPompaLoad') || findDetailValue('dash-card-listrik-details', ['Listrik Pompa /Load']) },
+          { label: 'Listrik Cuci /Load', source: () => readMoneyById('dispListrikCuciLoad') || findDetailValue('dash-card-listrik-details', ['Listrik Cuci /Load']) },
+          { label: 'Air Cuci /Load', source: () => readMoneyById('dispAirCuciLoad') || findDetailValue('dash-card-air-details', ['Air Cuci /Load']) }
+        ]
+      },
+      {
+        key: 'kering',
+        title: 'HPP Kering',
+        icon: 'ph-timer',
+        color: '#f97316',
+        unit: '/Load',
+        details: [
+          { label: 'Listrik Kering /Load', source: () => readMoneyById('dispListrikPengeringLoad') || findDetailValue('dash-card-listrik-details', ['Listrik Kering /Load']) },
+          { label: 'Gas Kering /Load', source: () => readMoneyById('displayEstimasiBiayaGas') || findDetailValue('dash-card-gas-details', ['Gas Kering /Load']) }
+        ]
+      },
+      {
+        key: 'setrika',
+        title: 'HPP Setrika',
+        icon: 'ph-iron',
+        color: '#7c3aed',
+        unit: '/Jam',
+        details: [
+          { label: 'Air Setrika /Jam', source: () => readMoneyById('dispAirBoilerJam') || findDetailValue('dash-card-air-details', ['Air Setrika /Jam']) },
+          { label: 'Listrik Setrika /Jam', source: () => readMoneyById('dispListrikSetrikaJam') || findDetailValue('dash-card-listrik-details', ['Listrik Setrika /Jam']) },
+          { label: 'Gas Setrika /Jam', source: () => findDetailValue('dash-card-gas-details', ['Gas Setrika /Jam']) }
+        ]
+      }
+    ];
+
+    let timer = null;
+
+    function byId(id) { return document.getElementById(id); }
+
+    function clean(value) {
+      if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+      return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
+    }
+
+    function money(value) {
+      const rounded = Math.round(Number(value) || 0);
+      if (typeof window.formatRupiah === 'function') {
+        try { return window.formatRupiah(rounded); } catch (error) {}
+      }
+      return 'Rp ' + rounded.toLocaleString('id-ID');
+    }
+
+    function readMoneyById(id) {
+      const el = byId(id);
+      return el ? clean(el.textContent || el.value) : 0;
+    }
+
+    function findDetailValue(containerId, labels) {
+      const container = byId(containerId);
+      if (!container) return 0;
+      const needles = labels.map(label => String(label).toLowerCase());
+      const rows = Array.from(container.querySelectorAll('div'));
+      for (const row of rows) {
+        const label = String(row.querySelector('span')?.textContent || '').toLowerCase();
+        if (needles.some(needle => label.includes(needle))) {
+          return clean(row.querySelector('strong')?.textContent || row.textContent);
+        }
+      }
+      return 0;
+    }
+
+    function ensureProcessCards() {
+      const dashboard = byId('hpp-dashboard-view');
+      const hero = dashboard ? dashboard.firstElementChild : null;
+      const heroText = hero ? hero.querySelector('.flex-1') : null;
+      if (!dashboard || !hero || !heroText) return;
+
+      hero.classList.add('hpp-hero-dashboard');
+      const title = heroText.querySelector('h2');
+      const subtitle = heroText.querySelector('p');
+      const total = byId('dash-hpp-total');
+      const totalRow = total ? total.closest('.flex') : null;
+
+      if (title) title.textContent = 'TOTAL HPP VARIABEL';
+      if (subtitle) subtitle.textContent = 'Ringkasan biaya variabel untuk menjaga margin tetap sehat';
+      if (totalRow) totalRow.classList.add('hpp-total-value-row');
+
+      let grid = heroText.querySelector('.hpp-process-grid');
+      if (!grid) {
+        grid = document.createElement('div');
+        grid.className = 'hpp-process-grid';
+        PROCESS.forEach(item => {
+          const card = document.createElement('article');
+          card.className = 'hpp-process-card';
+          card.dataset.hppProcess = item.key;
+          card.style.setProperty('--process-accent', item.color);
+          card.innerHTML = [
+            '<div class="hpp-process-head">',
+              '<span class="hpp-process-icon"><i class="ph ' + item.icon + '"></i></span>',
+              '<span class="hpp-process-title">' + item.title + '</span>',
+            '</div>',
+            '<div class="hpp-process-main">',
+              '<span class="hpp-process-value" data-process-value="' + item.key + '">Rp 0</span>',
+              '<span class="hpp-process-unit">' + item.unit + '</span>',
+            '</div>',
+            '<div class="hpp-process-detail" data-process-detail="' + item.key + '"></div>',
+            '<div class="hpp-process-foot">',
+              '<div class="hpp-process-bar"><span data-process-bar="' + item.key + '"></span></div>',
+              '<span class="hpp-process-pct" data-process-pct="' + item.key + '">0%</span>',
+            '</div>'
+          ].join('');
+          grid.appendChild(card);
+        });
+        heroText.appendChild(grid);
+      }
+
+      const oldGrid = dashboard.querySelector('.grid.grid-cols-2, .hpp-grid');
+      if (oldGrid) oldGrid.classList.add('hpp-grid');
+    }
+
+    function ensureComponentActionsVisible() {
+      document.querySelectorAll('#view-hpp .hpp-show-detail, #view-hpp .hpp-premium-lite-details').forEach(el => {
+        el.hidden = false;
+        el.removeAttribute('hidden');
+      });
+    }
+
+    function updateProcessCards() {
+      const processValues = {};
+      PROCESS.forEach(item => {
+        const detailRows = item.details.map(detail => ({
+          label: detail.label,
+          value: Math.max(0, Number(detail.source()) || 0)
+        }));
+        const total = detailRows.reduce((sum, row) => sum + row.value, 0);
+        processValues[item.key] = total;
+
+        const valueEl = document.querySelector('#view-hpp [data-process-value="' + item.key + '"]');
+        const detailEl = document.querySelector('#view-hpp [data-process-detail="' + item.key + '"]');
+        const nextValue = money(total);
+        if (valueEl && valueEl.textContent !== nextValue) valueEl.textContent = nextValue;
+        if (detailEl) {
+          const nextDetailHtml = detailRows
+            .filter(row => row.value > 0 || item.key !== 'setrika' || row.label === 'Air Setrika /Jam')
+            .slice(0, 3)
+            .map(row => '<div class="hpp-process-detail-row"><span>' + row.label + '</span><strong>' + money(row.value) + '</strong></div>')
+            .join('');
+          if (detailEl.innerHTML !== nextDetailHtml) detailEl.innerHTML = nextDetailHtml;
+        }
+      });
+
+      const grand = PROCESS.reduce((sum, item) => sum + (processValues[item.key] || 0), 0);
+      PROCESS.forEach(item => {
+        const pct = grand > 0 ? Math.round(((processValues[item.key] || 0) / grand) * 100) : 0;
+        const pctEl = document.querySelector('#view-hpp [data-process-pct="' + item.key + '"]');
+        const barEl = document.querySelector('#view-hpp [data-process-bar="' + item.key + '"]');
+        const nextPct = pct + '%';
+        if (pctEl && pctEl.textContent !== nextPct) pctEl.textContent = nextPct;
+        if (barEl) barEl.style.setProperty('--process-width', pct + '%');
+      });
+    }
+
+    function refresh() {
+      ensureProcessCards();
+      ensureComponentActionsVisible();
+      updateProcessCards();
+    }
+
+    function scheduleRefresh() {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(refresh, 90);
+    }
+
+    function wrap(name) {
+      const fn = window[name];
+      if (typeof fn !== 'function' || fn.__hppPremiumUiWrapped) return;
+      const wrapped = function() {
+        const result = fn.apply(this, arguments);
+        scheduleRefresh();
+        return result;
+      };
+      wrapped.__hppPremiumUiWrapped = true;
+      window[name] = wrapped;
+    }
+
+    function boot() {
+      ['calculateGas', 'calculateListrik', 'calculateAir', 'calculatePacking', 'calculateBahanBaku', 'calculateNota', 'zettHPPUpdateDashboardFromState'].forEach(wrap);
+      refresh();
+      window.setTimeout(refresh, 350);
+      window.setTimeout(refresh, 1200);
+
+      const dashboard = byId('hpp-dashboard-view');
+      if (dashboard && window.MutationObserver) {
+        const observer = new MutationObserver(scheduleRefresh);
+        observer.observe(dashboard, { childList: true, subtree: true, characterData: true });
+      }
+
+      document.addEventListener('change', event => {
+        if (event.target && (event.target.id === 'inputNamaHPP' || event.target.closest('#view-hpp'))) scheduleRefresh();
+      });
+      document.addEventListener('input', event => {
+        if (event.target && event.target.closest('#view-hpp')) scheduleRefresh();
+      });
+      window.addEventListener('resize', scheduleRefresh, { passive: true });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+    else boot();
+  })();
+</script>
+
 <style id="zett-hpp-action-area-flow-last-20260516">
   #view-hpp #actionAreaHPP,
   #actionAreaHPP {
