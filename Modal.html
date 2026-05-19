@@ -9027,7 +9027,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
         const valueEl = document.querySelector('#view-hpp [data-process-value="' + item.key + '"]');
         const detailEl = document.querySelector('#view-hpp [data-process-detail="' + item.key + '"]');
-        const nextValue = selfService && item.key === 'setrika' ? '' : money(total);
+        const nextValue = money(total);
         if (valueEl && valueEl.textContent !== nextValue) valueEl.textContent = nextValue;
         if (detailEl) {
           const nextDetailHtml = selfService && item.key === 'setrika'

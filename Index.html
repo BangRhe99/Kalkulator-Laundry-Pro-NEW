@@ -642,6 +642,7 @@
 
         if (
           isFirstHPPOpen &&
+          !selectedHPPOutlet &&
           typeof resetHPPDashboardToZero === 'function'
         ) {
           window.__HPP_FORCE_ZERO_DASHBOARD = true;
@@ -650,12 +651,18 @@
             window.zettResetHPPProcessCardsToZero();
           }
           window.__HPP_FIRST_OPEN_ZERO_DONE = true;
-        } else if (
+        } else {
+          window.__HPP_FORCE_ZERO_DASHBOARD = false;
+        }
+        if (isFirstHPPOpen) window.__HPP_FIRST_OPEN_ZERO_DONE = true;
+
+        if (!isFirstHPPOpen && (
           window.StateMachine &&
           typeof window.StateMachine.calculateTotal === 'function'
-        ) {
+        )) {
           window.StateMachine.calculateTotal();
         } else if (
+          !isFirstHPPOpen &&
           window.HPPStateMachine &&
           typeof window.HPPStateMachine.calculateTotal === 'function'
         ) {
@@ -718,6 +725,9 @@
       badge.classList.remove('hidden');
 
     }
+
+    // [HPP DASHBOARD OUTLET DATA RESTORE + CATEGORY BADGE FIX - 2026-05-19]
+    window.updateHeaderKategoriLaundryInfo = updateHeaderKategoriLaundryInfo;
 
     function handleGlobalOutletChange(value) {
 
@@ -933,6 +943,9 @@
           updatedAt: Date.now()
         };
         renderValues(values, source || 'hpp-fast-switch');
+        setTimeout(function() {
+          if (typeof window.zettRefreshHPPProcessCards === 'function') window.zettRefreshHPPProcessCards();
+        }, 120);
       }
       function runLegacyCalculators() {
         try { if (typeof toggleAirInputs === 'function') toggleAirInputs(); } catch (error) {}
@@ -993,6 +1006,7 @@
           .getHPPRowByOutlet(outlet);
       }
       function renderInitialZero() {
+        window.__HPP_FORCE_ZERO_DASHBOARD = true;
         window.currentHPPOutlet = '';
         window.hppRenderRequestId += 1;
         setSoftLoading(false);
@@ -1007,9 +1021,11 @@
         var selected = String(outlet || '').trim();
         if (!selected) {
           renderInitialZero();
+          if (typeof window.updateHeaderKategoriLaundryInfo === 'function') window.updateHeaderKategoriLaundryInfo();
           return;
         }
 
+        window.__HPP_FORCE_ZERO_DASHBOARD = false;
         var requestId = ++window.hppRenderRequestId;
         window.currentHPPOutlet = selected;
         window.__HPP_FAST_SWITCH_ACTIVE = true;
@@ -1063,8 +1079,14 @@
 
       window.handleGlobalOutletChange = function(value) {
         var outlet = String(value || '').trim();
+        window.__HPP_FORCE_ZERO_DASHBOARD = false;
         window.__HPP_GSHEET_SYNC_LOCKED = false;
         switchOutlet(outlet);
+        try { if (typeof window.updateHeaderKategoriLaundryInfo === 'function') window.updateHeaderKategoriLaundryInfo(); } catch (error) {}
+        setTimeout(function() {
+          try { if (typeof window.updateHeaderKategoriLaundryInfo === 'function') window.updateHeaderKategoriLaundryInfo(); } catch (error) {}
+          try { if (typeof window.zettRefreshHPPProcessCards === 'function') window.zettRefreshHPPProcessCards(); } catch (error) {}
+        }, 180);
         try { if (typeof toggleActionButtons === 'function') toggleActionButtons(); } catch (error) {}
         try { if (typeof checkHPPLock === 'function') checkHPPLock(); } catch (error) {}
       };
