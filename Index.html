@@ -702,7 +702,10 @@
 
       const outletName = String(select.value || '').trim().toLowerCase();
       const rows = [];
+      if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) rows.push(...masterDataCabang);
       if (Array.isArray(window.masterDataCabang)) rows.push(...window.masterDataCabang);
+      if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) rows.push(...masterDataHPP);
+      if (Array.isArray(window.masterDataHPP)) rows.push(...window.masterDataHPP);
       if (
         window.APP_STATE &&
         window.APP_STATE.data &&
@@ -711,9 +714,23 @@
       ) {
         rows.push(...window.APP_STATE.data.master.cabang);
       }
+      if (
+        window.APP_STATE &&
+        window.APP_STATE.data &&
+        window.APP_STATE.data.master &&
+        Array.isArray(window.APP_STATE.data.master.hpp)
+      ) {
+        rows.push(...window.APP_STATE.data.master.hpp);
+      }
 
       const outlet = rows.find(item => String(item?.namaOutlet || item?.['Nama Outlet'] || '').trim().toLowerCase() === outletName);
-      const kategori = String(outlet?.kategori || outlet?.kategoriLaundry || outlet?.['Kategori Laundry'] || '').trim();
+      const kategoriRaw = String(outlet?.kategori || outlet?.kategoriLaundry || outlet?.['Kategori Laundry'] || '').trim();
+      const kategoriLower = kategoriRaw.toLowerCase();
+      const kategori = kategoriLower.includes('self')
+        ? 'Self Service'
+        : (kategoriLower.includes('hybrid')
+          ? 'Hybrid'
+          : ((kategoriLower.includes('drop') || kategoriLower.includes('kilo')) ? 'Drop Off / Kiloan' : kategoriRaw));
 
       if (!outletName || !kategori) {
         badge.classList.add('hidden');
