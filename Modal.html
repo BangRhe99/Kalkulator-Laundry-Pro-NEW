@@ -776,9 +776,9 @@
           </div>
         </div>
 
-        <div class="bento-grid">
+        <div class="bento-grid zett-air-cost-grid">
           <!-- Pencucian Mesin Cuci -->
-          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+          <div class="bento-col-6 zett-air-wash-card" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
             <div style="position: absolute; top: 0; right: 0; background: rgba(59, 130, 246, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-washing-machine text-blue-500 text-xl"></i></div>
             <h4 style="font-size: 0.9rem; font-weight: 800; color: #3b82f6; margin-bottom: 1rem;">Pencucian (Mesin Cuci)</h4>
             
@@ -798,7 +798,7 @@
           </div>
 
           <!-- Setrika Uap Boiler -->
-          <div class="bento-col-6" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
+          <div id="zettAirSteamIronCard" class="bento-col-6 zett-air-steam-card" data-air-steam-card="boiler" style="border: 1px solid var(--omni-border); border-radius: var(--rad-xl); padding: 1.25rem; position: relative;">
             <div style="position: absolute; top: 0; right: 0; background: rgba(168, 85, 247, 0.1); border-bottom-left-radius: 1.25rem; padding: 0.75rem;"><i class="ph ph-wind text-purple-500 text-xl"></i></div>
             <h4 style="font-size: 0.9rem; font-weight: 800; color: #9333ea; margin-bottom: 1rem;">Setrika Uap (Boiler)</h4>
             
@@ -2974,6 +2974,12 @@
           if (typeof window.calculateListrik === 'function') window.calculateListrik();
         }, 30);
       }
+      if (type === 'air') {
+        setTimeout(function() {
+          if (typeof window.zettRenderWaterAnalysisForm === 'function') window.zettRenderWaterAnalysisForm();
+          if (typeof window.calculateAir === 'function') window.calculateAir();
+        }, 30);
+      }
 
       const scroller = byId('mainViewScroller') || document.querySelector('.custom-scroll');
       if (scroller && typeof scroller.scrollTo === 'function') {
@@ -4831,6 +4837,48 @@
      - Menjaga form Air, Bahan, Nota, dan Setrika tetap bisa dibuka
   ========================================================================= */
 
+  /* [AIR FORM STEAM IRON VISIBILITY PATCH - 2026-05-19] */
+  (function zettAirSteamIronVisibilityStyle20260519() {
+    if (document.getElementById('zett-air-steam-visibility-style-20260519')) return;
+    const style = document.createElement('style');
+    style.id = 'zett-air-steam-visibility-style-20260519';
+    style.textContent = `
+      /* [AIR FORM STEAM IRON VISIBILITY PATCH - 2026-05-19] */
+      #tab-air .zett-air-cost-grid {
+        align-items: stretch;
+      }
+
+      #tab-air .zett-air-wash-card,
+      #tab-air .zett-air-steam-card {
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: 0 16px 38px -32px rgba(15, 23, 42, 0.42);
+        min-width: 0;
+      }
+
+      #tab-air .zett-air-steam-card {
+        background:
+          linear-gradient(180deg, rgba(250, 245, 255, 0.68), rgba(255, 255, 255, 0.94));
+        border-color: rgba(216, 180, 254, 0.48) !important;
+      }
+
+      #tab-air .zett-air-steam-card.zett-air-steam-hidden {
+        display: none !important;
+      }
+
+      #tab-air .zett-air-cost-grid.zett-air-steam-off .zett-air-wash-card {
+        grid-column: span 12 / span 12;
+      }
+
+      @media (max-width: 767px) {
+        #tab-air .zett-air-cost-grid .zett-air-wash-card,
+        #tab-air .zett-air-cost-grid .zett-air-steam-card {
+          grid-column: span 12 / span 12;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  })();
+
   if (typeof window.toggleAirInputs !== 'function') {
     window.toggleAirInputs = function() {
       const sumberAir = document.getElementById('inputAirSumber')?.value || 'pdam';
@@ -4857,8 +4905,15 @@
       }
 
       if (wrapAirGalon) {
-        wrapAirGalon.classList.toggle('hidden', boilerSumber !== 'galon');
-        wrapAirGalon.style.display = boilerSumber === 'galon' ? 'flex' : 'none';
+        const steamVisible = typeof window.shouldShowWaterSteamIronCard === 'function'
+          ? window.shouldShowWaterSteamIronCard()
+          : true;
+        wrapAirGalon.classList.toggle('hidden', !steamVisible || boilerSumber !== 'galon');
+        wrapAirGalon.style.display = steamVisible && boilerSumber === 'galon' ? 'flex' : 'none';
+      }
+
+      if (typeof window.zettRenderWaterAnalysisForm === 'function') {
+        window.zettRenderWaterAnalysisForm();
       }
     };
   }
@@ -5706,12 +5761,77 @@ window.saveGasHPPData = function(event) {
     const row = getRow();
     const kategoriRaw = outlet.kategori || row['Kategori Laundry'] || byId('inputKategori')?.value || 'Drop Off/Kiloan';
     const kategori = norm(kategoriRaw);
+    const jenisSetrikaRaw = outlet.tipeSetrikaUtama || outlet.tipeSetrika || row['Tipe Setrika'] || byId('jenisSetrika')?.value || '';
+    const jenisSetrika = norm(jenisSetrikaRaw);
+    const isSelfService = kategori.includes('self');
+    const isDropOff = kategori.includes('drop') || kategori.includes('kilo');
+    const isHybrid = kategori.includes('hybrid');
+    const setrikaListrikToggle = !!byId('toggleSetrikaListrik')?.checked;
+    const usesElectricIron = jenisSetrika.includes('listrik') || (setrikaListrikToggle && !jenisSetrika.includes('uap') && !jenisSetrika.includes('boiler') && !jenisSetrika.includes('steam'));
+    const usesSteamIron = !usesElectricIron && (
+      jenisSetrika.includes('uap') ||
+      jenisSetrika.includes('boiler') ||
+      jenisSetrika.includes('steam') ||
+      jenisSetrika.includes('gas')
+    );
     return {
       kategoriBisnis: kategoriRaw,
-      isSelfService: kategori.includes('self'),
-      isDropOff: kategori.includes('drop') || kategori.includes('kiloan'),
-      isHybrid: kategori.includes('hybrid')
+      jenisSetrika: jenisSetrikaRaw,
+      isSelfService,
+      isDropOff,
+      isHybrid,
+      usesSteamIron,
+      showSteamIronCard: !isSelfService && (isDropOff || isHybrid) && usesSteamIron
     };
+  }
+
+  // [AIR FORM STEAM IRON VISIBILITY PATCH - 2026-05-19]
+  function shouldShowWaterSteamIronCard(profile) {
+    if (profile) {
+      const kategori = norm(profile.kategoriLaundry || profile.kategori || profile.kategoriBisnis || '');
+      const jenisSetrika = norm(profile.jenisSetrika || profile.tipeSetrika || profile.tipeSetrikaUtama || profile.setrika || '');
+      const isSelfService = kategori.includes('self');
+      const isDropOff = kategori.includes('drop') || kategori.includes('kilo');
+      const isHybrid = kategori.includes('hybrid');
+      const usesElectricIron = jenisSetrika.includes('listrik');
+      const usesSteamIron = !usesElectricIron && (
+        jenisSetrika.includes('uap') ||
+        jenisSetrika.includes('boiler') ||
+        jenisSetrika.includes('steam') ||
+        jenisSetrika.includes('gas')
+      );
+      return !isSelfService && (isDropOff || isHybrid) && usesSteamIron;
+    }
+    return !!zettGetWaterUsageContext().showSteamIronCard;
+  }
+
+  function zettRenderWaterAnalysisForm() {
+    const showSteam = shouldShowWaterSteamIronCard();
+    const grid = document.querySelector('#tab-air .zett-air-cost-grid');
+    const steamCard = byId('zettAirSteamIronCard') || document.querySelector('#tab-air [data-air-steam-card="boiler"]');
+    const steamInputs = ['inputAirBoilerSumber', 'inputAirHargaGalon', 'inputAirLiterGalon', 'inputAirBoilerLiter', 'inputAirBoilerJam', 'inputAirBoilerKgJam'];
+
+    if (grid) grid.classList.toggle('zett-air-steam-off', !showSteam);
+    if (steamCard) {
+      steamCard.classList.toggle('hidden', !showSteam);
+      steamCard.classList.toggle('zett-air-steam-hidden', !showSteam);
+      steamCard.style.display = showSteam ? '' : 'none';
+      steamCard.setAttribute('aria-hidden', showSteam ? 'false' : 'true');
+    }
+
+    steamInputs.forEach(id => {
+      const el = byId(id);
+      if (!el) return;
+      el.disabled = !showSteam;
+      el.setAttribute('aria-disabled', showSteam ? 'false' : 'true');
+    });
+
+    const galonWrap = byId('wrapAirGalon');
+    if (galonWrap) {
+      const showGalon = showSteam && norm(byId('inputAirBoilerSumber')?.value) === 'galon';
+      galonWrap.classList.toggle('hidden', !showGalon);
+      galonWrap.style.display = showGalon ? 'flex' : 'none';
+    }
   }
 
   function zettWaterValues() {
@@ -5756,26 +5876,35 @@ window.saveGasHPPData = function(event) {
     const v = zettWaterValues();
     if (c.isSelfService) return [{ label: 'Air Cuci /Load', value: v.airLoad }];
     if (c.isHybrid) {
-      return [
+      const metrics = [
         { label: 'Air Cuci /Load', value: v.airLoad },
-        { label: 'Air Cuci /Kg', value: v.airKg },
+        { label: 'Air Cuci /Kg', value: v.airKg }
+      ];
+      if (c.showSteamIronCard) {
+        metrics.push(
+          { label: 'Air Setrika /Jam', value: v.setrikaJam },
+          { label: 'Air Setrika /Kg', value: v.setrikaKg }
+        );
+      }
+      return metrics;
+    }
+    const metrics = [{ label: 'Air Cuci /Kg', value: v.airKg }];
+    if (c.showSteamIronCard) {
+      metrics.push(
         { label: 'Air Setrika /Jam', value: v.setrikaJam },
         { label: 'Air Setrika /Kg', value: v.setrikaKg }
-      ];
+      );
     }
-    return [
-      { label: 'Air Cuci /Kg', value: v.airKg },
-      { label: 'Air Setrika /Jam', value: v.setrikaJam },
-      { label: 'Air Setrika /Kg', value: v.setrikaKg }
-    ];
+    return metrics;
   }
 
   function zettGetWaterDashboardValue() {
     const c = zettGetWaterUsageContext();
     const v = zettWaterValues();
     if (c.isSelfService) return v.airLoad || 0;
-    if (c.isHybrid) return (v.airLoad || 0) + (v.airKg || 0) + (v.setrikaKg || 0);
-    return (v.airKg || 0) + (v.setrikaKg || 0);
+    const steamKg = c.showSteamIronCard ? (v.setrikaKg || 0) : 0;
+    if (c.isHybrid) return (v.airLoad || 0) + (v.airKg || 0) + steamKg;
+    return (v.airKg || 0) + steamKg;
   }
 
   function zettRenderWaterCard() {
@@ -5805,6 +5934,7 @@ window.saveGasHPPData = function(event) {
       ['inputAirHargaGalon', 'inputAirLiterGalon'].forEach(id => { const el = byId(id); if (el) el.value = ''; });
     }
 
+    zettRenderWaterAnalysisForm();
     const m3El = byId('dispAirCuciM3');
     if (m3El) m3El.textContent = ((airCuci || 0) / 1000).toFixed(3);
     setText('dispAirCuciLoad', v.airLoad);
@@ -5820,12 +5950,15 @@ window.saveGasHPPData = function(event) {
   window.zettGetVisibleWaterMetrics = zettGetVisibleWaterMetrics;
   window.zettGetWaterDashboardValue = zettGetWaterDashboardValue;
   window.zettRenderWaterCard = zettRenderWaterCard;
+  window.shouldShowWaterSteamIronCard = shouldShowWaterSteamIronCard;
+  window.zettRenderWaterAnalysisForm = zettRenderWaterAnalysisForm;
 
   document.addEventListener('DOMContentLoaded', function() {
     if (typeof window.toggleAirInputs === 'function') window.toggleAirInputs();
+    zettRenderWaterAnalysisForm();
     window.calculateAir();
     document.addEventListener('change', function(event) {
-      if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori')) {
+      if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori' || event.target.id === 'toggleSetrikaListrik')) {
         setTimeout(window.calculateAir, 60);
       }
     });
