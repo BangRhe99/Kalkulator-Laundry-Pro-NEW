@@ -439,7 +439,7 @@
         </div>
         
         <div class="space-y-1">
-          <h2 class="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Total HPP Variabel</h2>
+          <h2 class="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Ringkasan Biaya Variabel</h2>
           <div class="flex items-baseline justify-center md:justify-start gap-1.5 pt-1">
             <span class="text-[clamp(2.35rem,10vw,4.25rem)] leading-none font-black text-slate-900 tracking-tight tabular-nums [font-feature-settings:'tnum']" id="dash-hpp-total">Rp 0</span>
             <span class="text-lg md:text-xl font-bold text-slate-400">/Kg</span>
@@ -3052,7 +3052,7 @@
           pct.className = 'hpp-card-percent';
           valueEl.insertAdjacentElement('afterend', pct);
         }
-        pct.title = 'Persentase kontribusi biaya ini terhadap total HPP variabel.';
+        pct.title = 'Persentase kontribusi biaya ini terhadap ringkasan biaya variabel.';
         pct.setAttribute('aria-label', 'Persentase kontribusi terhadap total HPP');
       });
     }
@@ -8943,6 +8943,26 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       return 0;
     }
 
+    // [HPP DASHBOARD REQUEST PATCH - 2026-05-19]
+    function getSelectedOutletRow() {
+      const selected = String(byId('inputNamaHPP')?.value || '').trim().toLowerCase();
+      if (!selected) return null;
+      const sources = [];
+      if (Array.isArray(window.masterDataCabang)) sources.push(window.masterDataCabang);
+      if (window.APP_STATE?.data?.master?.cabang) sources.push(window.APP_STATE.data.master.cabang);
+      for (const rows of sources) {
+        const found = rows.find(row => String(row?.namaOutlet || row?.['Nama Outlet'] || '').trim().toLowerCase() === selected);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function isSelfServiceOutlet() {
+      const outlet = getSelectedOutletRow();
+      const category = String(outlet?.kategori || outlet?.kategoriLaundry || outlet?.['Kategori Laundry'] || '').toLowerCase();
+      return category.includes('self');
+    }
+
     function ensureProcessCards() {
       const dashboard = byId('hpp-dashboard-view');
       const hero = dashboard ? dashboard.firstElementChild : null;
@@ -8955,7 +8975,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       const total = byId('dash-hpp-total');
       const totalRow = total ? total.closest('.flex') : null;
 
-      if (title) title.textContent = 'TOTAL HPP VARIABEL';
+      if (title) title.textContent = 'RINGKASAN BIAYA VARIABEL';
       if (subtitle) subtitle.textContent = 'Ringkasan biaya variabel untuk menjaga margin tetap sehat';
       if (totalRow) totalRow.classList.add('hpp-total-value-row');
 
@@ -8991,25 +9011,32 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
 
     function updateProcessCards() {
+      const forceZero = !!window.__HPP_FORCE_ZERO_DASHBOARD;
+      const hasSelectedOutlet = !forceZero && !!String(byId('inputNamaHPP')?.value || '').trim();
+      const selfService = isSelfServiceOutlet();
       const processValues = {};
       PROCESS.forEach(item => {
         const detailRows = item.details.map(detail => ({
           label: detail.label,
           value: Math.max(0, Number(detail.source()) || 0)
         }));
-        const total = detailRows.reduce((sum, row) => sum + row.value, 0);
+        const total = !hasSelectedOutlet || (selfService && item.key === 'setrika')
+          ? 0
+          : detailRows.reduce((sum, row) => sum + row.value, 0);
         processValues[item.key] = total;
 
         const valueEl = document.querySelector('#view-hpp [data-process-value="' + item.key + '"]');
         const detailEl = document.querySelector('#view-hpp [data-process-detail="' + item.key + '"]');
-        const nextValue = money(total);
+        const nextValue = selfService && item.key === 'setrika' ? '' : money(total);
         if (valueEl && valueEl.textContent !== nextValue) valueEl.textContent = nextValue;
         if (detailEl) {
-          const nextDetailHtml = detailRows
-            .filter(row => row.value > 0 || item.key !== 'setrika' || row.label === 'Air Setrika /Jam')
-            .slice(0, 3)
-            .map(row => '<div class="hpp-process-detail-row"><span>' + row.label + '</span><strong>' + money(row.value) + '</strong></div>')
-            .join('');
+          const nextDetailHtml = selfService && item.key === 'setrika'
+            ? ''
+            : detailRows
+              .filter(row => row.value > 0 || !hasSelectedOutlet || item.key !== 'setrika' || row.label === 'Air Setrika /Jam')
+              .slice(0, 3)
+              .map(row => '<div class="hpp-process-detail-row"><span>' + row.label + '</span><strong>' + money(hasSelectedOutlet ? row.value : 0) + '</strong></div>')
+              .join('');
           if (detailEl.innerHTML !== nextDetailHtml) detailEl.innerHTML = nextDetailHtml;
         }
       });
@@ -9029,6 +9056,21 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       ensureProcessCards();
       updateProcessCards();
     }
+
+    window.zettRefreshHPPProcessCards = refresh;
+    window.zettResetHPPProcessCardsToZero = function() {
+      ensureProcessCards();
+      PROCESS.forEach(item => {
+        const valueEl = document.querySelector('#view-hpp [data-process-value="' + item.key + '"]');
+        const detailEl = document.querySelector('#view-hpp [data-process-detail="' + item.key + '"]');
+        const pctEl = document.querySelector('#view-hpp [data-process-pct="' + item.key + '"]');
+        const barEl = document.querySelector('#view-hpp [data-process-bar="' + item.key + '"]');
+        if (valueEl) valueEl.textContent = money(0);
+        if (detailEl) detailEl.innerHTML = '';
+        if (pctEl) pctEl.textContent = '0%';
+        if (barEl) barEl.style.setProperty('--process-width', '0%');
+      });
+    };
 
     function scheduleRefresh() {
       window.clearTimeout(timer);

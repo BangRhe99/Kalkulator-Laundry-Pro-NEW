@@ -407,6 +407,7 @@
       </div>
 
       <!-- SELECT CABANG -->
+      <div class="flex items-center gap-2">
       <div class="relative text-xs md:text-sm bg-blue-50/80 rounded-[1rem] flex items-center border border-blue-200/60 text-blue-700 font-bold shadow-sm">
 
         <i class="ph ph-storefront text-lg text-blue-500 absolute left-3 pointer-events-none"></i>
@@ -421,6 +422,11 @@
 
         <i class="ph ph-caret-down absolute right-3 pointer-events-none text-blue-500"></i>
 
+      </div>
+      <span
+        id="headerKategoriLaundryInfo"
+        class="hidden whitespace-nowrap rounded-[0.85rem] border border-slate-200 bg-white px-3 py-2 text-[11px] font-extrabold text-slate-600 shadow-sm"
+      ></span>
       </div>
 
     </header>
@@ -609,6 +615,9 @@
           document.getElementById('hpp-dashboard-view');
         const hppForm =
           document.getElementById('hpp-form-view');
+        const selectedHPPOutlet =
+          String(document.getElementById('inputNamaHPP')?.value || '').trim();
+        const isFirstHPPOpen = !window.__HPP_FIRST_OPEN_ZERO_DONE;
 
         if (target) {
           target.classList.remove('hidden');
@@ -632,6 +641,16 @@
         }
 
         if (
+          isFirstHPPOpen &&
+          typeof resetHPPDashboardToZero === 'function'
+        ) {
+          window.__HPP_FORCE_ZERO_DASHBOARD = true;
+          resetHPPDashboardToZero();
+          if (typeof window.zettResetHPPProcessCardsToZero === 'function') {
+            window.zettResetHPPProcessCardsToZero();
+          }
+          window.__HPP_FIRST_OPEN_ZERO_DONE = true;
+        } else if (
           window.StateMachine &&
           typeof window.StateMachine.calculateTotal === 'function'
         ) {
@@ -643,7 +662,7 @@
           window.HPPStateMachine.calculateTotal();
         }
 
-        if (typeof window.zettEnsureHPPDashboardLoaded === 'function') {
+        if (!isFirstHPPOpen && selectedHPPOutlet && typeof window.zettEnsureHPPDashboardLoaded === 'function') {
           window.zettEnsureHPPDashboardLoaded();
         }
 
@@ -664,11 +683,47 @@
         headerTitle.innerText = titleMap[tabName] || 'Dashboard';
       }
 
+      updateHeaderKategoriLaundryInfo();
+
+    }
+
+    function updateHeaderKategoriLaundryInfo() {
+
+      const badge = document.getElementById('headerKategoriLaundryInfo');
+      const select = document.getElementById('inputNamaHPP');
+      if (!badge || !select) return;
+
+      const outletName = String(select.value || '').trim().toLowerCase();
+      const rows = [];
+      if (Array.isArray(window.masterDataCabang)) rows.push(...window.masterDataCabang);
+      if (
+        window.APP_STATE &&
+        window.APP_STATE.data &&
+        window.APP_STATE.data.master &&
+        Array.isArray(window.APP_STATE.data.master.cabang)
+      ) {
+        rows.push(...window.APP_STATE.data.master.cabang);
+      }
+
+      const outlet = rows.find(item => String(item?.namaOutlet || item?.['Nama Outlet'] || '').trim().toLowerCase() === outletName);
+      const kategori = String(outlet?.kategori || outlet?.kategoriLaundry || outlet?.['Kategori Laundry'] || '').trim();
+
+      if (!outletName || !kategori) {
+        badge.classList.add('hidden');
+        badge.textContent = '';
+        return;
+      }
+
+      badge.textContent = kategori;
+      badge.classList.remove('hidden');
+
     }
 
     function handleGlobalOutletChange(value) {
 
       console.log('Outlet changed:', value);
+      window.__HPP_FORCE_ZERO_DASHBOARD = false;
+      updateHeaderKategoriLaundryInfo();
 
       const hppView = document.getElementById('view-hpp');
       const hppDashboard = document.getElementById('hpp-dashboard-view');
@@ -722,6 +777,9 @@
     document.addEventListener('DOMContentLoaded', () => {
 
       switchMainTab('dashboard');
+      updateHeaderKategoriLaundryInfo();
+      setTimeout(updateHeaderKategoriLaundryInfo, 350);
+      setTimeout(updateHeaderKategoriLaundryInfo, 1200);
 
     });
 

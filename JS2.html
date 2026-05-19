@@ -382,6 +382,9 @@ function applyCabangUIData() {
         } else if (typeof resetHPPDashboardToZero === 'function') {
             resetHPPDashboardToZero();
         }
+        if (typeof window.updateHeaderKategoriLaundryInfo === 'function') {
+            window.updateHeaderKategoriLaundryInfo();
+        }
     }
 
     if(!tableArea) return;
