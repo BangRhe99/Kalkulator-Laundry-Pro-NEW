@@ -2217,6 +2217,25 @@ function simpanDataHPP(e) {
     const electricFieldVisible = (key) => visibleElectricFields.length === 0 || visibleElectricFields.includes(key);
     const includeElectricDryer = electricFieldVisible('keringLoad') || electricFieldVisible('keringKg');
     const includeElectricIron = electricFieldVisible('setrikaJam') || electricFieldVisible('setrikaKg');
+    const cleanHPPPayloadNumber = (value) => {
+        if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+        let raw = String(value || '').trim().replace(/[^\d.,-]/g, '');
+        if (!raw) return 0;
+        const hasComma = raw.includes(',');
+        const hasDot = raw.includes('.');
+        if (hasComma && hasDot) {
+            raw = raw.lastIndexOf(',') > raw.lastIndexOf('.')
+                ? raw.replace(/\./g, '').replace(',', '.')
+                : raw.replace(/,/g, '');
+        } else if (hasDot) {
+            const parts = raw.split('.');
+            raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw;
+        } else if (hasComma) {
+            const parts = raw.split(',');
+            raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw.replace(',', '.');
+        }
+        return Number(raw) || 0;
+    };
 
     const payload = {
         namaOutlet: nama,
@@ -2278,32 +2297,32 @@ function simpanDataHPP(e) {
 
         chemDetActive: document.getElementById('toggleBahanDet') ? document.getElementById('toggleBahanDet').checked : false,
         chemDetType: document.getElementById('bahanDetType') ? document.getElementById('bahanDetType').value : '',
-        chemDetHargaBulk: document.getElementById('bahanDetHargaBulk') ? document.getElementById('bahanDetHargaBulk').value : '',
-        chemDetKapBulk: document.getElementById('bahanDetKapasitasBulk') ? document.getElementById('bahanDetKapasitasBulk').value : '',
+        chemDetHargaBulk: document.getElementById('bahanDetHargaBulk') ? cleanHPPPayloadNumber(document.getElementById('bahanDetHargaBulk').value) : '',
+        chemDetKapBulk: document.getElementById('bahanDetKapasitasBulk') ? cleanHPPPayloadNumber(document.getElementById('bahanDetKapasitasBulk').value) : '',
         chemDetHargaSachet: document.getElementById('bahanDetHargaSachet') ? document.getElementById('bahanDetHargaSachet').value : '',
         chemDetKapSachet: document.getElementById('bahanDetKapasitasSachet') ? document.getElementById('bahanDetKapasitasSachet').value : '',
-        chemDetPakai: document.getElementById('bahanDetPemakaian') ? document.getElementById('bahanDetPemakaian').value : '',
+        chemDetPakai: document.getElementById('bahanDetPemakaian') ? cleanHPPPayloadNumber(document.getElementById('bahanDetPemakaian').value) : '',
 
         chemSofActive: document.getElementById('toggleBahanSof') ? document.getElementById('toggleBahanSof').checked : false,
         chemSofType: document.getElementById('bahanSofType') ? document.getElementById('bahanSofType').value : '',
-        chemSofHargaBulk: document.getElementById('bahanSofHargaBulk') ? document.getElementById('bahanSofHargaBulk').value : '',
-        chemSofKapBulk: document.getElementById('bahanSofKapasitasBulk') ? document.getElementById('bahanSofKapasitasBulk').value : '',
+        chemSofHargaBulk: document.getElementById('bahanSofHargaBulk') ? cleanHPPPayloadNumber(document.getElementById('bahanSofHargaBulk').value) : '',
+        chemSofKapBulk: document.getElementById('bahanSofKapasitasBulk') ? cleanHPPPayloadNumber(document.getElementById('bahanSofKapasitasBulk').value) : '',
         chemSofHargaSachet: document.getElementById('bahanSofHargaSachet') ? document.getElementById('bahanSofHargaSachet').value : '',
         chemSofKapSachet: document.getElementById('bahanSofKapasitasSachet') ? document.getElementById('bahanSofKapasitasSachet').value : '',
-        chemSofPakai: document.getElementById('bahanSofPemakaian') ? document.getElementById('bahanSofPemakaian').value : '',
+        chemSofPakai: document.getElementById('bahanSofPemakaian') ? cleanHPPPayloadNumber(document.getElementById('bahanSofPemakaian').value) : '',
 
         chemParActive: document.getElementById('toggleBahanPar') ? document.getElementById('toggleBahanPar').checked : false,
-        chemParHargaBulk: document.getElementById('bahanParHargaBulk') ? document.getElementById('bahanParHargaBulk').value : '',
-        chemParKapBulk: document.getElementById('bahanParKapasitasBulk') ? document.getElementById('bahanParKapasitasBulk').value : '',
-        chemParPakai: document.getElementById('bahanParPemakaian') ? document.getElementById('bahanParPemakaian').value : '',
+        chemParHargaBulk: document.getElementById('bahanParHargaBulk') ? cleanHPPPayloadNumber(document.getElementById('bahanParHargaBulk').value) : '',
+        chemParKapBulk: document.getElementById('bahanParKapasitasBulk') ? cleanHPPPayloadNumber(document.getElementById('bahanParKapasitasBulk').value) : '',
+        chemParPakai: document.getElementById('bahanParPemakaian') ? cleanHPPPayloadNumber(document.getElementById('bahanParPemakaian').value) : '',
 
         chemPelActive: document.getElementById('toggleBahanPel') ? document.getElementById('toggleBahanPel').checked : false,
         chemPelType: document.getElementById('bahanPelType') ? document.getElementById('bahanPelType').value : '',
-        chemPelHargaBulk: document.getElementById('bahanPelHargaBulk') ? document.getElementById('bahanPelHargaBulk').value : '',
-        chemPelKapBulk: document.getElementById('bahanPelKapasitasBulk') ? document.getElementById('bahanPelKapasitasBulk').value : '',
+        chemPelHargaBulk: document.getElementById('bahanPelHargaBulk') ? cleanHPPPayloadNumber(document.getElementById('bahanPelHargaBulk').value) : '',
+        chemPelKapBulk: document.getElementById('bahanPelKapasitasBulk') ? cleanHPPPayloadNumber(document.getElementById('bahanPelKapasitasBulk').value) : '',
         chemPelHargaSachet: document.getElementById('bahanPelHargaSachet') ? document.getElementById('bahanPelHargaSachet').value : '',
         chemPelKapSachet: document.getElementById('bahanPelKapasitasSachet') ? document.getElementById('bahanPelKapasitasSachet').value : '',
-        chemPelPakai: document.getElementById('bahanPelPemakaian') ? document.getElementById('bahanPelPemakaian').value : '',
+        chemPelPakai: document.getElementById('bahanPelPemakaian') ? cleanHPPPayloadNumber(document.getElementById('bahanPelPemakaian').value) : '',
 
         notaType: document.getElementById('notaType') ? document.getElementById('notaType').value : '',
         notaAppFeeType: document.getElementById('notaAppFeeType') ? document.getElementById('notaAppFeeType').value : '',
@@ -2557,28 +2576,35 @@ async function prosesSimpanBEP() {
     zettSetVal('inputPackingSolasiUkuran', zettPick(hppData, ['Solasi Panjang/Roll (Meter)'], ''));
     zettSetVal('inputPackingSolasiPakai', zettPick(hppData, ['Solasi Pemakaian/Kg (Meter)'], ''));
 
-    zettSetCheck('toggleBahanDet', zettPick(hppData, ['Chem_Det_Active'], true));
-    if (typeof safeSetSelect === 'function') safeSetSelect('bahanDetType', zettPick(hppData, ['Chem_Det_Type'], 'cair'));
-    zettSetVal('bahanDetHargaBulk', zettPick(hppData, ['Chem_Det_Harga'], '100.000'));
-    zettSetVal('bahanDetKapasitasBulk', zettPick(hppData, ['Chem_Det_Kapasitas'], '5'));
-    zettSetVal('bahanDetPemakaian', zettPick(hppData, ['Chem_Det_Pemakaian'], '10'));
+    zettSetCheck('toggleBahanDet', zettPick(hppData, ['Deterjen Aktif', 'Chem_Det_Active'], true));
+    if (typeof safeSetSelect === 'function') safeSetSelect('bahanDetType', zettPick(hppData, ['Tipe Deterjen', 'Chem_Det_Type'], 'cair'));
+    zettSetVal('bahanDetHargaBulk', zettPick(hppData, ['Harga Total Deterjen', 'Harga Deterjen', 'Chem_Det_Harga'], '100.000'));
+    zettSetVal('bahanDetKapasitasBulk', zettPick(hppData, ['Kap Deterjen Liter', 'Isi Deterjen', 'Chem_Det_Kapasitas'], '5'));
+    zettSetVal('bahanDetPemakaian', zettPick(hppData, ['Pemakaian Deterjen Per Kg Ml', 'Takaran Deterjen Per Load', 'Chem_Det_Pemakaian'], '10'));
 
-    zettSetCheck('toggleBahanSof', zettPick(hppData, ['Chem_Sof_Active'], true));
-    if (typeof safeSetSelect === 'function') safeSetSelect('bahanSofType', zettPick(hppData, ['Chem_Sof_Type'], 'cair'));
-    zettSetVal('bahanSofHargaBulk', zettPick(hppData, ['Chem_Sof_Harga'], '80.000'));
-    zettSetVal('bahanSofKapasitasBulk', zettPick(hppData, ['Chem_Sof_Kapasitas'], '5'));
-    zettSetVal('bahanSofPemakaian', zettPick(hppData, ['Chem_Sof_Pemakaian'], '10'));
+    zettSetCheck('toggleBahanSof', zettPick(hppData, ['Softener Aktif', 'Chem_Sof_Active'], true));
+    if (typeof safeSetSelect === 'function') safeSetSelect('bahanSofType', zettPick(hppData, ['Tipe Softener', 'Chem_Sof_Type'], 'cair'));
+    zettSetVal('bahanSofHargaBulk', zettPick(hppData, ['Harga Total Softener', 'Harga Softener', 'Chem_Sof_Harga'], '80.000'));
+    zettSetVal('bahanSofKapasitasBulk', zettPick(hppData, ['Kap Softener Liter', 'Isi Softener', 'Chem_Sof_Kapasitas'], '5'));
+    zettSetVal('bahanSofPemakaian', zettPick(hppData, ['Pemakaian Softener Per Kg Ml', 'Takaran Softener Per Load', 'Chem_Sof_Pemakaian'], '10'));
 
-    zettSetCheck('toggleBahanPar', zettPick(hppData, ['Chem_Par_Active'], true));
-    zettSetVal('bahanParHargaBulk', zettPick(hppData, ['Chem_Par_Harga'], '150.000'));
-    zettSetVal('bahanParKapasitasBulk', zettPick(hppData, ['Chem_Par_Kapasitas'], '5'));
-    zettSetVal('bahanParPemakaian', zettPick(hppData, ['Chem_Par_Pemakaian'], '5'));
+    zettSetCheck('toggleBahanPar', zettPick(hppData, ['Pewangi Aktif', 'Chem_Par_Active'], true));
+    zettSetVal('bahanParHargaBulk', zettPick(hppData, ['Harga Total Pewangi', 'Harga Pewangi', 'Chem_Par_Harga'], '150.000'));
+    zettSetVal('bahanParKapasitasBulk', zettPick(hppData, ['Kap Pewangi Liter', 'Isi Pewangi', 'Chem_Par_Kapasitas'], '5'));
+    zettSetVal('bahanParPemakaian', zettPick(hppData, ['Pemakaian Pewangi Per Kg Ml', 'Takaran Pewangi Per Load', 'Chem_Par_Pemakaian'], '5'));
 
-    zettSetCheck('toggleBahanPel', zettPick(hppData, ['Chem_Pel_Active'], true));
-    if (typeof safeSetSelect === 'function') safeSetSelect('bahanPelType', zettPick(hppData, ['Chem_Pel_Type'], 'cair'));
-    zettSetVal('bahanPelHargaBulk', zettPick(hppData, ['Chem_Pel_Harga'], '50.000'));
-    zettSetVal('bahanPelKapasitasBulk', zettPick(hppData, ['Chem_Pel_Kapasitas'], '5'));
-    zettSetVal('bahanPelPemakaian', zettPick(hppData, ['Chem_Pel_Pemakaian'], '5'));
+    zettSetCheck('toggleBahanPel', zettPick(hppData, ['Pelicin Setrika Aktif', 'Chem_Pel_Active'], true));
+    if (typeof safeSetSelect === 'function') safeSetSelect('bahanPelType', zettPick(hppData, ['Tipe Pelicin Setrika', 'Chem_Pel_Type'], 'cair'));
+    zettSetVal('bahanPelHargaBulk', zettPick(hppData, ['Harga Total Pelicin Setrika', 'Harga Pelicin Setrika', 'Harga Chemical Tambahan', 'Chem_Pel_Harga'], '50.000'));
+    zettSetVal('bahanPelKapasitasBulk', zettPick(hppData, ['Kap Pelicin Setrika Liter', 'Isi Pelicin Setrika', 'Isi Chemical Tambahan', 'Chem_Pel_Kapasitas'], '5'));
+    zettSetVal('bahanPelPemakaian', zettPick(hppData, ['Pemakaian Pelicin Setrika Per Kg Ml', 'Takaran Pelicin Setrika Per Load', 'Takaran Chemical Tambahan Per Load', 'Chem_Pel_Pemakaian'], '5'));
+
+    if (typeof formatRupiahInput === 'function') {
+      ['bahanDetHargaBulk', 'bahanSofHargaBulk', 'bahanParHargaBulk', 'bahanPelHargaBulk'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && el.value) formatRupiahInput(el);
+      });
+    }
 
     if (typeof safeSetSelect === 'function') safeSetSelect('notaType', zettPick(hppData, ['Nota_Type'], 'digital'));
     if (typeof safeSetSelect === 'function') safeSetSelect('notaAppFeeType', zettPick(hppData, ['Nota_App_FeeType'], 'bulan'));

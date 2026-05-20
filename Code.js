@@ -891,33 +891,42 @@ function saveStrukturBiaya(payload) {
       setVal('Timestamp', timestamp);
       setVal('Nama Outlet', payload.namaOutlet);
 
-      setVal('Harga Deterjen', payload.chemDetHargaBulk);
-      setVal('Isi Deterjen', payload.chemDetKapBulk);
-      setVal('Takaran Deterjen Per Load', payload.chemDetPakai);
-      setFormula('Estimasi Deterjen Per Load', '=IFERROR(({Harga Deterjen}/MAX({Isi Deterjen};1))*{Takaran Deterjen Per Load};0)');
+      setVal('Deterjen Aktif', payload.chemDetActive ? 'Ya' : 'Tidak');
+      setVal('Tipe Deterjen', payload.chemDetType);
+      setVal('Harga Total Deterjen', payload.chemDetHargaBulk);
+      setVal('Kap Deterjen Liter', payload.chemDetKapBulk);
+      setFormula('Harga Deterjen Per Ltr', '=IFERROR({Harga Total Deterjen}/MAX({Kap Deterjen Liter};1);0)');
+      setFormula('Harga Deterjen Per Ml', '=IFERROR({Harga Deterjen Per Ltr}/1000;0)');
+      setVal('Pemakaian Deterjen Per Kg Ml', payload.chemDetPakai);
+      setFormula('Estimasi Deterjen Per Load', '=IFERROR(IF({Deterjen Aktif}="Tidak";0;{Kap Cuci}*{Pemakaian Deterjen Per Kg Ml}*{Harga Deterjen Per Ml});0)');
       setFormula('Estimasi Deterjen Per Kg', '=IFERROR({Estimasi Deterjen Per Load}/MAX({Kap Cuci};1);0)');
-      setVal('Harga Pewangi', payload.chemParHargaBulk);
-      setVal('Isi Pewangi', payload.chemParKapBulk);
-      setVal('Takaran Pewangi Per Load', payload.chemParPakai);
-      setFormula('Estimasi Pewangi Per Load', '=IFERROR(({Harga Pewangi}/MAX({Isi Pewangi};1))*{Takaran Pewangi Per Load};0)');
+      setVal('Pewangi Aktif', payload.chemParActive ? 'Ya' : 'Tidak');
+      setVal('Harga Total Pewangi', payload.chemParHargaBulk);
+      setVal('Kap Pewangi Liter', payload.chemParKapBulk);
+      setFormula('Harga Pewangi Per Ltr', '=IFERROR({Harga Total Pewangi}/MAX({Kap Pewangi Liter};1);0)');
+      setFormula('Harga Pewangi Per Ml', '=IFERROR({Harga Pewangi Per Ltr}/1000;0)');
+      setVal('Pemakaian Pewangi Per Kg Ml', payload.chemParPakai);
+      setFormula('Estimasi Pewangi Per Load', '=IFERROR(IF({Pewangi Aktif}="Tidak";0;{Kap Cuci}*{Pemakaian Pewangi Per Kg Ml}*{Harga Pewangi Per Ml});0)');
       setFormula('Estimasi Pewangi Per Kg', '=IFERROR({Estimasi Pewangi Per Load}/MAX({Kap Cuci};1);0)');
-      setVal('Harga Softener', payload.chemSofHargaBulk);
-      setVal('Isi Softener', payload.chemSofKapBulk);
-      setVal('Takaran Softener Per Load', payload.chemSofPakai);
-      setFormula('Estimasi Softener Per Load', '=IFERROR(({Harga Softener}/MAX({Isi Softener};1))*{Takaran Softener Per Load};0)');
+      setVal('Softener Aktif', payload.chemSofActive ? 'Ya' : 'Tidak');
+      setVal('Tipe Softener', payload.chemSofType);
+      setVal('Harga Total Softener', payload.chemSofHargaBulk);
+      setVal('Kap Softener Liter', payload.chemSofKapBulk);
+      setFormula('Harga Softener Per Ltr', '=IFERROR({Harga Total Softener}/MAX({Kap Softener Liter};1);0)');
+      setFormula('Harga Softener Per Ml', '=IFERROR({Harga Softener Per Ltr}/1000;0)');
+      setVal('Pemakaian Softener Per Kg Ml', payload.chemSofPakai);
+      setFormula('Estimasi Softener Per Load', '=IFERROR(IF({Softener Aktif}="Tidak";0;{Kap Cuci}*{Pemakaian Softener Per Kg Ml}*{Harga Softener Per Ml});0)');
       setFormula('Estimasi Softener Per Kg', '=IFERROR({Estimasi Softener Per Load}/MAX({Kap Cuci};1);0)');
-      setVal('Harga Pelicin Setrika', payload.chemPelHargaBulk);
-      setVal('Isi Pelicin Setrika', payload.chemPelKapBulk);
-      setVal('Takaran Pelicin Setrika Per Load', payload.chemPelPakai);
-      setFormula('Estimasi Pelicin Setrika Per Load', '=IFERROR(({Harga Pelicin Setrika}/MAX({Isi Pelicin Setrika};1))*{Takaran Pelicin Setrika Per Load};0)');
+      setVal('Pelicin Setrika Aktif', payload.chemPelActive ? 'Ya' : 'Tidak');
+      setVal('Tipe Pelicin Setrika', payload.chemPelType);
+      setVal('Harga Total Pelicin Setrika', payload.chemPelHargaBulk);
+      setVal('Kap Pelicin Setrika Liter', payload.chemPelKapBulk);
+      setFormula('Harga Pelicin Setrika Per Ltr', '=IFERROR({Harga Total Pelicin Setrika}/MAX({Kap Pelicin Setrika Liter};1);0)');
+      setFormula('Harga Pelicin Setrika Per Ml', '=IFERROR({Harga Pelicin Setrika Per Ltr}/1000;0)');
+      setVal('Pemakaian Pelicin Setrika Per Kg Ml', payload.chemPelPakai);
+      setFormula('Estimasi Pelicin Setrika Per Load', '=IFERROR(IF({Pelicin Setrika Aktif}="Tidak";0;{Kap Cuci}*{Pemakaian Pelicin Setrika Per Kg Ml}*{Harga Pelicin Setrika Per Ml});0)');
       setFormula('Estimasi Pelicin Setrika Per Kg', '=IFERROR({Estimasi Pelicin Setrika Per Load}/MAX({Kap Cuci};1);0)');
-      setFormula('Estimasi Pemutih Per Load', '=IFERROR(({Harga Pemutih}/MAX({Isi Pemutih};1))*{Takaran Pemutih Per Load};0)');
-      setFormula('Estimasi Pemutih Per Kg', '=IFERROR({Estimasi Pemutih Per Load}/MAX({Kap Cuci};1);0)');
-      setFormula('Estimasi Anti Noda Per Load', '=IFERROR(({Harga Anti Noda}/MAX({Isi Anti Noda};1))*{Takaran Anti Noda Per Load};0)');
-      setFormula('Estimasi Anti Noda Per Kg', '=IFERROR({Estimasi Anti Noda Per Load}/MAX({Kap Cuci};1);0)');
-      setFormula('Estimasi Chemical Tambahan Per Load', '=IFERROR(({Harga Chemical Tambahan}/MAX({Isi Chemical Tambahan};1))*{Takaran Chemical Tambahan Per Load};0)');
-      setFormula('Estimasi Chemical Tambahan Per Kg', '=IFERROR({Estimasi Chemical Tambahan Per Load}/MAX({Kap Cuci};1);0)');
-      setFormula('Chemical Cuci Per Load', '=IFERROR({Estimasi Deterjen Per Load}+{Estimasi Softener Per Load}+{Estimasi Pewangi Per Load}+{Estimasi Pelicin Setrika Per Load}+{Estimasi Pemutih Per Load}+{Estimasi Anti Noda Per Load}+{Estimasi Chemical Tambahan Per Load};0)');
+      setFormula('Chemical Cuci Per Load', '=IFERROR({Estimasi Deterjen Per Load}+{Estimasi Softener Per Load}+{Estimasi Pewangi Per Load}+{Estimasi Pelicin Setrika Per Load};0)');
       setFormula('Chemical Cuci Per Kg', '=IFERROR({Chemical Cuci Per Load}/MAX({Kap Cuci};1);0)');
 
       setFormula('Admin Per Order', '=IFERROR({Gaji Admin Bulanan}/MAX({Hari Kerja Admin Bulanan}*{Target Order Admin Per Hari};1);0)');
@@ -1455,7 +1464,7 @@ function zettEnsureHeaders_(sheet, headers) {
       .setWrap(true);
     colMap = zettGetHeaderMap_(sheet);
   }
-  if (headers.indexOf('Harga Deterjen') !== -1) {
+  if (headers.some(function(h) { return /^Harga Total |^Deterjen Aktif$|^Harga Deterjen$/.test(h); })) {
     const chemicalHeadersChanged = zettEnsureHeaderBlock_(sheet, zettChemicalHeaders_(), 'Total Biaya Packing/Kg (Rp)');
     const notaHeadersChanged = zettEnsureHeaderBlock_(sheet, zettNotaKasirHeaders_(), 'Chemical Cuci Per Kg');
     const legacyMigrated = zettMigrateLegacyChemicalNotaHeaders_(sheet);
@@ -1508,7 +1517,7 @@ function zettSetHPPGroupTitles_(sheet) {
   if (headerRow <= 1) return;
   const colMap = zettGetHeaderMap_(sheet);
   const groups = [
-    { title: 'Analisa Biaya Chemical', start: 'Harga Deterjen', end: 'Chemical Cuci Per Kg' },
+    { title: 'Analisa Biaya Chemical', start: 'Deterjen Aktif', end: 'Chemical Cuci Per Kg' },
     { title: 'Analisa Biaya Nota & Kasir', start: 'Gaji Admin Bulanan', end: 'Admin Nota Kasir Per Kg' }
   ];
   const titleRow = headerRow - 1;
@@ -1533,18 +1542,37 @@ function zettSetHPPGroupTitles_(sheet) {
 
 function zettLegacyChemicalNotaMap_() {
   return {
-    'Chem_Det_Harga': 'Harga Deterjen',
-    'Chem_Det_Kapasitas': 'Isi Deterjen',
-    'Chem_Det_Pemakaian': 'Takaran Deterjen Per Load',
-    'Chem_Par_Harga': 'Harga Pewangi',
-    'Chem_Par_Kapasitas': 'Isi Pewangi',
-    'Chem_Par_Pemakaian': 'Takaran Pewangi Per Load',
-    'Chem_Sof_Harga': 'Harga Softener',
-    'Chem_Sof_Kapasitas': 'Isi Softener',
-    'Chem_Sof_Pemakaian': 'Takaran Softener Per Load',
-    'Chem_Pel_Harga': 'Harga Pelicin Setrika',
-    'Chem_Pel_Kapasitas': 'Isi Pelicin Setrika',
-    'Chem_Pel_Pemakaian': 'Takaran Pelicin Setrika Per Load',
+    'Chem_Det_Active': 'Deterjen Aktif',
+    'Chem_Det_Type': 'Tipe Deterjen',
+    'Chem_Det_Harga': 'Harga Total Deterjen',
+    'Harga Deterjen': 'Harga Total Deterjen',
+    'Chem_Det_Kapasitas': 'Kap Deterjen Liter',
+    'Isi Deterjen': 'Kap Deterjen Liter',
+    'Chem_Det_Pemakaian': 'Pemakaian Deterjen Per Kg Ml',
+    'Takaran Deterjen Per Load': 'Pemakaian Deterjen Per Kg Ml',
+    'Chem_Par_Active': 'Pewangi Aktif',
+    'Chem_Par_Harga': 'Harga Total Pewangi',
+    'Harga Pewangi': 'Harga Total Pewangi',
+    'Chem_Par_Kapasitas': 'Kap Pewangi Liter',
+    'Isi Pewangi': 'Kap Pewangi Liter',
+    'Chem_Par_Pemakaian': 'Pemakaian Pewangi Per Kg Ml',
+    'Takaran Pewangi Per Load': 'Pemakaian Pewangi Per Kg Ml',
+    'Chem_Sof_Active': 'Softener Aktif',
+    'Chem_Sof_Type': 'Tipe Softener',
+    'Chem_Sof_Harga': 'Harga Total Softener',
+    'Harga Softener': 'Harga Total Softener',
+    'Chem_Sof_Kapasitas': 'Kap Softener Liter',
+    'Isi Softener': 'Kap Softener Liter',
+    'Chem_Sof_Pemakaian': 'Pemakaian Softener Per Kg Ml',
+    'Takaran Softener Per Load': 'Pemakaian Softener Per Kg Ml',
+    'Chem_Pel_Active': 'Pelicin Setrika Aktif',
+    'Chem_Pel_Type': 'Tipe Pelicin Setrika',
+    'Chem_Pel_Harga': 'Harga Total Pelicin Setrika',
+    'Harga Pelicin Setrika': 'Harga Total Pelicin Setrika',
+    'Chem_Pel_Kapasitas': 'Kap Pelicin Setrika Liter',
+    'Isi Pelicin Setrika': 'Kap Pelicin Setrika Liter',
+    'Chem_Pel_Pemakaian': 'Pemakaian Pelicin Setrika Per Kg Ml',
+    'Takaran Pelicin Setrika Per Load': 'Pemakaian Pelicin Setrika Per Kg Ml',
     'Deterjen Per Load': 'Estimasi Deterjen Per Load',
     'Pewangi Per Load': 'Estimasi Pewangi Per Load',
     'Softener Per Load': 'Estimasi Softener Per Load',
@@ -1564,6 +1592,10 @@ function zettLegacyChemicalNotaHeaders_() {
     'Chem_Sof_Active', 'Chem_Sof_Type', 'Chem_Sof_Harga', 'Chem_Sof_Kapasitas', 'Chem_Sof_Pemakaian',
     'Chem_Par_Active', 'Chem_Par_Harga', 'Chem_Par_Kapasitas', 'Chem_Par_Pemakaian',
     'Chem_Pel_Active', 'Chem_Pel_Type', 'Chem_Pel_Harga', 'Chem_Pel_Kapasitas', 'Chem_Pel_Pemakaian',
+    'Harga Deterjen', 'Isi Deterjen', 'Takaran Deterjen Per Load',
+    'Harga Softener', 'Isi Softener', 'Takaran Softener Per Load',
+    'Harga Pewangi', 'Isi Pewangi', 'Takaran Pewangi Per Load',
+    'Harga Pelicin Setrika', 'Isi Pelicin Setrika', 'Takaran Pelicin Setrika Per Load',
     'Deterjen Per Load', 'Pewangi Per Load', 'Softener Per Load', 'Pemutih Per Load',
     'Anti Noda Per Load', 'Chemical Tambahan Per Load',
     'Nota_Type', 'Nota_App_FeeType', 'Nota_App_HargaBulan', 'Nota_App_TrxBulan', 'Nota_App_HargaTrx',
@@ -1577,7 +1609,7 @@ function zettMigrateLegacyChemicalNotaHeaders_(sheet) {
   let colMap = zettGetHeaderMap_(sheet);
   const migration = zettLegacyChemicalNotaMap_();
   const hasLegacy = zettLegacyChemicalNotaHeaders_().some(function(header) { return header in colMap; })
-    || (('Harga Chemical Tambahan' in colMap) && ('Harga Pelicin Setrika' in colMap));
+    || ('Harga Chemical Tambahan' in colMap);
   if (!hasLegacy) return false;
 
   const lastRow = sheet.getLastRow();
@@ -1597,9 +1629,9 @@ function zettMigrateLegacyChemicalNotaHeaders_(sheet) {
         }
       });
       [
-        ['Harga Chemical Tambahan', 'Harga Pelicin Setrika'],
-        ['Isi Chemical Tambahan', 'Isi Pelicin Setrika'],
-        ['Takaran Chemical Tambahan Per Load', 'Takaran Pelicin Setrika Per Load'],
+        ['Harga Chemical Tambahan', 'Harga Total Pelicin Setrika'],
+        ['Isi Chemical Tambahan', 'Kap Pelicin Setrika Liter'],
+        ['Takaran Chemical Tambahan Per Load', 'Pemakaian Pelicin Setrika Per Kg Ml'],
         ['Estimasi Chemical Tambahan Per Load', 'Estimasi Pelicin Setrika Per Load'],
         ['Estimasi Chemical Tambahan Per Kg', 'Estimasi Pelicin Setrika Per Kg']
       ].forEach(function(pair) {
@@ -1655,21 +1687,29 @@ function zettApplyChemicalNotaFormulas_(sheet) {
 
   function formulaFor(header, rowNum) {
     const f = {
-      'Estimasi Deterjen Per Load': '=IFERROR((' + cell('Harga Deterjen', rowNum) + '/MAX(' + cell('Isi Deterjen', rowNum) + ';1))*' + cell('Takaran Deterjen Per Load', rowNum) + ';0)',
+      'Harga Deterjen Per Ltr': '=IFERROR(' + cell('Harga Total Deterjen', rowNum) + '/MAX(' + cell('Kap Deterjen Liter', rowNum) + ';1);0)',
+      'Harga Deterjen Per Ml': '=IFERROR(' + cell('Harga Deterjen Per Ltr', rowNum) + '/1000;0)',
+      'Estimasi Deterjen Per Load': '=IFERROR(IF(' + cell('Deterjen Aktif', rowNum) + '="Tidak";0;' + cell('Kap Cuci', rowNum) + '*' + cell('Pemakaian Deterjen Per Kg Ml', rowNum) + '*' + cell('Harga Deterjen Per Ml', rowNum) + ');0)',
       'Estimasi Deterjen Per Kg': '=IFERROR(' + cell('Estimasi Deterjen Per Load', rowNum) + '/MAX(' + cell('Kap Cuci', rowNum) + ';1);0)',
-      'Estimasi Pewangi Per Load': '=IFERROR((' + cell('Harga Pewangi', rowNum) + '/MAX(' + cell('Isi Pewangi', rowNum) + ';1))*' + cell('Takaran Pewangi Per Load', rowNum) + ';0)',
+      'Harga Pewangi Per Ltr': '=IFERROR(' + cell('Harga Total Pewangi', rowNum) + '/MAX(' + cell('Kap Pewangi Liter', rowNum) + ';1);0)',
+      'Harga Pewangi Per Ml': '=IFERROR(' + cell('Harga Pewangi Per Ltr', rowNum) + '/1000;0)',
+      'Estimasi Pewangi Per Load': '=IFERROR(IF(' + cell('Pewangi Aktif', rowNum) + '="Tidak";0;' + cell('Kap Cuci', rowNum) + '*' + cell('Pemakaian Pewangi Per Kg Ml', rowNum) + '*' + cell('Harga Pewangi Per Ml', rowNum) + ');0)',
       'Estimasi Pewangi Per Kg': '=IFERROR(' + cell('Estimasi Pewangi Per Load', rowNum) + '/MAX(' + cell('Kap Cuci', rowNum) + ';1);0)',
-      'Estimasi Softener Per Load': '=IFERROR((' + cell('Harga Softener', rowNum) + '/MAX(' + cell('Isi Softener', rowNum) + ';1))*' + cell('Takaran Softener Per Load', rowNum) + ';0)',
+      'Harga Softener Per Ltr': '=IFERROR(' + cell('Harga Total Softener', rowNum) + '/MAX(' + cell('Kap Softener Liter', rowNum) + ';1);0)',
+      'Harga Softener Per Ml': '=IFERROR(' + cell('Harga Softener Per Ltr', rowNum) + '/1000;0)',
+      'Estimasi Softener Per Load': '=IFERROR(IF(' + cell('Softener Aktif', rowNum) + '="Tidak";0;' + cell('Kap Cuci', rowNum) + '*' + cell('Pemakaian Softener Per Kg Ml', rowNum) + '*' + cell('Harga Softener Per Ml', rowNum) + ');0)',
       'Estimasi Softener Per Kg': '=IFERROR(' + cell('Estimasi Softener Per Load', rowNum) + '/MAX(' + cell('Kap Cuci', rowNum) + ';1);0)',
       'Estimasi Pemutih Per Load': '=IFERROR((' + cell('Harga Pemutih', rowNum) + '/MAX(' + cell('Isi Pemutih', rowNum) + ';1))*' + cell('Takaran Pemutih Per Load', rowNum) + ';0)',
       'Estimasi Pemutih Per Kg': '=IFERROR(' + cell('Estimasi Pemutih Per Load', rowNum) + '/MAX(' + cell('Kap Cuci', rowNum) + ';1);0)',
       'Estimasi Anti Noda Per Load': '=IFERROR((' + cell('Harga Anti Noda', rowNum) + '/MAX(' + cell('Isi Anti Noda', rowNum) + ';1))*' + cell('Takaran Anti Noda Per Load', rowNum) + ';0)',
       'Estimasi Anti Noda Per Kg': '=IFERROR(' + cell('Estimasi Anti Noda Per Load', rowNum) + '/MAX(' + cell('Kap Cuci', rowNum) + ';1);0)',
-      'Estimasi Pelicin Setrika Per Load': '=IFERROR((' + cell('Harga Pelicin Setrika', rowNum) + '/MAX(' + cell('Isi Pelicin Setrika', rowNum) + ';1))*' + cell('Takaran Pelicin Setrika Per Load', rowNum) + ';0)',
+      'Harga Pelicin Setrika Per Ltr': '=IFERROR(' + cell('Harga Total Pelicin Setrika', rowNum) + '/MAX(' + cell('Kap Pelicin Setrika Liter', rowNum) + ';1);0)',
+      'Harga Pelicin Setrika Per Ml': '=IFERROR(' + cell('Harga Pelicin Setrika Per Ltr', rowNum) + '/1000;0)',
+      'Estimasi Pelicin Setrika Per Load': '=IFERROR(IF(' + cell('Pelicin Setrika Aktif', rowNum) + '="Tidak";0;' + cell('Kap Cuci', rowNum) + '*' + cell('Pemakaian Pelicin Setrika Per Kg Ml', rowNum) + '*' + cell('Harga Pelicin Setrika Per Ml', rowNum) + ');0)',
       'Estimasi Pelicin Setrika Per Kg': '=IFERROR(' + cell('Estimasi Pelicin Setrika Per Load', rowNum) + '/MAX(' + cell('Kap Cuci', rowNum) + ';1);0)',
       'Estimasi Chemical Tambahan Per Load': '=IFERROR((' + cell('Harga Chemical Tambahan', rowNum) + '/MAX(' + cell('Isi Chemical Tambahan', rowNum) + ';1))*' + cell('Takaran Chemical Tambahan Per Load', rowNum) + ';0)',
       'Estimasi Chemical Tambahan Per Kg': '=IFERROR(' + cell('Estimasi Chemical Tambahan Per Load', rowNum) + '/MAX(' + cell('Kap Cuci', rowNum) + ';1);0)',
-      'Chemical Cuci Per Load': '=IFERROR(' + cell('Estimasi Deterjen Per Load', rowNum) + '+' + cell('Estimasi Softener Per Load', rowNum) + '+' + cell('Estimasi Pewangi Per Load', rowNum) + '+' + cell('Estimasi Pelicin Setrika Per Load', rowNum) + '+' + cell('Estimasi Pemutih Per Load', rowNum) + '+' + cell('Estimasi Anti Noda Per Load', rowNum) + '+' + cell('Estimasi Chemical Tambahan Per Load', rowNum) + ';0)',
+      'Chemical Cuci Per Load': '=IFERROR(' + cell('Estimasi Deterjen Per Load', rowNum) + '+' + cell('Estimasi Softener Per Load', rowNum) + '+' + cell('Estimasi Pewangi Per Load', rowNum) + '+' + cell('Estimasi Pelicin Setrika Per Load', rowNum) + ';0)',
       'Chemical Cuci Per Kg': '=IFERROR(' + cell('Chemical Cuci Per Load', rowNum) + '/MAX(' + cell('Kap Cuci', rowNum) + ';1);0)',
       'Admin Per Order': '=IFERROR(' + cell('Gaji Admin Bulanan', rowNum) + '/MAX(' + cell('Hari Kerja Admin Bulanan', rowNum) + '*' + cell('Target Order Admin Per Hari', rowNum) + ';1);0)',
       'Nota Per Order': '=IFERROR((' + cell('Harga Buku Nota', rowNum) + '/MAX(' + cell('Isi Nota', rowNum) + ';1))*MAX(' + cell('Lembar Nota Per Order', rowNum) + ';1);0)',
@@ -1683,9 +1723,13 @@ function zettApplyChemicalNotaFormulas_(sheet) {
 
   const names = sheet.getRange(headerRow + 1, colMap['Nama Outlet'] + 1, lastRow - headerRow, 1).getDisplayValues();
   const formulaHeaders = [
+    'Harga Deterjen Per Ltr', 'Harga Deterjen Per Ml',
     'Estimasi Deterjen Per Load', 'Estimasi Deterjen Per Kg',
+    'Harga Softener Per Ltr', 'Harga Softener Per Ml',
     'Estimasi Softener Per Load', 'Estimasi Softener Per Kg',
+    'Harga Pewangi Per Ltr', 'Harga Pewangi Per Ml',
     'Estimasi Pewangi Per Load', 'Estimasi Pewangi Per Kg',
+    'Harga Pelicin Setrika Per Ltr', 'Harga Pelicin Setrika Per Ml',
     'Estimasi Pelicin Setrika Per Load', 'Estimasi Pelicin Setrika Per Kg',
     'Estimasi Pemutih Per Load', 'Estimasi Pemutih Per Kg',
     'Estimasi Anti Noda Per Load', 'Estimasi Anti Noda Per Kg',
@@ -1707,41 +1751,41 @@ function zettApplyChemicalNotaFormulas_(sheet) {
 
 function zettChemicalHeaders_() {
   return [
-    'Harga Deterjen',
-    'Isi Deterjen',
-    'Takaran Deterjen Per Load',
+    'Deterjen Aktif',
+    'Tipe Deterjen',
+    'Harga Total Deterjen',
+    'Kap Deterjen Liter',
+    'Harga Deterjen Per Ltr',
+    'Harga Deterjen Per Ml',
+    'Pemakaian Deterjen Per Kg Ml',
     'Estimasi Deterjen Per Load',
     'Estimasi Deterjen Per Kg',
-    'Harga Softener',
-    'Isi Softener',
-    'Takaran Softener Per Load',
+    'Softener Aktif',
+    'Tipe Softener',
+    'Harga Total Softener',
+    'Kap Softener Liter',
+    'Harga Softener Per Ltr',
+    'Harga Softener Per Ml',
+    'Pemakaian Softener Per Kg Ml',
     'Estimasi Softener Per Load',
     'Estimasi Softener Per Kg',
-    'Harga Pewangi',
-    'Isi Pewangi',
-    'Takaran Pewangi Per Load',
+    'Pewangi Aktif',
+    'Harga Total Pewangi',
+    'Kap Pewangi Liter',
+    'Harga Pewangi Per Ltr',
+    'Harga Pewangi Per Ml',
+    'Pemakaian Pewangi Per Kg Ml',
     'Estimasi Pewangi Per Load',
     'Estimasi Pewangi Per Kg',
-    'Harga Pelicin Setrika',
-    'Isi Pelicin Setrika',
-    'Takaran Pelicin Setrika Per Load',
+    'Pelicin Setrika Aktif',
+    'Tipe Pelicin Setrika',
+    'Harga Total Pelicin Setrika',
+    'Kap Pelicin Setrika Liter',
+    'Harga Pelicin Setrika Per Ltr',
+    'Harga Pelicin Setrika Per Ml',
+    'Pemakaian Pelicin Setrika Per Kg Ml',
     'Estimasi Pelicin Setrika Per Load',
     'Estimasi Pelicin Setrika Per Kg',
-    'Harga Pemutih',
-    'Isi Pemutih',
-    'Takaran Pemutih Per Load',
-    'Estimasi Pemutih Per Load',
-    'Estimasi Pemutih Per Kg',
-    'Harga Anti Noda',
-    'Isi Anti Noda',
-    'Takaran Anti Noda Per Load',
-    'Estimasi Anti Noda Per Load',
-    'Estimasi Anti Noda Per Kg',
-    'Harga Chemical Tambahan',
-    'Isi Chemical Tambahan',
-    'Takaran Chemical Tambahan Per Load',
-    'Estimasi Chemical Tambahan Per Load',
-    'Estimasi Chemical Tambahan Per Kg',
     'Chemical Cuci Per Load',
     'Chemical Cuci Per Kg'
   ];
@@ -1918,25 +1962,25 @@ function zettAddPackingAliases20260518_(obj) {
 
 function zettAddChemicalNotaAliases_(obj) {
   if (!obj) return obj;
-  obj['Chem_Det_Active'] = zettFirst_(obj, ['Chem_Det_Active'], true);
-  obj['Chem_Det_Type'] = zettFirst_(obj, ['Chem_Det_Type'], 'cair');
-  obj['Chem_Det_Harga'] = zettFirst_(obj, ['Harga Deterjen', 'Chem_Det_Harga'], '');
-  obj['Chem_Det_Kapasitas'] = zettFirst_(obj, ['Isi Deterjen', 'Chem_Det_Kapasitas'], '');
-  obj['Chem_Det_Pemakaian'] = zettFirst_(obj, ['Takaran Deterjen Per Load', 'Chem_Det_Pemakaian'], '');
-  obj['Chem_Par_Active'] = zettFirst_(obj, ['Chem_Par_Active'], true);
-  obj['Chem_Par_Harga'] = zettFirst_(obj, ['Harga Pewangi', 'Chem_Par_Harga'], '');
-  obj['Chem_Par_Kapasitas'] = zettFirst_(obj, ['Isi Pewangi', 'Chem_Par_Kapasitas'], '');
-  obj['Chem_Par_Pemakaian'] = zettFirst_(obj, ['Takaran Pewangi Per Load', 'Chem_Par_Pemakaian'], '');
-  obj['Chem_Sof_Active'] = zettFirst_(obj, ['Chem_Sof_Active'], true);
-  obj['Chem_Sof_Type'] = zettFirst_(obj, ['Chem_Sof_Type'], 'cair');
-  obj['Chem_Sof_Harga'] = zettFirst_(obj, ['Harga Softener', 'Chem_Sof_Harga'], '');
-  obj['Chem_Sof_Kapasitas'] = zettFirst_(obj, ['Isi Softener', 'Chem_Sof_Kapasitas'], '');
-  obj['Chem_Sof_Pemakaian'] = zettFirst_(obj, ['Takaran Softener Per Load', 'Chem_Sof_Pemakaian'], '');
-  obj['Chem_Pel_Active'] = zettFirst_(obj, ['Chem_Pel_Active'], true);
-  obj['Chem_Pel_Type'] = zettFirst_(obj, ['Chem_Pel_Type'], 'cair');
-  obj['Chem_Pel_Harga'] = zettFirst_(obj, ['Harga Pelicin Setrika', 'Harga Chemical Tambahan', 'Chem_Pel_Harga'], '');
-  obj['Chem_Pel_Kapasitas'] = zettFirst_(obj, ['Isi Pelicin Setrika', 'Isi Chemical Tambahan', 'Chem_Pel_Kapasitas'], '');
-  obj['Chem_Pel_Pemakaian'] = zettFirst_(obj, ['Takaran Pelicin Setrika Per Load', 'Takaran Chemical Tambahan Per Load', 'Chem_Pel_Pemakaian'], '');
+  obj['Chem_Det_Active'] = zettFirst_(obj, ['Deterjen Aktif', 'Chem_Det_Active'], true);
+  obj['Chem_Det_Type'] = zettFirst_(obj, ['Tipe Deterjen', 'Chem_Det_Type'], 'cair');
+  obj['Chem_Det_Harga'] = zettFirst_(obj, ['Harga Total Deterjen', 'Harga Deterjen', 'Chem_Det_Harga'], '');
+  obj['Chem_Det_Kapasitas'] = zettFirst_(obj, ['Kap Deterjen Liter', 'Isi Deterjen', 'Chem_Det_Kapasitas'], '');
+  obj['Chem_Det_Pemakaian'] = zettFirst_(obj, ['Pemakaian Deterjen Per Kg Ml', 'Takaran Deterjen Per Load', 'Chem_Det_Pemakaian'], '');
+  obj['Chem_Par_Active'] = zettFirst_(obj, ['Pewangi Aktif', 'Chem_Par_Active'], true);
+  obj['Chem_Par_Harga'] = zettFirst_(obj, ['Harga Total Pewangi', 'Harga Pewangi', 'Chem_Par_Harga'], '');
+  obj['Chem_Par_Kapasitas'] = zettFirst_(obj, ['Kap Pewangi Liter', 'Isi Pewangi', 'Chem_Par_Kapasitas'], '');
+  obj['Chem_Par_Pemakaian'] = zettFirst_(obj, ['Pemakaian Pewangi Per Kg Ml', 'Takaran Pewangi Per Load', 'Chem_Par_Pemakaian'], '');
+  obj['Chem_Sof_Active'] = zettFirst_(obj, ['Softener Aktif', 'Chem_Sof_Active'], true);
+  obj['Chem_Sof_Type'] = zettFirst_(obj, ['Tipe Softener', 'Chem_Sof_Type'], 'cair');
+  obj['Chem_Sof_Harga'] = zettFirst_(obj, ['Harga Total Softener', 'Harga Softener', 'Chem_Sof_Harga'], '');
+  obj['Chem_Sof_Kapasitas'] = zettFirst_(obj, ['Kap Softener Liter', 'Isi Softener', 'Chem_Sof_Kapasitas'], '');
+  obj['Chem_Sof_Pemakaian'] = zettFirst_(obj, ['Pemakaian Softener Per Kg Ml', 'Takaran Softener Per Load', 'Chem_Sof_Pemakaian'], '');
+  obj['Chem_Pel_Active'] = zettFirst_(obj, ['Pelicin Setrika Aktif', 'Chem_Pel_Active'], true);
+  obj['Chem_Pel_Type'] = zettFirst_(obj, ['Tipe Pelicin Setrika', 'Chem_Pel_Type'], 'cair');
+  obj['Chem_Pel_Harga'] = zettFirst_(obj, ['Harga Total Pelicin Setrika', 'Harga Pelicin Setrika', 'Harga Chemical Tambahan', 'Chem_Pel_Harga'], '');
+  obj['Chem_Pel_Kapasitas'] = zettFirst_(obj, ['Kap Pelicin Setrika Liter', 'Isi Pelicin Setrika', 'Isi Chemical Tambahan', 'Chem_Pel_Kapasitas'], '');
+  obj['Chem_Pel_Pemakaian'] = zettFirst_(obj, ['Pemakaian Pelicin Setrika Per Kg Ml', 'Takaran Pelicin Setrika Per Load', 'Takaran Chemical Tambahan Per Load', 'Chem_Pel_Pemakaian'], '');
   obj['Nota_Type'] = zettFirst_(obj, ['Nota_Type'], 'manual');
   obj['Nota_App_FeeType'] = zettFirst_(obj, ['Nota_App_FeeType'], 'bulan');
   obj['Nota_App_HargaBulan'] = zettFirst_(obj, ['Biaya Kasir Bulanan', 'Nota_App_HargaBulan'], '');
@@ -2338,33 +2382,42 @@ function saveStrukturBiaya(payload) {
       'Solasi Biaya/Kg (Rp)': solasiBiayaKg,
       'Total Biaya Packing/Kg (Rp)': totalPacking,
 
-      'Harga Deterjen': payload.chemDetHargaBulk,
-      'Isi Deterjen': payload.chemDetKapBulk,
-      'Takaran Deterjen Per Load': payload.chemDetPakai,
-      'Estimasi Deterjen Per Load': '=IFERROR(({COL:Harga Deterjen}{ROW}/MAX({COL:Isi Deterjen}{ROW};1))*{COL:Takaran Deterjen Per Load}{ROW};0)',
+      'Deterjen Aktif': payload.chemDetActive ? 'Ya' : 'Tidak',
+      'Tipe Deterjen': payload.chemDetType,
+      'Harga Total Deterjen': payload.chemDetHargaBulk,
+      'Kap Deterjen Liter': payload.chemDetKapBulk,
+      'Harga Deterjen Per Ltr': '=IFERROR({COL:Harga Total Deterjen}{ROW}/MAX({COL:Kap Deterjen Liter}{ROW};1);0)',
+      'Harga Deterjen Per Ml': '=IFERROR({COL:Harga Deterjen Per Ltr}{ROW}/1000;0)',
+      'Pemakaian Deterjen Per Kg Ml': payload.chemDetPakai,
+      'Estimasi Deterjen Per Load': '=IFERROR(IF({COL:Deterjen Aktif}{ROW}="Tidak";0;{COL:Kap Cuci}{ROW}*{COL:Pemakaian Deterjen Per Kg Ml}{ROW}*{COL:Harga Deterjen Per Ml}{ROW});0)',
       'Estimasi Deterjen Per Kg': '=IFERROR({COL:Estimasi Deterjen Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
-      'Harga Pewangi': payload.chemParHargaBulk,
-      'Isi Pewangi': payload.chemParKapBulk,
-      'Takaran Pewangi Per Load': payload.chemParPakai,
-      'Estimasi Pewangi Per Load': '=IFERROR(({COL:Harga Pewangi}{ROW}/MAX({COL:Isi Pewangi}{ROW};1))*{COL:Takaran Pewangi Per Load}{ROW};0)',
+      'Pewangi Aktif': payload.chemParActive ? 'Ya' : 'Tidak',
+      'Harga Total Pewangi': payload.chemParHargaBulk,
+      'Kap Pewangi Liter': payload.chemParKapBulk,
+      'Harga Pewangi Per Ltr': '=IFERROR({COL:Harga Total Pewangi}{ROW}/MAX({COL:Kap Pewangi Liter}{ROW};1);0)',
+      'Harga Pewangi Per Ml': '=IFERROR({COL:Harga Pewangi Per Ltr}{ROW}/1000;0)',
+      'Pemakaian Pewangi Per Kg Ml': payload.chemParPakai,
+      'Estimasi Pewangi Per Load': '=IFERROR(IF({COL:Pewangi Aktif}{ROW}="Tidak";0;{COL:Kap Cuci}{ROW}*{COL:Pemakaian Pewangi Per Kg Ml}{ROW}*{COL:Harga Pewangi Per Ml}{ROW});0)',
       'Estimasi Pewangi Per Kg': '=IFERROR({COL:Estimasi Pewangi Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
-      'Harga Softener': payload.chemSofHargaBulk,
-      'Isi Softener': payload.chemSofKapBulk,
-      'Takaran Softener Per Load': payload.chemSofPakai,
-      'Estimasi Softener Per Load': '=IFERROR(({COL:Harga Softener}{ROW}/MAX({COL:Isi Softener}{ROW};1))*{COL:Takaran Softener Per Load}{ROW};0)',
+      'Softener Aktif': payload.chemSofActive ? 'Ya' : 'Tidak',
+      'Tipe Softener': payload.chemSofType,
+      'Harga Total Softener': payload.chemSofHargaBulk,
+      'Kap Softener Liter': payload.chemSofKapBulk,
+      'Harga Softener Per Ltr': '=IFERROR({COL:Harga Total Softener}{ROW}/MAX({COL:Kap Softener Liter}{ROW};1);0)',
+      'Harga Softener Per Ml': '=IFERROR({COL:Harga Softener Per Ltr}{ROW}/1000;0)',
+      'Pemakaian Softener Per Kg Ml': payload.chemSofPakai,
+      'Estimasi Softener Per Load': '=IFERROR(IF({COL:Softener Aktif}{ROW}="Tidak";0;{COL:Kap Cuci}{ROW}*{COL:Pemakaian Softener Per Kg Ml}{ROW}*{COL:Harga Softener Per Ml}{ROW});0)',
       'Estimasi Softener Per Kg': '=IFERROR({COL:Estimasi Softener Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
-      'Harga Pelicin Setrika': payload.chemPelHargaBulk,
-      'Isi Pelicin Setrika': payload.chemPelKapBulk,
-      'Takaran Pelicin Setrika Per Load': payload.chemPelPakai,
-      'Estimasi Pelicin Setrika Per Load': '=IFERROR(({COL:Harga Pelicin Setrika}{ROW}/MAX({COL:Isi Pelicin Setrika}{ROW};1))*{COL:Takaran Pelicin Setrika Per Load}{ROW};0)',
+      'Pelicin Setrika Aktif': payload.chemPelActive ? 'Ya' : 'Tidak',
+      'Tipe Pelicin Setrika': payload.chemPelType,
+      'Harga Total Pelicin Setrika': payload.chemPelHargaBulk,
+      'Kap Pelicin Setrika Liter': payload.chemPelKapBulk,
+      'Harga Pelicin Setrika Per Ltr': '=IFERROR({COL:Harga Total Pelicin Setrika}{ROW}/MAX({COL:Kap Pelicin Setrika Liter}{ROW};1);0)',
+      'Harga Pelicin Setrika Per Ml': '=IFERROR({COL:Harga Pelicin Setrika Per Ltr}{ROW}/1000;0)',
+      'Pemakaian Pelicin Setrika Per Kg Ml': payload.chemPelPakai,
+      'Estimasi Pelicin Setrika Per Load': '=IFERROR(IF({COL:Pelicin Setrika Aktif}{ROW}="Tidak";0;{COL:Kap Cuci}{ROW}*{COL:Pemakaian Pelicin Setrika Per Kg Ml}{ROW}*{COL:Harga Pelicin Setrika Per Ml}{ROW});0)',
       'Estimasi Pelicin Setrika Per Kg': '=IFERROR({COL:Estimasi Pelicin Setrika Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
-      'Estimasi Pemutih Per Load': '=IFERROR(({COL:Harga Pemutih}{ROW}/MAX({COL:Isi Pemutih}{ROW};1))*{COL:Takaran Pemutih Per Load}{ROW};0)',
-      'Estimasi Pemutih Per Kg': '=IFERROR({COL:Estimasi Pemutih Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
-      'Estimasi Anti Noda Per Load': '=IFERROR(({COL:Harga Anti Noda}{ROW}/MAX({COL:Isi Anti Noda}{ROW};1))*{COL:Takaran Anti Noda Per Load}{ROW};0)',
-      'Estimasi Anti Noda Per Kg': '=IFERROR({COL:Estimasi Anti Noda Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
-      'Estimasi Chemical Tambahan Per Load': '=IFERROR(({COL:Harga Chemical Tambahan}{ROW}/MAX({COL:Isi Chemical Tambahan}{ROW};1))*{COL:Takaran Chemical Tambahan Per Load}{ROW};0)',
-      'Estimasi Chemical Tambahan Per Kg': '=IFERROR({COL:Estimasi Chemical Tambahan Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
-      'Chemical Cuci Per Load': '=IFERROR({COL:Estimasi Deterjen Per Load}{ROW}+{COL:Estimasi Softener Per Load}{ROW}+{COL:Estimasi Pewangi Per Load}{ROW}+{COL:Estimasi Pelicin Setrika Per Load}{ROW}+{COL:Estimasi Pemutih Per Load}{ROW}+{COL:Estimasi Anti Noda Per Load}{ROW}+{COL:Estimasi Chemical Tambahan Per Load}{ROW};0)',
+      'Chemical Cuci Per Load': '=IFERROR({COL:Estimasi Deterjen Per Load}{ROW}+{COL:Estimasi Softener Per Load}{ROW}+{COL:Estimasi Pewangi Per Load}{ROW}+{COL:Estimasi Pelicin Setrika Per Load}{ROW};0)',
       'Chemical Cuci Per Kg': '=IFERROR({COL:Chemical Cuci Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
       'Admin Per Order': '=IFERROR({COL:Gaji Admin Bulanan}{ROW}/MAX({COL:Hari Kerja Admin Bulanan}{ROW}*{COL:Target Order Admin Per Hari}{ROW};1);0)',
       'Harga Buku Nota': payload.notaManualHarga,
