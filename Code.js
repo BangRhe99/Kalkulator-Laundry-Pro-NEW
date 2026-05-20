@@ -312,11 +312,8 @@ function setupDatabase() {
     
     const headersHPP3 = [
       'Timestamp', 'Nama Outlet', 
-      'Chem_Det_Active', 'Chem_Det_Type', 'Chem_Det_Harga', 'Chem_Det_Kapasitas', 'Chem_Det_Pemakaian', 
-      'Chem_Sof_Active', 'Chem_Sof_Type', 'Chem_Sof_Harga', 'Chem_Sof_Kapasitas', 'Chem_Sof_Pemakaian', 
-      'Chem_Par_Active', 'Chem_Par_Harga', 'Chem_Par_Kapasitas', 'Chem_Par_Pemakaian', 
-      'Chem_Pel_Active', 'Chem_Pel_Type', 'Chem_Pel_Harga', 'Chem_Pel_Kapasitas', 'Chem_Pel_Pemakaian', 
-      'Nota_Type', 'Nota_App_FeeType', 'Nota_App_HargaBulan', 'Nota_App_TrxBulan', 'Nota_App_HargaTrx', 'Nota_Thermal_Harga', 'Nota_Manual_Harga', 'Nota_Manual_LembarTotal', 'Nota_Manual_LembarTrx', 'Nota_RataKg'
+      ...zettChemicalHeaders_(),
+      ...zettNotaKasirHeaders_()
     ];
 
     const initSheet = (sheetName, headerArr) => {
@@ -894,39 +891,38 @@ function saveStrukturBiaya(payload) {
       setVal('Timestamp', timestamp);
       setVal('Nama Outlet', payload.namaOutlet);
 
-      setVal('Chem_Det_Active', payload.chemDetActive);
-      setVal('Chem_Det_Type', payload.chemDetType);
-      setVal('Chem_Det_Harga', payload.chemDetHargaBulk);
-      setVal('Chem_Det_Kapasitas', payload.chemDetKapBulk);
-      setVal('Chem_Det_Pemakaian', payload.chemDetPakai);
+      setVal('Harga Deterjen', payload.chemDetHargaBulk);
+      setVal('Isi Deterjen', payload.chemDetKapBulk);
+      setVal('Takaran Deterjen Per Load', payload.chemDetPakai);
+      setFormula('Deterjen Per Load', '=IFERROR(({Harga Deterjen}/MAX({Isi Deterjen};1))*{Takaran Deterjen Per Load};0)');
+      setVal('Harga Pewangi', payload.chemParHargaBulk);
+      setVal('Isi Pewangi', payload.chemParKapBulk);
+      setVal('Takaran Pewangi Per Load', payload.chemParPakai);
+      setFormula('Pewangi Per Load', '=IFERROR(({Harga Pewangi}/MAX({Isi Pewangi};1))*{Takaran Pewangi Per Load};0)');
+      setVal('Harga Softener', payload.chemSofHargaBulk);
+      setVal('Isi Softener', payload.chemSofKapBulk);
+      setVal('Takaran Softener Per Load', payload.chemSofPakai);
+      setFormula('Softener Per Load', '=IFERROR(({Harga Softener}/MAX({Isi Softener};1))*{Takaran Softener Per Load};0)');
+      setFormula('Pemutih Per Load', '=IFERROR(({Harga Pemutih}/MAX({Isi Pemutih};1))*{Takaran Pemutih Per Load};0)');
+      setFormula('Anti Noda Per Load', '=IFERROR(({Harga Anti Noda}/MAX({Isi Anti Noda};1))*{Takaran Anti Noda Per Load};0)');
+      setVal('Harga Chemical Tambahan', payload.chemPelHargaBulk);
+      setVal('Isi Chemical Tambahan', payload.chemPelKapBulk);
+      setVal('Takaran Chemical Tambahan Per Load', payload.chemPelPakai);
+      setFormula('Chemical Tambahan Per Load', '=IFERROR(({Harga Chemical Tambahan}/MAX({Isi Chemical Tambahan};1))*{Takaran Chemical Tambahan Per Load};0)');
+      setFormula('Chemical Cuci Per Load', '=IFERROR({Deterjen Per Load}+{Pewangi Per Load}+{Softener Per Load}+{Pemutih Per Load}+{Anti Noda Per Load}+{Chemical Tambahan Per Load};0)');
+      setFormula('Chemical Cuci Per Kg', '=IFERROR({Chemical Cuci Per Load}/MAX({Kap Cuci};1);0)');
 
-      setVal('Chem_Sof_Active', payload.chemSofActive);
-      setVal('Chem_Sof_Type', payload.chemSofType);
-      setVal('Chem_Sof_Harga', payload.chemSofHargaBulk);
-      setVal('Chem_Sof_Kapasitas', payload.chemSofKapBulk);
-      setVal('Chem_Sof_Pemakaian', payload.chemSofPakai);
-
-      setVal('Chem_Par_Active', payload.chemParActive);
-      setVal('Chem_Par_Harga', payload.chemParHargaBulk);
-      setVal('Chem_Par_Kapasitas', payload.chemParKapBulk);
-      setVal('Chem_Par_Pemakaian', payload.chemParPakai);
-
-      setVal('Chem_Pel_Active', payload.chemPelActive);
-      setVal('Chem_Pel_Type', payload.chemPelType);
-      setVal('Chem_Pel_Harga', payload.chemPelHargaBulk);
-      setVal('Chem_Pel_Kapasitas', payload.chemPelKapBulk);
-      setVal('Chem_Pel_Pemakaian', payload.chemPelPakai);
-
-      setVal('Nota_Type', payload.notaType);
-      setVal('Nota_App_FeeType', payload.notaAppFeeType);
-      setVal('Nota_App_HargaBulan', payload.notaAppHargaBulan);
-      setVal('Nota_App_TrxBulan', payload.notaAppTrxBulan);
-      setVal('Nota_App_HargaTrx', payload.notaAppHargaTrx);
-      setVal('Nota_Thermal_Harga', payload.notaThermalHarga);
-      setVal('Nota_Manual_Harga', payload.notaManualHarga);
-      setVal('Nota_Manual_LembarTotal', payload.notaManualLbrTotal);
-      setVal('Nota_Manual_LembarTrx', payload.notaManualLbrTrx);
-      setVal('Nota_RataKg', payload.notaRataKg);
+      setFormula('Admin Per Order', '=IFERROR({Gaji Admin Bulanan}/MAX({Hari Kerja Admin Bulanan}*{Target Order Admin Per Hari};1);0)');
+      setVal('Harga Buku Nota', payload.notaManualHarga);
+      setVal('Isi Nota', payload.notaManualLbrTotal);
+      setVal('Lembar Nota Per Order', payload.notaManualLbrTrx);
+      setFormula('Nota Per Order', '=IFERROR(({Harga Buku Nota}/MAX({Isi Nota};1))*MAX({Lembar Nota Per Order};1);0)');
+      setVal('Biaya Kasir Bulanan', payload.notaAppHargaBulan);
+      setVal('Target Order Kasir Per Hari', payload.notaAppTrxBulan);
+      setFormula('Kasir Per Order', '=IFERROR({Biaya Kasir Bulanan}/MAX({Hari Kerja Kasir Bulanan}*{Target Order Kasir Per Hari};1);0)');
+      setFormula('Admin Nota Kasir Per Order', '=IFERROR({Admin Per Order}+{Nota Per Order}+{Kasir Per Order};0)');
+      setFormula('Admin Nota Kasir Per Load', '=IFERROR({Admin Nota Kasir Per Order};0)');
+      setFormula('Admin Nota Kasir Per Kg', '=IFERROR({Admin Nota Kasir Per Load}/MAX({Kap Cuci};1);0)');
     };
 
     if (targetRow3 !== -1) {
@@ -1451,6 +1447,14 @@ function zettEnsureHeaders_(sheet, headers) {
       .setWrap(true);
     colMap = zettGetHeaderMap_(sheet);
   }
+  if (headers.indexOf('Harga Deterjen') !== -1) {
+    const chemicalHeadersChanged = zettEnsureHeaderBlock_(sheet, zettChemicalHeaders_(), 'Total Biaya Packing/Kg (Rp)');
+    const notaHeadersChanged = zettEnsureHeaderBlock_(sheet, zettNotaKasirHeaders_(), 'Chemical Cuci Per Kg');
+    const legacyMigrated = zettMigrateLegacyChemicalNotaHeaders_(sheet);
+    zettSetHPPGroupTitles_(sheet);
+    if (chemicalHeadersChanged || notaHeadersChanged || legacyMigrated) zettApplyChemicalNotaFormulas_(sheet);
+    colMap = zettGetHeaderMap_(sheet);
+  }
   const missing = headers.filter(function(h) {
     return !(h in colMap);
   });
@@ -1466,6 +1470,233 @@ function zettEnsureHeaders_(sheet, headers) {
     .setVerticalAlignment('middle')
     .setWrap(true);
   SpreadsheetApp.flush();
+}
+
+function zettEnsureHeaderBlock_(sheet, blockHeaders, anchorHeader) {
+  if (!sheet || !blockHeaders || blockHeaders.length === 0) return false;
+  const headerRow = zettHppHeaderRow_(sheet);
+  let colMap = zettGetHeaderMap_(sheet);
+  const missing = blockHeaders.filter(function(header) {
+    return !(header in colMap);
+  });
+  if (missing.length === 0) return false;
+
+  const anchorCol = (anchorHeader in colMap) ? colMap[anchorHeader] + 1 : sheet.getLastColumn();
+  sheet.insertColumnsAfter(anchorCol, missing.length);
+  sheet.getRange(headerRow, anchorCol + 1, 1, missing.length)
+    .setValues([missing])
+    .setFontWeight('bold')
+    .setBackground('#0f172a')
+    .setFontColor('#ffffff')
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle')
+    .setWrap(true);
+  return true;
+}
+
+function zettSetHPPGroupTitles_(sheet) {
+  if (!sheet) return;
+  const headerRow = zettHppHeaderRow_(sheet);
+  if (headerRow <= 1) return;
+  const colMap = zettGetHeaderMap_(sheet);
+  const groups = [
+    { title: 'Analisa Biaya Chemical', start: 'Harga Deterjen', end: 'Chemical Cuci Per Kg' },
+    { title: 'Analisa Biaya Nota & Kasir', start: 'Gaji Admin Bulanan', end: 'Admin Nota Kasir Per Kg' }
+  ];
+  const titleRow = headerRow - 1;
+  const row = sheet.getRange(titleRow, 1, 1, sheet.getLastColumn()).getValues()[0];
+  groups.forEach(function(group) {
+    if (!(group.start in colMap) || !(group.end in colMap)) return;
+    const start = colMap[group.start];
+    const end = colMap[group.end];
+    for (let i = start; i <= end; i++) row[i] = '';
+    row[start] = group.title;
+  });
+  sheet.getRange(titleRow, 1, 1, row.length).setValues([row]);
+}
+
+function zettLegacyChemicalNotaMap_() {
+  return {
+    'Chem_Det_Harga': 'Harga Deterjen',
+    'Chem_Det_Kapasitas': 'Isi Deterjen',
+    'Chem_Det_Pemakaian': 'Takaran Deterjen Per Load',
+    'Chem_Par_Harga': 'Harga Pewangi',
+    'Chem_Par_Kapasitas': 'Isi Pewangi',
+    'Chem_Par_Pemakaian': 'Takaran Pewangi Per Load',
+    'Chem_Sof_Harga': 'Harga Softener',
+    'Chem_Sof_Kapasitas': 'Isi Softener',
+    'Chem_Sof_Pemakaian': 'Takaran Softener Per Load',
+    'Chem_Pel_Harga': 'Harga Chemical Tambahan',
+    'Chem_Pel_Kapasitas': 'Isi Chemical Tambahan',
+    'Chem_Pel_Pemakaian': 'Takaran Chemical Tambahan Per Load',
+    'Nota_App_HargaBulan': 'Biaya Kasir Bulanan',
+    'Nota_Manual_Harga': 'Harga Buku Nota',
+    'Nota_Manual_LembarTotal': 'Isi Nota',
+    'Nota_Manual_LembarTrx': 'Lembar Nota Per Order'
+  };
+}
+
+function zettLegacyChemicalNotaHeaders_() {
+  return [
+    'Chem_Det_Active', 'Chem_Det_Type', 'Chem_Det_Harga', 'Chem_Det_Kapasitas', 'Chem_Det_Pemakaian',
+    'Chem_Sof_Active', 'Chem_Sof_Type', 'Chem_Sof_Harga', 'Chem_Sof_Kapasitas', 'Chem_Sof_Pemakaian',
+    'Chem_Par_Active', 'Chem_Par_Harga', 'Chem_Par_Kapasitas', 'Chem_Par_Pemakaian',
+    'Chem_Pel_Active', 'Chem_Pel_Type', 'Chem_Pel_Harga', 'Chem_Pel_Kapasitas', 'Chem_Pel_Pemakaian',
+    'Nota_Type', 'Nota_App_FeeType', 'Nota_App_HargaBulan', 'Nota_App_TrxBulan', 'Nota_App_HargaTrx',
+    'Nota_Thermal_Harga', 'Nota_Manual_Harga', 'Nota_Manual_LembarTotal', 'Nota_Manual_LembarTrx', 'Nota_RataKg'
+  ];
+}
+
+function zettMigrateLegacyChemicalNotaHeaders_(sheet) {
+  if (!sheet || sheet.getLastColumn() === 0) return false;
+  const headerRow = zettHppHeaderRow_(sheet);
+  let colMap = zettGetHeaderMap_(sheet);
+  const migration = zettLegacyChemicalNotaMap_();
+  const hasLegacy = zettLegacyChemicalNotaHeaders_().some(function(header) { return header in colMap; });
+  if (!hasLegacy) return false;
+
+  const lastRow = sheet.getLastRow();
+  let changed = false;
+  if (lastRow > headerRow) {
+    const range = sheet.getRange(headerRow + 1, 1, lastRow - headerRow, sheet.getLastColumn());
+    const values = range.getValues();
+    values.forEach(function(row) {
+      Object.keys(migration).forEach(function(oldHeader) {
+        const newHeader = migration[oldHeader];
+        if (!(oldHeader in colMap) || !(newHeader in colMap)) return;
+        const oldValue = row[colMap[oldHeader]];
+        const newValue = row[colMap[newHeader]];
+        if ((newValue === '' || newValue === null) && oldValue !== '' && oldValue !== null) {
+          row[colMap[newHeader]] = oldValue;
+          changed = true;
+        }
+      });
+    });
+    if (changed) range.setValues(values);
+  }
+
+  colMap = zettGetHeaderMap_(sheet);
+  const deleteCols = zettLegacyChemicalNotaHeaders_()
+    .filter(function(header) { return header in colMap; })
+    .map(function(header) { return colMap[header] + 1; })
+    .sort(function(a, b) { return b - a; });
+  deleteCols.forEach(function(col) {
+    sheet.deleteColumn(col);
+  });
+  return changed || deleteCols.length > 0;
+}
+
+function zettApplyChemicalNotaFormulas_(sheet) {
+  if (!sheet || sheet.getLastColumn() === 0) return;
+  const headerRow = zettHppHeaderRow_(sheet);
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= headerRow) return;
+
+  const colMap = zettGetHeaderMap_(sheet);
+  if (!('Nama Outlet' in colMap)) return;
+
+  function getColLetter(colIndex) {
+    let temp, letter = '';
+    let col = colIndex + 1;
+    while (col > 0) {
+      temp = (col - 1) % 26;
+      letter = String.fromCharCode(temp + 65) + letter;
+      col = (col - temp - 1) / 26;
+    }
+    return letter;
+  }
+
+  function cell(header, rowNum) {
+    return (header in colMap) ? getColLetter(colMap[header]) + rowNum : 'A' + rowNum;
+  }
+
+  function formulaFor(header, rowNum) {
+    const f = {
+      'Deterjen Per Load': '=IFERROR((' + cell('Harga Deterjen', rowNum) + '/MAX(' + cell('Isi Deterjen', rowNum) + ';1))*' + cell('Takaran Deterjen Per Load', rowNum) + ';0)',
+      'Pewangi Per Load': '=IFERROR((' + cell('Harga Pewangi', rowNum) + '/MAX(' + cell('Isi Pewangi', rowNum) + ';1))*' + cell('Takaran Pewangi Per Load', rowNum) + ';0)',
+      'Softener Per Load': '=IFERROR((' + cell('Harga Softener', rowNum) + '/MAX(' + cell('Isi Softener', rowNum) + ';1))*' + cell('Takaran Softener Per Load', rowNum) + ';0)',
+      'Pemutih Per Load': '=IFERROR((' + cell('Harga Pemutih', rowNum) + '/MAX(' + cell('Isi Pemutih', rowNum) + ';1))*' + cell('Takaran Pemutih Per Load', rowNum) + ';0)',
+      'Anti Noda Per Load': '=IFERROR((' + cell('Harga Anti Noda', rowNum) + '/MAX(' + cell('Isi Anti Noda', rowNum) + ';1))*' + cell('Takaran Anti Noda Per Load', rowNum) + ';0)',
+      'Chemical Tambahan Per Load': '=IFERROR((' + cell('Harga Chemical Tambahan', rowNum) + '/MAX(' + cell('Isi Chemical Tambahan', rowNum) + ';1))*' + cell('Takaran Chemical Tambahan Per Load', rowNum) + ';0)',
+      'Chemical Cuci Per Load': '=IFERROR(' + cell('Deterjen Per Load', rowNum) + '+' + cell('Pewangi Per Load', rowNum) + '+' + cell('Softener Per Load', rowNum) + '+' + cell('Pemutih Per Load', rowNum) + '+' + cell('Anti Noda Per Load', rowNum) + '+' + cell('Chemical Tambahan Per Load', rowNum) + ';0)',
+      'Chemical Cuci Per Kg': '=IFERROR(' + cell('Chemical Cuci Per Load', rowNum) + '/MAX(' + cell('Kap Cuci', rowNum) + ';1);0)',
+      'Admin Per Order': '=IFERROR(' + cell('Gaji Admin Bulanan', rowNum) + '/MAX(' + cell('Hari Kerja Admin Bulanan', rowNum) + '*' + cell('Target Order Admin Per Hari', rowNum) + ';1);0)',
+      'Nota Per Order': '=IFERROR((' + cell('Harga Buku Nota', rowNum) + '/MAX(' + cell('Isi Nota', rowNum) + ';1))*MAX(' + cell('Lembar Nota Per Order', rowNum) + ';1);0)',
+      'Kasir Per Order': '=IFERROR(' + cell('Biaya Kasir Bulanan', rowNum) + '/MAX(' + cell('Hari Kerja Kasir Bulanan', rowNum) + '*' + cell('Target Order Kasir Per Hari', rowNum) + ';1);0)',
+      'Admin Nota Kasir Per Order': '=IFERROR(' + cell('Admin Per Order', rowNum) + '+' + cell('Nota Per Order', rowNum) + '+' + cell('Kasir Per Order', rowNum) + ';0)',
+      'Admin Nota Kasir Per Load': '=IFERROR(' + cell('Admin Nota Kasir Per Order', rowNum) + ';0)',
+      'Admin Nota Kasir Per Kg': '=IFERROR(' + cell('Admin Nota Kasir Per Load', rowNum) + '/MAX(' + cell('Kap Cuci', rowNum) + ';1);0)'
+    };
+    return f[header] || '';
+  }
+
+  const names = sheet.getRange(headerRow + 1, colMap['Nama Outlet'] + 1, lastRow - headerRow, 1).getDisplayValues();
+  const formulaHeaders = [
+    'Deterjen Per Load', 'Pewangi Per Load', 'Softener Per Load', 'Pemutih Per Load',
+    'Anti Noda Per Load', 'Chemical Tambahan Per Load', 'Chemical Cuci Per Load', 'Chemical Cuci Per Kg',
+    'Admin Per Order', 'Nota Per Order', 'Kasir Per Order', 'Admin Nota Kasir Per Order',
+    'Admin Nota Kasir Per Load', 'Admin Nota Kasir Per Kg'
+  ];
+
+  formulaHeaders.forEach(function(header) {
+    if (!(header in colMap)) return;
+    const formulas = names.map(function(row, index) {
+      const rowNum = headerRow + 1 + index;
+      return [String(row[0] || '').trim() ? formulaFor(header, rowNum) : ''];
+    });
+    sheet.getRange(headerRow + 1, colMap[header] + 1, formulas.length, 1).setFormulas(formulas);
+  });
+}
+
+function zettChemicalHeaders_() {
+  return [
+    'Harga Deterjen',
+    'Isi Deterjen',
+    'Takaran Deterjen Per Load',
+    'Deterjen Per Load',
+    'Harga Pewangi',
+    'Isi Pewangi',
+    'Takaran Pewangi Per Load',
+    'Pewangi Per Load',
+    'Harga Softener',
+    'Isi Softener',
+    'Takaran Softener Per Load',
+    'Softener Per Load',
+    'Harga Pemutih',
+    'Isi Pemutih',
+    'Takaran Pemutih Per Load',
+    'Pemutih Per Load',
+    'Harga Anti Noda',
+    'Isi Anti Noda',
+    'Takaran Anti Noda Per Load',
+    'Anti Noda Per Load',
+    'Harga Chemical Tambahan',
+    'Isi Chemical Tambahan',
+    'Takaran Chemical Tambahan Per Load',
+    'Chemical Tambahan Per Load',
+    'Chemical Cuci Per Load',
+    'Chemical Cuci Per Kg'
+  ];
+}
+
+function zettNotaKasirHeaders_() {
+  return [
+    'Gaji Admin Bulanan',
+    'Hari Kerja Admin Bulanan',
+    'Target Order Admin Per Hari',
+    'Admin Per Order',
+    'Harga Buku Nota',
+    'Isi Nota',
+    'Lembar Nota Per Order',
+    'Nota Per Order',
+    'Biaya Kasir Bulanan',
+    'Hari Kerja Kasir Bulanan',
+    'Target Order Kasir Per Hari',
+    'Kasir Per Order',
+    'Admin Nota Kasir Per Order',
+    'Admin Nota Kasir Per Load',
+    'Admin Nota Kasir Per Kg'
+  ];
 }
 
 function zettCombinedHPPHeaders_() {
@@ -1488,13 +1719,8 @@ function zettCombinedHPPHeaders_() {
 
     ...zettPackingHeaders20260518_(),
 
-    // Chemical dan Nota tetap memakai nama field stabil agar frontend lama tetap terbaca
-    'Chem_Det_Active', 'Chem_Det_Type', 'Chem_Det_Harga', 'Chem_Det_Kapasitas', 'Chem_Det_Pemakaian',
-    'Chem_Sof_Active', 'Chem_Sof_Type', 'Chem_Sof_Harga', 'Chem_Sof_Kapasitas', 'Chem_Sof_Pemakaian',
-    'Chem_Par_Active', 'Chem_Par_Harga', 'Chem_Par_Kapasitas', 'Chem_Par_Pemakaian',
-    'Chem_Pel_Active', 'Chem_Pel_Type', 'Chem_Pel_Harga', 'Chem_Pel_Kapasitas', 'Chem_Pel_Pemakaian',
-    'Nota_Type', 'Nota_App_FeeType', 'Nota_App_HargaBulan', 'Nota_App_TrxBulan', 'Nota_App_HargaTrx',
-    'Nota_Thermal_Harga', 'Nota_Manual_Harga', 'Nota_Manual_LembarTotal', 'Nota_Manual_LembarTrx', 'Nota_RataKg'
+    ...zettChemicalHeaders_(),
+    ...zettNotaKasirHeaders_()
   ];
 }
 
@@ -1622,6 +1848,40 @@ function zettAddPackingAliases20260518_(obj) {
   return obj;
 }
 
+function zettAddChemicalNotaAliases_(obj) {
+  if (!obj) return obj;
+  obj['Chem_Det_Active'] = zettFirst_(obj, ['Chem_Det_Active'], true);
+  obj['Chem_Det_Type'] = zettFirst_(obj, ['Chem_Det_Type'], 'cair');
+  obj['Chem_Det_Harga'] = zettFirst_(obj, ['Harga Deterjen', 'Chem_Det_Harga'], '');
+  obj['Chem_Det_Kapasitas'] = zettFirst_(obj, ['Isi Deterjen', 'Chem_Det_Kapasitas'], '');
+  obj['Chem_Det_Pemakaian'] = zettFirst_(obj, ['Takaran Deterjen Per Load', 'Chem_Det_Pemakaian'], '');
+  obj['Chem_Par_Active'] = zettFirst_(obj, ['Chem_Par_Active'], true);
+  obj['Chem_Par_Harga'] = zettFirst_(obj, ['Harga Pewangi', 'Chem_Par_Harga'], '');
+  obj['Chem_Par_Kapasitas'] = zettFirst_(obj, ['Isi Pewangi', 'Chem_Par_Kapasitas'], '');
+  obj['Chem_Par_Pemakaian'] = zettFirst_(obj, ['Takaran Pewangi Per Load', 'Chem_Par_Pemakaian'], '');
+  obj['Chem_Sof_Active'] = zettFirst_(obj, ['Chem_Sof_Active'], true);
+  obj['Chem_Sof_Type'] = zettFirst_(obj, ['Chem_Sof_Type'], 'cair');
+  obj['Chem_Sof_Harga'] = zettFirst_(obj, ['Harga Softener', 'Chem_Sof_Harga'], '');
+  obj['Chem_Sof_Kapasitas'] = zettFirst_(obj, ['Isi Softener', 'Chem_Sof_Kapasitas'], '');
+  obj['Chem_Sof_Pemakaian'] = zettFirst_(obj, ['Takaran Softener Per Load', 'Chem_Sof_Pemakaian'], '');
+  obj['Chem_Pel_Active'] = zettFirst_(obj, ['Chem_Pel_Active'], true);
+  obj['Chem_Pel_Type'] = zettFirst_(obj, ['Chem_Pel_Type'], 'cair');
+  obj['Chem_Pel_Harga'] = zettFirst_(obj, ['Harga Chemical Tambahan', 'Chem_Pel_Harga'], '');
+  obj['Chem_Pel_Kapasitas'] = zettFirst_(obj, ['Isi Chemical Tambahan', 'Chem_Pel_Kapasitas'], '');
+  obj['Chem_Pel_Pemakaian'] = zettFirst_(obj, ['Takaran Chemical Tambahan Per Load', 'Chem_Pel_Pemakaian'], '');
+  obj['Nota_Type'] = zettFirst_(obj, ['Nota_Type'], 'manual');
+  obj['Nota_App_FeeType'] = zettFirst_(obj, ['Nota_App_FeeType'], 'bulan');
+  obj['Nota_App_HargaBulan'] = zettFirst_(obj, ['Biaya Kasir Bulanan', 'Nota_App_HargaBulan'], '');
+  obj['Nota_App_TrxBulan'] = zettFirst_(obj, ['Target Order Kasir Per Hari', 'Nota_App_TrxBulan'], '');
+  obj['Nota_App_HargaTrx'] = zettFirst_(obj, ['Kasir Per Order', 'Nota_App_HargaTrx'], '');
+  obj['Nota_Thermal_Harga'] = zettFirst_(obj, ['Nota Per Order', 'Nota_Thermal_Harga'], '');
+  obj['Nota_Manual_Harga'] = zettFirst_(obj, ['Harga Buku Nota', 'Nota_Manual_Harga'], '');
+  obj['Nota_Manual_LembarTotal'] = zettFirst_(obj, ['Isi Nota', 'Nota_Manual_LembarTotal'], '');
+  obj['Nota_Manual_LembarTrx'] = zettFirst_(obj, ['Lembar Nota Per Order', 'Nota_Manual_LembarTrx'], '');
+  obj['Nota_RataKg'] = zettFirst_(obj, ['Kap Cuci', 'Nota_RataKg'], '');
+  return obj;
+}
+
 function zettNormalizeOutletName_(value) {
   return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
@@ -1700,6 +1960,7 @@ function getAllHPPData() {
       });
 
       zettAddPackingAliases20260518_(obj);
+      zettAddChemicalNotaAliases_(obj);
 
       result.push(obj);
     }
@@ -1736,6 +1997,7 @@ function getHPPRowByOutlet(namaOutlet) {
       });
 
       zettAddPackingAliases20260518_(obj);
+      zettAddChemicalNotaAliases_(obj);
 
       return { status: 'success', data: obj };
     }
@@ -2008,35 +2270,37 @@ function saveStrukturBiaya(payload) {
       'Solasi Biaya/Kg (Rp)': solasiBiayaKg,
       'Total Biaya Packing/Kg (Rp)': totalPacking,
 
-      'Chem_Det_Active': payload.chemDetActive,
-      'Chem_Det_Type': payload.chemDetType,
-      'Chem_Det_Harga': payload.chemDetHargaBulk,
-      'Chem_Det_Kapasitas': payload.chemDetKapBulk,
-      'Chem_Det_Pemakaian': payload.chemDetPakai,
-      'Chem_Sof_Active': payload.chemSofActive,
-      'Chem_Sof_Type': payload.chemSofType,
-      'Chem_Sof_Harga': payload.chemSofHargaBulk,
-      'Chem_Sof_Kapasitas': payload.chemSofKapBulk,
-      'Chem_Sof_Pemakaian': payload.chemSofPakai,
-      'Chem_Par_Active': payload.chemParActive,
-      'Chem_Par_Harga': payload.chemParHargaBulk,
-      'Chem_Par_Kapasitas': payload.chemParKapBulk,
-      'Chem_Par_Pemakaian': payload.chemParPakai,
-      'Chem_Pel_Active': payload.chemPelActive,
-      'Chem_Pel_Type': payload.chemPelType,
-      'Chem_Pel_Harga': payload.chemPelHargaBulk,
-      'Chem_Pel_Kapasitas': payload.chemPelKapBulk,
-      'Chem_Pel_Pemakaian': payload.chemPelPakai,
-      'Nota_Type': payload.notaType,
-      'Nota_App_FeeType': payload.notaAppFeeType,
-      'Nota_App_HargaBulan': payload.notaAppHargaBulan,
-      'Nota_App_TrxBulan': payload.notaAppTrxBulan,
-      'Nota_App_HargaTrx': payload.notaAppHargaTrx,
-      'Nota_Thermal_Harga': payload.notaThermalHarga,
-      'Nota_Manual_Harga': payload.notaManualHarga,
-      'Nota_Manual_LembarTotal': payload.notaManualLbrTotal,
-      'Nota_Manual_LembarTrx': payload.notaManualLbrTrx,
-      'Nota_RataKg': payload.notaRataKg,
+      'Harga Deterjen': payload.chemDetHargaBulk,
+      'Isi Deterjen': payload.chemDetKapBulk,
+      'Takaran Deterjen Per Load': payload.chemDetPakai,
+      'Deterjen Per Load': '=IFERROR(({COL:Harga Deterjen}{ROW}/MAX({COL:Isi Deterjen}{ROW};1))*{COL:Takaran Deterjen Per Load}{ROW};0)',
+      'Harga Pewangi': payload.chemParHargaBulk,
+      'Isi Pewangi': payload.chemParKapBulk,
+      'Takaran Pewangi Per Load': payload.chemParPakai,
+      'Pewangi Per Load': '=IFERROR(({COL:Harga Pewangi}{ROW}/MAX({COL:Isi Pewangi}{ROW};1))*{COL:Takaran Pewangi Per Load}{ROW};0)',
+      'Harga Softener': payload.chemSofHargaBulk,
+      'Isi Softener': payload.chemSofKapBulk,
+      'Takaran Softener Per Load': payload.chemSofPakai,
+      'Softener Per Load': '=IFERROR(({COL:Harga Softener}{ROW}/MAX({COL:Isi Softener}{ROW};1))*{COL:Takaran Softener Per Load}{ROW};0)',
+      'Pemutih Per Load': '=IFERROR(({COL:Harga Pemutih}{ROW}/MAX({COL:Isi Pemutih}{ROW};1))*{COL:Takaran Pemutih Per Load}{ROW};0)',
+      'Anti Noda Per Load': '=IFERROR(({COL:Harga Anti Noda}{ROW}/MAX({COL:Isi Anti Noda}{ROW};1))*{COL:Takaran Anti Noda Per Load}{ROW};0)',
+      'Harga Chemical Tambahan': payload.chemPelHargaBulk,
+      'Isi Chemical Tambahan': payload.chemPelKapBulk,
+      'Takaran Chemical Tambahan Per Load': payload.chemPelPakai,
+      'Chemical Tambahan Per Load': '=IFERROR(({COL:Harga Chemical Tambahan}{ROW}/MAX({COL:Isi Chemical Tambahan}{ROW};1))*{COL:Takaran Chemical Tambahan Per Load}{ROW};0)',
+      'Chemical Cuci Per Load': '=IFERROR({COL:Deterjen Per Load}{ROW}+{COL:Pewangi Per Load}{ROW}+{COL:Softener Per Load}{ROW}+{COL:Pemutih Per Load}{ROW}+{COL:Anti Noda Per Load}{ROW}+{COL:Chemical Tambahan Per Load}{ROW};0)',
+      'Chemical Cuci Per Kg': '=IFERROR({COL:Chemical Cuci Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
+      'Admin Per Order': '=IFERROR({COL:Gaji Admin Bulanan}{ROW}/MAX({COL:Hari Kerja Admin Bulanan}{ROW}*{COL:Target Order Admin Per Hari}{ROW};1);0)',
+      'Harga Buku Nota': payload.notaManualHarga,
+      'Isi Nota': payload.notaManualLbrTotal,
+      'Lembar Nota Per Order': payload.notaManualLbrTrx,
+      'Nota Per Order': '=IFERROR(({COL:Harga Buku Nota}{ROW}/MAX({COL:Isi Nota}{ROW};1))*MAX({COL:Lembar Nota Per Order}{ROW};1);0)',
+      'Biaya Kasir Bulanan': payload.notaAppHargaBulan,
+      'Target Order Kasir Per Hari': payload.notaAppTrxBulan,
+      'Kasir Per Order': '=IFERROR({COL:Biaya Kasir Bulanan}{ROW}/MAX({COL:Hari Kerja Kasir Bulanan}{ROW}*{COL:Target Order Kasir Per Hari}{ROW};1);0)',
+      'Admin Nota Kasir Per Order': '=IFERROR({COL:Admin Per Order}{ROW}+{COL:Nota Per Order}{ROW}+{COL:Kasir Per Order}{ROW};0)',
+      'Admin Nota Kasir Per Load': '=IFERROR({COL:Admin Nota Kasir Per Order}{ROW};0)',
+      'Admin Nota Kasir Per Kg': '=IFERROR({COL:Admin Nota Kasir Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
 
       'Packing_PP_Active': payload.packPPActive,
       'Packing_PP_Harga': payload.packPPHarga,
