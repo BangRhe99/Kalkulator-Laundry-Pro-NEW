@@ -1500,8 +1500,9 @@
                 </div>
               </div>
 
-              <div style="margin-top: 1.25rem; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(16, 185, 129, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #047857; border: 1px dashed rgba(16, 185, 129, 0.3);">
-                <span>Biaya Deterjen / Kg:</span> <span id="dispDetCostKg">Rp 0</span>
+              <div class="zett-chemical-output" style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.45rem; font-size: 0.8rem; font-weight: 800; background: rgba(16, 185, 129, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #047857; border: 1px dashed rgba(16, 185, 129, 0.3);">
+                <div style="display:flex; justify-content:space-between; gap:0.75rem;"><span>Estimasi Deterjen /Load:</span> <span id="dispDetCostLoad">Rp 0</span></div>
+                <div style="display:flex; justify-content:space-between; gap:0.75rem;"><span>Estimasi Deterjen /Kg:</span> <span id="dispDetCostKg">Rp 0</span></div>
               </div>
             </div>
           </div>
@@ -1569,8 +1570,9 @@
                 </div>
               </div>
 
-              <div style="margin-top: 1.25rem; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(99, 102, 241, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #4338ca; border: 1px dashed rgba(99, 102, 241, 0.3);">
-                <span>Biaya Softener / Kg:</span> <span id="dispSofCostKg">Rp 0</span>
+              <div class="zett-chemical-output" style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.45rem; font-size: 0.8rem; font-weight: 800; background: rgba(99, 102, 241, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #4338ca; border: 1px dashed rgba(99, 102, 241, 0.3);">
+                <div style="display:flex; justify-content:space-between; gap:0.75rem;"><span>Estimasi Softener /Load:</span> <span id="dispSofCostLoad">Rp 0</span></div>
+                <div style="display:flex; justify-content:space-between; gap:0.75rem;"><span>Estimasi Softener /Kg:</span> <span id="dispSofCostKg">Rp 0</span></div>
               </div>
             </div>
           </div>
@@ -1616,8 +1618,9 @@
                 <input type="number" id="bahanParPemakaian" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" value="5" oninput="calculateBahanBaku()">
               </div>
 
-              <div style="margin-top: auto; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(245, 158, 11, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #b45309; border: 1px dashed rgba(245, 158, 11, 0.3);">
-                <span>Biaya Parfum / Kg:</span> <span id="dispParCostKg">Rp 0</span>
+              <div class="zett-chemical-output" style="margin-top: auto; display: flex; flex-direction: column; gap: 0.45rem; font-size: 0.8rem; font-weight: 800; background: rgba(245, 158, 11, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #b45309; border: 1px dashed rgba(245, 158, 11, 0.3);">
+                <div style="display:flex; justify-content:space-between; gap:0.75rem;"><span>Estimasi Pewangi /Load:</span> <span id="dispParCostLoad">Rp 0</span></div>
+                <div style="display:flex; justify-content:space-between; gap:0.75rem;"><span>Estimasi Pewangi /Kg:</span> <span id="dispParCostKg">Rp 0</span></div>
               </div>
             </div>
           </div>
@@ -1687,8 +1690,9 @@
                 </div>
               </div>
 
-              <div style="margin-top: 1.25rem; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; background: rgba(168, 85, 247, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #7e22ce; border: 1px dashed rgba(168, 85, 247, 0.3);">
-                <span>Biaya Pelicin / Kg:</span> <span id="dispPelCostKg">Rp 0</span>
+              <div class="zett-chemical-output" style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.45rem; font-size: 0.8rem; font-weight: 800; background: rgba(168, 85, 247, 0.05); padding: 0.75rem 1rem; border-radius: 0.75rem; color: #7e22ce; border: 1px dashed rgba(168, 85, 247, 0.3);">
+                <div style="display:flex; justify-content:space-between; gap:0.75rem;"><span>Estimasi Pelicin Setrika /Load:</span> <span id="dispPelCostLoad">Rp 0</span></div>
+                <div style="display:flex; justify-content:space-between; gap:0.75rem;"><span>Estimasi Pelicin Setrika /Kg:</span> <span id="dispPelCostKg">Rp 0</span></div>
               </div>
             </div>
           </div>
@@ -4967,6 +4971,133 @@
   if (typeof window.calculateGas !== 'function') {
     window.calculateGas = function() {};
   }
+
+  (function zettChemicalCardUi20260520() {
+    function byId(id) { return document.getElementById(id); }
+    function clean(value) {
+      if (typeof zettCleanNumber === 'function') return zettCleanNumber(value);
+      return Number(String(value || '').replace(/[^0-9,-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    function money(value) {
+      const n = Number.isFinite(Number(value)) ? Number(value) : 0;
+      if (typeof formatRupiah === 'function') return formatRupiah(Math.round(n));
+      return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    }
+    function row() {
+      if (typeof zettFindActiveHPPRow === 'function') return zettFindActiveHPPRow() || {};
+      return {};
+    }
+    function outlet() {
+      const name = String(byId('inputNamaHPP')?.value || '').trim().toLowerCase();
+      const lists = [];
+      if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) lists.push(masterDataCabang);
+      if (window.APP_STATE?.data?.master?.cabang) lists.push(window.APP_STATE.data.master.cabang);
+      for (const items of lists) {
+        const found = items.find(item => String(item?.namaOutlet || item?.['Nama Outlet'] || '').trim().toLowerCase() === name);
+        if (found) return found;
+      }
+      return {};
+    }
+    function kapCuci() {
+      const o = outlet();
+      const r = row();
+      return Math.max(clean(o.cuciKg || o.kapCuci || r['Kap Cuci']) || 1, 1);
+    }
+    const items = [
+      { key: 'Det', toggle: 'toggleBahanDet', wrap: 'wrapDetMain', type: 'bahanDetType', harga: 'bahanDetHargaBulk', isi: 'bahanDetKapasitasBulk', pakai: 'bahanDetPemakaian', sachetHarga: 'bahanDetHargaSachet', sachetIsi: 'bahanDetKapasitasSachet', load: 'dispDetCostLoad', kg: 'dispDetCostKg', rgb: '16,185,129', color: '#047857' },
+      { key: 'Sof', toggle: 'toggleBahanSof', wrap: 'wrapSofMain', type: 'bahanSofType', harga: 'bahanSofHargaBulk', isi: 'bahanSofKapasitasBulk', pakai: 'bahanSofPemakaian', sachetHarga: 'bahanSofHargaSachet', sachetIsi: 'bahanSofKapasitasSachet', load: 'dispSofCostLoad', kg: 'dispSofCostKg', rgb: '99,102,241', color: '#4338ca' },
+      { key: 'Par', toggle: 'toggleBahanPar', wrap: 'wrapParMain', harga: 'bahanParHargaBulk', isi: 'bahanParKapasitasBulk', pakai: 'bahanParPemakaian', load: 'dispParCostLoad', kg: 'dispParCostKg', rgb: '245,158,11', color: '#b45309' },
+      { key: 'Pel', toggle: 'toggleBahanPel', wrap: 'wrapPelMain', type: 'bahanPelType', harga: 'bahanPelHargaBulk', isi: 'bahanPelKapasitasBulk', pakai: 'bahanPelPemakaian', sachetHarga: 'bahanPelHargaSachet', sachetIsi: 'bahanPelKapasitasSachet', load: 'dispPelCostLoad', kg: 'dispPelCostKg', rgb: '168,85,247', color: '#7e22ce' }
+    ];
+
+    function cardFor(config) {
+      return byId(config.wrap)?.closest('.bento-col-6');
+    }
+    function outputFor(config) {
+      return byId(config.kg)?.closest('.zett-chemical-output');
+    }
+    function isActive(config) {
+      const toggle = byId(config.toggle);
+      return !toggle || !!toggle.checked;
+    }
+    function itemLoad(config) {
+      if (!isActive(config)) return 0;
+      const type = String(byId(config.type)?.value || '').toLowerCase();
+      if (type === 'sachet') {
+        const harga = clean(byId(config.sachetHarga)?.value);
+        const isi = Math.max(clean(byId(config.sachetIsi)?.value) || 1, 1);
+        return harga / isi;
+      }
+      const harga = clean(byId(config.harga)?.value);
+      const isi = Math.max(clean(byId(config.isi)?.value) || 1, 1);
+      const pakai = clean(byId(config.pakai)?.value);
+      return (harga / isi) * pakai;
+    }
+    function applyState(config) {
+      const active = isActive(config);
+      const card = cardFor(config);
+      const wrap = byId(config.wrap);
+      const output = outputFor(config);
+      const title = card?.querySelector('h4');
+      if (card) {
+        card.style.background = active ? 'rgba(' + config.rgb + ',0.035)' : '#f8fafc';
+        card.style.borderColor = active ? 'rgba(' + config.rgb + ',0.45)' : 'rgba(148,163,184,0.35)';
+      }
+      if (wrap) {
+        wrap.style.opacity = active ? '1' : '0.52';
+        wrap.style.filter = active ? 'none' : 'grayscale(0.35)';
+      }
+      if (title) title.style.color = active ? config.color : '#94a3b8';
+      if (output) {
+        output.style.background = active ? 'rgba(' + config.rgb + ',0.07)' : 'rgba(148,163,184,0.08)';
+        output.style.borderColor = active ? 'rgba(' + config.rgb + ',0.35)' : 'rgba(148,163,184,0.28)';
+        output.style.color = active ? config.color : '#64748b';
+      }
+    }
+
+    window.toggleBahanActive = function() {
+      items.forEach(applyState);
+    };
+    window.toggleBahanInputs = function() {
+      [['bahanDetType', 'wrapDetBulk', 'wrapDetSachet'], ['bahanSofType', 'wrapSofBulk', 'wrapSofSachet'], ['bahanPelType', 'wrapPelBulk', 'wrapPelSachet']].forEach(function(parts) {
+        const type = String(byId(parts[0])?.value || '').toLowerCase();
+        const sachet = type === 'sachet';
+        const bulkEl = byId(parts[1]);
+        const sachetEl = byId(parts[2]);
+        if (bulkEl) {
+          bulkEl.classList.toggle('hidden', sachet);
+          bulkEl.style.display = sachet ? 'none' : 'flex';
+        }
+        if (sachetEl) {
+          sachetEl.classList.toggle('hidden', !sachet);
+          sachetEl.style.display = sachet ? 'flex' : 'none';
+        }
+      });
+      window.toggleBahanActive();
+    };
+    window.calculateBahanBaku = function() {
+      const cap = kapCuci();
+      let totalKg = 0;
+      items.forEach(function(config) {
+        const load = itemLoad(config);
+        const kg = cap > 0 ? load / cap : 0;
+        const loadEl = byId(config.load);
+        const kgEl = byId(config.kg);
+        if (loadEl) loadEl.textContent = money(load);
+        if (kgEl) kgEl.textContent = money(kg);
+        totalKg += kg;
+        applyState(config);
+      });
+      const totalEl = byId('displayBiayaBahanTotalKg');
+      if (totalEl) totalEl.textContent = money(totalKg);
+      if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('bahan', totalKg);
+      return { totalKg };
+    };
+    document.addEventListener('DOMContentLoaded', function() {
+      window.toggleBahanInputs();
+      window.calculateBahanBaku();
+    });
+  })();
   /* =========================================================================
    HPP SYNC FROM GSHEET MASTER DATA
    Tujuan:
