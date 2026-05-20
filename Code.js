@@ -1838,10 +1838,28 @@ function zettCombinedHPPHeaders_() {
 
 function zettToNumber_(value) {
   if (value === null || value === undefined || value === '') return 0;
-  if (typeof value === 'number') return value;
-  const str = String(value).replace(/Rp/gi, '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '');
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  let str = String(value).trim().replace(/Rp/gi, '').replace(/\s/g, '').replace(/[^\d.,-]/g, '');
+  if (!str) return 0;
+  const hasComma = str.indexOf(',') !== -1;
+  const hasDot = str.indexOf('.') !== -1;
+  if (hasComma && hasDot) {
+    str = str.lastIndexOf(',') > str.lastIndexOf('.')
+      ? str.replace(/\./g, '').replace(',', '.')
+      : str.replace(/,/g, '');
+  } else if (hasDot) {
+    const parts = str.split('.');
+    str = parts.length > 1 && parts.slice(1).every(function(part) { return part.length === 3; })
+      ? parts.join('')
+      : str;
+  } else if (hasComma) {
+    const parts = str.split(',');
+    str = parts.length > 1 && parts.slice(1).every(function(part) { return part.length === 3; })
+      ? parts.join('')
+      : str.replace(',', '.');
+  }
   const n = parseFloat(str);
-  return isNaN(n) ? 0 : n;
+  return Number.isFinite(n) ? n : 0;
 }
 
 function zettFormatPlainNumber_(value) {
@@ -1962,6 +1980,11 @@ function zettAddPackingAliases20260518_(obj) {
 
 function zettAddChemicalNotaAliases_(obj) {
   if (!obj) return obj;
+  const chemActive = function(value) {
+    const text = String(value === undefined || value === null ? '' : value).trim().toLowerCase();
+    if (text === '') return true;
+    return !(text === 'tidak' || text === 'false' || text === '0' || text === 'off' || text === 'no');
+  };
   obj['Chem_Det_Active'] = zettFirst_(obj, ['Deterjen Aktif', 'Chem_Det_Active'], true);
   obj['Chem_Det_Type'] = zettFirst_(obj, ['Tipe Deterjen', 'Chem_Det_Type'], 'cair');
   obj['Chem_Det_Harga'] = zettFirst_(obj, ['Harga Total Deterjen', 'Harga Deterjen', 'Chem_Det_Harga'], '');
@@ -1991,6 +2014,40 @@ function zettAddChemicalNotaAliases_(obj) {
   obj['Nota_Manual_LembarTotal'] = zettFirst_(obj, ['Isi Nota', 'Nota_Manual_LembarTotal'], '');
   obj['Nota_Manual_LembarTrx'] = zettFirst_(obj, ['Lembar Nota Per Order', 'Nota_Manual_LembarTrx'], '');
   obj['Nota_RataKg'] = zettFirst_(obj, ['Kap Cuci', 'Nota_RataKg'], '');
+
+  const activeChemicalLoads = [
+    { active: obj['Chem_Det_Active'], load: zettFirst_(obj, ['Estimasi Deterjen Per Load'], '') },
+    { active: obj['Chem_Sof_Active'], load: zettFirst_(obj, ['Estimasi Softener Per Load'], '') },
+    { active: obj['Chem_Par_Active'], load: zettFirst_(obj, ['Estimasi Pewangi Per Load'], '') },
+    { active: obj['Chem_Pel_Active'], load: zettFirst_(obj, ['Estimasi Pelicin Setrika Per Load'], '') }
+  ];
+  const anyChemicalActive = activeChemicalLoads.some(function(item) { return chemActive(item.active); });
+  if (!anyChemicalActive) {
+    obj['Chemical Cuci Per Load'] = 0;
+    obj['Chemical Cuci Per Kg'] = 0;
+  } else {
+    const effectiveChemicalLoad = activeChemicalLoads.reduce(function(sum, item) {
+      return chemActive(item.active) ? sum + zettToNumber_(item.load) : sum;
+    }, 0);
+    if (effectiveChemicalLoad > 0) {
+      obj['Chemical Cuci Per Load'] = effectiveChemicalLoad;
+      obj['Chemical Cuci Per Kg'] = effectiveChemicalLoad / Math.max(zettToNumber_(obj['Kap Cuci']) || 1, 1);
+    }
+  }
+
+  obj['Listrik Kering Per Load'] = zettFirst_(obj, ['Listrik Kering Per Load', 'Listrik Kering /Load', 'Kering Per Load'], '');
+  obj['listrikKeringPerLoad'] = obj['Listrik Kering Per Load'];
+  obj['listrikKeringLoad'] = obj['Listrik Kering Per Load'];
+  obj['keringElectricPerLoad'] = obj['Listrik Kering Per Load'];
+  obj['Listrik Cuci Per Load'] = zettFirst_(obj, ['Listrik Cuci Per Load', 'Listrik Cuci /Load', 'Cuci Per Load'], '');
+  obj['Listrik Pompa /Load'] = zettFirst_(obj, ['Listrik Pompa /Load', 'Listrik Pompa Per Load'], '');
+
+  obj['Transaksi Apps Per Load'] = zettFirst_(obj, ['Transaksi Apps Per Load', 'Transaksi Apps /Load', 'Kasir Per Order', 'Nota_App_HargaTrx'], '');
+  obj['transaksiAppsPerLoad'] = obj['Transaksi Apps Per Load'];
+  obj['Nota Transaksi Per Load'] = zettFirst_(obj, ['Nota Transaksi Per Load', 'Nota Transaksi /Load', 'Nota Per Order', 'Nota_Thermal_Harga'], '');
+  obj['notaTransaksiPerLoad'] = obj['Nota Transaksi Per Load'];
+  obj['Admin/Nota Per Load'] = zettFirst_(obj, ['Admin/Nota Per Load', 'Admin Nota Kasir Per Load', 'Admin Nota Kasir Per Order'], '');
+  obj['adminNotaPerLoad'] = obj['Admin/Nota Per Load'];
   return obj;
 }
 

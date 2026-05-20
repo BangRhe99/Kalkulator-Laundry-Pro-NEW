@@ -5108,21 +5108,33 @@
     window.calculateBahanBaku = function() {
       formatMoneyInputs();
       const cap = kapCuci();
+      let totalLoad = 0;
       let totalKg = 0;
+      let hasActiveChemical = false;
       items.forEach(function(config) {
+        const active = isActive(config);
         const load = itemLoad(config);
         const kg = cap > 0 ? load / cap : 0;
         const loadEl = byId(config.load);
         const kgEl = byId(config.kg);
         if (loadEl) loadEl.textContent = money(load);
         if (kgEl) kgEl.textContent = money(kg);
+        if (active) hasActiveChemical = true;
+        totalLoad += load;
         totalKg += kg;
         applyState(config);
       });
+      if (!hasActiveChemical) {
+        totalLoad = 0;
+        totalKg = 0;
+      }
       const totalEl = byId('displayBiayaBahanTotalKg');
       if (totalEl) totalEl.textContent = money(totalKg);
+      window.__zettChemicalDashboardActive = hasActiveChemical;
+      window.__zettChemicalDashboardLoad = totalLoad;
+      window.__zettChemicalDashboardKg = totalKg;
       if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('bahan', totalKg);
-      return { totalKg };
+      return { totalLoad, totalKg, active: hasActiveChemical };
     };
     document.addEventListener('DOMContentLoaded', function() {
       window.toggleBahanInputs();
@@ -5736,7 +5748,7 @@ window.saveGasHPPData = function(event) {
       return 0;
     };
     const cuciLoad = hasCuciInput ? (clean(byId('inputListrikCuciWatt')?.value) / 1000) * tdl : rowNum(['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']);
-    const keringLoad = hasKeringInput ? (clean(byId('inputListrikPengeringWatt')?.value) / 1000) * tdl : rowNum(['Kering Per Load', 'Listrik Kering Per Load', 'Listrik Kering /Load']);
+    const keringLoad = hasKeringInput ? (clean(byId('inputListrikPengeringWatt')?.value) / 1000) * tdl : rowNum(['Listrik Kering Per Load', 'Listrik Kering /Load', 'Kering Per Load', 'listrikKeringPerLoad', 'listrikKeringLoad', 'keringElectricPerLoad']);
     const pompaLoad = hasPompaInput
       ? ((clean(byId('inputListrikPompaWatt')?.value) / 1000) * (cap.durasiCuci / 60) * tdl) / cap.mesinCuci
       : rowNum(['Listrik Pompa Per Load', 'Listrik Pompa /Load']);
@@ -8189,7 +8201,24 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
 
     function parseCurrency(text) {
-      return Number(String(text || '').replace(/[^0-9.-]/g, '')) || 0;
+      if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(text);
+      let raw = String(text || '').trim().replace(/[^\d.,-]/g, '');
+      if (!raw) return 0;
+      const hasComma = raw.includes(',');
+      const hasDot = raw.includes('.');
+      if (hasComma && hasDot) {
+        raw = raw.lastIndexOf(',') > raw.lastIndexOf('.')
+          ? raw.replace(/\./g, '').replace(',', '.')
+          : raw.replace(/,/g, '');
+      } else if (hasDot) {
+        const parts = raw.split('.');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw;
+      } else if (hasComma) {
+        const parts = raw.split(',');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw.replace(',', '.');
+      }
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : 0;
     }
 
     function formatMoney(value) {
@@ -8214,9 +8243,10 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         if (!Number.isFinite(values[item.key]) || values[item.key] < 0) {
           values[item.key] = parseCurrency(domValue ? domValue.textContent : 0);
         }
+        if (item.key === 'bahan' && window.__zettChemicalDashboardActive === false) values[item.key] = 0;
       });
       values.total = Number(store.total);
-      if (!Number.isFinite(values.total) || values.total <= 0) {
+      if (!Number.isFinite(values.total) || values.total <= 0 || window.__zettChemicalDashboardActive === false) {
         values.total = TYPES.reduce((sum, item) => sum + (Number(values[item.key]) || 0), 0);
       }
       return values;
@@ -8284,6 +8314,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
           detail.className = 'hpp-premium-lite-details';
           valueEl.insertAdjacentElement('afterend', detail);
         }
+        if (item.key === 'nota') detail.id = 'dash-card-nota-details';
 
         let show = card.querySelector('.hpp-show-detail');
         if (!show) {
@@ -8356,7 +8387,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         const valueEl = byId('dash-card-' + item.key);
         const card = valueEl ? valueEl.closest('.hpp-card-dash') : null;
         const detail = card ? card.querySelector('.hpp-premium-lite-details') : null;
-        if (detail) {
+        if (detail && item.key !== 'nota') {
           const nextDetailHtml = '<div><span>Biaya /Kg</span><strong>' + formatMoney(value) + '</strong></div>';
           if (detail.innerHTML !== nextDetailHtml) detail.innerHTML = nextDetailHtml;
         }
@@ -9090,8 +9121,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
           { label: 'Listrik Pompa /Load', source: () => sourceValue(['dispListrikPompaLoad'], 'dash-card-listrik-details', ['Listrik Pompa /Load'], ['Listrik Pompa Per Load', 'Listrik Pompa /Load']) },
           { label: 'Listrik Cuci /Load', source: () => sourceValue(['dispListrikCuciLoad'], 'dash-card-listrik-details', ['Listrik Cuci /Load'], ['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']) },
           { label: 'Air Cuci /Load', source: () => sourceValue(['dispAirCuciLoad'], 'dash-card-air-details', ['Air Cuci /Load'], ['Air Per Load', 'Air Cuci Per Load', 'Air Cuci /Load']) },
-          { label: 'Transaksi Apps /Load', source: () => sourceValue([], 'dash-card-nota-details', ['Transaksi Apps /Load', 'Kasir Per Order'], ['Kasir Per Order', 'Transaksi Apps Per Load', 'Transaksi Apps /Load', 'Nota_App_HargaTrx']) },
-          { label: 'Nota Transaksi /Load', source: () => sourceValue([], 'dash-card-nota-details', ['Nota Transaksi /Load', 'Nota Per Order'], ['Nota Per Order', 'Nota Transaksi Per Load', 'Nota Transaksi /Load', 'Nota_Thermal_Harga']) }
+          { label: 'Transaksi Apps /Load', source: () => adminNotaBreakdown().apps },
+          { label: 'Nota Transaksi /Load', source: () => adminNotaBreakdown().nota }
         ]
       },
       {
@@ -9101,7 +9132,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         color: '#f97316',
         unit: '/Load',
         details: [
-          { label: 'Listrik Kering /Load', source: () => sourceValue(['dispListrikPengeringLoad'], 'dash-card-listrik-details', ['Listrik Kering /Load'], ['Kering Per Load', 'Listrik Kering Per Load', 'Listrik Kering /Load']) },
+          { label: 'Listrik Kering /Load', source: () => electricDryerLoadValue() },
           { label: 'Gas Kering /Load', source: () => sourceValue(['displayEstimasiBiayaGas'], 'dash-card-gas-details', ['Gas Kering /Load'], ['Estimasi Biaya Gas', 'Gas Per Load', 'Gas Kering Per Load', 'Gas Kering /Load']) }
         ]
       },
@@ -9126,11 +9157,27 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     function clean(value) {
       if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
-      return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
+      let raw = String(value || '').trim().replace(/[^\d.,-]/g, '');
+      if (!raw) return 0;
+      const hasComma = raw.includes(',');
+      const hasDot = raw.includes('.');
+      if (hasComma && hasDot) {
+        raw = raw.lastIndexOf(',') > raw.lastIndexOf('.')
+          ? raw.replace(/\./g, '').replace(',', '.')
+          : raw.replace(/,/g, '');
+      } else if (hasDot) {
+        const parts = raw.split('.');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw;
+      } else if (hasComma) {
+        const parts = raw.split(',');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw.replace(',', '.');
+      }
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : 0;
     }
 
     function money(value) {
-      const rounded = Math.round(Number(value) || 0);
+      const rounded = Math.round(clean(value));
       if (typeof window.formatRupiah === 'function') {
         try { return window.formatRupiah(rounded); } catch (error) {}
       }
@@ -9193,6 +9240,65 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       if (rowKeys) values.push(readRowNumber(rowKeys));
       const found = values.find(value => Number.isFinite(Number(value)) && Number(value) > 0);
       return found || 0;
+    }
+
+    function electricDryerLoadValue() {
+      return sourceValue(
+        ['dispListrikPengeringLoad'],
+        'dash-card-listrik-details',
+        ['Listrik Kering /Load'],
+        ['Listrik Kering Per Load', 'Listrik Kering /Load', 'Kering Per Load', 'listrikKeringPerLoad', 'listrikKeringLoad', 'keringElectricPerLoad']
+      );
+    }
+
+    function adminNotaBreakdown() {
+      const apps = sourceValue(
+        [],
+        '',
+        ['Transaksi Apps /Load', 'Kasir Per Order'],
+        ['Transaksi Apps Per Load', 'Transaksi Apps /Load', 'transaksiAppsPerLoad', 'Kasir Per Order', 'Nota_App_HargaTrx']
+      );
+      const nota = sourceValue(
+        [],
+        '',
+        ['Nota Transaksi /Load', 'Nota Per Order'],
+        ['Nota Transaksi Per Load', 'Nota Transaksi /Load', 'notaTransaksiPerLoad', 'Nota Per Order', 'Nota_Thermal_Harga']
+      );
+      const total = sourceValue(
+        [],
+        '',
+        [],
+        ['Admin Nota Kasir Per Load', 'Admin Nota Kasir Per Order', 'Admin/Nota Per Load', 'adminNotaPerLoad']
+      );
+      return {
+        apps,
+        nota,
+        total: total > 0 ? total : apps + nota
+      };
+    }
+
+    function renderAdminNotaCard() {
+      const valueEl = byId('dash-card-nota');
+      if (!valueEl) return;
+      const card = valueEl.closest('.hpp-card-dash');
+      let detail = byId('dash-card-nota-details');
+      if (!detail && card) {
+        detail = document.createElement('div');
+        detail.id = 'dash-card-nota-details';
+        detail.className = 'hpp-premium-lite-details';
+        valueEl.insertAdjacentElement('afterend', detail);
+      }
+      const data = adminNotaBreakdown();
+      const nextValue = money(data.total);
+      if (valueEl.textContent !== nextValue) valueEl.textContent = nextValue;
+      if (detail) {
+        const nextDetail = [
+          '<div><span>Transaksi Apps /Load</span><strong>' + money(data.apps) + '</strong></div>',
+          '<div><span>Nota Transaksi /Load</span><strong>' + money(data.nota) + '</strong></div>'
+        ].join('');
+        if (detail.innerHTML !== nextDetail) detail.innerHTML = nextDetail;
+      }
+      if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('nota', data.total);
     }
 
     // [HPP DASHBOARD REQUEST PATCH - 2026-05-19]
@@ -9306,6 +9412,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
 
     function updateProcessCards() {
+      renderAdminNotaCard();
       const forceZero = !!window.__HPP_FORCE_ZERO_DASHBOARD;
       const hasSelectedOutlet = !forceZero && !!String(byId('inputNamaHPP')?.value || '').trim();
       const context = getDashboardContext();
