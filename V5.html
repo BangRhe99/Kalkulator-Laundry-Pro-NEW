@@ -19,26 +19,28 @@
 
 <section
   id="view-cost-structure"
-  class="main-view hidden animate-fade-in space-y-6"
+  class="main-view hidden animate-fade-in"
 >
+
+  <div class="v5-shell">
 
   <!-- =========================================================
        HEADER DASHBOARD BIAYA
   ========================================================= -->
 
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+  <div class="v5-page-header">
 
     <div>
 
-      <p class="text-xs font-extrabold text-indigo-500 uppercase tracking-[0.18em] mb-2">
+      <p class="v5-page-kicker">
         Dashboard Biaya
       </p>
 
-      <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+      <h1 class="v5-page-title">
         Struktur Biaya Laundry
       </h1>
 
-      <p class="text-sm md:text-base text-slate-500 font-medium mt-1">
+      <p class="v5-page-subtitle">
         Ringkasan visual biaya operasional berdasarkan data HPP yang sedang aktif.
       </p>
 
@@ -47,9 +49,7 @@
     <button
       type="button"
       onclick="exportCostStructureReport()"
-      class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl
-      bg-slate-900 text-white text-sm font-extrabold shadow-lg shadow-slate-900/10
-      hover:bg-slate-800 active:scale-[0.98] transition-all"
+      class="v5-export-button"
     >
       <i class="ph ph-file-arrow-down text-lg"></i>
       Export Ringkasan
@@ -254,11 +254,11 @@
        INFO PANEL
   ========================================================= -->
 
-  <div class="rounded-[1.25rem] border border-slate-200 bg-white/80 p-5 shadow-sm">
+  <div class="v5-info-panel">
 
     <div class="flex items-start gap-3">
 
-      <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+      <div class="v5-info-icon">
         <i class="ph ph-info text-xl"></i>
       </div>
 
@@ -276,6 +276,8 @@
       </div>
 
     </div>
+
+  </div>
 
   </div>
 

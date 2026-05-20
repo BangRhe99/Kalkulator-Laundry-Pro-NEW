@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Kalkulator Laundry Pro</title>
 
   <!-- LIBRARY -->
@@ -227,6 +228,10 @@
 
   </style>
 
+  <style>
+    <?!= HtmlService.createHtmlOutputFromFile('V5.styles').getContent(); ?>
+  </style>
+
   <?!= HtmlService.createHtmlOutputFromFile('JS4').getContent(); ?>
 
 </head>
@@ -442,6 +447,7 @@
       <?!= HtmlService.createHtmlOutputFromFile('V2').getContent(); ?>
       <?!= HtmlService.createHtmlOutputFromFile('V3').getContent(); ?>
       <?!= HtmlService.createHtmlOutputFromFile('V4').getContent(); ?>
+      <?!= HtmlService.createHtmlOutputFromFile('V5').getContent(); ?>
       <?!= HtmlService.createHtmlOutputFromFile('Modal').getContent(); ?>
 
     </div>
