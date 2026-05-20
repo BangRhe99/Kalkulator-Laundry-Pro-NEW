@@ -5650,7 +5650,11 @@ window.saveGasHPPData = function(event) {
 
   function zettGetVisibleElectricInputFields(context) {
     const c = context || zettGetElectricUsageContext();
-    if (c.isSelfService) return ['cuciLoad', 'pompaLoad'];
+    if (c.isSelfService) {
+      const base = ['cuciLoad', 'pompaLoad'];
+      if (c.pakaiMesinPengering) base.push('keringLoad');
+      return base;
+    }
     if (c.isHybrid) {
       const base = ['cuciLoad', 'cuciKg', 'pompaLoad', 'keringLoad', 'keringKg'];
       return c.pakaiSetrikaListrik ? base.concat(['setrikaJam', 'setrikaKg']) : base;
@@ -5681,12 +5685,31 @@ window.saveGasHPPData = function(event) {
     const hasKeringInput = String(byId('inputListrikPengeringWatt')?.value || '').trim() !== '' && tdl > 0;
     const hasPompaInput = String(byId('inputListrikPompaWatt')?.value || '').trim() !== '' && tdl > 0;
     const hasSetrikaInput = String(byId('inputListrikSetrikaWatt')?.value || '').trim() !== '' && tdl > 0;
-    const cuciLoad = hasCuciInput ? (clean(byId('inputListrikCuciWatt')?.value) / 1000) * tdl : clean(row['Cuci Per Load']);
-    const keringLoad = hasKeringInput ? (clean(byId('inputListrikPengeringWatt')?.value) / 1000) * tdl : clean(row['Kering Per Load']);
+    const rowNum = function(keys) {
+      const selected = norm(outletName());
+      const rows = [row];
+      const sources = [];
+      if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) sources.push(masterDataHPP);
+      if (Array.isArray(window.masterDataHPP)) sources.push(window.masterDataHPP);
+      if (window.APP_STATE?.data?.master?.hpp) sources.push(window.APP_STATE.data.master.hpp);
+      sources.forEach(source => {
+        const found = source.find(item => norm(item?.namaOutlet || item?.['Nama Outlet']) === selected);
+        if (found) rows.push(found);
+      });
+      for (const item of rows) {
+        for (const key of keys) {
+          const value = clean(item?.[key]);
+          if (value > 0) return value;
+        }
+      }
+      return 0;
+    };
+    const cuciLoad = hasCuciInput ? (clean(byId('inputListrikCuciWatt')?.value) / 1000) * tdl : rowNum(['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']);
+    const keringLoad = hasKeringInput ? (clean(byId('inputListrikPengeringWatt')?.value) / 1000) * tdl : rowNum(['Kering Per Load', 'Listrik Kering Per Load', 'Listrik Kering /Load']);
     const pompaLoad = hasPompaInput
       ? ((clean(byId('inputListrikPompaWatt')?.value) / 1000) * (cap.durasiCuci / 60) * tdl) / cap.mesinCuci
-      : clean(row['Listrik Pompa Per Load']);
-    const setrikaJam = hasSetrikaInput ? (clean(byId('inputListrikSetrikaWatt')?.value) / 1000) * tdl : clean(row['Listrik Setrika Jam']);
+      : rowNum(['Listrik Pompa Per Load', 'Listrik Pompa /Load']);
+    const setrikaJam = hasSetrikaInput ? (clean(byId('inputListrikSetrikaWatt')?.value) / 1000) * tdl : rowNum(['Listrik Setrika Jam', 'Listrik Setrika Per Jam', 'Listrik Setrika /Jam']);
     return {
       pompaLoad,
       pompaKg: cap.cuciKg > 0 ? pompaLoad / cap.cuciKg : 0,
@@ -8887,9 +8910,21 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     font-weight: 950 !important;
   }
 
+  #view-hpp .hpp-hero-dashboard .hpp-process-estimate {
+    color: #64748b !important;
+    font-size: 0.64rem !important;
+    line-height: 1.1 !important;
+    font-weight: 850 !important;
+    margin-top: 0.28rem !important;
+  }
+
+  #view-hpp .hpp-hero-dashboard .hpp-process-estimate:empty {
+    display: none !important;
+  }
+
   #view-hpp .hpp-hero-dashboard .hpp-process-detail {
     gap: 0.28rem !important;
-    margin-top: 0.8rem !important;
+    margin-top: 0.62rem !important;
   }
 
   #view-hpp .hpp-hero-dashboard .hpp-process-detail-row {
@@ -9021,9 +9056,11 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         color: '#2563eb',
         unit: '/Load',
         details: [
-          { label: 'Listrik Pompa /Load', source: () => readMoneyById('dispListrikPompaLoad') || findDetailValue('dash-card-listrik-details', ['Listrik Pompa /Load']) },
-          { label: 'Listrik Cuci /Load', source: () => readMoneyById('dispListrikCuciLoad') || findDetailValue('dash-card-listrik-details', ['Listrik Cuci /Load']) },
-          { label: 'Air Cuci /Load', source: () => readMoneyById('dispAirCuciLoad') || findDetailValue('dash-card-air-details', ['Air Cuci /Load']) }
+          { label: 'Listrik Pompa /Load', source: () => sourceValue(['dispListrikPompaLoad'], 'dash-card-listrik-details', ['Listrik Pompa /Load'], ['Listrik Pompa Per Load', 'Listrik Pompa /Load']) },
+          { label: 'Listrik Cuci /Load', source: () => sourceValue(['dispListrikCuciLoad'], 'dash-card-listrik-details', ['Listrik Cuci /Load'], ['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']) },
+          { label: 'Air Cuci /Load', source: () => sourceValue(['dispAirCuciLoad'], 'dash-card-air-details', ['Air Cuci /Load'], ['Air Per Load', 'Air Cuci Per Load', 'Air Cuci /Load']) },
+          { label: 'Transaksi Apps /Load', source: () => sourceValue([], 'dash-card-nota-details', ['Transaksi Apps /Load', 'Kasir Per Order'], ['Kasir Per Order', 'Transaksi Apps Per Load', 'Transaksi Apps /Load', 'Nota_App_HargaTrx']) },
+          { label: 'Nota Transaksi /Load', source: () => sourceValue([], 'dash-card-nota-details', ['Nota Transaksi /Load', 'Nota Per Order'], ['Nota Per Order', 'Nota Transaksi Per Load', 'Nota Transaksi /Load', 'Nota_Thermal_Harga']) }
         ]
       },
       {
@@ -9033,8 +9070,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         color: '#f97316',
         unit: '/Load',
         details: [
-          { label: 'Listrik Kering /Load', source: () => readMoneyById('dispListrikPengeringLoad') || findDetailValue('dash-card-listrik-details', ['Listrik Kering /Load']) },
-          { label: 'Gas Kering /Load', source: () => readMoneyById('displayEstimasiBiayaGas') || findDetailValue('dash-card-gas-details', ['Gas Kering /Load']) }
+          { label: 'Listrik Kering /Load', source: () => sourceValue(['dispListrikPengeringLoad'], 'dash-card-listrik-details', ['Listrik Kering /Load'], ['Kering Per Load', 'Listrik Kering Per Load', 'Listrik Kering /Load']) },
+          { label: 'Gas Kering /Load', source: () => sourceValue(['displayEstimasiBiayaGas'], 'dash-card-gas-details', ['Gas Kering /Load'], ['Estimasi Biaya Gas', 'Gas Per Load', 'Gas Kering Per Load', 'Gas Kering /Load']) }
         ]
       },
       {
@@ -9044,9 +9081,10 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         color: '#7c3aed',
         unit: '/Jam',
         details: [
-          { label: 'Air Setrika /Jam', source: () => readMoneyById('dispAirBoilerJam') || findDetailValue('dash-card-air-details', ['Air Setrika /Jam']) },
-          { label: 'Listrik Setrika /Jam', source: () => readMoneyById('dispListrikSetrikaJam') || findDetailValue('dash-card-listrik-details', ['Listrik Setrika /Jam']) },
-          { label: 'Gas Setrika /Jam', source: () => findDetailValue('dash-card-gas-details', ['Gas Setrika /Jam']) }
+          { label: 'Air Setrika /Jam', when: context => !context.isSelfService && context.usesSteamIron, source: () => sourceValue(['dispAirBoilerJam'], 'dash-card-air-details', ['Air Setrika /Jam'], ['Air Setrika Jam', 'Air Setrika Per Jam', 'Air Setrika /Jam']) },
+          { label: 'Gas Setrika /Jam', when: context => !context.isSelfService && context.usesSteamIron, source: () => sourceValue([], 'dash-card-gas-details', ['Gas Setrika /Jam'], ['Setrika Per Jam', 'Gas Setrika Per Jam', 'Gas Setrika /Jam']) },
+          { label: 'Air Setrika /Jam', when: context => !context.isSelfService && context.usesElectricIron, source: () => sourceValue(['dispAirBoilerJam'], 'dash-card-air-details', ['Air Setrika /Jam'], ['Air Setrika Jam', 'Air Setrika Per Jam', 'Air Setrika /Jam']) },
+          { label: 'Listrik Setrika /Jam', when: context => !context.isSelfService && context.usesElectricIron, source: () => sourceValue(['dispListrikSetrikaJam'], 'dash-card-listrik-details', ['Listrik Setrika /Jam'], ['Listrik Setrika Jam', 'Listrik Setrika Per Jam', 'Listrik Setrika /Jam']) }
         ]
       }
     ];
@@ -9087,6 +9125,45 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       return 0;
     }
 
+    function getSelectedHPPRow() {
+      const selected = String(byId('inputNamaHPP')?.value || '').trim().toLowerCase();
+      if (typeof window.zettFindActiveHPPRow === 'function') {
+        const active = window.zettFindActiveHPPRow();
+        const activeName = String(active?.namaOutlet || active?.['Nama Outlet'] || '').trim().toLowerCase();
+        if (active && (!selected || activeName === selected)) return active;
+      }
+      if (!selected) return null;
+      const sources = [];
+      if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) sources.push(masterDataHPP);
+      if (Array.isArray(window.masterDataHPP)) sources.push(window.masterDataHPP);
+      if (window.APP_STATE?.data?.master?.hpp) sources.push(window.APP_STATE.data.master.hpp);
+      for (const rows of sources) {
+        const found = rows.find(row => String(row?.namaOutlet || row?.['Nama Outlet'] || '').trim().toLowerCase() === selected);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function readRowNumber(keys) {
+      const rows = [getSelectedHPPRow(), getSelectedOutletRow()].filter(Boolean);
+      for (const row of rows) {
+        for (const key of keys) {
+          const value = clean(row[key]);
+          if (value > 0) return value;
+        }
+      }
+      return 0;
+    }
+
+    function sourceValue(ids, detailContainerId, detailLabels, rowKeys) {
+      const values = [];
+      (ids || []).forEach(id => values.push(readMoneyById(id)));
+      if (detailContainerId && detailLabels) values.push(findDetailValue(detailContainerId, detailLabels));
+      if (rowKeys) values.push(readRowNumber(rowKeys));
+      const found = values.find(value => Number.isFinite(Number(value)) && Number(value) > 0);
+      return found || 0;
+    }
+
     // [HPP DASHBOARD REQUEST PATCH - 2026-05-19]
     function getSelectedOutletRow() {
       const selected = String(byId('inputNamaHPP')?.value || '').trim().toLowerCase();
@@ -9109,6 +9186,31 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       const outlet = getSelectedOutletRow();
       const category = String(outlet?.kategori || outlet?.kategoriLaundry || outlet?.['Kategori Laundry'] || '').toLowerCase();
       return category.includes('self');
+    }
+
+    function getDashboardContext() {
+      const outlet = getSelectedOutletRow() || {};
+      const row = getSelectedHPPRow() || {};
+      const category = String(outlet.kategori || outlet.kategoriLaundry || outlet['Kategori Laundry'] || row['Kategori Laundry'] || byId('inputKategori')?.value || '').toLowerCase();
+      const setrika = String(outlet.tipeSetrikaUtama || outlet.tipeSetrika || row['Tipe Setrika'] || '').toLowerCase();
+      const isSelfService = category.includes('self');
+      const isHybrid = category.includes('hybrid');
+      const isDropOff = category.includes('drop') || category.includes('kiloan');
+      const usesElectricIron = !isSelfService && setrika.includes('listrik');
+      const usesSteamIron = !isSelfService && !usesElectricIron;
+      return {
+        isSelfService,
+        isHybrid,
+        isDropOff,
+        showKgEstimate: isDropOff || isHybrid,
+        usesElectricIron,
+        usesSteamIron,
+        capacities: {
+          cuci: Math.max(readRowNumber(['Kap Cuci', 'cuciKg']) || 1, 1),
+          kering: Math.max(readRowNumber(['Kap Kering', 'pengeringKg']) || 1, 1),
+          setrika: Math.max(readRowNumber(['Kap Setrika', 'setrikaKg', 'Kg Setrika']) || 1, 1)
+        }
+      };
     }
 
     // [HPP DASHBOARD OUTLET DATA RESTORE + CATEGORY BADGE FIX - 2026-05-19]
@@ -9158,6 +9260,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
               '<span class="hpp-process-value" data-process-value="' + item.key + '">Rp 0</span>',
               '<span class="hpp-process-unit">' + item.unit + '</span>',
             '</div>',
+            '<div class="hpp-process-estimate" data-process-estimate="' + item.key + '"></div>',
             '<div class="hpp-process-detail" data-process-detail="' + item.key + '"></div>',
             '<div class="hpp-process-foot">',
               '<div class="hpp-process-bar"><span data-process-bar="' + item.key + '"></span></div>',
@@ -9174,28 +9277,36 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     function updateProcessCards() {
       const forceZero = !!window.__HPP_FORCE_ZERO_DASHBOARD;
       const hasSelectedOutlet = !forceZero && !!String(byId('inputNamaHPP')?.value || '').trim();
-      const selfService = isSelfServiceOutlet();
+      const context = getDashboardContext();
+      const selfService = context.isSelfService;
       const processValues = {};
       PROCESS.forEach(item => {
-        const detailRows = item.details.map(detail => ({
-          label: detail.label,
-          value: Math.max(0, Number(detail.source()) || 0)
-        }));
+        const detailRows = item.details
+          .filter(detail => !detail.when || detail.when(context))
+          .map(detail => ({
+            label: detail.label,
+            value: Math.max(0, Number(detail.source()) || 0)
+          }));
         const total = !hasSelectedOutlet || (selfService && item.key === 'setrika')
           ? 0
           : detailRows.reduce((sum, row) => sum + row.value, 0);
         processValues[item.key] = total;
 
         const valueEl = document.querySelector('#view-hpp [data-process-value="' + item.key + '"]');
+        const estimateEl = document.querySelector('#view-hpp [data-process-estimate="' + item.key + '"]');
         const detailEl = document.querySelector('#view-hpp [data-process-detail="' + item.key + '"]');
         const nextValue = money(total);
         if (valueEl && valueEl.textContent !== nextValue) valueEl.textContent = nextValue;
+        if (estimateEl) {
+          const cap = context.capacities[item.key] || 1;
+          const showEstimate = hasSelectedOutlet && context.showKgEstimate && !(selfService && item.key === 'setrika');
+          const nextEstimate = showEstimate ? 'Estimasi ' + money(total / Math.max(cap, 1)) + ' /Kg' : '';
+          if (estimateEl.textContent !== nextEstimate) estimateEl.textContent = nextEstimate;
+        }
         if (detailEl) {
           const nextDetailHtml = selfService && item.key === 'setrika'
             ? ''
             : detailRows
-              .filter(row => row.value > 0 || !hasSelectedOutlet || item.key !== 'setrika' || row.label === 'Air Setrika /Jam')
-              .slice(0, 3)
               .map(row => '<div class="hpp-process-detail-row"><span>' + row.label + '</span><strong>' + money(hasSelectedOutlet ? row.value : 0) + '</strong></div>')
               .join('');
           if (detailEl.innerHTML !== nextDetailHtml) detailEl.innerHTML = nextDetailHtml;
@@ -9223,10 +9334,12 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       ensureProcessCards();
       PROCESS.forEach(item => {
         const valueEl = document.querySelector('#view-hpp [data-process-value="' + item.key + '"]');
+        const estimateEl = document.querySelector('#view-hpp [data-process-estimate="' + item.key + '"]');
         const detailEl = document.querySelector('#view-hpp [data-process-detail="' + item.key + '"]');
         const pctEl = document.querySelector('#view-hpp [data-process-pct="' + item.key + '"]');
         const barEl = document.querySelector('#view-hpp [data-process-bar="' + item.key + '"]');
         if (valueEl) valueEl.textContent = money(0);
+        if (estimateEl) estimateEl.textContent = '';
         if (detailEl) detailEl.innerHTML = '';
         if (pctEl) pctEl.textContent = '0%';
         if (barEl) barEl.style.setProperty('--process-width', '0%');
