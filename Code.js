@@ -297,7 +297,7 @@ function setupDatabase() {
       'Kap Gas', 'Harga Gas', 'Jam Gas', 'Menit Gas',
       'Estimasi Load Gas', 'Estimasi Biaya Gas', 'Gas Per Jam', 'Gas Per Menit',
       'Gas Per Load', 'Gas Per Kg', 'Setrika Per Jam', 'Setrika Per Kg',
-      'TDL', 'Watt Cuci', 'kW Watt Cuci', 'Watt Kering', 'kW Watt Kering', 'Watt Pompa', 'kW Watt Pompa', 'Watt Setrika', 'kW Watt Setrika',
+      'TDL', 'Watt Cuci', 'kW Watt Cuci', 'Watt Kering', 'kW Watt Kering', 'Watt Pompa', 'kW Watt Pompa', 'Listrik Pompa Per Load', 'Watt Setrika', 'kW Watt Setrika',
       'Cuci Per Load', 'Cuci Per Kg', 'Kering Per Load', 'Kering Per Kg', 'Listrik Setrika Jam', 'Listrik Setrika Kg',
       'Sumber Air', 'Harga Air', 'Harga Tangki', 'Liter Tangki', 'Air Cuci', 'Sumber Setrika', 'Galon Setrika', 'Vol Setrika', 'Liter Setrika', 'Jam Setrika', 'Kg Setrika',
       'Air Per Load', 'Air Per Kg', 'Air Setrika Jam', 'Air Setrika Kg'
@@ -389,6 +389,17 @@ function setupDatabase() {
         if (!('Cuci Per Kg' in colMap)) missingHeaders.push('Cuci Per Kg');
         if (!('Kering Per Load' in colMap)) missingHeaders.push('Kering Per Load');
         if (!('Kering Per Kg' in colMap)) missingHeaders.push('Kering Per Kg');
+        if (!('Listrik Pompa Per Load' in colMap)) {
+          const insertAfter = ('kW Watt Pompa' in colMap) ? colMap['kW Watt Pompa'] + 1 : sheetHPP1.getLastColumn();
+          sheetHPP1.insertColumnAfter(insertAfter);
+          sheetHPP1.getRange(1, insertAfter + 1)
+            .setValue('Listrik Pompa Per Load')
+            .setBackground('#0f172a')
+            .setFontColor('#ffffff')
+            .setFontWeight('bold')
+            .setHorizontalAlignment('center')
+            .setVerticalAlignment('middle');
+        }
         if (!('Listrik Setrika Jam' in colMap)) missingHeaders.push('Listrik Setrika Jam');
         if (!('Listrik Setrika Kg' in colMap)) missingHeaders.push('Listrik Setrika Kg');
         
@@ -770,6 +781,7 @@ function saveStrukturBiaya(payload) {
       setFormula('kW Watt Cuci', '=IF({Watt Cuci}="";"";{Watt Cuci}/1000)');
       setFormula('kW Watt Kering', '=IF({Watt Kering}="";"";{Watt Kering}/1000)');
       setFormula('kW Watt Pompa', '=IF({Watt Pompa}="";"";{Watt Pompa}/1000)');
+      setFormula('Listrik Pompa Per Load', '=IFERROR(({Watt Pompa}/1000)*({Durasi Cuci}/60)*{TDL}/MAX({Mesin Cuci};1);0)');
       setFormula('kW Watt Setrika', '=IF({Watt Setrika}="";"";{Watt Setrika}/1000)');
       setFormula('Cuci Per Load', '=IF({kW Watt Cuci}="";"";{kW Watt Cuci}*{TDL}*1)');
       setFormula('Cuci Per Kg', '=IF(OR({Kategori Laundry}="Self Service";{Cuci Per Load}="");"";{Cuci Per Load}/{Kap Cuci})');
@@ -1426,6 +1438,19 @@ function zettEnsureHeaders_(sheet, headers) {
   if (!sheet) return;
   const headerRow = zettHppHeaderRow_(sheet);
   let colMap = zettGetHeaderMap_(sheet);
+  if (headers.indexOf('Listrik Pompa Per Load') !== -1 && !('Listrik Pompa Per Load' in colMap)) {
+    const insertAfter = ('kW Watt Pompa' in colMap) ? colMap['kW Watt Pompa'] + 1 : sheet.getLastColumn();
+    sheet.insertColumnAfter(insertAfter);
+    sheet.getRange(headerRow, insertAfter + 1)
+      .setValue('Listrik Pompa Per Load')
+      .setFontWeight('bold')
+      .setBackground('#0f172a')
+      .setFontColor('#ffffff')
+      .setHorizontalAlignment('center')
+      .setVerticalAlignment('middle')
+      .setWrap(true);
+    colMap = zettGetHeaderMap_(sheet);
+  }
   const missing = headers.filter(function(h) {
     return !(h in colMap);
   });
@@ -1453,7 +1478,7 @@ function zettCombinedHPPHeaders_() {
     'Estimasi Load Gas', 'Estimasi Biaya Gas', 'Gas Per Jam', 'Gas Per Menit',
     'Gas Per Load', 'Gas Per Kg', 'Setrika Per Jam', 'Setrika Per Kg',
     'TDL', 'Watt Cuci', 'kW Watt Cuci', 'Watt Kering', 'kW Watt Kering',
-    'Watt Pompa', 'kW Watt Pompa', 'Watt Setrika', 'kW Watt Setrika',
+    'Watt Pompa', 'kW Watt Pompa', 'Listrik Pompa Per Load', 'Watt Setrika', 'kW Watt Setrika',
     'Cuci Per Load', 'Cuci Per Kg', 'Kering Per Load', 'Kering Per Kg',
     'Listrik Setrika Jam', 'Listrik Setrika Kg',
     'Sumber Air', 'Harga Air', 'Harga Tangki', 'Liter Tangki', 'Air Cuci',
@@ -1925,6 +1950,7 @@ function saveStrukturBiaya(payload) {
       'kW Watt Kering': '=IF({COL:Watt Kering}{ROW}="";""; {COL:Watt Kering}{ROW}/1000)',
       'Watt Pompa': payload.listrikPompa,
       'kW Watt Pompa': '=IF({COL:Watt Pompa}{ROW}="";""; {COL:Watt Pompa}{ROW}/1000)',
+      'Listrik Pompa Per Load': '=IFERROR(({COL:Watt Pompa}{ROW}/1000)*({COL:Durasi Cuci}{ROW}/60)*{COL:TDL}{ROW}/MAX({COL:Mesin Cuci}{ROW};1);0)',
       'Watt Setrika': payload.listrikSetrika,
       'kW Watt Setrika': '=IF({COL:Watt Setrika}{ROW}="";""; {COL:Watt Setrika}{ROW}/1000)',
       'Cuci Per Load': '=IF({COL:kW Watt Cuci}{ROW}="";""; {COL:kW Watt Cuci}{ROW}*{COL:TDL}{ROW}*1)',
