@@ -1729,8 +1729,8 @@
               <label class="omni-label" style="font-size: 0.7rem;">Metode Biaya Aplikasi</label>
               <div class="omni-input-wrapper" style="margin-bottom: 1rem;">
                 <select id="notaAppFeeType" class="omni-input" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;" onchange="toggleNotaInputs(); calculateNota()">
-                   <option value="bulan">Berlangganan Per Bulan</option>
-                   <option value="trx">Biaya Langsung Per Transaksi</option>
+                   <option value="Berlangganan Per Bulan">Berlangganan Per Bulan</option>
+                   <option value="Biaya Langsung Per Transaksi">Biaya Langsung Per Transaksi</option>
                 </select>
                 <i class="ph ph-caret-down omni-caret" style="font-size: 0.9rem; right: 1rem;"></i>
               </div>
@@ -5147,7 +5147,14 @@
   }
 
   (function zettNotaKasirPatch20260521() {
+    const NOTA_APP_DIRECT = 'Biaya Langsung Per Transaksi';
+    const NOTA_APP_MONTHLY = 'Berlangganan Per Bulan';
+    window.ZETT_DEBUG_NOTA_KASIR = window.ZETT_DEBUG_NOTA_KASIR === true;
     function byId(id) { return document.getElementById(id); }
+    function debugNotaKasir(label, payload) {
+      if (!window.ZETT_DEBUG_NOTA_KASIR || !window.console) return;
+      console.log('[NOTA_KASIR_DEBUG] ' + label, payload || {});
+    }
     function clean(value) {
       if (typeof zettCleanNumber === 'function') return zettCleanNumber(value);
       let raw = String(value || '').trim().replace(/Rp/gi, '').replace(/\s/g, '').replace(/[^\d.,-]/g, '');
@@ -5185,9 +5192,34 @@
       const raw = String(value || '').toLowerCase();
       return raw.includes('manual') ? 'manual' : 'digital';
     }
+    function zettNormalizeNotaAppFeeType_(value) {
+      const text = String(value || '').trim().toLowerCase();
+      if (
+        text === 'biaya langsung per transaksi' ||
+        text === 'langsung' ||
+        text === 'direct' ||
+        text === 'per transaksi' ||
+        text === 'per_transaksi' ||
+        text === 'app_per_transaksi' ||
+        text === 'trx'
+      ) {
+        return NOTA_APP_DIRECT;
+      }
+      if (
+        text === 'berlangganan per bulan' ||
+        text === 'bulanan' ||
+        text === 'monthly' ||
+        text === 'per bulan' ||
+        text === 'subscription' ||
+        text === 'bulan'
+      ) {
+        return NOTA_APP_MONTHLY;
+      }
+      return NOTA_APP_MONTHLY;
+    }
+    window.zettNormalizeNotaAppFeeType_ = zettNormalizeNotaAppFeeType_;
     function normalizeMethod(value) {
-      const raw = String(value || '').toLowerCase();
-      return raw.includes('trx') || raw.includes('transaksi') || raw.includes('langsung') ? 'trx' : 'bulan';
+      return zettNormalizeNotaAppFeeType_(value);
     }
     function safeDivide(numerator, denominator) {
       const top = clean(numerator);
@@ -5237,7 +5269,7 @@
       const manualPly = clean(byId('notaManualLembarTrx')?.value);
 
       const appPerLoad = system === 'digital'
-        ? (method === 'trx' ? appDirect : (appTrxMonthly > 0 ? safeDivide(appMonthly, appTrxMonthly) + appExtra : 0))
+        ? (method === NOTA_APP_DIRECT ? appDirect : (appTrxMonthly > 0 ? safeDivide(appMonthly, appTrxMonthly) + appExtra : 0))
         : 0;
       const thermalPerTrx = system === 'digital' ? safeDivide(thermalRoll, thermalTrx) : 0;
       const manualPerSheet = system === 'manual' ? safeDivide(manualStart, manualSheets) : 0;
@@ -5248,7 +5280,7 @@
         system,
         systemLabel: system === 'manual' ? 'Nota Manual Buku NCR' : 'Aplikasi Kasir (Digital + Kertas Thermal)',
         method,
-        methodLabel: method === 'trx' ? 'Biaya Langsung Per Transaksi' : 'Berlangganan Per Bulan',
+        methodLabel: method,
         appDirect,
         appMonthly,
         appTrxMonthly,
@@ -5269,7 +5301,9 @@
       ensureHiddenLegacyInputs();
       const values = notaKasirValues();
       const digital = values.system === 'digital';
-      const direct = values.method === 'trx';
+      const direct = values.method === NOTA_APP_DIRECT;
+      const methodSelect = byId('notaAppFeeType');
+      if (methodSelect && methodSelect.value !== values.method) methodSelect.value = values.method;
       const panelDigital = byId('panelNotaDigital');
       const panelThermal = byId('panelNotaThermalFields');
       const panelManual = byId('panelNotaManual');
@@ -5304,6 +5338,11 @@
     function calculateNotaKasir() {
       renderNotaKasirForm();
       const values = notaKasirValues();
+      debugNotaKasir('calculate', {
+        metodeAktif: values.method,
+        appBiayaPerTransaksi: values.appDirect,
+        hppAplikasiPerLoad: values.appPerLoad
+      });
       setText('dispNotaAppLoad', values.appPerLoad);
       setText('dispNotaCostTrx', values.notaPerLoad);
       setText('dispNotaCostKg', 0);
@@ -5321,13 +5360,19 @@
     }
     function buildNotaKasirPayloadPatch() {
       const v = calculateNotaKasir();
-      return {
+      const payload = {
         notaType: v.system,
+        sistemKasirNota: v.systemLabel,
         notaAppFeeType: v.method,
-        notaAppHargaTrx: v.system === 'digital' && v.method === 'trx' ? v.appDirect : 0,
-        notaAppHargaBulan: v.system === 'digital' && v.method === 'bulan' ? v.appMonthly : 0,
-        notaAppTrxBulan: v.system === 'digital' && v.method === 'bulan' ? v.appTrxMonthly : 0,
-        notaAppBiayaTransaksiTambahan: v.system === 'digital' && v.method === 'bulan' ? v.appExtra : 0,
+        metodeBiayaAplikasi: v.method,
+        appBiayaPerTransaksi: v.system === 'digital' && v.method === NOTA_APP_DIRECT ? v.appDirect : 0,
+        notaAppHargaTrx: v.system === 'digital' && v.method === NOTA_APP_DIRECT ? v.appDirect : 0,
+        appBiayaBulanan: v.system === 'digital' && v.method === NOTA_APP_MONTHLY ? v.appMonthly : 0,
+        notaAppHargaBulan: v.system === 'digital' && v.method === NOTA_APP_MONTHLY ? v.appMonthly : 0,
+        appEstimasiTrxBulanan: v.system === 'digital' && v.method === NOTA_APP_MONTHLY ? v.appTrxMonthly : 0,
+        notaAppTrxBulan: v.system === 'digital' && v.method === NOTA_APP_MONTHLY ? v.appTrxMonthly : 0,
+        appBiayaTransaksiTambahan: v.system === 'digital' && v.method === NOTA_APP_MONTHLY ? v.appExtra : 0,
+        notaAppBiayaTransaksiTambahan: v.system === 'digital' && v.method === NOTA_APP_MONTHLY ? v.appExtra : 0,
         notaThermalHargaRoll: v.system === 'digital' ? v.thermalRoll : 0,
         notaThermalTransaksiRoll: v.system === 'digital' ? v.thermalTrx : 0,
         notaThermalHarga: v.system === 'digital' ? v.thermalPerTrx : 0,
@@ -5341,6 +5386,13 @@
         hppNotaTransaksiPerLoad: v.notaPerLoad,
         hppNotaKasirPerLoad: v.appPerLoad + v.notaPerLoad
       };
+      debugNotaKasir('save payload', {
+        sistemKasirNota: payload.sistemKasirNota,
+        metodeBiayaAplikasi: payload.metodeBiayaAplikasi,
+        appBiayaPerTransaksi: payload.appBiayaPerTransaksi,
+        hppAplikasiPerLoad: payload.hppAplikasiPerLoad
+      });
+      return payload;
     }
     function pick(row, keys, fallback) {
       row = row || {};
@@ -5355,6 +5407,13 @@
       const method = pick(row, ['Metode Biaya Aplikasi', 'Nota_App_FeeType'], 'bulan');
       const normalizedSystem = normalizeSystem(system);
       const normalizedMethod = normalizeMethod(method);
+      debugNotaKasir('load outlet', {
+        outlet: pick(row, ['namaOutlet', 'Nama Outlet', 'Nama_Outlet'], ''),
+        metodeDariSheet: method,
+        normalizedMetode: normalizedMethod,
+        appBiayaPerTransaksiDariSheet: pick(row, ['App Biaya Per Transaksi', 'Nota_App_HargaTrx'], ''),
+        hppAplikasiPerLoadDariSheet: pick(row, ['HPP Aplikasi Per Load', 'Kasir Per Order'], '')
+      });
       setValue('notaType', normalizedSystem);
       setValue('notaAppFeeType', normalizedMethod);
       setValue('notaAppHargaTrx', pick(row, ['App Biaya Per Transaksi', 'Nota_App_HargaTrx'], ''));
@@ -5370,7 +5429,7 @@
     }
     function resetNotaKasirForm() {
       setValue('notaType', 'digital');
-      setValue('notaAppFeeType', 'bulan');
+      setValue('notaAppFeeType', NOTA_APP_MONTHLY);
       [
         'notaAppHargaTrx', 'notaAppHargaBulan', 'notaAppTrxBulan',
         'notaAppBiayaTransaksiTambahan', 'notaThermalHargaRoll',
@@ -5463,6 +5522,12 @@
       patchPopulateForm();
       document.addEventListener('change', function(event) {
         if (event.target && (event.target.id === 'inputNamaHPP' || event.target.closest('#tab-nota'))) {
+          if (event.target.id === 'notaAppFeeType') {
+            debugNotaKasir('dropdown metode berubah', {
+              selectedRawValue: event.target.value,
+              normalizedValue: normalizeMethod(event.target.value)
+            });
+          }
           window.setTimeout(calculateNotaKasir, 40);
         }
       });
@@ -9825,13 +9890,13 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     function adminNotaBreakdown() {
       const apps = sourceValue(
-        [],
+        ['dispNotaAppLoad'],
         '',
         ['Transaksi Apps /Load', 'Kasir Per Order'],
         ['HPP Aplikasi Per Load', 'Transaksi Apps Per Load', 'Transaksi Apps /Load', 'transaksiAppsPerLoad', 'Kasir Per Order', 'Nota_App_HargaTrx']
       );
       const nota = sourceValue(
-        [],
+        ['dispNotaCostTrx'],
         '',
         ['Nota Transaksi /Load', 'Nota Per Order'],
         ['HPP Nota Transaksi Per Load', 'Nota Transaksi Per Load', 'Nota Transaksi /Load', 'notaTransaksiPerLoad', 'Nota Per Order', 'Nota_Thermal_Harga']

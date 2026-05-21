@@ -1593,9 +1593,9 @@ function zettMigrateNotaKasirHeadersOnly_(sheet) {
         }
       }
       const legacyType = String(get('Nota_Type') || '').toLowerCase();
-      const legacyFeeType = String(get('Nota_App_FeeType') || '').toLowerCase();
+      const legacyFeeType = get('Nota_App_FeeType');
       const system = legacyType.indexOf('manual') !== -1 ? 'Nota Manual Buku NCR' : 'Aplikasi Kasir (Digital + Kertas Thermal)';
-      const method = legacyFeeType.indexOf('trx') !== -1 ? 'Biaya Langsung Per Transaksi' : 'Berlangganan Per Bulan';
+      const method = zettNormalizeNotaAppFeeType_(legacyFeeType);
       setIfEmpty('Sistem Kasir Nota', system);
       setIfEmpty('Metode Biaya Aplikasi', system === 'Nota Manual Buku NCR' ? '' : method);
       setIfEmpty('App Biaya Per Transaksi', get('Nota_App_HargaTrx'));
@@ -1966,6 +1966,32 @@ function zettToNumber_(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function zettNormalizeNotaAppFeeType_(value) {
+  const text = String(value || '').trim().toLowerCase();
+  if (
+    text === 'biaya langsung per transaksi' ||
+    text === 'langsung' ||
+    text === 'direct' ||
+    text === 'per transaksi' ||
+    text === 'per_transaksi' ||
+    text === 'app_per_transaksi' ||
+    text === 'trx'
+  ) {
+    return 'Biaya Langsung Per Transaksi';
+  }
+  if (
+    text === 'berlangganan per bulan' ||
+    text === 'bulanan' ||
+    text === 'monthly' ||
+    text === 'per bulan' ||
+    text === 'subscription' ||
+    text === 'bulan'
+  ) {
+    return 'Berlangganan Per Bulan';
+  }
+  return 'Berlangganan Per Bulan';
+}
+
 function zettFormatPlainNumber_(value) {
   const n = zettToNumber_(value);
   return n || '';
@@ -2109,7 +2135,7 @@ function zettAddChemicalNotaAliases_(obj) {
   obj['Chem_Pel_Kapasitas'] = zettFirst_(obj, ['Kap Pelicin Setrika Liter', 'Isi Pelicin Setrika', 'Isi Chemical Tambahan', 'Chem_Pel_Kapasitas'], '');
   obj['Chem_Pel_Pemakaian'] = zettFirst_(obj, ['Pemakaian Pelicin Setrika Per Kg Ml', 'Takaran Pelicin Setrika Per Load', 'Takaran Chemical Tambahan Per Load', 'Chem_Pel_Pemakaian'], '');
   obj['Nota_Type'] = zettFirst_(obj, ['Sistem Kasir Nota', 'Nota_Type'], 'Aplikasi Kasir (Digital + Kertas Thermal)');
-  obj['Nota_App_FeeType'] = zettFirst_(obj, ['Metode Biaya Aplikasi', 'Nota_App_FeeType'], 'Berlangganan Per Bulan');
+  obj['Nota_App_FeeType'] = zettNormalizeNotaAppFeeType_(zettFirst_(obj, ['Metode Biaya Aplikasi', 'Nota_App_FeeType'], 'Berlangganan Per Bulan'));
   obj['Nota_App_HargaBulan'] = zettFirst_(obj, ['App Biaya Bulanan', 'Biaya Kasir Bulanan', 'Nota_App_HargaBulan'], '');
   obj['Nota_App_TrxBulan'] = zettFirst_(obj, ['App Estimasi Trx Bulanan', 'Target Order Kasir Per Hari', 'Nota_App_TrxBulan'], '');
   obj['Nota_App_HargaTrx'] = zettFirst_(obj, ['App Biaya Per Transaksi', 'Kasir Per Order', 'Nota_App_HargaTrx'], '');
@@ -2456,13 +2482,10 @@ function saveStrukturBiaya(payload) {
     const volSetrika = sumberSetrika === 'galon' ? payload.airLiterGalon : '';
     const notaSystemRaw = String(payload.notaType || payload.sistemKasirNota || '').toLowerCase();
     const notaSystem = notaSystemRaw.indexOf('manual') !== -1 ? 'Nota Manual Buku NCR' : 'Aplikasi Kasir (Digital + Kertas Thermal)';
-    const notaMethodRaw = String(payload.notaAppFeeType || payload.metodeBiayaAplikasi || '').toLowerCase();
-    const notaMethod = notaMethodRaw.indexOf('trx') !== -1 || notaMethodRaw.indexOf('transaksi') !== -1
-      ? 'Biaya Langsung Per Transaksi'
-      : 'Berlangganan Per Bulan';
+    const notaMethod = zettNormalizeNotaAppFeeType_(payload.metodeBiayaAplikasi || payload.notaAppFeeType);
     const notaIsManual = notaSystem === 'Nota Manual Buku NCR';
     const notaIsDirect = notaMethod === 'Biaya Langsung Per Transaksi';
-    const appDirect = !notaIsManual && notaIsDirect ? zettToNumber_(payload.notaAppHargaTrx || payload.appBiayaPerTransaksi) : 0;
+    const appDirect = !notaIsManual && notaIsDirect ? zettToNumber_(payload.appBiayaPerTransaksi || payload.notaAppHargaTrx || payload.hppAplikasiPerLoad) : 0;
     const appMonthly = !notaIsManual && !notaIsDirect ? zettToNumber_(payload.notaAppHargaBulan || payload.appBiayaBulanan) : 0;
     const appMonthlyTrx = !notaIsManual && !notaIsDirect ? zettToNumber_(payload.notaAppTrxBulan || payload.appEstimasiTrxBulanan) : 0;
     const appExtra = !notaIsManual && !notaIsDirect ? zettToNumber_(payload.notaAppBiayaTransaksiTambahan || payload.appBiayaTransaksiTambahan) : 0;

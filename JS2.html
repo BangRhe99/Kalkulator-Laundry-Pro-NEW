@@ -964,7 +964,7 @@ function safeSetSelect(elementId, targetValue) {
     let cleanVal = String(targetValue).trim(); el.value = cleanVal;
     if(el.value !== cleanVal) {
         for(let opt of el.options) {
-            if(opt.value.toLowerCase() === cleanVal.toLowerCase()) { el.value = opt.value; break; }
+            if(opt.value.toLowerCase() === cleanVal.toLowerCase() || opt.textContent.trim().toLowerCase() === cleanVal.toLowerCase()) { el.value = opt.value; break; }
         }
     }
 }
@@ -1353,7 +1353,7 @@ function resetFormHPP() {
     if(document.getElementById('bahanPelPemakaian')) document.getElementById('bahanPelPemakaian').value = '5';
 
     safeSetSelect('notaType', 'digital');
-    safeSetSelect('notaAppFeeType', 'bulan');
+    safeSetSelect('notaAppFeeType', 'Berlangganan Per Bulan');
     if(document.getElementById('notaAppHargaBulan')) document.getElementById('notaAppHargaBulan').value = '';
     if(document.getElementById('notaAppTrxBulan')) document.getElementById('notaAppTrxBulan').value = '';
     if(document.getElementById('notaAppHargaTrx')) document.getElementById('notaAppHargaTrx').value = '';
@@ -1442,7 +1442,9 @@ function populateFormHPP(namaCabang) {
     if(document.getElementById('bahanPelPemakaian')) document.getElementById('bahanPelPemakaian').value = hppData['Chem_Pel_Pemakaian'] || '5';
 
     safeSetSelect('notaType', hppData['Sistem Kasir Nota'] || hppData['Nota_Type'] || 'digital');
-    safeSetSelect('notaAppFeeType', hppData['Metode Biaya Aplikasi'] || hppData['Nota_App_FeeType'] || 'bulan');
+    var notaFeeTypeLegacy = hppData['Metode Biaya Aplikasi'] || hppData['Nota_App_FeeType'] || 'Berlangganan Per Bulan';
+    if (typeof window.zettNormalizeNotaAppFeeType_ === 'function') notaFeeTypeLegacy = window.zettNormalizeNotaAppFeeType_(notaFeeTypeLegacy);
+    safeSetSelect('notaAppFeeType', notaFeeTypeLegacy);
     if(document.getElementById('notaAppHargaBulan')) document.getElementById('notaAppHargaBulan').value = hppData['App Biaya Bulanan'] || hppData['Nota_App_HargaBulan'] || '';
     if(document.getElementById('notaAppTrxBulan')) document.getElementById('notaAppTrxBulan').value = hppData['App Estimasi Trx Bulanan'] || hppData['Nota_App_TrxBulan'] || '';
     if(document.getElementById('notaAppHargaTrx')) document.getElementById('notaAppHargaTrx').value = hppData['App Biaya Per Transaksi'] || hppData['Nota_App_HargaTrx'] || '';
@@ -2331,7 +2333,10 @@ function simpanDataHPP(e) {
         chemPelPakai: document.getElementById('bahanPelPemakaian') ? cleanHPPPayloadNumber(document.getElementById('bahanPelPemakaian').value) : '',
 
         notaType: document.getElementById('notaType') ? document.getElementById('notaType').value : '',
-        notaAppFeeType: document.getElementById('notaAppFeeType') ? document.getElementById('notaAppFeeType').value : '',
+        sistemKasirNota: document.getElementById('notaType') && document.getElementById('notaType').value === 'manual' ? 'Nota Manual Buku NCR' : 'Aplikasi Kasir (Digital + Kertas Thermal)',
+        notaAppFeeType: document.getElementById('notaAppFeeType') ? (typeof window.zettNormalizeNotaAppFeeType_ === 'function' ? window.zettNormalizeNotaAppFeeType_(document.getElementById('notaAppFeeType').value) : document.getElementById('notaAppFeeType').value) : '',
+        metodeBiayaAplikasi: document.getElementById('notaAppFeeType') ? (typeof window.zettNormalizeNotaAppFeeType_ === 'function' ? window.zettNormalizeNotaAppFeeType_(document.getElementById('notaAppFeeType').value) : document.getElementById('notaAppFeeType').value) : '',
+        appBiayaPerTransaksi: document.getElementById('notaAppHargaTrx') ? document.getElementById('notaAppHargaTrx').value : '',
         notaAppHargaBulan: document.getElementById('notaAppHargaBulan') ? document.getElementById('notaAppHargaBulan').value : '',
         notaAppTrxBulan: document.getElementById('notaAppTrxBulan') ? document.getElementById('notaAppTrxBulan').value : '',
         notaAppHargaTrx: document.getElementById('notaAppHargaTrx') ? document.getElementById('notaAppHargaTrx').value : '',
@@ -2613,7 +2618,9 @@ async function prosesSimpanBEP() {
     }
 
     if (typeof safeSetSelect === 'function') safeSetSelect('notaType', zettPick(hppData, ['Sistem Kasir Nota', 'Nota_Type'], 'digital'));
-    if (typeof safeSetSelect === 'function') safeSetSelect('notaAppFeeType', zettPick(hppData, ['Metode Biaya Aplikasi', 'Nota_App_FeeType'], 'bulan'));
+    var notaFeeType = zettPick(hppData, ['Metode Biaya Aplikasi', 'Nota_App_FeeType'], 'Berlangganan Per Bulan');
+    if (typeof window.zettNormalizeNotaAppFeeType_ === 'function') notaFeeType = window.zettNormalizeNotaAppFeeType_(notaFeeType);
+    if (typeof safeSetSelect === 'function') safeSetSelect('notaAppFeeType', notaFeeType);
     zettSetVal('notaAppHargaBulan', zettPick(hppData, ['App Biaya Bulanan', 'Nota_App_HargaBulan'], ''));
     zettSetVal('notaAppTrxBulan', zettPick(hppData, ['App Estimasi Trx Bulanan', 'Nota_App_TrxBulan'], ''));
     zettSetVal('notaAppHargaTrx', zettPick(hppData, ['App Biaya Per Transaksi', 'Nota_App_HargaTrx'], ''));
