@@ -11656,20 +11656,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     body #view-hpp .hpp-grid,
     body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-      grid-template-rows: auto auto !important;
-      row-gap: 20px !important;
-      column-gap: 20px !important;
-      align-content: start !important;
-      justify-content: center !important;
-      place-content: start center !important;
-      margin-top: 0 !important;
-      margin-bottom: 22px !important;
-      padding-top: 0 !important;
+      margin-bottom: 0 !important;
       padding-bottom: 0 !important;
-      min-height: auto !important;
-      height: auto !important;
-      transform: none !important;
     }
 
     body #view-hpp .hpp-card-dash {
@@ -11679,7 +11667,12 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     body #view-hpp #actionAreaHPP {
       position: relative !important;
-      margin-top: 20px !important;
+      inset: auto !important;
+      top: auto !important;
+      right: auto !important;
+      bottom: auto !important;
+      left: auto !important;
+      margin-top: 28px !important;
       padding-top: 0 !important;
       padding-bottom: 0 !important;
       transform: none !important;
@@ -11689,20 +11682,18 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   @media (min-width: 1200px) and (max-width: 1365px) {
     body #view-hpp .hpp-grid,
     body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      row-gap: 18px !important;
-      margin-bottom: 20px !important;
+      margin-bottom: 0 !important;
     }
   }
 
   @media (min-width: 768px) and (max-width: 1199px) {
     body #view-hpp .hpp-grid,
     body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      row-gap: 18px !important;
-      margin-bottom: 20px !important;
+      margin-bottom: 0 !important;
     }
 
     body #view-hpp #actionAreaHPP {
-      margin-top: 18px !important;
+      margin-top: 26px !important;
     }
   }
 </style>
