@@ -11774,3 +11774,84 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
   }
 </style>
+
+<style id="hpp-form-mode-visibility-lock-20260521">
+  /* JANGAN DIUBAH - HPP spacing sudah fix untuk desktop/tablet/zoom out.
+     Patch ini hanya mengunci flow dashboard -> form agar form tidak muncul di bawah dashboard. */
+  #view-hpp.hpp-form-active #hpp-dashboard-view {
+    display: none !important;
+  }
+
+  #view-hpp.hpp-form-active #hpp-form-view {
+    display: block !important;
+  }
+</style>
+
+<script id="hpp-admin-nota-form-flow-lock-20260521">
+  (function hppAdminNotaFormFlowLock20260521() {
+    function byId(id) { return document.getElementById(id); }
+
+    function lockFormMode(type) {
+      const page = byId('view-hpp');
+      const dashboard = byId('hpp-dashboard-view');
+      const formView = byId('hpp-form-view');
+      const tab = byId('tab-' + type);
+
+      if (page) {
+        page.classList.add('hpp-form-active');
+        page.dataset.hppActiveForm = type || '';
+      }
+      if (dashboard) {
+        dashboard.classList.add('hidden');
+        dashboard.style.display = 'none';
+      }
+      if (formView) {
+        formView.classList.remove('hidden');
+        formView.style.display = 'block';
+      }
+      if (tab) {
+        tab.classList.remove('hidden');
+        tab.style.display = 'grid';
+      }
+
+      const scroller = byId('mainViewScroller') || document.querySelector('.custom-scroll');
+      if (scroller && typeof scroller.scrollTo === 'function') {
+        scroller.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    }
+
+    function unlockFormMode() {
+      const page = byId('view-hpp');
+      if (page) {
+        page.classList.remove('hpp-form-active');
+        delete page.dataset.hppActiveForm;
+      }
+    }
+
+    const originalOpen = window.openHPPForm;
+    if (typeof originalOpen === 'function' && !originalOpen.__hppAdminNotaFlowLocked) {
+      const wrappedOpen = function(type, title) {
+        const result = originalOpen.apply(this, arguments);
+        if (type === 'nota') {
+          lockFormMode(type);
+          requestAnimationFrame(function() { lockFormMode(type); });
+          setTimeout(function() { lockFormMode(type); }, 80);
+          setTimeout(function() { lockFormMode(type); }, 220);
+        }
+        return result;
+      };
+      wrappedOpen.__hppAdminNotaFlowLocked = true;
+      window.openHPPForm = wrappedOpen;
+    }
+
+    const originalClose = window.closeHPPForm;
+    if (typeof originalClose === 'function' && !originalClose.__hppAdminNotaFlowLocked) {
+      const wrappedClose = function() {
+        unlockFormMode();
+        return originalClose.apply(this, arguments);
+      };
+      wrappedClose.__hppAdminNotaFlowLocked = true;
+      window.closeHPPForm = wrappedClose;
+    }
+  })();
+</script>
