@@ -11791,6 +11791,35 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   (function hppAdminNotaFormFlowLock20260521() {
     function byId(id) { return document.getElementById(id); }
 
+    function getMainScroller() {
+      return byId('mainViewScroller') || document.querySelector('.custom-scroll') || window;
+    }
+
+    function scrollToNotaKasirForm() {
+      const form = byId('tab-nota') || byId('hpp-form-view');
+      const scroller = getMainScroller();
+      if (!form) return;
+
+      requestAnimationFrame(function() {
+        setTimeout(function() {
+          if (scroller === window) {
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+          }
+
+          if (!scroller || typeof scroller.scrollTo !== 'function' || typeof scroller.getBoundingClientRect !== 'function') return;
+          const scrollerRect = scroller.getBoundingClientRect();
+          const formRect = form.getBoundingClientRect();
+          const offset = formRect.top - scrollerRect.top + scroller.scrollTop - 12;
+
+          scroller.scrollTo({
+            top: Math.max(0, offset),
+            behavior: 'smooth'
+          });
+        }, 60);
+      });
+    }
+
     function lockFormMode(type) {
       const page = byId('view-hpp');
       const dashboard = byId('hpp-dashboard-view');
@@ -11814,9 +11843,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         tab.style.display = 'grid';
       }
 
-      const scroller = byId('mainViewScroller') || document.querySelector('.custom-scroll');
-      if (scroller && typeof scroller.scrollTo === 'function') {
-        scroller.scrollTo({ top: 0, behavior: 'auto' });
+      if (type === 'nota') {
+        scrollToNotaKasirForm();
       }
     }
 
@@ -11826,6 +11854,17 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         page.classList.remove('hpp-form-active');
         delete page.dataset.hppActiveForm;
       }
+    }
+
+    function bindNotaCardScrollFallback() {
+      const valueEl = byId('dash-card-nota');
+      const card = valueEl ? valueEl.closest('.hpp-card-dash') : null;
+      if (!card || card.__hppAdminNotaScrollBound) return;
+      card.__hppAdminNotaScrollBound = true;
+      card.addEventListener('click', function() {
+        setTimeout(function() { lockFormMode('nota'); }, 180);
+        setTimeout(function() { scrollToNotaKasirForm(); }, 320);
+      });
     }
 
     const originalOpen = window.openHPPForm;
@@ -11853,5 +11892,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       wrappedClose.__hppAdminNotaFlowLocked = true;
       window.closeHPPForm = wrappedClose;
     }
+
+    bindNotaCardScrollFallback();
+    setTimeout(bindNotaCardScrollFallback, 300);
   })();
 </script>
