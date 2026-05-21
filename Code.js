@@ -1466,10 +1466,11 @@ function zettEnsureHeaders_(sheet, headers) {
   }
   if (headers.some(function(h) { return /^Harga Total |^Deterjen Aktif$|^Harga Deterjen$/.test(h); })) {
     const chemicalHeadersChanged = zettEnsureHeaderBlock_(sheet, zettChemicalHeaders_(), 'Total Biaya Packing/Kg (Rp)');
+    const notaMigrationChanged = zettMigrateNotaKasirHeadersOnly_(sheet);
     const notaHeadersChanged = zettEnsureHeaderBlock_(sheet, zettNotaKasirHeaders_(), 'Chemical Cuci Per Kg');
     const legacyMigrated = zettMigrateLegacyChemicalNotaHeaders_(sheet);
     zettSetHPPGroupTitles_(sheet);
-    if (chemicalHeadersChanged || notaHeadersChanged || legacyMigrated) zettApplyChemicalNotaFormulas_(sheet);
+    if (chemicalHeadersChanged || notaHeadersChanged || legacyMigrated || notaMigrationChanged) zettApplyChemicalNotaFormulas_(sheet);
     colMap = zettGetHeaderMap_(sheet);
   }
   const missing = headers.filter(function(h) {
@@ -1508,6 +1509,108 @@ function zettEnsureHeaderBlock_(sheet, blockHeaders, anchorHeader) {
     .setHorizontalAlignment('center')
     .setVerticalAlignment('middle')
     .setWrap(true);
+  return true;
+}
+
+function zettNotaKasirNewHeaders_() {
+  return [
+    'Sistem Kasir Nota',
+    'Metode Biaya Aplikasi',
+    'App Biaya Per Transaksi',
+    'App Biaya Bulanan',
+    'App Estimasi Trx Bulanan',
+    'App Biaya Transaksi Tambahan',
+    'Thermal Harga Per Roll',
+    'Thermal Transaksi Per Roll',
+    'Thermal Biaya Per Transaksi',
+    'Manual Harga Satuan Awal Nota',
+    'Manual Jumlah Lembar Nota',
+    'Manual Ply Per Transaksi',
+    'Manual Harga Nota Per Lembar',
+    'Manual Biaya Nota Per Transaksi',
+    'HPP Aplikasi Per Load',
+    'HPP Nota Transaksi Per Load'
+  ];
+}
+
+function zettBackupSheetBeforeNotaKasirMigration_(sheet, reason) {
+  if (!sheet) return;
+  const props = PropertiesService.getDocumentProperties();
+  const key = 'zett_nota_kasir_backup_' + sheet.getSheetId();
+  const today = Utilities.formatDate(new Date(), 'Asia/Jakarta', 'yyyyMMdd');
+  if (props.getProperty(key) === today) return;
+  const ss = sheet.getParent();
+  const stamp = Utilities.formatDate(new Date(), 'Asia/Jakarta', 'yyyyMMdd_HHmmss');
+  const backup = sheet.copyTo(ss).setName(sheet.getName() + '_backup_nota_' + stamp);
+  backup.hideSheet();
+  props.setProperty(key, today);
+  Logger.log('[Nota Kasir] Backup dibuat sebelum migrasi header: %s (%s)', backup.getName(), reason || 'header update');
+}
+
+function zettMigrateNotaKasirHeadersOnly_(sheet) {
+  if (!sheet || sheet.getLastColumn() === 0) return false;
+  let colMap = zettGetHeaderMap_(sheet);
+  const required = zettNotaKasirNewHeaders_();
+  const missing = required.filter(function(header) { return !(header in colMap); });
+  const legacyPresent = [
+    'Nota_Type', 'Nota_App_FeeType', 'Nota_App_HargaBulan', 'Nota_App_TrxBulan',
+    'Nota_App_HargaTrx', 'Nota_Thermal_Harga', 'Nota_Manual_Harga',
+    'Nota_Manual_LembarTotal', 'Nota_Manual_LembarTrx'
+  ].some(function(header) { return header in colMap; });
+  if (missing.length === 0 && !legacyPresent) return false;
+
+  zettBackupSheetBeforeNotaKasirMigration_(sheet, 'Nota & Kasir headers');
+  if (missing.length > 0) {
+    const headerRow = zettHppHeaderRow_(sheet);
+    const anchorHeader = 'Admin Nota Kasir Per Kg';
+    colMap = zettGetHeaderMap_(sheet);
+    const anchorCol = (anchorHeader in colMap) ? colMap[anchorHeader] + 1 : sheet.getLastColumn();
+    sheet.insertColumnsAfter(anchorCol, missing.length);
+    sheet.getRange(headerRow, anchorCol + 1, 1, missing.length)
+      .setValues([missing])
+      .setFontWeight('bold')
+      .setBackground('#0f172a')
+      .setFontColor('#ffffff')
+      .setHorizontalAlignment('center')
+      .setVerticalAlignment('middle')
+      .setWrap(true);
+  }
+
+  colMap = zettGetHeaderMap_(sheet);
+  const headerRow = zettHppHeaderRow_(sheet);
+  const lastRow = sheet.getLastRow();
+  if (lastRow > headerRow) {
+    const range = sheet.getRange(headerRow + 1, 1, lastRow - headerRow, sheet.getLastColumn());
+    const values = range.getValues();
+    let changed = false;
+    values.forEach(function(row) {
+      function get(header) { return header in colMap ? row[colMap[header]] : ''; }
+      function setIfEmpty(header, value) {
+        if (!(header in colMap)) return;
+        if ((row[colMap[header]] === '' || row[colMap[header]] === null) && value !== '' && value !== null && value !== undefined) {
+          row[colMap[header]] = value;
+          changed = true;
+        }
+      }
+      const legacyType = String(get('Nota_Type') || '').toLowerCase();
+      const legacyFeeType = String(get('Nota_App_FeeType') || '').toLowerCase();
+      const system = legacyType.indexOf('manual') !== -1 ? 'Nota Manual Buku NCR' : 'Aplikasi Kasir (Digital + Kertas Thermal)';
+      const method = legacyFeeType.indexOf('trx') !== -1 ? 'Biaya Langsung Per Transaksi' : 'Berlangganan Per Bulan';
+      setIfEmpty('Sistem Kasir Nota', system);
+      setIfEmpty('Metode Biaya Aplikasi', system === 'Nota Manual Buku NCR' ? '' : method);
+      setIfEmpty('App Biaya Per Transaksi', get('Nota_App_HargaTrx'));
+      setIfEmpty('App Biaya Bulanan', get('Nota_App_HargaBulan') || get('Biaya Kasir Bulanan'));
+      setIfEmpty('App Estimasi Trx Bulanan', get('Nota_App_TrxBulan') || get('Target Order Kasir Per Hari'));
+      setIfEmpty('Thermal Biaya Per Transaksi', get('Nota_Thermal_Harga'));
+      setIfEmpty('Manual Harga Satuan Awal Nota', get('Nota_Manual_Harga') || get('Harga Buku Nota'));
+      setIfEmpty('Manual Jumlah Lembar Nota', get('Nota_Manual_LembarTotal') || get('Isi Nota'));
+      setIfEmpty('Manual Ply Per Transaksi', get('Nota_Manual_LembarTrx') || get('Lembar Nota Per Order'));
+      setIfEmpty('Manual Biaya Nota Per Transaksi', get('Nota Per Order'));
+      setIfEmpty('HPP Aplikasi Per Load', get('Kasir Per Order'));
+      setIfEmpty('HPP Nota Transaksi Per Load', get('Nota Per Order') || get('Nota_Thermal_Harga'));
+    });
+    if (changed) range.setValues(values);
+  }
   return true;
 }
 
@@ -1807,7 +1910,8 @@ function zettNotaKasirHeaders_() {
     'Kasir Per Order',
     'Admin Nota Kasir Per Order',
     'Admin Nota Kasir Per Load',
-    'Admin Nota Kasir Per Kg'
+    'Admin Nota Kasir Per Kg',
+    ...zettNotaKasirNewHeaders_()
   ];
 }
 
@@ -2004,15 +2108,20 @@ function zettAddChemicalNotaAliases_(obj) {
   obj['Chem_Pel_Harga'] = zettFirst_(obj, ['Harga Total Pelicin Setrika', 'Harga Pelicin Setrika', 'Harga Chemical Tambahan', 'Chem_Pel_Harga'], '');
   obj['Chem_Pel_Kapasitas'] = zettFirst_(obj, ['Kap Pelicin Setrika Liter', 'Isi Pelicin Setrika', 'Isi Chemical Tambahan', 'Chem_Pel_Kapasitas'], '');
   obj['Chem_Pel_Pemakaian'] = zettFirst_(obj, ['Pemakaian Pelicin Setrika Per Kg Ml', 'Takaran Pelicin Setrika Per Load', 'Takaran Chemical Tambahan Per Load', 'Chem_Pel_Pemakaian'], '');
-  obj['Nota_Type'] = zettFirst_(obj, ['Nota_Type'], 'manual');
-  obj['Nota_App_FeeType'] = zettFirst_(obj, ['Nota_App_FeeType'], 'bulan');
-  obj['Nota_App_HargaBulan'] = zettFirst_(obj, ['Biaya Kasir Bulanan', 'Nota_App_HargaBulan'], '');
-  obj['Nota_App_TrxBulan'] = zettFirst_(obj, ['Target Order Kasir Per Hari', 'Nota_App_TrxBulan'], '');
-  obj['Nota_App_HargaTrx'] = zettFirst_(obj, ['Kasir Per Order', 'Nota_App_HargaTrx'], '');
-  obj['Nota_Thermal_Harga'] = zettFirst_(obj, ['Nota Per Order', 'Nota_Thermal_Harga'], '');
-  obj['Nota_Manual_Harga'] = zettFirst_(obj, ['Harga Buku Nota', 'Nota_Manual_Harga'], '');
-  obj['Nota_Manual_LembarTotal'] = zettFirst_(obj, ['Isi Nota', 'Nota_Manual_LembarTotal'], '');
-  obj['Nota_Manual_LembarTrx'] = zettFirst_(obj, ['Lembar Nota Per Order', 'Nota_Manual_LembarTrx'], '');
+  obj['Nota_Type'] = zettFirst_(obj, ['Sistem Kasir Nota', 'Nota_Type'], 'Aplikasi Kasir (Digital + Kertas Thermal)');
+  obj['Nota_App_FeeType'] = zettFirst_(obj, ['Metode Biaya Aplikasi', 'Nota_App_FeeType'], 'Berlangganan Per Bulan');
+  obj['Nota_App_HargaBulan'] = zettFirst_(obj, ['App Biaya Bulanan', 'Biaya Kasir Bulanan', 'Nota_App_HargaBulan'], '');
+  obj['Nota_App_TrxBulan'] = zettFirst_(obj, ['App Estimasi Trx Bulanan', 'Target Order Kasir Per Hari', 'Nota_App_TrxBulan'], '');
+  obj['Nota_App_HargaTrx'] = zettFirst_(obj, ['App Biaya Per Transaksi', 'Kasir Per Order', 'Nota_App_HargaTrx'], '');
+  obj['Nota_App_BiayaTambahan'] = zettFirst_(obj, ['App Biaya Transaksi Tambahan'], '');
+  obj['Nota_Thermal_HargaRoll'] = zettFirst_(obj, ['Thermal Harga Per Roll'], '');
+  obj['Nota_Thermal_TrxRoll'] = zettFirst_(obj, ['Thermal Transaksi Per Roll'], '');
+  obj['Nota_Thermal_Harga'] = zettFirst_(obj, ['Thermal Biaya Per Transaksi', 'Nota Per Order', 'Nota_Thermal_Harga'], '');
+  obj['Nota_Manual_Harga'] = zettFirst_(obj, ['Manual Harga Satuan Awal Nota', 'Harga Buku Nota', 'Nota_Manual_Harga'], '');
+  obj['Nota_Manual_LembarTotal'] = zettFirst_(obj, ['Manual Jumlah Lembar Nota', 'Isi Nota', 'Nota_Manual_LembarTotal'], '');
+  obj['Nota_Manual_LembarTrx'] = zettFirst_(obj, ['Manual Ply Per Transaksi', 'Lembar Nota Per Order', 'Nota_Manual_LembarTrx'], '');
+  obj['Nota_Manual_HargaLembar'] = zettFirst_(obj, ['Manual Harga Nota Per Lembar'], '');
+  obj['Nota_Manual_BiayaTrx'] = zettFirst_(obj, ['Manual Biaya Nota Per Transaksi'], '');
   obj['Nota_RataKg'] = zettFirst_(obj, ['Kap Cuci', 'Nota_RataKg'], '');
 
   const activeChemicalLoads = [
@@ -2042,9 +2151,9 @@ function zettAddChemicalNotaAliases_(obj) {
   obj['Listrik Cuci Per Load'] = zettFirst_(obj, ['Listrik Cuci Per Load', 'Listrik Cuci /Load', 'Cuci Per Load'], '');
   obj['Listrik Pompa /Load'] = zettFirst_(obj, ['Listrik Pompa /Load', 'Listrik Pompa Per Load'], '');
 
-  obj['Transaksi Apps Per Load'] = zettFirst_(obj, ['Transaksi Apps Per Load', 'Transaksi Apps /Load', 'Kasir Per Order', 'Nota_App_HargaTrx'], '');
+  obj['Transaksi Apps Per Load'] = zettFirst_(obj, ['HPP Aplikasi Per Load', 'Transaksi Apps Per Load', 'Transaksi Apps /Load', 'Kasir Per Order', 'Nota_App_HargaTrx'], '');
   obj['transaksiAppsPerLoad'] = obj['Transaksi Apps Per Load'];
-  obj['Nota Transaksi Per Load'] = zettFirst_(obj, ['Nota Transaksi Per Load', 'Nota Transaksi /Load', 'Nota Per Order', 'Nota_Thermal_Harga'], '');
+  obj['Nota Transaksi Per Load'] = zettFirst_(obj, ['HPP Nota Transaksi Per Load', 'Nota Transaksi Per Load', 'Nota Transaksi /Load', 'Nota Per Order', 'Nota_Thermal_Harga'], '');
   obj['notaTransaksiPerLoad'] = obj['Nota Transaksi Per Load'];
   obj['Admin/Nota Per Load'] = zettFirst_(obj, ['Admin/Nota Per Load', 'Admin Nota Kasir Per Load', 'Admin Nota Kasir Per Order'], '');
   obj['adminNotaPerLoad'] = obj['Admin/Nota Per Load'];
@@ -2345,6 +2454,33 @@ function saveStrukturBiaya(payload) {
     const literTangki = sumberAir === 'tangki' ? payload.airLiterTangki : '';
     const galonSetrika = sumberSetrika === 'galon' ? payload.airHargaGalon : '';
     const volSetrika = sumberSetrika === 'galon' ? payload.airLiterGalon : '';
+    const notaSystemRaw = String(payload.notaType || payload.sistemKasirNota || '').toLowerCase();
+    const notaSystem = notaSystemRaw.indexOf('manual') !== -1 ? 'Nota Manual Buku NCR' : 'Aplikasi Kasir (Digital + Kertas Thermal)';
+    const notaMethodRaw = String(payload.notaAppFeeType || payload.metodeBiayaAplikasi || '').toLowerCase();
+    const notaMethod = notaMethodRaw.indexOf('trx') !== -1 || notaMethodRaw.indexOf('transaksi') !== -1
+      ? 'Biaya Langsung Per Transaksi'
+      : 'Berlangganan Per Bulan';
+    const notaIsManual = notaSystem === 'Nota Manual Buku NCR';
+    const notaIsDirect = notaMethod === 'Biaya Langsung Per Transaksi';
+    const appDirect = !notaIsManual && notaIsDirect ? zettToNumber_(payload.notaAppHargaTrx || payload.appBiayaPerTransaksi) : 0;
+    const appMonthly = !notaIsManual && !notaIsDirect ? zettToNumber_(payload.notaAppHargaBulan || payload.appBiayaBulanan) : 0;
+    const appMonthlyTrx = !notaIsManual && !notaIsDirect ? zettToNumber_(payload.notaAppTrxBulan || payload.appEstimasiTrxBulanan) : 0;
+    const appExtra = !notaIsManual && !notaIsDirect ? zettToNumber_(payload.notaAppBiayaTransaksiTambahan || payload.appBiayaTransaksiTambahan) : 0;
+    const hppAplikasiPerLoad = !notaIsManual
+      ? Math.ceil(notaIsDirect ? appDirect : (appMonthlyTrx > 0 ? (appMonthly / appMonthlyTrx) + appExtra : 0))
+      : 0;
+    const thermalHargaRoll = !notaIsManual ? zettToNumber_(payload.notaThermalHargaRoll || payload.thermalHargaPerRoll) : 0;
+    const thermalTransaksiRoll = !notaIsManual ? zettToNumber_(payload.notaThermalTransaksiRoll || payload.thermalTransaksiPerRoll) : 0;
+    const thermalBiayaTransaksi = !notaIsManual
+      ? Math.ceil(thermalTransaksiRoll > 0 ? thermalHargaRoll / thermalTransaksiRoll : zettToNumber_(payload.notaThermalHarga))
+      : 0;
+    const manualHargaAwal = notaIsManual ? zettToNumber_(payload.notaManualHarga || payload.manualHargaSatuanAwalNota) : 0;
+    const manualJumlahLembar = notaIsManual ? zettToNumber_(payload.notaManualLbrTotal || payload.manualJumlahLembarNota) : 0;
+    const manualPly = notaIsManual ? zettToNumber_(payload.notaManualLbrTrx || payload.manualPlyPerTransaksi) : 0;
+    const manualHargaLembar = notaIsManual ? Math.ceil(manualJumlahLembar > 0 ? manualHargaAwal / manualJumlahLembar : 0) : 0;
+    const manualBiayaTransaksi = notaIsManual ? Math.ceil(manualHargaLembar * manualPly) : 0;
+    const hppNotaTransaksiPerLoad = notaIsManual ? manualBiayaTransaksi : thermalBiayaTransaksi;
+    const hppNotaKasirPerLoad = hppAplikasiPerLoad + hppNotaTransaksiPerLoad;
 
     const mapping = {
       'Kategori Laundry': kategoriLaundry,
@@ -2476,17 +2612,33 @@ function saveStrukturBiaya(payload) {
       'Estimasi Pelicin Setrika Per Kg': '=IFERROR({COL:Estimasi Pelicin Setrika Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
       'Chemical Cuci Per Load': '=IFERROR({COL:Estimasi Deterjen Per Load}{ROW}+{COL:Estimasi Softener Per Load}{ROW}+{COL:Estimasi Pewangi Per Load}{ROW}+{COL:Estimasi Pelicin Setrika Per Load}{ROW};0)',
       'Chemical Cuci Per Kg': '=IFERROR({COL:Chemical Cuci Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
-      'Admin Per Order': '=IFERROR({COL:Gaji Admin Bulanan}{ROW}/MAX({COL:Hari Kerja Admin Bulanan}{ROW}*{COL:Target Order Admin Per Hari}{ROW};1);0)',
-      'Harga Buku Nota': payload.notaManualHarga,
-      'Isi Nota': payload.notaManualLbrTotal,
-      'Lembar Nota Per Order': payload.notaManualLbrTrx,
-      'Nota Per Order': '=IFERROR(({COL:Harga Buku Nota}{ROW}/MAX({COL:Isi Nota}{ROW};1))*MAX({COL:Lembar Nota Per Order}{ROW};1);0)',
-      'Biaya Kasir Bulanan': payload.notaAppHargaBulan,
-      'Target Order Kasir Per Hari': payload.notaAppTrxBulan,
-      'Kasir Per Order': '=IFERROR({COL:Biaya Kasir Bulanan}{ROW}/MAX({COL:Hari Kerja Kasir Bulanan}{ROW}*{COL:Target Order Kasir Per Hari}{ROW};1);0)',
-      'Admin Nota Kasir Per Order': '=IFERROR({COL:Admin Per Order}{ROW}+{COL:Nota Per Order}{ROW}+{COL:Kasir Per Order}{ROW};0)',
-      'Admin Nota Kasir Per Load': '=IFERROR({COL:Admin Nota Kasir Per Order}{ROW};0)',
-      'Admin Nota Kasir Per Kg': '=IFERROR({COL:Admin Nota Kasir Per Load}{ROW}/MAX({COL:Kap Cuci}{ROW};1);0)',
+      'Admin Per Order': 0,
+      'Harga Buku Nota': manualHargaAwal,
+      'Isi Nota': manualJumlahLembar,
+      'Lembar Nota Per Order': manualPly,
+      'Nota Per Order': hppNotaTransaksiPerLoad,
+      'Biaya Kasir Bulanan': appMonthly,
+      'Target Order Kasir Per Hari': appMonthlyTrx,
+      'Kasir Per Order': hppAplikasiPerLoad,
+      'Admin Nota Kasir Per Order': hppNotaKasirPerLoad,
+      'Admin Nota Kasir Per Load': hppNotaKasirPerLoad,
+      'Admin Nota Kasir Per Kg': hppNotaKasirPerLoad,
+      'Sistem Kasir Nota': notaSystem,
+      'Metode Biaya Aplikasi': notaIsManual ? '' : notaMethod,
+      'App Biaya Per Transaksi': appDirect,
+      'App Biaya Bulanan': appMonthly,
+      'App Estimasi Trx Bulanan': appMonthlyTrx,
+      'App Biaya Transaksi Tambahan': appExtra,
+      'Thermal Harga Per Roll': thermalHargaRoll,
+      'Thermal Transaksi Per Roll': thermalTransaksiRoll,
+      'Thermal Biaya Per Transaksi': thermalBiayaTransaksi,
+      'Manual Harga Satuan Awal Nota': manualHargaAwal,
+      'Manual Jumlah Lembar Nota': manualJumlahLembar,
+      'Manual Ply Per Transaksi': manualPly,
+      'Manual Harga Nota Per Lembar': manualHargaLembar,
+      'Manual Biaya Nota Per Transaksi': manualBiayaTransaksi,
+      'HPP Aplikasi Per Load': hppAplikasiPerLoad,
+      'HPP Nota Transaksi Per Load': hppNotaTransaksiPerLoad,
 
       'Packing_PP_Active': payload.packPPActive,
       'Packing_PP_Harga': payload.packPPHarga,

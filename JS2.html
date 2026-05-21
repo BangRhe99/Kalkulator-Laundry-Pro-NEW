@@ -1354,14 +1354,17 @@ function resetFormHPP() {
 
     safeSetSelect('notaType', 'digital');
     safeSetSelect('notaAppFeeType', 'bulan');
-    if(document.getElementById('notaAppHargaBulan')) document.getElementById('notaAppHargaBulan').value = '50.000';
-    if(document.getElementById('notaAppTrxBulan')) document.getElementById('notaAppTrxBulan').value = '500';
-    if(document.getElementById('notaAppHargaTrx')) document.getElementById('notaAppHargaTrx').value = '100';
-    if(document.getElementById('notaThermalHarga')) document.getElementById('notaThermalHarga').value = '35';
-    if(document.getElementById('notaManualHarga')) document.getElementById('notaManualHarga').value = '10.000';
-    if(document.getElementById('notaManualLembarTotal')) document.getElementById('notaManualLembarTotal').value = '100';
-    if(document.getElementById('notaManualLembarTrx')) document.getElementById('notaManualLembarTrx').value = '2';
-    if(document.getElementById('notaRataKg')) document.getElementById('notaRataKg').value = '4';
+    if(document.getElementById('notaAppHargaBulan')) document.getElementById('notaAppHargaBulan').value = '';
+    if(document.getElementById('notaAppTrxBulan')) document.getElementById('notaAppTrxBulan').value = '';
+    if(document.getElementById('notaAppHargaTrx')) document.getElementById('notaAppHargaTrx').value = '';
+    if(document.getElementById('notaAppBiayaTransaksiTambahan')) document.getElementById('notaAppBiayaTransaksiTambahan').value = '';
+    if(document.getElementById('notaThermalHarga')) document.getElementById('notaThermalHarga').value = '';
+    if(document.getElementById('notaThermalHargaRoll')) document.getElementById('notaThermalHargaRoll').value = '';
+    if(document.getElementById('notaThermalTransaksiRoll')) document.getElementById('notaThermalTransaksiRoll').value = '';
+    if(document.getElementById('notaManualHarga')) document.getElementById('notaManualHarga').value = '';
+    if(document.getElementById('notaManualLembarTotal')) document.getElementById('notaManualLembarTotal').value = '';
+    if(document.getElementById('notaManualLembarTrx')) document.getElementById('notaManualLembarTrx').value = '';
+    if(document.getElementById('notaRataKg')) document.getElementById('notaRataKg').value = '';
     
     if(typeof StateMachine !== 'undefined') StateMachine.calculateTotal();
 }
@@ -1438,16 +1441,19 @@ function populateFormHPP(namaCabang) {
     if(document.getElementById('bahanPelKapasitasBulk')) document.getElementById('bahanPelKapasitasBulk').value = hppData['Chem_Pel_Kapasitas'] || '5';
     if(document.getElementById('bahanPelPemakaian')) document.getElementById('bahanPelPemakaian').value = hppData['Chem_Pel_Pemakaian'] || '5';
 
-    safeSetSelect('notaType', hppData['Nota_Type'] || 'digital');
-    safeSetSelect('notaAppFeeType', hppData['Nota_App_FeeType'] || 'bulan');
-    if(document.getElementById('notaAppHargaBulan')) document.getElementById('notaAppHargaBulan').value = hppData['Nota_App_HargaBulan'] || '50.000';
-    if(document.getElementById('notaAppTrxBulan')) document.getElementById('notaAppTrxBulan').value = hppData['Nota_App_TrxBulan'] || '500';
-    if(document.getElementById('notaAppHargaTrx')) document.getElementById('notaAppHargaTrx').value = hppData['Nota_App_HargaTrx'] || '100';
-    if(document.getElementById('notaThermalHarga')) document.getElementById('notaThermalHarga').value = hppData['Nota_Thermal_Harga'] || '35';
-    if(document.getElementById('notaManualHarga')) document.getElementById('notaManualHarga').value = hppData['Nota_Manual_Harga'] || '10.000';
-    if(document.getElementById('notaManualLembarTotal')) document.getElementById('notaManualLembarTotal').value = hppData['Nota_Manual_LembarTotal'] || '100';
-    if(document.getElementById('notaManualLembarTrx')) document.getElementById('notaManualLembarTrx').value = hppData['Nota_Manual_LembarTrx'] || '2';
-    if(document.getElementById('notaRataKg')) document.getElementById('notaRataKg').value = hppData['Nota_RataKg'] || '4';
+    safeSetSelect('notaType', hppData['Sistem Kasir Nota'] || hppData['Nota_Type'] || 'digital');
+    safeSetSelect('notaAppFeeType', hppData['Metode Biaya Aplikasi'] || hppData['Nota_App_FeeType'] || 'bulan');
+    if(document.getElementById('notaAppHargaBulan')) document.getElementById('notaAppHargaBulan').value = hppData['App Biaya Bulanan'] || hppData['Nota_App_HargaBulan'] || '';
+    if(document.getElementById('notaAppTrxBulan')) document.getElementById('notaAppTrxBulan').value = hppData['App Estimasi Trx Bulanan'] || hppData['Nota_App_TrxBulan'] || '';
+    if(document.getElementById('notaAppHargaTrx')) document.getElementById('notaAppHargaTrx').value = hppData['App Biaya Per Transaksi'] || hppData['Nota_App_HargaTrx'] || '';
+    if(document.getElementById('notaAppBiayaTransaksiTambahan')) document.getElementById('notaAppBiayaTransaksiTambahan').value = hppData['App Biaya Transaksi Tambahan'] || '';
+    if(document.getElementById('notaThermalHarga')) document.getElementById('notaThermalHarga').value = hppData['Thermal Biaya Per Transaksi'] || hppData['Nota_Thermal_Harga'] || '';
+    if(document.getElementById('notaThermalHargaRoll')) document.getElementById('notaThermalHargaRoll').value = hppData['Thermal Harga Per Roll'] || '';
+    if(document.getElementById('notaThermalTransaksiRoll')) document.getElementById('notaThermalTransaksiRoll').value = hppData['Thermal Transaksi Per Roll'] || '';
+    if(document.getElementById('notaManualHarga')) document.getElementById('notaManualHarga').value = hppData['Manual Harga Satuan Awal Nota'] || hppData['Nota_Manual_Harga'] || '';
+    if(document.getElementById('notaManualLembarTotal')) document.getElementById('notaManualLembarTotal').value = hppData['Manual Jumlah Lembar Nota'] || hppData['Nota_Manual_LembarTotal'] || '';
+    if(document.getElementById('notaManualLembarTrx')) document.getElementById('notaManualLembarTrx').value = hppData['Manual Ply Per Transaksi'] || hppData['Nota_Manual_LembarTrx'] || '';
+    if(document.getElementById('notaRataKg')) document.getElementById('notaRataKg').value = '';
 
   } else {
     resetFormHPP();
@@ -2606,16 +2612,19 @@ async function prosesSimpanBEP() {
       });
     }
 
-    if (typeof safeSetSelect === 'function') safeSetSelect('notaType', zettPick(hppData, ['Nota_Type'], 'digital'));
-    if (typeof safeSetSelect === 'function') safeSetSelect('notaAppFeeType', zettPick(hppData, ['Nota_App_FeeType'], 'bulan'));
-    zettSetVal('notaAppHargaBulan', zettPick(hppData, ['Nota_App_HargaBulan'], '50.000'));
-    zettSetVal('notaAppTrxBulan', zettPick(hppData, ['Nota_App_TrxBulan'], '500'));
-    zettSetVal('notaAppHargaTrx', zettPick(hppData, ['Nota_App_HargaTrx'], '100'));
-    zettSetVal('notaThermalHarga', zettPick(hppData, ['Nota_Thermal_Harga'], '35'));
-    zettSetVal('notaManualHarga', zettPick(hppData, ['Nota_Manual_Harga'], '10.000'));
-    zettSetVal('notaManualLembarTotal', zettPick(hppData, ['Nota_Manual_LembarTotal'], '100'));
-    zettSetVal('notaManualLembarTrx', zettPick(hppData, ['Nota_Manual_LembarTrx'], '2'));
-    zettSetVal('notaRataKg', zettPick(hppData, ['Nota_RataKg'], '4'));
+    if (typeof safeSetSelect === 'function') safeSetSelect('notaType', zettPick(hppData, ['Sistem Kasir Nota', 'Nota_Type'], 'digital'));
+    if (typeof safeSetSelect === 'function') safeSetSelect('notaAppFeeType', zettPick(hppData, ['Metode Biaya Aplikasi', 'Nota_App_FeeType'], 'bulan'));
+    zettSetVal('notaAppHargaBulan', zettPick(hppData, ['App Biaya Bulanan', 'Nota_App_HargaBulan'], ''));
+    zettSetVal('notaAppTrxBulan', zettPick(hppData, ['App Estimasi Trx Bulanan', 'Nota_App_TrxBulan'], ''));
+    zettSetVal('notaAppHargaTrx', zettPick(hppData, ['App Biaya Per Transaksi', 'Nota_App_HargaTrx'], ''));
+    zettSetVal('notaAppBiayaTransaksiTambahan', zettPick(hppData, ['App Biaya Transaksi Tambahan'], ''));
+    zettSetVal('notaThermalHarga', zettPick(hppData, ['Thermal Biaya Per Transaksi', 'Nota_Thermal_Harga'], ''));
+    zettSetVal('notaThermalHargaRoll', zettPick(hppData, ['Thermal Harga Per Roll'], ''));
+    zettSetVal('notaThermalTransaksiRoll', zettPick(hppData, ['Thermal Transaksi Per Roll'], ''));
+    zettSetVal('notaManualHarga', zettPick(hppData, ['Manual Harga Satuan Awal Nota', 'Nota_Manual_Harga'], ''));
+    zettSetVal('notaManualLembarTotal', zettPick(hppData, ['Manual Jumlah Lembar Nota', 'Nota_Manual_LembarTotal'], ''));
+    zettSetVal('notaManualLembarTrx', zettPick(hppData, ['Manual Ply Per Transaksi', 'Nota_Manual_LembarTrx'], ''));
+    zettSetVal('notaRataKg', '');
 
     if (typeof toggleAirInputs === 'function') toggleAirInputs();
     if (typeof toggleBahanActive === 'function') toggleBahanActive();
