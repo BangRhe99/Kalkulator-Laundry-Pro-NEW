@@ -4492,7 +4492,7 @@
 <script id="zett-hpp-active-outlet-zero-guard-20260521">
   (function zettHPPActiveOutletZeroGuard20260521() {
     function normalizeText(value) {
-      return String(value == null ? '' : value).trim();
+      return String(value == null ? '' : value).trim().replace(/\s+/g, ' ');
     }
 
     function isEmptyOutletLabel(value) {
@@ -4502,6 +4502,7 @@
         text === '-' ||
         text === 'undefined' ||
         text === 'null' ||
+        text === 'semua cabang' ||
         text.includes('pilih cabang') ||
         text.includes('pilih outlet') ||
         text.includes('select branch') ||
@@ -5353,8 +5354,9 @@
       const totalEl = byId('displayBiayaNotaTotalKg');
       if (totalEl) totalEl.textContent = money(total);
       const cardValue = byId('dash-card-nota');
-      if (cardValue) cardValue.textContent = money(total);
-      if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('nota', total);
+      const noOutlet = typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_();
+      if (cardValue) cardValue.textContent = noOutlet ? money(0) : money(total);
+      if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('nota', noOutlet ? 0 : total);
       if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('nota-kasir');
       return values;
     }
@@ -8876,6 +8878,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
         values.listrik = 0;
         values.air = 0;
+        values.nota = 0;
       }
       values.total = Number(store.total);
       if (
@@ -9741,6 +9744,20 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       justify-items: stretch !important;
     }
   }
+
+  #view-hpp .hpp-card-dash.is-admin-nota-zero-state,
+  #view-hpp .hpp-card-dash.is-admin-nota-transitioning {
+    transition: opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease !important;
+  }
+
+  #view-hpp .hpp-card-dash.is-admin-nota-transitioning {
+    opacity: 0.65 !important;
+    transform: translateY(1px) !important;
+  }
+
+  #view-hpp .hpp-card-dash.is-admin-nota-zero-state .hpp-premium-lite-details strong {
+    color: #64748b !important;
+  }
 </style>
 
 <script id="hpp-dashboard-premium-ui-patch-js-20260519">
@@ -9791,6 +9808,12 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     let timer = null;
 
     function byId(id) { return document.getElementById(id); }
+    window.ZETT_DEBUG_ADMIN_NOTA_ZERO = window.ZETT_DEBUG_ADMIN_NOTA_ZERO === true;
+
+    function debugAdminNotaZero(payload) {
+      if (!window.ZETT_DEBUG_ADMIN_NOTA_ZERO || !window.console) return;
+      console.log('[ADMIN_NOTA_ZERO]', payload || {});
+    }
 
     function clean(value) {
       if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
@@ -9824,6 +9847,46 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     function readMoneyById(id) {
       const el = byId(id);
       return el ? clean(el.textContent || el.value) : 0;
+    }
+
+    function getActiveHPPOutletName() {
+      if (typeof window.zettGetActiveHPPOutletName_ === 'function') return window.zettGetActiveHPPOutletName_();
+      return String(byId('inputNamaHPP')?.value || '').trim();
+    }
+
+    function isAdminNotaOutletNotSelected() {
+      const outlet = getActiveHPPOutletName();
+      if (typeof window.zettIsHPPOutletNotSelected_ === 'function') return window.zettIsHPPOutletNotSelected_();
+      const text = String(outlet || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      return !text || text === '-' || text === 'pilih cabang' || text === 'pilih outlet' || text === 'pilih cabang laundry' || text === 'semua cabang';
+    }
+
+    function zettGetZeroAdminNotaMetrics_() {
+      return {
+        apps: 0,
+        nota: 0,
+        total: 0,
+        appPerLoad: 0,
+        notaPerLoad: 0,
+        totalAdminNota: 0,
+        percent: 0,
+        displayAppPerLoad: 'Rp 0',
+        displayNotaPerLoad: 'Rp 0',
+        displayTotal: 'Rp 0',
+        source: 'zero'
+      };
+    }
+    window.zettGetZeroAdminNotaMetrics_ = window.zettGetZeroAdminNotaMetrics_ || zettGetZeroAdminNotaMetrics_;
+
+    function setAdminNotaCardTransition(card, active) {
+      if (!card) return;
+      card.classList.toggle('is-admin-nota-transitioning', !!active);
+      if (active) {
+        window.clearTimeout(card.__zettAdminNotaTransitionTimer);
+        card.__zettAdminNotaTransitionTimer = window.setTimeout(function() {
+          card.classList.remove('is-admin-nota-transitioning');
+        }, 180);
+      }
     }
 
     function findDetailValue(containerId, labels) {
@@ -9889,6 +9952,17 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
 
     function adminNotaBreakdown() {
+      if (isAdminNotaOutletNotSelected()) {
+        const zero = zettGetZeroAdminNotaMetrics_();
+        debugAdminNotaZero({
+          outletAktif: getActiveHPPOutletName(),
+          isOutletNotSelected: true,
+          sourceData: zero.source,
+          appPerLoad: zero.appPerLoad,
+          notaPerLoad: zero.notaPerLoad
+        });
+        return zero;
+      }
       const apps = sourceValue(
         ['dispNotaAppLoad'],
         '',
@@ -9910,7 +9984,15 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       return {
         apps,
         nota,
-        total: total > 0 ? total : apps + nota
+        total: total > 0 ? total : apps + nota,
+        appPerLoad: apps,
+        notaPerLoad: nota,
+        totalAdminNota: total > 0 ? total : apps + nota,
+        percent: 0,
+        displayAppPerLoad: money(apps),
+        displayNotaPerLoad: money(nota),
+        displayTotal: money(total > 0 ? total : apps + nota),
+        source: (apps > 0 || nota > 0 || total > 0) ? 'live/sheet' : 'empty'
       };
     }
 
@@ -9927,7 +10009,12 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       }
       const data = adminNotaBreakdown();
       const nextValue = money(data.total);
+      const previousSignature = card ? card.__zettAdminNotaSignature : '';
+      const nextSignature = [data.source, data.apps, data.nota, data.total].join('|');
+      if (card && previousSignature !== nextSignature) setAdminNotaCardTransition(card, true);
+      if (card) card.__zettAdminNotaSignature = nextSignature;
       if (valueEl.textContent !== nextValue) valueEl.textContent = nextValue;
+      if (card) card.classList.toggle('is-admin-nota-zero-state', data.source === 'zero');
       if (detail) {
         const nextDetail = [
           '<div><span>Transaksi Apps /Load</span><strong>' + money(data.apps) + '</strong></div>',
@@ -9935,8 +10022,24 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         ].join('');
         if (detail.innerHTML !== nextDetail) detail.innerHTML = nextDetail;
       }
+      const pctEl = byId('dash-card-nota-pct');
+      if (pctEl && data.source === 'zero') pctEl.textContent = '0%';
       if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('nota', data.total);
+      debugAdminNotaZero({
+        outletAktif: getActiveHPPOutletName(),
+        isOutletNotSelected: data.source === 'zero',
+        sourceData: data.source,
+        appPerLoad: data.apps,
+        notaPerLoad: data.nota
+      });
     }
+
+    function resetAdminNotaCardIfNoOutlet() {
+      if (!isAdminNotaOutletNotSelected()) return false;
+      renderAdminNotaCard();
+      return true;
+    }
+    window.zettResetAdminNotaCardIfNoOutlet = resetAdminNotaCardIfNoOutlet;
 
     // [HPP DASHBOARD REQUEST PATCH - 2026-05-19]
     function getSelectedOutletRow() {
@@ -10101,6 +10204,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     function refresh() {
       ensureProcessCards();
+      resetAdminNotaCardIfNoOutlet();
       updateProcessCards();
     }
 
