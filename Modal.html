@@ -11571,22 +11571,25 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     #view-hpp #hpp-dashboard-view {
       min-height: auto !important;
       gap: clamp(14px, 1.15vw, 18px) !important;
+      align-content: start !important;
+      justify-content: start !important;
     }
 
     #view-hpp .hpp-grid,
     #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
       align-content: start !important;
-      row-gap: 24px !important;
+      justify-content: center !important;
+      row-gap: 20px !important;
       column-gap: clamp(16px, 1.35vw, 20px) !important;
       grid-auto-rows: clamp(204px, 20vh, 226px) !important;
-      margin-bottom: 0 !important;
+      margin-bottom: 18px !important;
       padding-bottom: 0 !important;
     }
 
     #view-hpp #actionAreaHPP,
     #actionAreaHPP {
-      margin-top: 24px !important;
-      padding-top: 24px !important;
+      margin-top: 18px !important;
+      padding-top: 0 !important;
       padding-bottom: clamp(10px, 0.95vw, 14px) !important;
     }
   }
@@ -11594,7 +11597,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   @media (min-width: 1366px) {
     #view-hpp .hpp-grid,
     #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      row-gap: 24px !important;
+      row-gap: 20px !important;
       grid-auto-rows: 208px !important;
     }
   }
@@ -11602,7 +11605,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   @media (min-width: 1200px) and (max-width: 1365px) {
     #view-hpp .hpp-grid,
     #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      row-gap: 24px !important;
+      row-gap: 18px !important;
       grid-auto-rows: 202px !important;
     }
   }
@@ -11610,7 +11613,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   @media (min-width: 900px) and (max-width: 1199px) {
     #view-hpp .hpp-grid,
     #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      row-gap: 24px !important;
+      row-gap: 18px !important;
       grid-auto-rows: 208px !important;
     }
   }
@@ -11618,7 +11621,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   @media (min-width: 768px) and (max-width: 899px) {
     #view-hpp .hpp-grid,
     #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      row-gap: 24px !important;
+      row-gap: 18px !important;
       grid-auto-rows: 208px !important;
     }
   }
