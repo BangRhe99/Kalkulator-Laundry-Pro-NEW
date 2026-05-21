@@ -324,7 +324,18 @@
 
           if (!sourceEl || !targetEl) return;
 
-          const sourceText = sourceEl.textContent.trim();
+          const shouldZeroUtility =
+            typeof window.zettIsHPPOutletNotSelected_ === 'function' &&
+            window.zettIsHPPOutletNotSelected_() &&
+            (
+              sourceId === 'dash-card-listrik' ||
+              sourceId === 'dash-card-air' ||
+              sourceId === 'dash-card-listrik-pct' ||
+              sourceId === 'dash-card-air-pct'
+            );
+          const sourceText = shouldZeroUtility
+            ? (sourceId.includes('-pct') ? '0%' : 'Rp 0')
+            : sourceEl.textContent.trim();
           const targetText = targetEl.textContent.trim();
 
           if (sourceText !== targetText) {

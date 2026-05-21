@@ -1950,11 +1950,19 @@
     
     renderDashboard: function() {
       const t = APP_STATE.data.hpp.total;
-      const { gas, listrik, air, packing, bahan, nota } = APP_STATE.data.hpp;
+      let { gas, listrik, air, packing, bahan, nota } = APP_STATE.data.hpp;
+      if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+        listrik = 0;
+        air = 0;
+        APP_STATE.data.hpp.listrik = 0;
+        APP_STATE.data.hpp.air = 0;
+        APP_STATE.data.hpp.total = gas + packing + bahan + nota;
+      }
+      const displayTotal = APP_STATE.data.hpp.total;
       
       const totalEl = document.getElementById('dash-hpp-total');
       if(totalEl && typeof formatRupiah === 'function') {
-        totalEl.innerText = formatRupiah(t);
+        totalEl.innerText = formatRupiah(displayTotal);
         
         if(document.getElementById('dash-card-gas')) document.getElementById('dash-card-gas').innerText = formatRupiah(gas);
         if(document.getElementById('dash-card-listrik')) document.getElementById('dash-card-listrik').innerText = formatRupiah(listrik);
@@ -1967,13 +1975,13 @@
       const donut = document.getElementById('hpp-donut-chart');
       const labelsContainer = document.getElementById('hpp-donut-labels');
 
-      if (donut && t > 0) {
-        let pctGas = (gas / t) * 100;
-        let pctListrik = (listrik / t) * 100;
-        let pctAir = (air / t) * 100;
-        let pctPacking = (packing / t) * 100;
-        let pctBahan = (bahan / t) * 100;
-        let pctNota = (nota / t) * 100;
+      if (donut && displayTotal > 0) {
+        let pctGas = (gas / displayTotal) * 100;
+        let pctListrik = (listrik / displayTotal) * 100;
+        let pctAir = (air / displayTotal) * 100;
+        let pctPacking = (packing / displayTotal) * 100;
+        let pctBahan = (bahan / displayTotal) * 100;
+        let pctNota = (nota / displayTotal) * 100;
 
         let cGas = pctGas;
         let cListrik = cGas + pctListrik;
@@ -4449,6 +4457,138 @@
 <!-- ZETTBOT PATCH 2026-05-12: HYBRID COMPATIBILITY BRIDGE                    -->
 <!-- Tujuan: mempertahankan UI HPP premium lama + kompatibel dengan data baru.  -->
 <!-- ========================================================================= -->
+<script id="zett-hpp-active-outlet-zero-guard-20260521">
+  (function zettHPPActiveOutletZeroGuard20260521() {
+    function normalizeText(value) {
+      return String(value == null ? '' : value).trim();
+    }
+
+    function isEmptyOutletLabel(value) {
+      const text = normalizeText(value).toLowerCase();
+      if (!text) return true;
+      return (
+        text === '-' ||
+        text === 'undefined' ||
+        text === 'null' ||
+        text.includes('pilih cabang') ||
+        text.includes('pilih outlet') ||
+        text.includes('select branch') ||
+        text.includes('select outlet')
+      );
+    }
+
+    function readElementValue(selector, attr) {
+      const el = document.querySelector(selector);
+      if (!el) return null;
+      return attr ? el.getAttribute(attr) : (el.value != null ? el.value : el.textContent);
+    }
+
+    function getActiveHPPOutletName() {
+      const controlSources = [
+        readElementValue('#inputNamaHPP'),
+        readElementValue('#namaOutletHPP'),
+        readElementValue('#selectCabangHPP'),
+        readElementValue('#dropdownCabangHPP'),
+        readElementValue('[data-hpp-selected-outlet]', 'data-hpp-selected-outlet'),
+        readElementValue('[data-selected-outlet]', 'data-selected-outlet'),
+        readElementValue('.hpp-selected-outlet'),
+        readElementValue('.selected-outlet-name')
+      ];
+
+      for (const source of controlSources) {
+        if (source == null) continue;
+        const value = normalizeText(source);
+        return isEmptyOutletLabel(value) ? '' : value;
+      }
+
+      const state = window.APP_STATE || {};
+      const possibleSources = [
+        window.selectedCabangHPP,
+        window.hppSelectedCabang,
+        window.selectedCabang,
+        window.cabangAktif,
+        window.activeCabang,
+        window.activeOutlet,
+        window.namaCabangAktif,
+        window.currentHPPOutlet,
+        state.hpp && state.hpp.selectedOutlet,
+        state.hpp && state.hpp.outletName,
+        state.selectedOutlet,
+        state.activeOutletName
+      ];
+
+      for (const source of possibleSources) {
+        const value = normalizeText(source);
+        if (!isEmptyOutletLabel(value)) return value;
+      }
+
+      return '';
+    }
+
+    function getZeroElectricMetrics() {
+      return {
+        total: 0,
+        value: 0,
+        amount: 0,
+        percent: 0,
+        listrikCuciLoad: 0,
+        listrikCuciKg: 0,
+        listrikPompaLoad: 0,
+        listrikPompaKg: 0,
+        listrikKeringLoad: 0,
+        listrikKeringKg: 0,
+        listrikSetrikaJam: 0,
+        listrikSetrikaKg: 0,
+        hppListrik: 0,
+        hppListrikCuci: 0,
+        hppListrikKering: 0,
+        hppListrikSetrika: 0,
+        cuciLoad: 0,
+        cuciKg: 0,
+        pompaLoad: 0,
+        pompaKg: 0,
+        keringLoad: 0,
+        keringKg: 0,
+        setrikaJam: 0,
+        setrikaKg: 0
+      };
+    }
+
+    function getZeroWaterPdamMetrics() {
+      return {
+        total: 0,
+        value: 0,
+        amount: 0,
+        percent: 0,
+        airCuciLoad: 0,
+        airCuciKg: 0,
+        airSetrikaJam: 0,
+        airSetrikaKg: 0,
+        airPDAM: 0,
+        airPdam: 0,
+        hppAir: 0,
+        hppAirCuci: 0,
+        hppAirSetrika: 0,
+        source: '',
+        boilerSource: '',
+        airLoad: 0,
+        airKg: 0,
+        setrikaJam: 0,
+        setrikaKg: 0
+      };
+    }
+
+    window.zettNormalizeText_ = window.zettNormalizeText_ || normalizeText;
+    window.zettIsEmptyOutletLabel_ = window.zettIsEmptyOutletLabel_ || isEmptyOutletLabel;
+    window.zettGetActiveHPPOutletName_ = window.zettGetActiveHPPOutletName_ || getActiveHPPOutletName;
+    window.zettIsHPPOutletNotSelected_ = window.zettIsHPPOutletNotSelected_ || function() {
+      return isEmptyOutletLabel(getActiveHPPOutletName());
+    };
+    window.zettGetZeroElectricMetrics_ = window.zettGetZeroElectricMetrics_ || getZeroElectricMetrics;
+    window.zettGetZeroWaterPdamMetrics_ = window.zettGetZeroWaterPdamMetrics_ || getZeroWaterPdamMetrics;
+  })();
+</script>
+
 <script id="zett-hpp-hybrid-compat-20260512">
   (function zettHPPHybridCompat20260512() {
     const HPP_TYPES = ['gas', 'listrik', 'air', 'packing', 'bahan', 'nota'];
@@ -4524,7 +4664,10 @@
     function setStateValue(type, value) {
       if (!HPP_TYPES.includes(type)) return;
       const state = getState();
-      state[type] = Number(value) || 0;
+      const shouldZeroUtility = typeof window.zettIsHPPOutletNotSelected_ === 'function' &&
+        window.zettIsHPPOutletNotSelected_() &&
+        (type === 'listrik' || type === 'air');
+      state[type] = shouldZeroUtility ? 0 : (Number(value) || 0);
       syncToKnownStores();
     }
 
@@ -4596,6 +4739,13 @@
         bahan: Number(state.bahan) || 0,
         nota: Number(state.nota) || 0
       };
+
+      if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+        values.listrik = 0;
+        values.air = 0;
+        state.listrik = 0;
+        state.air = 0;
+      }
 
       const total = syncToKnownStores();
 
@@ -5721,6 +5871,12 @@ window.saveGasHPPData = function(event) {
   }
 
   function electricValues() {
+    if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+      return typeof window.zettGetZeroElectricMetrics_ === 'function'
+        ? window.zettGetZeroElectricMetrics_()
+        : { pompaLoad: 0, pompaKg: 0, cuciLoad: 0, cuciKg: 0, keringLoad: 0, keringKg: 0, setrikaJam: 0, setrikaKg: 0 };
+    }
+
     const row = getRow();
     const cap = capacities();
     const tdl = clean(byId('inputTDL')?.value);
@@ -5766,12 +5922,24 @@ window.saveGasHPPData = function(event) {
   }
 
   function zettGetVisibleElectricMetrics(context) {
+    if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+      const zero = typeof window.zettGetZeroElectricMetrics_ === 'function'
+        ? window.zettGetZeroElectricMetrics_()
+        : {};
+      return zettGetVisibleElectricInputFields(context)
+        .map(key => ({ key, label: FIELD_CONFIG[key].label, value: zero[key] || 0 }));
+    }
+
     const visible = zettGetVisibleElectricInputFields(context);
     const values = electricValues();
     return visible.map(key => ({ key, label: FIELD_CONFIG[key].label, value: values[key] || 0 }));
   }
 
   function zettGetElectricDashboardValue() {
+    if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+      return 0;
+    }
+
     return zettGetVisibleElectricMetrics().reduce((sum, item) => sum + (Number(item.value) || 0), 0);
   }
 
@@ -5799,8 +5967,9 @@ window.saveGasHPPData = function(event) {
     if (window.__zettElectricRendering) return;
     window.__zettElectricRendering = true;
     try {
+      const shouldZero = typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_();
       const metrics = zettGetVisibleElectricMetrics();
-      const value = metrics.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+      const value = shouldZero ? 0 : metrics.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
       const valueEl = byId('dash-card-listrik');
       const detail = byId('dash-card-listrik-details');
       if (valueEl) valueEl.textContent = rupiah(value);
@@ -5824,14 +5993,14 @@ window.saveGasHPPData = function(event) {
 
   window.calculateListrik = function() {
     const v = electricValues();
-    setText('dispListrikCuciLoad', v.cuciLoad);
-    setText('dispListrikCuciKg', v.cuciKg);
-    setText('dispListrikPengeringLoad', v.keringLoad);
-    setText('dispListrikPengeringKg', v.keringKg);
-    setText('dispListrikPompaLoad', v.pompaLoad);
-    setText('dispListrikPompaKg', v.pompaKg);
-    setText('dispListrikSetrikaJam', v.setrikaJam);
-    setText('dispListrikSetrikaKg', v.setrikaKg);
+    setText('dispListrikCuciLoad', v.cuciLoad || 0);
+    setText('dispListrikCuciKg', v.cuciKg || 0);
+    setText('dispListrikPengeringLoad', v.keringLoad || 0);
+    setText('dispListrikPengeringKg', v.keringKg || 0);
+    setText('dispListrikPompaLoad', v.pompaLoad || 0);
+    setText('dispListrikPompaKg', v.pompaKg || 0);
+    setText('dispListrikSetrikaJam', v.setrikaJam || 0);
+    setText('dispListrikSetrikaKg', v.setrikaKg || 0);
     const total = zettGetElectricDashboardValue();
     setText('displayBiayaListrikTotalKg', total);
     zettRenderElectricCard();
@@ -6036,6 +6205,12 @@ window.saveGasHPPData = function(event) {
   }
 
   function zettWaterValues() {
+    if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+      return typeof window.zettGetZeroWaterPdamMetrics_ === 'function'
+        ? window.zettGetZeroWaterPdamMetrics_()
+        : { source: '', boilerSource: '', airLoad: 0, airKg: 0, setrikaJam: 0, setrikaKg: 0 };
+    }
+
     const row = getRow();
     const outlet = getOutlet() || {};
     const source = norm(byId('inputAirSumber')?.value || row['Sumber Air'] || 'pdam');
@@ -6073,6 +6248,15 @@ window.saveGasHPPData = function(event) {
   }
 
   function zettGetVisibleWaterMetrics(context) {
+    if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+      return [
+        { label: 'Air Cuci /Load', value: 0 },
+        { label: 'Air Cuci /Kg', value: 0 },
+        { label: 'Air Setrika /Jam', value: 0 },
+        { label: 'Air Setrika /Kg', value: 0 }
+      ];
+    }
+
     const c = context || zettGetWaterUsageContext();
     const v = zettWaterValues();
     if (c.isSelfService) return [{ label: 'Air Cuci /Load', value: v.airLoad }];
@@ -6100,6 +6284,10 @@ window.saveGasHPPData = function(event) {
   }
 
   function zettGetWaterDashboardValue() {
+    if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+      return 0;
+    }
+
     const c = zettGetWaterUsageContext();
     const v = zettWaterValues();
     if (c.isSelfService) return v.airLoad || 0;
@@ -6111,8 +6299,9 @@ window.saveGasHPPData = function(event) {
   function zettRenderWaterCard() {
     const detail = byId('dash-card-air-details');
     const valueEl = byId('dash-card-air');
+    const shouldZero = typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_();
     const metrics = zettGetVisibleWaterMetrics().filter(item => String(item.label || '').trim());
-    const value = zettGetWaterDashboardValue();
+    const value = shouldZero ? 0 : zettGetWaterDashboardValue();
     if (valueEl) valueEl.textContent = rupiah(value);
     if (detail) {
       detail.innerHTML = metrics.map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`).join('');
@@ -6138,10 +6327,10 @@ window.saveGasHPPData = function(event) {
     zettRenderWaterAnalysisForm();
     const m3El = byId('dispAirCuciM3');
     if (m3El) m3El.textContent = ((airCuci || 0) / 1000).toFixed(3);
-    setText('dispAirCuciLoad', v.airLoad);
-    setText('dispAirCuciKg', v.airKg);
-    setText('dispAirBoilerJam', v.setrikaJam);
-    setText('dispAirBoilerKg', v.setrikaKg);
+    setText('dispAirCuciLoad', v.airLoad || 0);
+    setText('dispAirCuciKg', v.airKg || 0);
+    setText('dispAirBoilerJam', v.setrikaJam || 0);
+    setText('dispAirBoilerKg', v.setrikaKg || 0);
     setText('displayBiayaAirTotalKg', zettGetWaterDashboardValue());
     zettRenderWaterCard();
     return v;
@@ -8245,8 +8434,17 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         }
         if (item.key === 'bahan' && window.__zettChemicalDashboardActive === false) values[item.key] = 0;
       });
+      if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+        values.listrik = 0;
+        values.air = 0;
+      }
       values.total = Number(store.total);
-      if (!Number.isFinite(values.total) || values.total <= 0 || window.__zettChemicalDashboardActive === false) {
+      if (
+        !Number.isFinite(values.total) ||
+        values.total <= 0 ||
+        window.__zettChemicalDashboardActive === false ||
+        (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_())
+      ) {
         values.total = TYPES.reduce((sum, item) => sum + (Number(values[item.key]) || 0), 0);
       }
       return values;
