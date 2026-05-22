@@ -1098,16 +1098,9 @@
  * Scope: Target Titik Impas / BEP only.
  * ===================================================================== */
 (function zettBEPFixedCostModule() {
-  var DEFAULT_MACHINES = [
-    { name: 'Mesin Cuci', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 4, annualMaintenance: 0 },
-    { name: 'Mesin Pengering / Dryer', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 },
-    { name: 'Setrika Uap Boiler', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 },
-    { name: 'Setrika Listrik', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 },
-    { name: 'Mesin/Peralatan Lainnya', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 }
-  ];
-
   var state = {
     outletName: '',
+    category: '',
     rentStatus: 'Sewa',
     annualRent: 0,
     monthlyRent: 0,
@@ -1157,6 +1150,9 @@
   function compactCount(value, suffix) {
     var n = Math.round(finite(value));
     return n + ' ' + suffix;
+  }
+  function machineKey(outletName, jenisMesin, tipeMesin) {
+    return [outletName, jenisMesin, tipeMesin].map(function(value) { return norm(value); }).join('|');
   }
   function bepCacheKey(outlet) { return norm(outlet); }
   function getCachedBEPOutlet(outlet) {
@@ -1298,12 +1294,13 @@
   function emptyState(outlet) {
     state = {
       outletName: outlet || '',
+      category: '',
       rentStatus: 'Sewa',
       annualRent: 0,
       monthlyRent: 0,
       rentNote: '',
       salaries: [{ name: '', count: 1, salaryPerPerson: 0 }],
-      machines: DEFAULT_MACHINES.map(function(item) { return Object.assign({}, item); }),
+      machines: [],
       internetProvider: '',
       internetMonthly: 0,
       internetNote: '',
@@ -1325,15 +1322,32 @@
   }
   function cleanMachine(row) {
     row = row || {};
-    var units = Math.max(0, parseSafe(row.units));
-    var purchase = Math.max(0, parseSafe(row.purchasePrice));
-    var residual = Math.max(0, parseSafe(row.residualValue));
-    var years = Math.max(0, parseSafe(row.usefulLifeYears));
-    var maintenance = Math.max(0, parseSafe(row.annualMaintenance));
+    var jenisMesin = String(row.jenisMesin || row.name || '').trim();
+    var tipeMesin = String(row.tipeMesin || '').trim();
+    var units = Math.max(0, parseSafe(row.jumlahUnit || row.units));
+    var purchase = Math.max(0, parseSafe(row.hargaPerUnit || row.purchasePrice));
+    var residual = Math.max(0, parseSafe(row.residuPerUnit || row.residualValue));
+    var years = Math.max(0, parseSafe(row.umurEkonomisTahun || row.usefulLifeYears));
+    var maintenance = Math.max(0, parseSafe(row.rawatPerTahunPerUnit || row.annualMaintenance));
     var depreciation = years > 0 ? Math.max(0, ((purchase - residual) * units) / (years * 12)) : 0;
-    var maintenanceMonthly = maintenance / 12;
+    var maintenanceMonthly = (maintenance * units) / 12;
     return {
-      name: String(row.name || '').trim(),
+      machineKey: row.machineKey || machineKey(state.outletName || selectedOutlet(), jenisMesin, tipeMesin),
+      jenisMesin: jenisMesin,
+      tipeMesin: tipeMesin,
+      jumlahUnit: units,
+      status: row.status || (units > 0 ? 'Aktif' : 'Nonaktif'),
+      source: row.source || 'Profil Operasional',
+      active: row.active !== false && units > 0,
+      hargaPerUnit: purchase,
+      residuPerUnit: residual,
+      umurEkonomisTahun: years,
+      umurEkonomisBulan: years * 12,
+      rawatPerTahunPerUnit: maintenance,
+      depresiasiPerBulan: depreciation,
+      maintenancePerBulan: maintenanceMonthly,
+      totalBiayaMesinPerBulan: depreciation + maintenanceMonthly,
+      name: jenisMesin,
       units: units,
       purchasePrice: purchase,
       residualValue: residual,
@@ -1372,12 +1386,17 @@
     });
     state.machines = Array.from(document.querySelectorAll('#bepMachineRows .bep-machine-row')).map(function(row) {
       return cleanMachine({
-        name: row.querySelector('[data-bep-field="machine-name"]')?.value,
-        units: row.querySelector('[data-bep-field="machine-units"]')?.value,
-        purchasePrice: row.querySelector('[data-bep-field="machine-purchase"]')?.value,
-        residualValue: row.querySelector('[data-bep-field="machine-residual"]')?.value,
-        usefulLifeYears: row.querySelector('[data-bep-field="machine-years"]')?.value,
-        annualMaintenance: row.querySelector('[data-bep-field="machine-maintenance"]')?.value
+        machineKey: row.getAttribute('data-machine-key') || '',
+        jenisMesin: row.getAttribute('data-machine-name') || row.querySelector('[data-bep-field="machine-name"]')?.value,
+        tipeMesin: row.getAttribute('data-machine-type') || '',
+        jumlahUnit: row.getAttribute('data-machine-units') || row.querySelector('[data-bep-field="machine-units"]')?.value,
+        status: row.getAttribute('data-machine-status') || '',
+        source: row.getAttribute('data-machine-source') || 'Profil Operasional',
+        active: row.getAttribute('data-machine-active') !== 'false',
+        hargaPerUnit: row.querySelector('[data-bep-field="machine-purchase"]')?.value,
+        residuPerUnit: row.querySelector('[data-bep-field="machine-residual"]')?.value,
+        umurEkonomisTahun: row.querySelector('[data-bep-field="machine-years"]')?.value,
+        rawatPerTahunPerUnit: row.querySelector('[data-bep-field="machine-maintenance"]')?.value
       });
     });
     state.others = Array.from(document.querySelectorAll('#bepOtherRows .bep-other-row')).map(function(row) {
@@ -1441,18 +1460,37 @@
   function renderMachineRows() {
     var wrap = byId('bepMachineRows');
     if (!wrap) return;
+    var notice = byId('bepMachineNotice');
+    if (!state.outletName && !selectedOutlet()) {
+      if (notice) notice.innerHTML = '<i class="ph ph-info"></i><span>Pilih cabang terlebih dahulu untuk memuat data mesin dari Profil Operasional.</span>';
+      wrap.innerHTML = '';
+      return;
+    }
+    if (!(state.machines || []).length) {
+      if (notice) notice.innerHTML = '<i class="ph ph-warning-circle"></i><span>Data mesin di Profil Operasional belum lengkap. Lengkapi Profil Operasional agar perhitungan Biaya Mesin akurat.</span>';
+      wrap.innerHTML = '';
+      return;
+    }
+    if (notice) notice.innerHTML = '<i class="ph ph-check-circle"></i><span>Data mesin otomatis diambil dari Profil Operasional' + (state.category ? ' (' + escapeHtml(state.category) + ')' : '') + '.</span>';
     wrap.innerHTML = (state.machines || []).map(function(row, idx) {
       row = cleanMachine(row);
-      return '<div class="bep-machine-row" data-index="' + idx + '">' +
-        '<input class="bep-input" data-bep-field="machine-name" placeholder="Nama mesin" value="' + escapeHtml(row.name) + '" oninput="zettBEPFixedChange()">' +
-        '<input class="bep-input" data-bep-field="machine-units" inputmode="numeric" placeholder="Unit" value="' + escapeHtml(row.units || '') + '" oninput="zettBEPFixedChange()">' +
-        '<input class="bep-input" data-bep-field="machine-purchase" inputmode="numeric" placeholder="Harga/unit" value="' + escapeHtml(formatInputValue(row.purchasePrice)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
-        '<input class="bep-input" data-bep-field="machine-residual" inputmode="numeric" placeholder="Residu/unit" value="' + escapeHtml(formatInputValue(row.residualValue)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
-        '<input class="bep-input" data-bep-field="machine-years" inputmode="decimal" placeholder="Tahun" value="' + escapeHtml(row.usefulLifeYears || '') + '" oninput="zettBEPFixedChange()">' +
+      var archived = row.active === false || row.units <= 0;
+      return '<div class="bep-machine-row bep-machine-smart-row" data-index="' + idx + '" data-machine-key="' + escapeHtml(row.machineKey) + '" data-machine-name="' + escapeHtml(row.jenisMesin) + '" data-machine-type="' + escapeHtml(row.tipeMesin) + '" data-machine-units="' + escapeHtml(row.jumlahUnit) + '" data-machine-status="' + escapeHtml(row.status) + '" data-machine-source="' + escapeHtml(row.source) + '" data-machine-active="' + (row.active !== false ? 'true' : 'false') + '">' +
+        '<div class="bep-machine-identity">' +
+          '<div class="bep-machine-name">' + escapeHtml(row.jenisMesin || row.name || 'Mesin') + '</div>' +
+          '<div class="bep-machine-badges">' +
+            (row.tipeMesin ? '<span class="bep-machine-badge">' + escapeHtml(row.tipeMesin) + '</span>' : '') +
+            '<span class="bep-machine-badge">' + escapeHtml(row.jumlahUnit || 0) + ' unit</span>' +
+            '<span class="bep-machine-badge ' + (archived ? 'is-archived' : 'is-source') + '">' + escapeHtml(row.source || 'Profil Operasional') + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<input class="bep-input" data-bep-field="machine-purchase" inputmode="numeric" placeholder="Harga/unit" value="' + escapeHtml(formatInputValue(row.hargaPerUnit)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="machine-residual" inputmode="numeric" placeholder="Residu/unit" value="' + escapeHtml(formatInputValue(row.residuPerUnit)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="machine-years" inputmode="decimal" placeholder="Umur/tahun" value="' + escapeHtml(row.umurEkonomisTahun || '') + '" oninput="zettBEPFixedChange()">' +
         '<div class="bep-mini-total">' + money(row.depreciationMonthly) + '</div>' +
-        '<input class="bep-input" data-bep-field="machine-maintenance" inputmode="numeric" placeholder="Rawat/tahun" value="' + escapeHtml(formatInputValue(row.annualMaintenance)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="machine-maintenance" inputmode="numeric" placeholder="Rawat/tahun/unit" value="' + escapeHtml(formatInputValue(row.rawatPerTahunPerUnit)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
+        '<div class="bep-mini-total">' + money(row.maintenanceMonthly) + '</div>' +
         '<div class="bep-mini-total">' + money(row.totalMonthly) + '</div>' +
-        '<button type="button" class="bep-icon-btn" onclick="zettRemoveBEPMachineRow(' + idx + ')"><i class="ph ph-trash"></i></button>' +
       '</div>';
     }).join('');
   }
@@ -1492,7 +1530,7 @@
     var salaryActive = activeRows(state.salaries, function(row) { return finite(row.total) > 0 || String(row.name || '').trim(); });
     var totalEmployees = salaryActive.reduce(function(sum, row) { return sum + finite(row.count); }, 0);
     var machineActive = activeRows(state.machines, function(row) {
-      return finite(row.purchasePrice) > 0 || finite(row.annualMaintenance) > 0;
+      return row.active !== false && finite(row.units) > 0;
     });
     var otherActive = activeRows(state.others, function(row) { return finite(row.monthlyAmount) > 0 || String(row.name || '').trim(); });
     var biggest = largestComponent(totals);
@@ -1507,7 +1545,7 @@
     setText('bepSalaryTotal', money(totals.salaryTotal) + ' / bulan');
     setText('bepSalaryCardStatus', totalEmployees > 0 ? (compactCount(totalEmployees, 'karyawan') + ' aktif, ' + compactCount(salaryActive.length, 'kelompok')) : '0 karyawan aktif');
     setText('bepMachineTotal', money(totals.machineTotal) + ' / bulan');
-    setText('bepMachineCardStatus', 'Untuk servis, sparepart, dan penggantian aset');
+    setText('bepMachineCardStatus', machineActive.length ? (compactCount(machineActive.length, 'jenis mesin') + ' dari Profil Operasional') : 'Menunggu data mesin Profil Operasional');
     setText('bepInternetTotal', money(totals.internetTotal) + ' / bulan');
     setText('bepInternetCardStatus', state.internetProvider ? ('Provider: ' + state.internetProvider) : 'Provider belum diisi');
     setText('bepOtherTotal', money(totals.otherTotal) + ' / bulan');
@@ -1548,7 +1586,8 @@
       var item = state.machines[index] || {};
       var totals = row.querySelectorAll('.bep-mini-total');
       if (totals[0]) totals[0].textContent = money(item.depreciationMonthly || 0);
-      if (totals[1]) totals[1].textContent = money(item.totalMonthly || 0);
+      if (totals[1]) totals[1].textContent = money(item.maintenanceMonthly || 0);
+      if (totals[2]) totals[2].textContent = money(item.totalMonthly || 0);
     });
     scheduleCalc();
   };
@@ -1567,17 +1606,10 @@
     scheduleCalc();
   };
   window.zettAddBEPMachineRow = function() {
-    collectFromDom();
-    state.machines.push({ name: '', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 });
-    renderAll();
-    scheduleCalc();
+    showBEPFixedToast('Data mesin otomatis diambil dari Profil Operasional.', 'error');
   };
   window.zettRemoveBEPMachineRow = function(index) {
-    collectFromDom();
-    state.machines.splice(index, 1);
-    if (!state.machines.length) state.machines.push({ name: '', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 });
-    renderAll();
-    scheduleCalc();
+    showBEPFixedToast('Nonaktifkan atau ubah jumlah mesin dari Profil Operasional.', 'error');
   };
   window.zettAddBEPOtherRow = function() {
     collectFromDom();
@@ -1597,12 +1629,13 @@
     emptyState(outlet);
     if (data) {
       state.outletName = data.namaOutlet || data['Nama Outlet'] || outlet || '';
+      state.category = data.category || data.kategoriLaundry || data['Kategori Laundry'] || '';
       state.rentStatus = data.statusSewa || data['Status Sewa'] || 'Sewa';
       state.annualRent = parseSafe(data.biayaSewaTahunan || data['Biaya Sewa Tahunan']);
       state.monthlyRent = parseSafe(data.biayaSewaBulanan || data['Biaya Sewa Bulanan']) || (state.annualRent / 12);
       state.rentNote = data.catatanSewa || data.catatan || data['Catatan'] || '';
       state.salaries = Array.isArray(data.detailGaji) && data.detailGaji.length ? data.detailGaji : state.salaries;
-      state.machines = Array.isArray(data.detailMesin) && data.detailMesin.length ? data.detailMesin : state.machines;
+      state.machines = Array.isArray(data.detailMesin) ? data.detailMesin : state.machines;
       state.internetProvider = data.providerInternet || data['Provider Internet'] || '';
       state.internetMonthly = parseSafe(data.biayaInternetBulanan || data['Biaya Internet Bulanan']);
       state.internetNote = data.catatanInternet || '';
@@ -1693,6 +1726,7 @@
     calculateTotals();
     return {
       namaOutlet: state.outletName || selectedOutlet(),
+      kategoriLaundry: state.category,
       statusSewa: state.rentStatus,
       biayaSewaTahunan: state.annualRent,
       biayaSewaBulanan: state.monthlyRent,
@@ -1732,7 +1766,8 @@
         cacheBEPOutletData(outlet, res && res.data ? res.data : buildPayload());
         renderAll();
         scheduleCalc();
-        showBEPFixedToast('Berhasil disimpan', 'success');
+        var activeSection = document.querySelector('#bepFixedDetailPanel .bep-detail-section.is-active');
+        showBEPFixedToast(activeSection && activeSection.getAttribute('data-bep-detail') === 'machine' ? 'Biaya Mesin berhasil disimpan dan masuk ke perhitungan BEP.' : 'Berhasil disimpan', 'success');
       } catch (error) {
         console.error('saveBEPFixedCost gagal:', error);
         showBEPFixedToast(error && error.message ? error.message : 'Gagal disimpan', 'error');

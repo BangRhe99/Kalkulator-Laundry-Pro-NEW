@@ -242,6 +242,15 @@
     #view-bep .bep-helper { font-size:.72rem; font-weight:700; color:var(--bep-muted, #64748B); line-height:1.45; margin-top:.65rem; }
     #view-bep .bep-row { display:grid; grid-template-columns: minmax(150px,1.2fr) .55fr .9fr .9fr 2.5rem; gap:.55rem; align-items:center; margin-bottom:.55rem; }
     #view-bep .bep-machine-row { display:grid; grid-template-columns: minmax(150px,1.2fr) .5fr .85fr .8fr .55fr .85fr .85fr .9fr 2.5rem; gap:.5rem; align-items:center; margin-bottom:.55rem; }
+    #view-bep .bep-machine-smart-row { grid-template-columns: minmax(180px,1.22fr) repeat(4,minmax(104px,.72fr)) repeat(3,minmax(118px,.76fr)); padding:.85rem; border:1px solid var(--bep-border, #DDE7F6); border-radius:1rem; background:linear-gradient(145deg, rgba(255,255,255,.98), rgba(248,251,255,.88)); box-shadow:0 10px 24px rgba(15,23,42,.035); }
+    #view-bep .bep-machine-identity { min-width:0; display:flex; flex-direction:column; gap:.45rem; }
+    #view-bep .bep-machine-name { font-size:.86rem; font-weight:950; color:var(--bep-ink, #0F172A); line-height:1.15; }
+    #view-bep .bep-machine-badges { display:flex; flex-wrap:wrap; gap:.35rem; }
+    #view-bep .bep-machine-badge { display:inline-flex; align-items:center; gap:.25rem; width:max-content; padding:.24rem .48rem; border-radius:999px; border:1px solid rgba(199,215,242,.85); background:#fff; color:var(--bep-muted, #64748B); font-size:.58rem; font-weight:950; text-transform:uppercase; letter-spacing:.05em; line-height:1; }
+    #view-bep .bep-machine-badge.is-source { color:#2563EB; background:#EFF6FF; border-color:#BFDBFE; }
+    #view-bep .bep-machine-badge.is-archived { color:#B45309; background:#FFFBEB; border-color:#FDE68A; }
+    #view-bep .bep-machine-empty { padding:1rem; border:1px dashed var(--bep-border-strong, #C7D7F2); border-radius:1rem; background:rgba(248,251,255,.78); color:var(--bep-muted, #64748B); font-size:.78rem; font-weight:800; line-height:1.45; display:flex; align-items:flex-start; gap:.65rem; }
+    #view-bep .bep-machine-empty i { color:var(--bep-primary, #2563EB); font-size:1.2rem; line-height:1; }
     #view-bep .bep-other-row { display:grid; grid-template-columns: minmax(150px,1fr) .8fr minmax(130px,1fr) 2.5rem; gap:.55rem; align-items:center; margin-bottom:.55rem; }
     #view-bep .bep-mini-total { padding:.72rem .85rem; border-radius:.9rem; background:var(--bep-card-soft, #F8FBFF); border:1px solid var(--bep-border, #DDE7F6); font-size:.78rem; font-weight:900; color:var(--bep-ink, #0F172A); text-align:right; white-space:nowrap; }
     #view-bep .bep-icon-btn { width:2.25rem; height:2.25rem; display:inline-flex; align-items:center; justify-content:center; border-radius:.85rem; border:1px solid var(--bep-border, #DDE7F6); background:#fff; color:var(--bep-muted, #64748B); font-weight:900; transition:transform .2s var(--bep-ease), background-color .2s var(--bep-ease), border-color .2s var(--bep-ease), color .2s var(--bep-ease); }
@@ -441,8 +450,9 @@
             <div><h4>Biaya Mesin</h4><p>Dana tetap bulanan untuk menjaga aset mesin tetap siap operasional.</p></div>
             <button type="button" class="bep-close-detail" onclick="zettCloseBEPFixedDetail()" aria-label="Kembali ke dashboard"><i class="ph ph-arrow-left"></i><span>Kembali</span></button>
           </div>
+          <div id="bepMachineNotice" class="bep-machine-empty mb-3"><i class="ph ph-info"></i><span>Pilih cabang terlebih dahulu untuk memuat data mesin dari Profil Operasional.</span></div>
           <div id="bepMachineRows" class="space-y-2"></div>
-          <button type="button" class="bep-add-btn mt-2" onclick="zettAddBEPMachineRow()"><i class="ph ph-plus"></i> Tambah Mesin</button>
+          <button type="button" class="bep-add-btn mt-2 hidden" onclick="zettAddBEPMachineRow()"><i class="ph ph-plus"></i> Tambah Mesin</button>
         </div>
 
         <div class="bep-detail-section" data-bep-detail="internet">

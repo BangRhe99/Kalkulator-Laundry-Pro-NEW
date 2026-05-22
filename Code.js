@@ -1188,7 +1188,11 @@ const BEP_FIXED_OPERATIONAL_HEADERS_ = [
   'Alat Setrika',
   'Kap Setrika',
   'Durasi Setrika',
-  'Tipe Mesin Cuci'
+  'Tipe Mesin Cuci',
+  'Tipe Mesin Pengering',
+  'Tipe Setrika',
+  'Pakai Pengering',
+  'Metode Pengeringan'
 ];
 
 function normalizeOutletName_(value) {
@@ -1273,7 +1277,11 @@ function buildBEPFixedOperationalValuesFromMaster_(row, map) {
     'Alat Setrika': pickBEPRowValue_(row, map, ['Alat Setrika']),
     'Kap Setrika': pickBEPRowValue_(row, map, ['Kap Setrika']),
     'Durasi Setrika': pickBEPRowValue_(row, map, ['Durasi Setrika']),
-    'Tipe Mesin Cuci': pickBEPRowValue_(row, map, ['Tipe Mesin Cuci'])
+    'Tipe Mesin Cuci': pickBEPRowValue_(row, map, ['Tipe Mesin Cuci']),
+    'Tipe Mesin Pengering': pickBEPRowValue_(row, map, ['Tipe Mesin Pengering']),
+    'Tipe Setrika': pickBEPRowValue_(row, map, ['Tipe Setrika']),
+    'Pakai Pengering': pickBEPRowValue_(row, map, ['Pakai Pengering']),
+    'Metode Pengeringan': pickBEPRowValue_(row, map, ['Metode Pengeringan'])
   };
 }
 
@@ -1431,6 +1439,158 @@ function parseJsonSafe_(value, fallback) {
   }
 }
 
+function normalizeBepMachineText_(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function buildBepMachineKey_(outletName, jenisMesin, tipeMesin) {
+  return [
+    normalizeBepMachineText_(outletName),
+    normalizeBepMachineText_(jenisMesin),
+    normalizeBepMachineText_(tipeMesin)
+  ].join('|');
+}
+
+function isBepExplicitNoValue_(value) {
+  const text = normalizeBepMachineText_(value);
+  return text === 'tidak' || text === 'false' || text === '0' || text === 'no' || text === 'jemur';
+}
+
+function buildBepMachineRowsFromOperational_(data, savedMachines) {
+  data = data || {};
+  savedMachines = Array.isArray(savedMachines) ? savedMachines : [];
+  const outletName = data.namaOutlet || data['Nama Outlet'] || data.outletName || '';
+  const category = data.kategoriLaundry || data['Kategori Laundry'] || '';
+  const savedByKey = {};
+  const savedByLegacyName = {};
+
+  savedMachines.forEach(function(item) {
+    item = item || {};
+    const jenis = item.jenisMesin || item.name || item.namaMesin || '';
+    const tipe = item.tipeMesin || '';
+    const key = item.machineKey || buildBepMachineKey_(outletName, jenis, tipe);
+    if (key) savedByKey[key] = item;
+    if (!item.machineKey && jenis) savedByLegacyName[normalizeBepMachineText_(jenis)] = item;
+  });
+
+  function pickFinance(row) {
+    row = row || {};
+    return {
+      hargaPerUnit: Math.max(0, parseNumberSafe_(row.hargaPerUnit || row.purchasePrice || row.hargaBeliPerUnit)),
+      residuPerUnit: Math.max(0, parseNumberSafe_(row.residuPerUnit || row.residualValue || row.nilaiResiduPerUnit)),
+      umurEkonomisTahun: Math.max(0, parseNumberSafe_(row.umurEkonomisTahun || row.usefulLifeYears || row.umurManfaatTahun)),
+      rawatPerTahunPerUnit: Math.max(0, parseNumberSafe_(row.rawatPerTahunPerUnit || row.annualMaintenance || row.estimasiPerawatanTahunan))
+    };
+  }
+
+  function makeMachine(jenisMesin, tipeMesin, jumlahUnit, status) {
+    jumlahUnit = Math.max(0, parseNumberSafe_(jumlahUnit));
+    jenisMesin = String(jenisMesin || '').trim();
+    tipeMesin = String(tipeMesin || '').trim();
+    if (!jenisMesin || jumlahUnit <= 0) return null;
+
+    const machineKey = buildBepMachineKey_(outletName, jenisMesin, tipeMesin);
+    const saved = savedByKey[machineKey] || savedByLegacyName[normalizeBepMachineText_(jenisMesin)] || {};
+    const finance = pickFinance(saved);
+    const umurEkonomisBulan = finance.umurEkonomisTahun * 12;
+    const depreciableAmount = Math.max(finance.hargaPerUnit - finance.residuPerUnit, 0);
+    const depresiasiPerBulan = umurEkonomisBulan > 0 ? (depreciableAmount / umurEkonomisBulan) * jumlahUnit : 0;
+    const maintenancePerBulan = (finance.rawatPerTahunPerUnit * jumlahUnit) / 12;
+    const totalBiayaMesinPerBulan = depresiasiPerBulan + maintenancePerBulan;
+
+    return {
+      machineKey: machineKey,
+      jenisMesin: jenisMesin,
+      tipeMesin: tipeMesin,
+      jumlahUnit: jumlahUnit,
+      status: status || 'Aktif',
+      hargaPerUnit: finance.hargaPerUnit,
+      residuPerUnit: finance.residuPerUnit,
+      umurEkonomisTahun: finance.umurEkonomisTahun,
+      umurEkonomisBulan: umurEkonomisBulan,
+      rawatPerTahunPerUnit: finance.rawatPerTahunPerUnit,
+      depresiasiPerBulan: depresiasiPerBulan,
+      maintenancePerBulan: maintenancePerBulan,
+      totalBiayaMesinPerBulan: totalBiayaMesinPerBulan,
+      source: 'Profil Operasional',
+      active: true,
+      name: jenisMesin,
+      units: jumlahUnit,
+      purchasePrice: finance.hargaPerUnit,
+      residualValue: finance.residuPerUnit,
+      usefulLifeYears: finance.umurEkonomisTahun,
+      annualMaintenance: finance.rawatPerTahunPerUnit,
+      depreciationMonthly: depresiasiPerBulan,
+      maintenanceMonthly: maintenancePerBulan,
+      totalMonthly: totalBiayaMesinPerBulan
+    };
+  }
+
+  const rows = [];
+  const cuci = makeMachine('Mesin Cuci', data.tipeMesinCuci || data['Tipe Mesin Cuci'] || '', data.mesinCuci || data['Mesin Cuci'], 'Aktif');
+  if (cuci) rows.push(cuci);
+
+  const pakaiPengering = data.pakaiPengering || data['Pakai Pengering'];
+  const metodePengeringan = data.metodePengeringan || data['Metode Pengeringan'];
+  const dryerEnabled = !isBepExplicitNoValue_(pakaiPengering) && !isBepExplicitNoValue_(metodePengeringan);
+  const pengering = dryerEnabled ? makeMachine('Mesin Pengering / Dryer', data.tipeMesinPengering || data['Tipe Mesin Pengering'] || '', data.mesinPengering || data['Mesin Pengering'], 'Aktif') : null;
+  if (pengering) rows.push(pengering);
+
+  const setrikaUnits = data.alatSetrika || data['Alat Setrika'];
+  const tipeSetrika = data.tipeSetrika || data['Tipe Setrika'] || '';
+  const setrikaKind = normalizeBepMachineText_(tipeSetrika).indexOf('listrik') >= 0 ? 'Setrika Listrik' : 'Setrika Uap Boiler';
+  const setrika = makeMachine(setrikaKind, tipeSetrika || (setrikaKind === 'Setrika Listrik' ? 'Listrik' : 'Uap Boiler'), setrikaUnits, 'Aktif');
+  if (setrika) rows.push(setrika);
+
+  const activeKeys = rows.reduce(function(acc, row) {
+    acc[row.machineKey] = true;
+    return acc;
+  }, {});
+  savedMachines.forEach(function(item) {
+    item = item || {};
+    const jenis = item.jenisMesin || item.name || item.namaMesin || '';
+    const tipe = item.tipeMesin || '';
+    const key = item.machineKey || buildBepMachineKey_(outletName, jenis, tipe);
+    if (!key || activeKeys[key]) return;
+    const finance = pickFinance(item);
+    rows.push({
+      machineKey: key,
+      jenisMesin: jenis || 'Mesin nonaktif',
+      tipeMesin: tipe,
+      jumlahUnit: 0,
+      status: 'Nonaktif / tidak ada di Profil Operasional',
+      hargaPerUnit: finance.hargaPerUnit,
+      residuPerUnit: finance.residuPerUnit,
+      umurEkonomisTahun: finance.umurEkonomisTahun,
+      umurEkonomisBulan: finance.umurEkonomisTahun * 12,
+      rawatPerTahunPerUnit: finance.rawatPerTahunPerUnit,
+      depresiasiPerBulan: 0,
+      maintenancePerBulan: 0,
+      totalBiayaMesinPerBulan: 0,
+      source: 'BEP_Fixed arsip',
+      active: false,
+      name: jenis || 'Mesin nonaktif',
+      units: 0,
+      purchasePrice: finance.hargaPerUnit,
+      residualValue: finance.residuPerUnit,
+      usefulLifeYears: finance.umurEkonomisTahun,
+      annualMaintenance: finance.rawatPerTahunPerUnit,
+      depreciationMonthly: 0,
+      maintenanceMonthly: 0,
+      totalMonthly: 0
+    });
+  });
+
+  return {
+    outletName: outletName,
+    category: category,
+    machines: rows,
+    totalDepresiasiPerBulan: rows.reduce(function(sum, item) { return sum + parseNumberSafe_(item.depresiasiPerBulan); }, 0),
+    totalMaintenancePerBulan: rows.reduce(function(sum, item) { return sum + parseNumberSafe_(item.maintenancePerBulan); }, 0),
+    totalBiayaMesinPerBulan: rows.reduce(function(sum, item) { return sum + parseNumberSafe_(item.totalBiayaMesinPerBulan); }, 0)
+  };
+}
+
 function normalizeBEPFixedPayload_(payload) {
   payload = payload || {};
   const detailGaji = parseJsonSafe_(payload.detailGaji, Array.isArray(payload.detailGaji) ? payload.detailGaji : []);
@@ -1450,15 +1610,32 @@ function normalizeBEPFixedPayload_(payload) {
 
   const cleanMachine = detailMesin.map(item => {
     item = item || {};
-    const units = Math.max(0, parseNumberSafe_(item.units || item.jumlahUnit));
-    const purchase = Math.max(0, parseNumberSafe_(item.purchasePrice || item.hargaBeliPerUnit));
-    const residual = Math.max(0, parseNumberSafe_(item.residualValue || item.nilaiResiduPerUnit));
-    const years = Math.max(0, parseNumberSafe_(item.usefulLifeYears || item.umurManfaatTahun));
-    const annualMaintenance = Math.max(0, parseNumberSafe_(item.annualMaintenance || item.estimasiPerawatanTahunan));
+    const name = String(item.jenisMesin || item.name || item.namaMesin || '').trim();
+    const type = String(item.tipeMesin || '').trim();
+    const units = Math.max(0, parseNumberSafe_(item.jumlahUnit || item.units));
+    const purchase = Math.max(0, parseNumberSafe_(item.hargaPerUnit || item.purchasePrice || item.hargaBeliPerUnit));
+    const residual = Math.max(0, parseNumberSafe_(item.residuPerUnit || item.residualValue || item.nilaiResiduPerUnit));
+    const years = Math.max(0, parseNumberSafe_(item.umurEkonomisTahun || item.usefulLifeYears || item.umurManfaatTahun));
+    const annualMaintenance = Math.max(0, parseNumberSafe_(item.rawatPerTahunPerUnit || item.annualMaintenance || item.estimasiPerawatanTahunan));
     const depreciation = years > 0 ? Math.max(0, ((purchase - residual) * units) / (years * 12)) : 0;
-    const maintenanceMonthly = annualMaintenance / 12;
+    const maintenanceMonthly = (annualMaintenance * units) / 12;
     return {
-      name: String(item.name || item.namaMesin || '').trim(),
+      machineKey: item.machineKey || buildBepMachineKey_(payload.namaOutlet || payload['Nama Outlet'] || '', name, type),
+      jenisMesin: name,
+      tipeMesin: type,
+      jumlahUnit: units,
+      status: item.status || (units > 0 ? 'Aktif' : 'Nonaktif'),
+      source: item.source || 'Profil Operasional',
+      active: item.active !== false && units > 0,
+      hargaPerUnit: purchase,
+      residuPerUnit: residual,
+      umurEkonomisTahun: years,
+      umurEkonomisBulan: years * 12,
+      rawatPerTahunPerUnit: annualMaintenance,
+      depresiasiPerBulan: depreciation,
+      maintenancePerBulan: maintenanceMonthly,
+      totalBiayaMesinPerBulan: depreciation + maintenanceMonthly,
+      name: name,
       units: units,
       purchasePrice: purchase,
       residualValue: residual,
@@ -1523,7 +1700,11 @@ function normalizeBEPFixedPayload_(payload) {
     alatSetrika: payload.alatSetrika || payload['Alat Setrika'] || '',
     kapSetrika: payload.kapSetrika || payload['Kap Setrika'] || '',
     durasiSetrika: payload.durasiSetrika || payload['Durasi Setrika'] || '',
-    tipeMesinCuci: payload.tipeMesinCuci || payload['Tipe Mesin Cuci'] || ''
+    tipeMesinCuci: payload.tipeMesinCuci || payload['Tipe Mesin Cuci'] || '',
+    tipeMesinPengering: payload.tipeMesinPengering || payload['Tipe Mesin Pengering'] || '',
+    tipeSetrika: payload.tipeSetrika || payload.tipeSetrikaUtama || payload['Tipe Setrika'] || '',
+    pakaiPengering: payload.pakaiPengering || payload['Pakai Pengering'] || '',
+    metodePengeringan: payload.metodePengeringan || payload['Metode Pengeringan'] || ''
   };
 }
 
@@ -1554,6 +1735,10 @@ function upsertBEPFixedByOutlet_(payload) {
     const col = map[header] || map[String(header).toLowerCase()];
     if (col) row[col - 1] = value;
   };
+  const setValIfNotBlank = (header, value) => {
+    if (value === null || value === undefined || String(value).trim() === '') return;
+    setVal(header, value);
+  };
 
   setVal('Timestamp', now);
   setVal('Nama Outlet', data.namaOutlet);
@@ -1572,6 +1757,31 @@ function upsertBEPFixedByOutlet_(payload) {
   setVal('Total Lain Lain Bulanan', data.totalLainLainBulanan);
   setVal('Total Fixed Cost Bulanan', data.totalFixedCostBulanan);
   setVal('Catatan', data.catatan);
+  setValIfNotBlank('Kategori Laundry', data.kategoriLaundry);
+  setValIfNotBlank('Jam Buka', data.jamBuka);
+  setValIfNotBlank('Jam Tutup', data.jamTutup);
+  setValIfNotBlank('Tutup Hari Minggu', data.tutupHariMinggu);
+  setValIfNotBlank('Durasi Operasional', data.durasiOperasional);
+  setValIfNotBlank('Target Okupansi Cuci', data.targetOkupansiCuci);
+  setValIfNotBlank('Target Okupansi Kering', data.targetOkupansiKering);
+  setValIfNotBlank('Target Okupansi Setrika', data.targetOkupansiSetrika);
+  setValIfNotBlank('Estimasi Cuci', data.estimasiCuci);
+  setValIfNotBlank('Estimasi Kering', data.estimasiKering);
+  setValIfNotBlank('Estimasi Setrika', data.estimasiSetrika);
+  setValIfNotBlank('Mesin Cuci', data.mesinCuci);
+  setValIfNotBlank('Mesin Pengering', data.mesinPengering);
+  setValIfNotBlank('Kap Cuci', data.kapCuci);
+  setValIfNotBlank('Kap Kering', data.kapKering);
+  setValIfNotBlank('Durasi Cuci', data.durasiCuci);
+  setValIfNotBlank('Durasi Kering', data.durasiKering);
+  setValIfNotBlank('Alat Setrika', data.alatSetrika);
+  setValIfNotBlank('Kap Setrika', data.kapSetrika);
+  setValIfNotBlank('Durasi Setrika', data.durasiSetrika);
+  setValIfNotBlank('Tipe Mesin Cuci', data.tipeMesinCuci);
+  setValIfNotBlank('Tipe Mesin Pengering', data.tipeMesinPengering);
+  setValIfNotBlank('Tipe Setrika', data.tipeSetrika);
+  setValIfNotBlank('Pakai Pengering', data.pakaiPengering);
+  setValIfNotBlank('Metode Pengeringan', data.metodePengeringan);
 
   if (targetRow) sheet.getRange(targetRow, 1, 1, row.length).setValues([row]);
   else sheet.appendRow(row);
@@ -1639,6 +1849,22 @@ function getBEPFixedByOutlet_(outletName) {
     BEP_FIXED_OPERATIONAL_HEADERS_.forEach(function(header) {
       result[header] = get(row, header);
     });
+    result.tipeMesinPengering = get(row, 'Tipe Mesin Pengering');
+    result.tipeSetrika = get(row, 'Tipe Setrika');
+    result.pakaiPengering = get(row, 'Pakai Pengering');
+    result.metodePengeringan = get(row, 'Metode Pengeringan');
+    const machineData = buildBepMachineRowsFromOperational_(result, result.detailMesin);
+    result.bepMachineData = machineData;
+    result.detailMesin = machineData.machines;
+    result.totalDepresiasiMesinBulanan = machineData.totalDepresiasiPerBulan;
+    result.totalCadanganPerawatanMesinBulanan = machineData.totalMaintenancePerBulan;
+    result.totalBiayaMesinBulanan = machineData.totalBiayaMesinPerBulan;
+    result.totalFixedCostBulanan =
+      parseNumberSafe_(result.biayaSewaBulanan) +
+      parseNumberSafe_(result.totalGajiBulanan) +
+      parseNumberSafe_(result.totalBiayaMesinBulanan) +
+      parseNumberSafe_(result.biayaInternetBulanan) +
+      parseNumberSafe_(result.totalLainLainBulanan);
     return result;
   }
   return null;
@@ -1659,6 +1885,41 @@ function getBEPFixedCost(outletName) {
     return { status: 'success', data: data || normalizeBEPFixedPayload_({ namaOutlet: outletName }) };
   } catch (error) {
     return { status: 'error', message: error.toString(), data: normalizeBEPFixedPayload_({ namaOutlet: outletName }) };
+  }
+}
+
+function getBepMachineData(outletName) {
+  try {
+    const data = getBEPFixedByOutlet_(outletName);
+    const machineData = data && data.bepMachineData
+      ? data.bepMachineData
+      : buildBepMachineRowsFromOperational_({ namaOutlet: outletName }, []);
+    return { status: 'success', data: machineData };
+  } catch (error) {
+    return {
+      status: 'error',
+      message: error.toString(),
+      data: buildBepMachineRowsFromOperational_({ namaOutlet: outletName }, [])
+    };
+  }
+}
+
+function saveBepMachineCost(payload) {
+  try {
+    payload = payload || {};
+    const outletName = payload.outletName || payload.namaOutlet || payload['Nama Outlet'];
+    if (!outletName) throw new Error('Nama Outlet wajib diisi.');
+    const existing = getBEPFixedByOutlet_(outletName) || normalizeBEPFixedPayload_({ namaOutlet: outletName });
+    const machines = Array.isArray(payload.machines)
+      ? payload.machines
+      : (Array.isArray(payload.detailMesin) ? payload.detailMesin : []);
+    const data = upsertBEPFixedByOutlet_(Object.assign({}, existing, {
+      namaOutlet: outletName,
+      detailMesin: machines
+    }));
+    return { status: 'success', message: 'Biaya Mesin berhasil disimpan dan masuk ke perhitungan BEP.', data: data };
+  } catch (error) {
+    return { status: 'error', message: error.toString(), data: null };
   }
 }
 
