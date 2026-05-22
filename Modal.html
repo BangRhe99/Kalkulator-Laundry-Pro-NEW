@@ -11685,7 +11685,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     body #view-hpp .hpp-dashboard-summary,
     body #view-hpp .hpp-variable-summary {
       margin-top: 0 !important;
-      margin-bottom: 20px !important;
+      margin-bottom: 16px !important;
     }
 
     body #view-hpp .hpp-grid,
@@ -11751,7 +11751,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     body #view-hpp .hpp-summary-grid,
     body #view-hpp .hpp-dashboard-summary,
     body #view-hpp .hpp-variable-summary {
-      margin-bottom: 20px !important;
+      margin-bottom: 16px !important;
     }
 
     body #view-hpp .hpp-grid,
@@ -11781,6 +11781,20 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     body #view-hpp #actionAreaHPP {
       margin-top: 26px !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard,
+    body #view-hpp #hpp-dashboard-view > .bg-white,
+    body #view-hpp #hpp-dashboard-view > .bg-white\/95 {
+      margin-bottom: 16px !important;
+    }
+
+    body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard + .grid,
+    body #view-hpp #hpp-dashboard-view > .bg-white + .grid,
+    body #view-hpp #hpp-dashboard-view > .bg-white\/95 + .grid {
+      margin-top: 0 !important;
     }
   }
 </style>
