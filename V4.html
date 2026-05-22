@@ -51,8 +51,8 @@
         linear-gradient(135deg, rgba(255,255,255,.98), rgba(248,251,255,.94));
       box-shadow: var(--bep-shadow-blue, 0 18px 45px rgba(37,99,235,.12));
     }
-    #view-bep .bep-hero h2 { font-size: clamp(1.5rem, 2.5vw, 2.05rem); line-height: 1.08; letter-spacing: 0; color:var(--bep-ink, #0F172A); }
-    #view-bep .bep-hero p { max-width: 46rem; font-size: .92rem; line-height: 1.58; color:var(--bep-muted, #64748B); }
+    #view-bep .bep-hero h2 { font-size: clamp(26px, 2vw, 34px); line-height: 1.1; letter-spacing: 0; color:var(--bep-ink, #0F172A); }
+    #view-bep .bep-hero p { max-width: 46rem; font-size: 14px; font-weight: 600; line-height: 1.5; color:var(--bep-muted, #64748B); }
     #view-bep .bep-premium-btn {
       display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.65rem;
       padding: .72rem 1rem; border-radius: .95rem; border: 1px solid var(--bep-border-strong, #C7D7F2);
@@ -86,10 +86,7 @@
     #view-bep .bep-kpi-label { display:block; color:var(--bep-muted, #64748B); font-size:.62rem; font-weight:950; text-transform:uppercase; letter-spacing:.13em; }
     #view-bep .bep-kpi-value { display:block; color:var(--bep-ink, #0F172A); font-size:clamp(1.15rem,1.8vw,1.58rem); font-weight:950; margin-top:.5rem; font-variant-numeric:tabular-nums; line-height:1.08; }
     #view-bep .bep-kpi-note { display:block; color:var(--bep-muted, #64748B); font-size:.7rem; font-weight:750; margin-top:.45rem; line-height:1.35; }
-    #view-bep .bep-section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-top:1rem; }
-    #view-bep .bep-section-head h3 { font-size:1rem; font-weight:950; color:var(--bep-ink, #0F172A); letter-spacing:0; }
-    #view-bep .bep-section-head p { font-size:.78rem; color:var(--bep-muted, #64748B); font-weight:700; line-height:1.45; }
-    #view-bep .bep-fixed-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: .85rem; margin-top:.9rem; }
+    #view-bep .bep-fixed-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top:1.35rem; align-items:stretch; }
     #view-bep .bep-fixed-card {
       --bep-card-accent: var(--bep-primary, #2563EB);
       --bep-card-accent-soft: var(--bep-primary-light, #EFF6FF);
@@ -97,14 +94,13 @@
       --bep-card-icon-border: #DBEAFE;
       position: relative;
       overflow: hidden;
-      grid-column: span 4 / span 4;
-      min-height: 10.3rem;
+      min-height: 10.35rem;
       background:
         radial-gradient(circle at 100% 0%, var(--bep-card-glow), transparent 9rem),
         linear-gradient(145deg, rgba(255,255,255,.99), rgba(248,251,255,.9));
       border: 1px solid var(--bep-border);
-      border-radius: 1.08rem;
-      padding: 1rem;
+      border-radius: 1.12rem;
+      padding: 1.15rem 1.2rem;
       box-shadow: 0 14px 34px rgba(15,23,42,0.045);
       display:flex; flex-direction:column; justify-content:space-between; gap:.8rem;
       transform: translate3d(0,0,0); transition: transform .22s var(--bep-ease), box-shadow .22s var(--bep-ease), border-color .22s var(--bep-ease), background-color .22s var(--bep-ease), color .22s var(--bep-ease);
@@ -131,10 +127,10 @@
     #view-bep .bep-card-top { display:flex; align-items:flex-start; gap:.75rem; }
     #view-bep .bep-card-icon { width:2.35rem; height:2.35rem; border-radius:.86rem; display:flex; align-items:center; justify-content:center; background:var(--bep-card-accent-soft, #EFF6FF); color:var(--bep-card-accent, #2563EB); border:1px solid var(--bep-card-icon-border, #DBEAFE); flex:0 0 auto; transition: background-color .22s var(--bep-ease), border-color .22s var(--bep-ease), color .22s var(--bep-ease), box-shadow .22s var(--bep-ease); }
     #view-bep .bep-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: .8rem; }
-    #view-bep .bep-card-title { font-size: .84rem; font-weight: 950; color: var(--bep-ink); letter-spacing: 0; line-height: 1.25; }
+    #view-bep .bep-card-title { font-size: 14px; font-weight: 800; color: var(--bep-ink); letter-spacing: 0; line-height: 1.25; }
     #view-bep .bep-card-subtitle { font-size: .7rem; color: var(--bep-muted); font-weight: 750; line-height: 1.35; margin-top: .18rem; }
-    #view-bep .bep-card-total { font-size: 1.15rem; font-weight: 950; color: var(--bep-primary, #2563EB); white-space: nowrap; font-variant-numeric: tabular-nums; line-height:1.05; }
-    #view-bep .bep-status { font-size:.68rem; color:var(--bep-muted, #64748B); font-weight:800; line-height:1.35; min-height:1.9rem; }
+    #view-bep .bep-card-total { font-size: 20px; font-weight: 800; color: var(--bep-primary, #2563EB); white-space: nowrap; font-variant-numeric: tabular-nums; line-height:1.05; }
+    #view-bep .bep-status { font-size:11px; color:var(--bep-muted, #64748B); font-weight:600; line-height:1.35; min-height:1.9rem; }
     #view-bep .bep-card-action {
       align-self:flex-start; display:inline-flex; align-items:center; gap:.4rem; border:1px solid var(--bep-border-strong, #C7D7F2); background:#fff; color:var(--bep-primary, #2563EB);
       border-radius:.8rem; min-height:2.2rem; padding:.52rem .72rem; font-size:.68rem; font-weight:950; text-transform:uppercase; letter-spacing:.08em;
@@ -185,7 +181,7 @@
     #view-bep .bep-summary-item strong { display:block; color:var(--bep-ink, #0F172A); font-size:.86rem; font-weight:900; margin-top:.25rem; font-variant-numeric:tabular-nums; }
     @media (max-width: 1023px) {
       #view-bep .bep-kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
-      #view-bep .bep-fixed-card { grid-column: span 6 / span 6; }
+      #view-bep .bep-fixed-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
     @media (max-width: 900px) {
       #view-bep .bep-row, #view-bep .bep-machine-row, #view-bep .bep-other-row { grid-template-columns: 1fr; padding:.85rem; border:1px solid var(--bep-border, #DDE7F6); border-radius:1rem; background:var(--bep-card-soft, #F8FBFF); }
@@ -199,7 +195,8 @@
       #view-bep .bep-kpi-card::after { opacity:.45; }
       #view-bep .bep-save-btn { width:100%; }
       #view-bep .bep-kpi-grid { grid-template-columns: 1fr; }
-      #view-bep .bep-fixed-card { grid-column: span 12 / span 12; padding: 1rem; border-radius: 1rem; min-height:9.5rem; }
+      #view-bep .bep-fixed-grid { grid-template-columns: 1fr; gap:.95rem; margin-top:1.25rem; }
+      #view-bep .bep-fixed-card { padding: 1rem; border-radius: 1rem; min-height:9.5rem; }
       #view-bep .bep-card-head { flex-direction: column; }
       #view-bep .bep-summary-strip { grid-template-columns: 1fr; }
       #view-bep .bep-save-strip { flex-direction:column; align-items:stretch; }
@@ -211,8 +208,8 @@
       <div class="bep-hero">
         <div>
           <div>
-            <h2 class="font-black text-slate-900">Analisa Titik Impas (BEP)</h2>
-            <p class="text-slate-500 mt-1.5 font-semibold">Hitung omzet, volume cucian, dan transaksi minimal agar outlet tidak rugi.</p>
+            <h2 class="font-black text-slate-900">Komponen Biaya Tetap</h2>
+            <p class="text-slate-500 mt-1.5">Atur pengeluaran tetap bulanan yang digunakan untuk menghitung target titik impas.</p>
           </div>
         </div>
       </div>
@@ -224,16 +221,7 @@
         <div class="bep-kpi-card"><span class="bep-kpi-label">Margin Kontribusi</span><strong id="bepKpiMargin" class="bep-kpi-value">Rp 0</strong><span id="bepKpiMarginNote" class="bep-kpi-note">Harga jual - biaya variabel</span></div>
       </div>
 
-      <div class="bep-section-head">
-        <div>
-          <h3>Komponen Biaya Tetap</h3>
-          <p>Atur pengeluaran tetap bulanan yang digunakan untuk menghitung target titik impas.</p>
-        </div>
-        <div class="hidden md:block text-right">
-          <span class="text-[10px] uppercase tracking-[0.16em] font-black text-slate-400">Total Biaya Tetap</span>
-          <div id="bepFixedGrandTotal" class="text-xl font-black text-blue-700 tabular-nums">Rp 0</div>
-        </div>
-      </div>
+      <div id="bepFixedGrandTotal" class="hidden">Rp 0</div>
 
       <div class="bep-fixed-grid">
         <div class="bep-fixed-card">
