@@ -225,6 +225,36 @@
       overflow-wrap: anywhere;
     }
 
+    #sidebar #nav-bep {
+      align-items: center;
+      min-width: 0;
+    }
+
+    #sidebar #nav-bep i {
+      flex: 0 0 auto;
+    }
+
+    #sidebar #nav-bep span {
+      display: block;
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      overflow-wrap: normal;
+      line-height: 1.25;
+    }
+
+    body.bep-active #sidebar #nav-bep {
+      gap: 0.68rem !important;
+      font-size: 0.79rem;
+    }
+
+    body.bep-active #sidebar #nav-bep span {
+      white-space: nowrap;
+      overflow-wrap: normal;
+    }
+
     body.bep-active #sidebar .custom-scroll {
       padding-top: 1rem !important;
       padding-bottom: 1rem !important;
