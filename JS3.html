@@ -1178,23 +1178,77 @@
     return items.reduce(function(best, item) { return item.value > best.value ? item : best; }, { name: '', value: 0 });
   }
 
+  function isBEPFixedFormOpen() {
+    var panel = byId('bepFixedDetailPanel');
+    return !!(panel && panel.classList.contains('is-open'));
+  }
+
+  function setBEPFixedSaveLoading(isLoading) {
+    var btn = document.querySelector('#bepFixedDetailPanel .bep-save-btn');
+    if (!btn) return function() {};
+    if (!btn.getAttribute('data-bep-original-html')) btn.setAttribute('data-bep-original-html', btn.innerHTML);
+    if (isLoading) {
+      btn.classList.add('is-saving');
+      btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin"></i> Menyimpan...';
+    } else {
+      btn.classList.remove('is-saving');
+      btn.innerHTML = btn.getAttribute('data-bep-original-html') || '<i class="ph ph-cloud-arrow-up"></i> Simpan Fixed Cost';
+    }
+  }
+
+  function showBEPFixedToast(message, type) {
+    var stack = document.querySelector('.bep-toast-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.className = 'bep-toast-stack';
+      document.body.appendChild(stack);
+    }
+    var toast = document.createElement('div');
+    var isError = type === 'error';
+    toast.className = 'bep-premium-toast' + (isError ? ' is-error' : '');
+    toast.innerHTML = '<i class="ph ' + (isError ? 'ph-warning-circle' : 'ph-check') + '"></i><span>' + escapeHtml(message || (isError ? 'Gagal disimpan' : 'Berhasil disimpan')) + '</span>';
+    stack.appendChild(toast);
+    window.setTimeout(function() {
+      toast.classList.add('is-leaving');
+      window.setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 220);
+    }, isError ? 3200 : 2400);
+  }
+
   window.zettOpenBEPFixedDetail = function(type) {
     var panel = byId('bepFixedDetailPanel');
     if (!panel) return;
+    var outlet = selectedOutlet();
+    if (!outlet) {
+      emptyState('');
+      renderAll();
+      setOutletState('', 'idle');
+      showBEPFixedToast('Pilih cabang terlebih dahulu di pojok kanan atas.', 'error');
+      return;
+    }
     var target = type || 'summary';
+    var view = byId('view-bep');
     document.querySelectorAll('#bepFixedDetailPanel .bep-detail-section').forEach(function(section) {
       section.classList.toggle('is-active', section.getAttribute('data-bep-detail') === target);
     });
-    panel.classList.add('is-open');
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (view) view.classList.add('bep-fixed-form-mode');
+    window.requestAnimationFrame(function() {
+      panel.classList.add('is-open');
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   window.zettCloseBEPFixedDetail = function() {
     var panel = byId('bepFixedDetailPanel');
+    var view = byId('view-bep');
     if (!panel) return;
     panel.classList.remove('is-open');
+    if (view) view.classList.remove('bep-fixed-form-mode');
     document.querySelectorAll('#bepFixedDetailPanel .bep-detail-section').forEach(function(section) {
       section.classList.remove('is-active');
+    });
+    window.requestAnimationFrame(function() {
+      var shell = document.querySelector('#view-bep .bep-shell');
+      if (shell) shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   };
 
@@ -1524,6 +1578,7 @@
   window.zettLoadBEPFixedCost = function(outletName) {
     var outlet = String(outletName || selectedOutlet()).trim();
     if (!outlet) {
+      if (isBEPFixedFormOpen()) window.zettCloseBEPFixedDetail();
       emptyState('');
       renderAll();
       setOutletState('', 'idle');
@@ -1576,12 +1631,29 @@
   window.prosesSimpanBEP = async function() {
     var outlet = selectedOutlet();
     if (!outlet) {
-      if (typeof showOmniToast === 'function') showOmniToast('Pilih cabang terlebih dahulu di pojok kanan atas.', 'error');
+      showBEPFixedToast('Pilih cabang terlebih dahulu di pojok kanan atas.', 'error');
       return;
     }
     collectFromDom();
     syncLegacyInputs();
-    if (window.google && google.script && google.script.run) {
+    if (isBEPFixedFormOpen()) {
+      setBEPFixedSaveLoading(true);
+      try {
+        if (!window.google || !google.script || !google.script.run || typeof runServer !== 'function') throw new Error('Koneksi Google Apps Script belum siap.');
+        var res = await runServer('saveBEPFixedCost', buildPayload());
+        if (res && res.status === 'error') throw new Error(res.message || 'Gagal menyimpan data.');
+        renderAll();
+        scheduleCalc();
+        showBEPFixedToast('Berhasil disimpan', 'success');
+      } catch (error) {
+        console.error('saveBEPFixedCost gagal:', error);
+        showBEPFixedToast(error && error.message ? error.message : 'Gagal disimpan', 'error');
+      } finally {
+        setBEPFixedSaveLoading(false);
+      }
+      return;
+    }
+    if (window.google && google.script && google.script.run && typeof runServer === 'function') {
       try { await runServer('saveBEPFixedCost', buildPayload()); } catch (error) { console.error('saveBEPFixedCost gagal:', error); }
     }
     if (typeof originalSave === 'function') return originalSave.apply(this, arguments);
