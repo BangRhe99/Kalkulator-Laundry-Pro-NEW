@@ -84,6 +84,31 @@
     #view-bep .bep-kpi-card:nth-child(3) { --bep-kpi-accent: var(--bep-sky, #38BDF8); --bep-kpi-soft: var(--bep-sky-soft, #E0F2FE); --bep-kpi-glow: rgba(56,189,248,.13); --bep-kpi-line-end:#BAE6FD; }
     #view-bep .bep-kpi-card:nth-child(4) { --bep-kpi-accent: var(--bep-violet, #7C3AED); --bep-kpi-soft: var(--bep-violet-soft, #F3E8FF); --bep-kpi-glow: rgba(124,58,237,.10); --bep-kpi-line-end:#DDD6FE; }
     #view-bep .bep-kpi-card:hover { transform: translate3d(0,-2px,0); border-color: rgba(147,197,253,.85); box-shadow: 0 24px 52px rgba(15,23,42,.085), 0 12px 28px var(--bep-kpi-glow); }
+    #view-bep .bep-kpi-card,
+    #view-bep .bep-fixed-card,
+    #view-bep .bep-detail-panel {
+      will-change: opacity, transform;
+    }
+    #view-bep.bep-is-loading .bep-kpi-card,
+    #view-bep.bep-is-loading .bep-fixed-card,
+    #view-bep.bep-is-loading .bep-detail-panel {
+      opacity:.64;
+      transform:translate3d(0,4px,0);
+      pointer-events:none;
+      transition:opacity .18s var(--bep-ease), transform .18s var(--bep-ease);
+    }
+    #view-bep.bep-is-loading.bep-soft-refresh .bep-kpi-card,
+    #view-bep.bep-is-loading.bep-soft-refresh .bep-fixed-card,
+    #view-bep.bep-is-loading.bep-soft-refresh .bep-detail-panel {
+      opacity:.82;
+      pointer-events:auto;
+    }
+    #view-bep.bep-did-update .bep-kpi-card,
+    #view-bep.bep-did-update .bep-fixed-card,
+    #view-bep.bep-did-update .bep-detail-panel {
+      animation:bepDataSwapIn .18s var(--bep-ease) both;
+    }
+    @keyframes bepDataSwapIn { from { opacity:.7; transform:translate3d(0,4px,0); } to { opacity:1; transform:translate3d(0,0,0); } }
     #view-bep .bep-kpi-label { display:block; padding-right:1rem; color:var(--bep-muted, #64748B); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; line-height:1.2; }
     #view-bep .bep-kpi-body { display:flex; align-items:center; gap:1.1rem; min-width:0; }
     #view-bep .bep-kpi-icon { width:2.8rem; height:2.8rem; border-radius:999px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; background:linear-gradient(135deg, #FFFFFF, var(--bep-kpi-soft)); color:var(--bep-kpi-accent); border:1px solid rgba(255,255,255,.84); box-shadow:0 10px 22px var(--bep-kpi-glow), inset 0 1px 0 rgba(255,255,255,.95); }

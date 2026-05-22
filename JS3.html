@@ -1120,6 +1120,11 @@
     others: [],
     totals: {}
   };
+  var BEP_CACHE_TTL_MS = 90000;
+  var bepActiveRequestId = 0;
+  var bepLoadTimer = 0;
+  var bepActiveOutletKey = '';
+  window.bepOutletCache = window.bepOutletCache || {};
 
   function byId(id) { return document.getElementById(id); }
   function norm(value) { return String(value || '').trim().toLowerCase().replace(/\s+/g, ' '); }
@@ -1152,6 +1157,39 @@
   function compactCount(value, suffix) {
     var n = Math.round(finite(value));
     return n + ' ' + suffix;
+  }
+  function bepCacheKey(outlet) { return norm(outlet); }
+  function getCachedBEPOutlet(outlet) {
+    var key = bepCacheKey(outlet);
+    var cached = key ? window.bepOutletCache[key] : null;
+    return cached && cached.data ? cached : null;
+  }
+  function cacheBEPOutletData(outlet, data) {
+    var key = bepCacheKey(outlet || (data && (data.namaOutlet || data['Nama Outlet'])));
+    if (!key || !data) return;
+    window.bepOutletCache[key] = { data: data, updatedAt: Date.now() };
+  }
+  function invalidateBEPCache(outlet) {
+    var key = bepCacheKey(outlet || selectedOutlet());
+    if (key && window.bepOutletCache[key]) delete window.bepOutletCache[key];
+  }
+  window.invalidateBEPCache = invalidateBEPCache;
+  function setBEPLoadingState(isLoading, soft) {
+    var view = byId('view-bep');
+    if (!view) return;
+    view.classList.toggle('bep-is-loading', !!isLoading);
+    view.classList.toggle('bep-soft-refresh', !!isLoading && !!soft);
+  }
+  function pulseBEPDataSwap() {
+    var view = byId('view-bep');
+    if (!view) return;
+    view.classList.remove('bep-did-update');
+    void view.offsetWidth;
+    view.classList.add('bep-did-update');
+    window.clearTimeout(window.__bepDataSwapTimer);
+    window.__bepDataSwapTimer = window.setTimeout(function() {
+      view.classList.remove('bep-did-update');
+    }, 240);
   }
   function setOutletState(text, tone) {
     var el = byId('bepOutletState');
@@ -1575,30 +1613,79 @@
     scheduleCalc();
   }
 
-  window.zettLoadBEPFixedCost = function(outletName) {
+  function renderBEPDashboardFast(data, outlet) {
+    applyServerData(data, outlet);
+    setBEPLoadingState(false, false);
+    pulseBEPDataSwap();
+  }
+
+  function loadBEPDashboardByOutlet(outletName, options) {
     var outlet = String(outletName || selectedOutlet()).trim();
+    var key = bepCacheKey(outlet);
+    var config = options || {};
+    var requestId = ++bepActiveRequestId;
+    bepActiveOutletKey = key;
+
     if (!outlet) {
       if (isBEPFixedFormOpen()) window.zettCloseBEPFixedDetail();
       emptyState('');
       renderAll();
       setOutletState('', 'idle');
       scheduleCalc();
+      setBEPLoadingState(false, false);
       return;
     }
-    emptyState(outlet);
-    renderAll();
-    setOutletState('Memuat data BEP: ' + outlet, 'loading');
-    if (!window.google || !google.script || !google.script.run) return;
+
+    if (isBEPFixedFormOpen() && norm(state.outletName) !== key) window.zettCloseBEPFixedDetail();
+
+    var cached = getCachedBEPOutlet(outlet);
+    var cacheFresh = cached && (Date.now() - cached.updatedAt < BEP_CACHE_TTL_MS);
+    if (cached && !config.force) {
+      renderBEPDashboardFast(cached.data, outlet);
+      if (cacheFresh) return;
+      setBEPLoadingState(true, true);
+      setOutletState('Memuat data BEP: ' + outlet, 'loading');
+    } else {
+      emptyState(outlet);
+      renderAll();
+      setBEPLoadingState(true, false);
+      setOutletState('Memuat data BEP: ' + outlet, 'loading');
+    }
+
+    if (!window.google || !google.script || !google.script.run) {
+      setBEPLoadingState(false, false);
+      return;
+    }
     google.script.run
       .withSuccessHandler(function(res) {
-        if (norm(selectedOutlet()) !== norm(outlet)) return;
-        applyServerData(res && res.data ? res.data : null, outlet);
+        if (requestId !== bepActiveRequestId || bepActiveOutletKey !== key || norm(selectedOutlet()) !== key) return;
+        var data = res && res.data ? res.data : null;
+        var responseKey = data ? bepCacheKey(data.namaOutlet || data['Nama Outlet'] || outlet) : key;
+        if (responseKey && responseKey !== key) return;
+        if (data) cacheBEPOutletData(outlet, data);
+        renderBEPDashboardFast(data, outlet);
       })
       .withFailureHandler(function(error) {
         console.error('Gagal load BEP Fixed:', error);
-        if (norm(selectedOutlet()) === norm(outlet)) applyServerData(null, outlet);
+        if (requestId !== bepActiveRequestId || bepActiveOutletKey !== key || norm(selectedOutlet()) !== key) return;
+        setBEPLoadingState(false, false);
+        if (!cached) renderBEPDashboardFast(null, outlet);
+        showBEPFixedToast('Gagal memuat data cabang', 'error');
       })
       .getBEPFixedCost(outlet);
+  }
+
+  window.zettLoadBEPFixedCost = function(outletName, options) {
+    var outlet = String(outletName || selectedOutlet()).trim();
+    window.clearTimeout(bepLoadTimer);
+    if (!outlet) {
+      loadBEPDashboardByOutlet('', { force: true });
+      return;
+    }
+    var delay = options && options.immediate ? 0 : 90;
+    bepLoadTimer = window.setTimeout(function() {
+      loadBEPDashboardByOutlet(outlet, options || {});
+    }, delay);
   };
 
   function buildPayload() {
@@ -1642,6 +1729,7 @@
         if (!window.google || !google.script || !google.script.run || typeof runServer !== 'function') throw new Error('Koneksi Google Apps Script belum siap.');
         var res = await runServer('saveBEPFixedCost', buildPayload());
         if (res && res.status === 'error') throw new Error(res.message || 'Gagal menyimpan data.');
+        cacheBEPOutletData(outlet, res && res.data ? res.data : buildPayload());
         renderAll();
         scheduleCalc();
         showBEPFixedToast('Berhasil disimpan', 'success');
@@ -1654,7 +1742,10 @@
       return;
     }
     if (window.google && google.script && google.script.run && typeof runServer === 'function') {
-      try { await runServer('saveBEPFixedCost', buildPayload()); } catch (error) { console.error('saveBEPFixedCost gagal:', error); }
+      try {
+        var fixedRes = await runServer('saveBEPFixedCost', buildPayload());
+        if (fixedRes && fixedRes.status !== 'error') cacheBEPOutletData(outlet, fixedRes.data || buildPayload());
+      } catch (error) { console.error('saveBEPFixedCost gagal:', error); }
     }
     if (typeof originalSave === 'function') return originalSave.apply(this, arguments);
   };
@@ -1669,14 +1760,14 @@
   window.switchMainTab = function(tabName) {
     document.body.classList.toggle('bep-active', tabName === 'bep');
     var result = typeof originalSwitch === 'function' ? originalSwitch.apply(this, arguments) : undefined;
-    if (tabName === 'bep') window.zettLoadBEPFixedCost(selectedOutlet());
+    if (tabName === 'bep') window.zettLoadBEPFixedCost(selectedOutlet(), { immediate: true });
     return result;
   };
 
   function init() {
     emptyState(selectedOutlet());
     renderAll();
-    if (selectedOutlet()) window.zettLoadBEPFixedCost(selectedOutlet());
+    if (selectedOutlet()) window.zettLoadBEPFixedCost(selectedOutlet(), { immediate: true });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
