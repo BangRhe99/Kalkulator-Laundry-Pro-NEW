@@ -984,8 +984,8 @@
         if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(state.bepRupiah);
         if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(state.bepKg) ? state.bepKg.toFixed(1) : '0.0') + ' Kg';
         if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(Math.max(0, marginKontribusi));
-        if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = state.bepRupiah > 0 ? 'Omzet minimal agar tidak rugi' : 'Belum dihitung';
-        if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = state.bepKg > 0 ? 'Target cucian per bulan' : 'Pilih acuan harga';
+        if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
+        if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
         if(document.getElementById('bepKpiMarginNote')) document.getElementById('bepKpiMarginNote').innerText = marginKontribusi > 0 ? 'Bisnis punya kontribusi positif' : 'Harga perlu dinaikkan';
         
         updateBEPChart(GRAND_TOTAL_BIAYA_TETAP, biayaVariabel, refPrice, state.bepKg, GRAND_TOTAL_KAPASITAS_BULAN);
@@ -1156,7 +1156,7 @@
   function setOutletState(text, tone) {
     var el = byId('bepOutletState');
     if (!el) return;
-    el.textContent = text || 'Pilih cabang atau lengkapi data';
+    el.textContent = text || '';
     el.classList.remove('text-slate-500', 'bg-slate-100', 'border-slate-200', 'text-blue-700', 'bg-blue-50', 'border-blue-200', 'text-emerald-700', 'bg-emerald-50', 'border-emerald-200');
     if (tone === 'loading') el.classList.add('text-blue-700', 'bg-blue-50', 'border-blue-200');
     else if (tone === 'ready') el.classList.add('text-emerald-700', 'bg-emerald-50', 'border-emerald-200');
@@ -1411,11 +1411,11 @@
     setText('displaySewaHari', money(state.monthlyRent / Math.max(hari, 1)));
     setText('displayTotalGaji', money(totals.salaryTotal));
     setText('bepRentCardTotal', money(state.monthlyRent) + ' / bulan');
-    setText('bepRentCardStatus', state.annualRent > 0 ? ('Dari sewa tahunan ' + money(state.annualRent)) : (state.rentStatus === 'Milik Sendiri' ? 'Outlet milik sendiri' : 'Boleh dikosongkan atau diisi 0'));
+    setText('bepRentCardStatus', state.annualRent > 0 ? ('Dari sewa tahunan ' + money(state.annualRent)) : 'Boleh dikosongkan atau diisi 0');
     setText('bepSalaryTotal', money(totals.salaryTotal) + ' / bulan');
     setText('bepSalaryCardStatus', totalEmployees > 0 ? (compactCount(totalEmployees, 'karyawan') + ' aktif, ' + compactCount(salaryActive.length, 'kelompok')) : '0 karyawan aktif');
     setText('bepMachineTotal', money(totals.machineTotal) + ' / bulan');
-    setText('bepMachineCardStatus', machineActive.length ? (compactCount(machineActive.length, 'aset') + ', ' + money(totals.depreciationTotal) + ' depresiasi, ' + money(totals.maintenanceTotal) + ' perawatan') : 'Depresiasi + cadangan perawatan');
+    setText('bepMachineCardStatus', 'Untuk servis, sparepart, dan penggantian aset');
     setText('bepInternetTotal', money(totals.internetTotal) + ' / bulan');
     setText('bepInternetCardStatus', state.internetProvider ? ('Provider: ' + state.internetProvider) : 'Provider belum diisi');
     setText('bepOtherTotal', money(totals.otherTotal) + ' / bulan');
@@ -1423,14 +1423,14 @@
     setText('bepFixedGrandTotal', money(totals.fixedTotal));
     setText('bepFixedGrandTotalCard', money(totals.fixedTotal));
     setText('bepKpiFixedTotal', money(totals.fixedTotal));
-    setText('bepKpiFixedNote', totals.fixedTotal > 0 ? 'Biaya tetap siap dihitung' : 'Belum dihitung');
-    setText('bepFixedInsight', totals.fixedTotal > 0 ? ('Komponen terbesar: ' + biggest.name + ' ' + pct + '% dari total fixed cost.') : 'Lengkapi data biaya tetap untuk menghitung target BEP.');
+    setText('bepKpiFixedNote', 'Total Biaya Tetap Per Bulan');
+    setText('bepFixedInsight', totals.fixedTotal > 0 ? 'Komponen terbesar: Gaji Tim' : 'Lengkapi komponen biaya tetap untuk menghitung BEP.');
     setText('bepSummaryRent', money(state.monthlyRent));
     setText('bepSummarySalary', money(totals.salaryTotal));
     setText('bepSummaryMachine', money(totals.machineTotal));
     setText('bepSummaryInternet', money(totals.internetTotal));
     setText('bepSummaryOther', money(totals.otherTotal));
-    if (!selected) setOutletState('Pilih cabang atau lengkapi data', 'idle');
+    if (!selected) setOutletState('', 'idle');
   }
 
   function scheduleCalc() {
@@ -1517,7 +1517,7 @@
       state.others = Array.isArray(data.detailLainLain) && data.detailLainLain.length ? data.detailLainLain : state.others;
     }
     renderAll();
-    setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : 'Pilih cabang atau lengkapi data', outlet ? 'ready' : 'idle');
+    setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : '', outlet ? 'ready' : 'idle');
     scheduleCalc();
   }
 
@@ -1526,7 +1526,7 @@
     if (!outlet) {
       emptyState('');
       renderAll();
-      setOutletState('Pilih cabang atau lengkapi data', 'idle');
+      setOutletState('', 'idle');
       scheduleCalc();
       return;
     }
