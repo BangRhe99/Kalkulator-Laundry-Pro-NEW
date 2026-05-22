@@ -11660,13 +11660,17 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       min-height: 0 !important;
       height: auto !important;
       max-height: none !important;
+      width: 100% !important;
+      max-width: 1400px !important;
       display: block !important;
       align-content: start !important;
       justify-content: start !important;
       place-content: start !important;
       margin-top: 0 !important;
       margin-bottom: 0 !important;
-      padding-top: 18px !important;
+      padding-top: 2px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
       padding-bottom: 0 !important;
       flex: 0 0 auto !important;
       flex-grow: 0 !important;
@@ -11741,7 +11745,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
   @media (min-width: 1440px) {
     body #view-hpp #hpp-dashboard-view {
-      padding-top: 18px !important;
+      padding-top: 2px !important;
     }
 
     body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard,
@@ -11785,6 +11789,14 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   }
 
   @media (max-width: 767px) {
+    body #view-hpp #hpp-dashboard-view {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding-top: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+
     body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard,
     body #view-hpp #hpp-dashboard-view > .bg-white,
     body #view-hpp #hpp-dashboard-view > .bg-white\/95 {
