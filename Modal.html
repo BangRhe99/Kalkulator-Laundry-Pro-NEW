@@ -11698,9 +11698,9 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
       grid-template-rows: auto auto !important;
       grid-auto-rows: auto !important;
-      gap: 22px 20px !important;
-      row-gap: 22px !important;
-      column-gap: 20px !important;
+      gap: 16px !important;
+      row-gap: 16px !important;
+      column-gap: 16px !important;
       align-items: stretch !important;
       align-content: start !important;
       justify-content: center !important;
@@ -11761,7 +11761,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     body #view-hpp .hpp-grid,
     body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
       grid-auto-rows: auto !important;
-      gap: 22px 20px !important;
+      gap: 16px !important;
       margin-bottom: 0 !important;
     }
   }
@@ -11770,7 +11770,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     body #view-hpp .hpp-grid,
     body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
       grid-auto-rows: auto !important;
-      gap: 20px 20px !important;
+      gap: 16px !important;
       margin-bottom: 0 !important;
     }
   }
@@ -11779,7 +11779,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     body #view-hpp .hpp-grid,
     body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
       grid-auto-rows: auto !important;
-      gap: 20px 18px !important;
+      gap: 16px !important;
       margin-bottom: 0 !important;
     }
 
@@ -11789,6 +11789,11 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   }
 
   @media (max-width: 767px) {
+    body #view-hpp {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+    }
+
     body #view-hpp #hpp-dashboard-view {
       width: 100% !important;
       max-width: 100% !important;
@@ -11807,6 +11812,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     body #view-hpp #hpp-dashboard-view > .bg-white + .grid,
     body #view-hpp #hpp-dashboard-view > .bg-white\/95 + .grid {
       margin-top: 0 !important;
+      gap: 16px !important;
     }
   }
 </style>
