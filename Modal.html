@@ -11815,6 +11815,22 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       gap: 16px !important;
     }
   }
+
+  body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard {
+    margin-bottom: 14px !important;
+  }
+
+  body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard + .bg-white,
+  body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard + .bg-white\/95,
+  body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard + .grid {
+    margin-top: 0 !important;
+  }
+
+  @media (max-width: 767px) {
+    body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard {
+      margin-bottom: 16px !important;
+    }
+  }
 </style>
 
 <style id="hpp-form-mode-visibility-lock-20260521">
