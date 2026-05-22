@@ -932,7 +932,8 @@
         if(document.getElementById('hiddenTotalBiayaTetap')) document.getElementById('hiddenTotalBiayaTetap').value = GRAND_TOTAL_BIAYA_TETAP;
         if(document.getElementById('hiddenTotalKapasitasBulan')) document.getElementById('hiddenTotalKapasitasBulan').value = GRAND_TOTAL_KAPASITAS_BULAN;
 
-        const biayaVariabel = parseFloat(document.getElementById('inputBiayaVariabel') ? document.getElementById('inputBiayaVariabel').value : 0) || 0;
+        const biayaVariabelRaw = document.getElementById('inputBiayaVariabel') ? String(document.getElementById('inputBiayaVariabel').value || '0').replace(/\./g, '').replace(',', '.') : '0';
+        const biayaVariabel = parseFloat(biayaVariabelRaw) || 0;
 
         if (GRAND_TOTAL_KAPASITAS_BULAN > 0) {
           state.hpp = (GRAND_TOTAL_BIAYA_TETAP / GRAND_TOTAL_KAPASITAS_BULAN) + biayaVariabel;
@@ -968,7 +969,7 @@
           state.bepKg = 0;
           state.bepRupiah = 0;
           if(statusText) {
-            statusText.innerText = "⚠️ Harga Acuan BEP Anda terlalu murah (Lebih rendah dari Biaya Variabel). Anda akan rugi terus!";
+            statusText.innerText = "Harga Acuan BEP terlalu murah. Harga lebih rendah dari biaya variabel.";
             statusText.classList.remove('text-indigo-600/70');
             statusText.classList.add('text-rose-500', 'font-bold');
           }
@@ -980,6 +981,12 @@
 
         if(document.getElementById('displayBEPKg')) document.getElementById('displayBEPKg').innerText = state.bepKg.toFixed(1) + ' Kg';
         if(document.getElementById('displayBEPRupiah')) document.getElementById('displayBEPRupiah').innerText = formatRupiah(state.bepRupiah);
+        if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(state.bepRupiah);
+        if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(state.bepKg) ? state.bepKg.toFixed(1) : '0.0') + ' Kg';
+        if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(Math.max(0, marginKontribusi));
+        if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = state.bepRupiah > 0 ? 'Omzet minimal agar tidak rugi' : 'Belum dihitung';
+        if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = state.bepKg > 0 ? 'Target cucian per bulan' : 'Pilih acuan harga';
+        if(document.getElementById('bepKpiMarginNote')) document.getElementById('bepKpiMarginNote').innerText = marginKontribusi > 0 ? 'Bisnis punya kontribusi positif' : 'Harga perlu dinaikkan';
         
         updateBEPChart(GRAND_TOTAL_BIAYA_TETAP, biayaVariabel, refPrice, state.bepKg, GRAND_TOTAL_KAPASITAS_BULAN);
         updateTargetPenjualanTable(GRAND_TOTAL_BIAYA_TETAP, biayaVariabel, operasionalHariPerBulan, mingguTutup);
@@ -1142,6 +1149,54 @@
     return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
   function formatInputValue(value) { return value ? String(Math.round(finite(value))).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''; }
+  function compactCount(value, suffix) {
+    var n = Math.round(finite(value));
+    return n + ' ' + suffix;
+  }
+  function setOutletState(text, tone) {
+    var el = byId('bepOutletState');
+    if (!el) return;
+    el.textContent = text || 'Pilih cabang atau lengkapi data';
+    el.classList.remove('text-slate-500', 'bg-slate-100', 'border-slate-200', 'text-blue-700', 'bg-blue-50', 'border-blue-200', 'text-emerald-700', 'bg-emerald-50', 'border-emerald-200');
+    if (tone === 'loading') el.classList.add('text-blue-700', 'bg-blue-50', 'border-blue-200');
+    else if (tone === 'ready') el.classList.add('text-emerald-700', 'bg-emerald-50', 'border-emerald-200');
+    else el.classList.add('text-slate-500', 'bg-slate-100', 'border-slate-200');
+  }
+  function activeRows(rows, predicate) {
+    return (rows || []).filter(function(row) {
+      try { return predicate(row); } catch (error) { return false; }
+    });
+  }
+  function largestComponent(totals) {
+    var items = [
+      { name: 'Biaya Sewa', value: finite(state.monthlyRent) },
+      { name: 'Gaji Karyawan', value: finite(totals.salaryTotal) },
+      { name: 'Biaya Mesin', value: finite(totals.machineTotal) },
+      { name: 'Internet', value: finite(totals.internetTotal) },
+      { name: 'Lain-Lain', value: finite(totals.otherTotal) }
+    ];
+    return items.reduce(function(best, item) { return item.value > best.value ? item : best; }, { name: '', value: 0 });
+  }
+
+  window.zettOpenBEPFixedDetail = function(type) {
+    var panel = byId('bepFixedDetailPanel');
+    if (!panel) return;
+    var target = type || 'summary';
+    document.querySelectorAll('#bepFixedDetailPanel .bep-detail-section').forEach(function(section) {
+      section.classList.toggle('is-active', section.getAttribute('data-bep-detail') === target);
+    });
+    panel.classList.add('is-open');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  window.zettCloseBEPFixedDetail = function() {
+    var panel = byId('bepFixedDetailPanel');
+    if (!panel) return;
+    panel.classList.remove('is-open');
+    document.querySelectorAll('#bepFixedDetailPanel .bep-detail-section').forEach(function(section) {
+      section.classList.remove('is-active');
+    });
+  };
 
   window.zettMoneyInput = function(input) {
     if (!input) return;
@@ -1341,20 +1396,41 @@
   function updateDisplays() {
     var totals = calculateTotals();
     syncLegacyInputs();
+    var selected = selectedOutlet();
+    var salaryActive = activeRows(state.salaries, function(row) { return finite(row.total) > 0 || String(row.name || '').trim(); });
+    var totalEmployees = salaryActive.reduce(function(sum, row) { return sum + finite(row.count); }, 0);
+    var machineActive = activeRows(state.machines, function(row) {
+      return finite(row.purchasePrice) > 0 || finite(row.annualMaintenance) > 0;
+    });
+    var otherActive = activeRows(state.others, function(row) { return finite(row.monthlyAmount) > 0 || String(row.name || '').trim(); });
+    var biggest = largestComponent(totals);
+    var pct = totals.fixedTotal > 0 ? Math.round((biggest.value / totals.fixedTotal) * 100) : 0;
+
     setText('displaySewaBulan', money(state.monthlyRent));
     var hari = byId('inputMingguTutup') && byId('inputMingguTutup').checked ? 26 : 30;
     setText('displaySewaHari', money(state.monthlyRent / Math.max(hari, 1)));
     setText('displayTotalGaji', money(totals.salaryTotal));
+    setText('bepRentCardTotal', money(state.monthlyRent) + ' / bulan');
+    setText('bepRentCardStatus', state.annualRent > 0 ? ('Dari sewa tahunan ' + money(state.annualRent)) : (state.rentStatus === 'Milik Sendiri' ? 'Outlet milik sendiri' : 'Boleh dikosongkan atau diisi 0'));
     setText('bepSalaryTotal', money(totals.salaryTotal) + ' / bulan');
+    setText('bepSalaryCardStatus', totalEmployees > 0 ? (compactCount(totalEmployees, 'karyawan') + ' aktif, ' + compactCount(salaryActive.length, 'kelompok')) : '0 karyawan aktif');
     setText('bepMachineTotal', money(totals.machineTotal) + ' / bulan');
+    setText('bepMachineCardStatus', machineActive.length ? (compactCount(machineActive.length, 'aset') + ', ' + money(totals.depreciationTotal) + ' depresiasi, ' + money(totals.maintenanceTotal) + ' perawatan') : 'Depresiasi + cadangan perawatan');
     setText('bepInternetTotal', money(totals.internetTotal) + ' / bulan');
+    setText('bepInternetCardStatus', state.internetProvider ? ('Provider: ' + state.internetProvider) : 'Provider belum diisi');
     setText('bepOtherTotal', money(totals.otherTotal) + ' / bulan');
+    setText('bepOtherCardStatus', otherActive.length ? compactCount(otherActive.length, 'item biaya') : '0 item biaya');
     setText('bepFixedGrandTotal', money(totals.fixedTotal));
+    setText('bepFixedGrandTotalCard', money(totals.fixedTotal));
+    setText('bepKpiFixedTotal', money(totals.fixedTotal));
+    setText('bepKpiFixedNote', totals.fixedTotal > 0 ? 'Biaya tetap siap dihitung' : 'Belum dihitung');
+    setText('bepFixedInsight', totals.fixedTotal > 0 ? ('Komponen terbesar: ' + biggest.name + ' ' + pct + '% dari total fixed cost.') : 'Lengkapi data biaya tetap untuk menghitung target BEP.');
     setText('bepSummaryRent', money(state.monthlyRent));
     setText('bepSummarySalary', money(totals.salaryTotal));
     setText('bepSummaryMachine', money(totals.machineTotal));
     setText('bepSummaryInternet', money(totals.internetTotal));
     setText('bepSummaryOther', money(totals.otherTotal));
+    if (!selected) setOutletState('Pilih cabang atau lengkapi data', 'idle');
   }
 
   function scheduleCalc() {
@@ -1433,14 +1509,15 @@
       state.annualRent = parseSafe(data.biayaSewaTahunan || data['Biaya Sewa Tahunan']);
       state.monthlyRent = parseSafe(data.biayaSewaBulanan || data['Biaya Sewa Bulanan']) || (state.annualRent / 12);
       state.rentNote = data.catatanSewa || data.catatan || data['Catatan'] || '';
-      state.salaries = Array.isArray(data.detailGaji) ? data.detailGaji : state.salaries;
-      state.machines = Array.isArray(data.detailMesin) ? data.detailMesin : state.machines;
+      state.salaries = Array.isArray(data.detailGaji) && data.detailGaji.length ? data.detailGaji : state.salaries;
+      state.machines = Array.isArray(data.detailMesin) && data.detailMesin.length ? data.detailMesin : state.machines;
       state.internetProvider = data.providerInternet || data['Provider Internet'] || '';
       state.internetMonthly = parseSafe(data.biayaInternetBulanan || data['Biaya Internet Bulanan']);
       state.internetNote = data.catatanInternet || '';
-      state.others = Array.isArray(data.detailLainLain) ? data.detailLainLain : state.others;
+      state.others = Array.isArray(data.detailLainLain) && data.detailLainLain.length ? data.detailLainLain : state.others;
     }
     renderAll();
+    setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : 'Pilih cabang atau lengkapi data', outlet ? 'ready' : 'idle');
     scheduleCalc();
   }
 
@@ -1449,11 +1526,13 @@
     if (!outlet) {
       emptyState('');
       renderAll();
+      setOutletState('Pilih cabang atau lengkapi data', 'idle');
       scheduleCalc();
       return;
     }
     emptyState(outlet);
     renderAll();
+    setOutletState('Memuat data BEP: ' + outlet, 'loading');
     if (!window.google || !google.script || !google.script.run) return;
     google.script.run
       .withSuccessHandler(function(res) {

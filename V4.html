@@ -1,28 +1,90 @@
 <!-- ================= VIEW TARGET BEP (HYPER-PREMIUM FINTECH EDITION) ================= -->
   <style id="bep-fixed-cost-ui-20260522">
     #view-bep {
-      --bep-card: rgba(255,255,255,0.92);
-      --bep-border: rgba(226,232,240,0.9);
+      --bep-card: rgba(255,255,255,0.94);
+      --bep-border: rgba(226,232,240,0.86);
       --bep-muted: #64748b;
       --bep-ink: #0f172a;
       --bep-blue: #2563eb;
+      --bep-green: #059669;
+      --bep-red: #dc2626;
+      --bep-soft: #f8fafc;
+      --bep-ease: cubic-bezier(.2,.8,.2,1);
+      font-feature-settings: "tnum" 1, "lnum" 1;
     }
-    #view-bep .bep-fixed-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1rem; }
+    #view-bep .bep-shell { padding: clamp(1rem, 2.4vw, 2rem); border-radius: 1.6rem; }
+    #view-bep .bep-hero {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 1.25rem;
+      padding-bottom: 1.2rem; border-bottom: 1px solid rgba(226,232,240,.72);
+    }
+    #view-bep .bep-hero h2 { font-size: clamp(1.28rem, 2.2vw, 1.78rem); line-height: 1.12; letter-spacing: 0; }
+    #view-bep .bep-hero p { max-width: 42rem; font-size: .86rem; line-height: 1.55; }
+    #view-bep .bep-premium-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.65rem;
+      padding: .72rem 1rem; border-radius: .95rem; border: 1px solid rgba(191,219,254,.95);
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(239,246,255,.92));
+      color: #1d4ed8; font-size: .78rem; font-weight: 900; box-shadow: 0 10px 24px rgba(37,99,235,.08);
+      transform: translate3d(0,0,0); transition: transform .18s var(--bep-ease), box-shadow .18s var(--bep-ease);
+    }
+    #view-bep .bep-premium-btn:hover { transform: translate3d(0,-1px,0); box-shadow: 0 14px 28px rgba(37,99,235,.13); }
+    #view-bep .bep-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: .85rem; margin-top: 1rem; }
+    #view-bep .bep-kpi-card {
+      min-height: 7rem; padding: 1rem; border-radius: 1.1rem; border: 1px solid var(--bep-border);
+      background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(248,250,252,.88));
+      box-shadow: 0 12px 32px rgba(15,23,42,.045);
+    }
+    #view-bep .bep-kpi-label { display:block; color:#64748b; font-size:.64rem; font-weight:900; text-transform:uppercase; letter-spacing:.12em; }
+    #view-bep .bep-kpi-value { display:block; color:#0f172a; font-size:clamp(1.05rem,1.65vw,1.45rem); font-weight:950; margin-top:.5rem; font-variant-numeric:tabular-nums; line-height:1.1; }
+    #view-bep .bep-kpi-note { display:block; color:#64748b; font-size:.7rem; font-weight:750; margin-top:.45rem; line-height:1.35; }
+    #view-bep .bep-section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-top:1rem; }
+    #view-bep .bep-section-head h3 { font-size:1rem; font-weight:950; color:#0f172a; letter-spacing:0; }
+    #view-bep .bep-section-head p { font-size:.78rem; color:#64748b; font-weight:700; line-height:1.45; }
+    #view-bep .bep-fixed-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: .85rem; margin-top:.9rem; }
     #view-bep .bep-fixed-card {
-      grid-column: span 12 / span 12;
-      background: var(--bep-card);
+      grid-column: span 4 / span 4;
+      min-height: 10.3rem;
+      background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(248,250,252,.86));
       border: 1px solid var(--bep-border);
-      border-radius: 1.25rem;
-      padding: 1.25rem;
-      box-shadow: 0 14px 42px rgba(15,23,42,0.045);
+      border-radius: 1.08rem;
+      padding: 1rem;
+      box-shadow: 0 14px 34px rgba(15,23,42,0.045);
+      display:flex; flex-direction:column; justify-content:space-between; gap:.8rem;
+      transform: translate3d(0,0,0); transition: transform .2s var(--bep-ease), box-shadow .2s var(--bep-ease), border-color .2s var(--bep-ease);
     }
-    #view-bep .bep-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
-    #view-bep .bep-card-title { font-size: .9rem; font-weight: 900; color: var(--bep-ink); letter-spacing: -0.01em; line-height: 1.25; }
-    #view-bep .bep-card-subtitle { font-size: .72rem; color: var(--bep-muted); font-weight: 700; line-height: 1.45; margin-top: .25rem; }
-    #view-bep .bep-card-total { font-size: .95rem; font-weight: 900; color: #1d4ed8; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    #view-bep .bep-fixed-card:hover { transform: translate3d(0,-2px,0); border-color:rgba(96,165,250,.45); box-shadow:0 18px 42px rgba(15,23,42,.075); }
+    #view-bep .bep-fixed-summary { background: linear-gradient(145deg, #0f172a, #1e293b); border-color: rgba(148,163,184,.3); color:#fff; }
+    #view-bep .bep-fixed-summary .bep-card-title, #view-bep .bep-fixed-summary .bep-card-total { color:#fff; }
+    #view-bep .bep-fixed-summary .bep-card-subtitle, #view-bep .bep-fixed-summary .bep-status { color:#cbd5e1; }
+    #view-bep .bep-card-top { display:flex; align-items:flex-start; gap:.75rem; }
+    #view-bep .bep-card-icon { width:2.35rem; height:2.35rem; border-radius:.86rem; display:flex; align-items:center; justify-content:center; background:#eff6ff; color:#2563eb; border:1px solid #dbeafe; flex:0 0 auto; }
+    #view-bep .bep-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: .8rem; }
+    #view-bep .bep-card-title { font-size: .84rem; font-weight: 950; color: var(--bep-ink); letter-spacing: 0; line-height: 1.25; }
+    #view-bep .bep-card-subtitle { font-size: .7rem; color: var(--bep-muted); font-weight: 750; line-height: 1.35; margin-top: .18rem; }
+    #view-bep .bep-card-total { font-size: 1.15rem; font-weight: 950; color: #1d4ed8; white-space: nowrap; font-variant-numeric: tabular-nums; line-height:1.05; }
+    #view-bep .bep-status { font-size:.68rem; color:#64748b; font-weight:800; line-height:1.35; min-height:1.9rem; }
+    #view-bep .bep-card-action {
+      align-self:flex-start; display:inline-flex; align-items:center; gap:.4rem; border:1px solid #dbeafe; background:#fff; color:#1d4ed8;
+      border-radius:.8rem; min-height:2.2rem; padding:.52rem .72rem; font-size:.68rem; font-weight:950; text-transform:uppercase; letter-spacing:.08em;
+    }
+    #view-bep .bep-card-action:hover { background:#eff6ff; }
+    #view-bep .bep-detail-panel {
+      display:none; margin-top:1rem; border:1px solid rgba(191,219,254,.85); border-radius:1.25rem;
+      background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(239,246,255,.78));
+      padding:1rem; box-shadow:0 18px 42px rgba(37,99,235,.07); transform:translate3d(0,0,0);
+    }
+    #view-bep .bep-detail-panel.is-open { display:block; animation:bepDetailIn .22s var(--bep-ease) both; will-change: transform, opacity; }
+    @keyframes bepDetailIn { from { opacity:0; transform:translate3d(0,8px,0); } to { opacity:1; transform:translate3d(0,0,0); } }
+    #view-bep .bep-detail-section { display:none; }
+    #view-bep .bep-detail-section.is-active { display:block; }
+    #view-bep .bep-detail-title { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.9rem; }
+    #view-bep .bep-detail-title h4 { font-size:.95rem; font-weight:950; color:#0f172a; }
+    #view-bep .bep-detail-title p { font-size:.72rem; font-weight:750; color:#64748b; margin-top:.15rem; }
+    #view-bep .bep-close-detail { width:2.2rem; height:2.2rem; border-radius:.8rem; border:1px solid #e2e8f0; background:#fff; color:#64748b; display:flex; align-items:center; justify-content:center; }
+    #view-bep .bep-save-strip { display:flex; justify-content:space-between; align-items:center; gap:.8rem; margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(226,232,240,.8); }
+    #view-bep .bep-save-btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:.92rem; padding:.72rem 1rem; background:#0f172a; color:#fff; font-size:.75rem; font-weight:950; }
     #view-bep .bep-input, #view-bep .bep-select, #view-bep .bep-textarea {
-      width: 100%; border: 1px solid #e2e8f0; border-radius: .9rem; background: rgba(255,255,255,.88);
-      padding: .75rem .85rem; font-size: .82rem; font-weight: 800; color: #0f172a; outline: none;
+      width: 100%; border: 1px solid #e2e8f0; border-radius: .82rem; background: rgba(255,255,255,.9);
+      padding: .68rem .78rem; font-size: .8rem; font-weight: 800; color: #0f172a; outline: none;
       transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
     #view-bep .bep-input:focus, #view-bep .bep-select:focus, #view-bep .bep-textarea:focus {
@@ -41,9 +103,9 @@
     #view-bep .bep-summary-item { border:1px solid #e2e8f0; background:#f8fafc; border-radius:1rem; padding:.85rem; }
     #view-bep .bep-summary-item span { display:block; color:#64748b; font-size:.62rem; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
     #view-bep .bep-summary-item strong { display:block; color:#0f172a; font-size:.86rem; font-weight:900; margin-top:.25rem; font-variant-numeric:tabular-nums; }
-    @media (min-width: 1024px) {
-      #view-bep .bep-fixed-card.bep-span-6 { grid-column: span 6 / span 6; }
-      #view-bep .bep-fixed-card.bep-span-12 { grid-column: span 12 / span 12; }
+    @media (max-width: 1023px) {
+      #view-bep .bep-kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      #view-bep .bep-fixed-card { grid-column: span 6 / span 6; }
     }
     @media (max-width: 900px) {
       #view-bep .bep-row, #view-bep .bep-machine-row, #view-bep .bep-other-row { grid-template-columns: 1fr; padding:.85rem; border:1px solid #e2e8f0; border-radius:1rem; background:#f8fafc; }
@@ -51,154 +113,216 @@
       #view-bep .bep-summary-strip { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 640px) {
-      #view-bep .bep-fixed-card { padding: 1rem; border-radius: 1rem; }
+      #view-bep .bep-shell { padding: 1rem; border-radius: 1.15rem; }
+      #view-bep .bep-hero { flex-direction:column; }
+      #view-bep .bep-premium-btn, #view-bep .bep-save-btn { width:100%; }
+      #view-bep .bep-kpi-grid { grid-template-columns: 1fr; }
+      #view-bep .bep-fixed-card { grid-column: span 12 / span 12; padding: 1rem; border-radius: 1rem; min-height:9.5rem; }
       #view-bep .bep-card-head { flex-direction: column; }
       #view-bep .bep-summary-strip { grid-template-columns: 1fr; }
+      #view-bep .bep-save-strip { flex-direction:column; align-items:stretch; }
     }
   </style>
   <div id="view-bep" class="main-view hidden animate-fade-in space-y-8">
     
-    <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.03),0_2px_12px_rgba(0,0,0,0.01)] border border-slate-100/80 p-6 md:p-12 transform-gpu will-change-transform transition-all duration-500 ease-out hover:shadow-[0_12px_48px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.02)] animate-fade-in">
-      
-      <!-- [ZETTBOT UX Update: Title-Subtitle Duo] -->
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-100/60 pb-8 shrink-0 gap-6">
-        <div class="flex items-start gap-5">
-          <div class="bg-rose-50/60 p-4 rounded-[1.25rem] text-rose-600 shrink-0 border border-rose-100/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)]">
-            <i class="ph ph-target text-3xl"></i>
+    <div class="bep-shell bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.03),0_2px_12px_rgba(0,0,0,0.01)] border border-slate-100/80 transform-gpu will-change-transform transition-all duration-500 ease-out animate-fade-in">
+      <div class="bep-hero">
+        <div class="flex items-start gap-3.5">
+          <div class="bg-blue-50/90 p-3 rounded-[1rem] text-blue-600 shrink-0 border border-blue-100/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.6)]">
+            <i class="ph ph-target text-2xl"></i>
           </div>
           <div>
-            <h2 class="text-[clamp(1.5rem,3.5vw,2rem)] font-extrabold text-slate-800 tracking-tight leading-tight">Analisis Titik Impas (BEP)</h2>
-            <p class="text-sm text-slate-500 mt-2 font-medium leading-relaxed max-w-xl">Ketahui target minimal volume cucian yang wajib dicapai agar bisnis tidak menanggung defisit operasional.</p>
+            <h2 class="font-black text-slate-900">Target Titik Impas (BEP)</h2>
+            <p class="text-slate-500 mt-1.5 font-semibold">Ketahui omzet, volume cucian, dan transaksi minimal agar outlet tidak rugi.</p>
+            <span id="bepOutletState" class="inline-flex mt-3 text-[10px] uppercase tracking-[0.14em] font-black text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">Pilih cabang atau lengkapi data</span>
           </div>
         </div>
-        
-        <button type="button" onclick="safeSwitchMainTab('harga')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 px-6 py-3.5 rounded-[1.25rem] font-extrabold flex items-center gap-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 transform-gpu hover:-translate-y-1 shrink-0 active:scale-95">
-          <i class="ph ph-tag text-xl text-blue-600"></i> Cek Harga Jual
+        <button type="button" onclick="safeSwitchMainTab('harga')" class="bep-premium-btn shrink-0">
+          <i class="ph ph-tag text-lg"></i> Cek Harga Jual
         </button>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 border-b border-slate-100/60 pb-10 mt-10">
-        
-        <!-- Biaya Sewa Tahunan -->
-        <div class="lg:col-span-2 bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-[1.5rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] p-6 md:p-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] transition-all duration-500 transform-gpu hover:-translate-y-1 space-y-5">
-          <label class="block text-sm font-extrabold text-slate-700 flex items-center gap-3 tracking-tight"><i class="ph ph-house text-blue-500 text-xl"></i> Biaya Sewa Tahunan</label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <span class="bep-label">Status Sewa</span>
-              <select id="bepRentStatus" class="bep-select" onchange="zettBEPFixedChange()">
-                <option value="Sewa">Sewa</option>
-                <option value="Milik Sendiri">Milik Sendiri</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
-            </div>
-            <div>
-              <span class="bep-label">Catatan</span>
-              <input type="text" id="bepRentNote" class="bep-input" placeholder="Opsional" oninput="zettBEPFixedChange()">
-            </div>
-          </div>
-          <div class="relative flex items-center">
-            <span class="absolute left-5 text-sm font-black text-slate-400">Rp</span>
-            <input type="text" id="inputSewaTahun" inputmode="numeric" class="w-full pl-12 pr-5 py-4 rounded-[1rem] border border-slate-200/80 text-lg font-black text-slate-800 focus:ring-[4px] focus:ring-blue-500/15 focus:border-blue-400 bg-white/70 backdrop-blur-sm focus:bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="Misal: 30.000.000" oninput="safeFormatAndCalculate(this); zettBEPFixedChange()">
-          </div>
-          <p class="bep-helper">Boleh dikosongkan atau diisi 0 jika outlet milik sendiri.</p>
-          <div class="grid grid-cols-2 gap-4 text-xs mt-2">
-            <div class="bg-slate-50/80 p-4 rounded-xl border border-slate-100 text-center shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-              <span class="text-slate-400 block mb-1.5 font-bold uppercase tracking-widest text-[9px]">Per Bulan</span>
-              <span class="font-black text-slate-700 tabular-nums [font-feature-settings:'tnum'] text-sm" id="displaySewaBulan">Rp 0</span>
-            </div>
-            <div class="bg-slate-50/80 p-4 rounded-xl border border-slate-100 text-center shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-              <span class="text-slate-400 block mb-1.5 font-bold uppercase tracking-widest text-[9px]">Per Hari</span>
-              <span class="font-black text-slate-700 tabular-nums [font-feature-settings:'tnum'] text-sm" id="displaySewaHari">Rp 0</span>
-            </div>
-          </div>
-        </div>
+      <div class="bep-kpi-grid">
+        <div class="bep-kpi-card"><span class="bep-kpi-label">Total Fixed Cost / Bulan</span><strong id="bepKpiFixedTotal" class="bep-kpi-value">Rp 0</strong><span id="bepKpiFixedNote" class="bep-kpi-note">Belum dihitung</span></div>
+        <div class="bep-kpi-card"><span class="bep-kpi-label">Target Omzet BEP</span><strong id="bepKpiTargetRevenue" class="bep-kpi-value">Rp 0</strong><span id="bepKpiRevenueNote" class="bep-kpi-note">Belum dihitung</span></div>
+        <div class="bep-kpi-card"><span class="bep-kpi-label">Target Volume BEP</span><strong id="bepKpiTargetVolume" class="bep-kpi-value">0 Kg</strong><span id="bepKpiVolumeNote" class="bep-kpi-note">Pilih acuan harga</span></div>
+        <div class="bep-kpi-card"><span class="bep-kpi-label">Margin Kontribusi</span><strong id="bepKpiMargin" class="bep-kpi-value">Rp 0</strong><span id="bepKpiMarginNote" class="bep-kpi-note">Harga jual - biaya variabel</span></div>
+      </div>
 
-        <!-- Gaji Karyawan -->
-        <div id="bepLegacySalaryCard" class="hidden bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-[1.5rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] p-6 md:p-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.04)] transition-all duration-500 transform-gpu hover:-translate-y-1 space-y-5 flex flex-col">
-          <div class="flex justify-between items-center">
-            <label class="block text-sm font-extrabold text-slate-700 flex items-center gap-3 tracking-tight"><i class="ph ph-users text-blue-500 text-xl"></i> Gaji Karyawan</label>
-            <button type="button" onclick="safeAddKaryawan()" class="text-[10px] bg-blue-50 border border-blue-200/80 text-blue-700 px-4 py-2 rounded-xl font-black hover:bg-blue-100 transition-colors active:scale-95 uppercase tracking-widest flex items-center gap-1"><i class="ph ph-plus"></i> Tambah</button>
-          </div>
-          <div id="containerKaryawan" class="flex-1 space-y-3 max-h-48 overflow-y-auto custom-scroll pr-2"></div>
-          <div class="bg-slate-50/80 p-5 rounded-xl border border-slate-100 flex justify-between items-center text-sm shadow-[0_2px_8px_rgba(0,0,0,0.02)] mt-auto shrink-0">
-            <span class="text-slate-500 font-extrabold text-xs uppercase tracking-widest">Total Gaji/Bulan:</span>
-            <span class="font-black text-slate-800 text-lg tabular-nums [font-feature-settings:'tnum']" id="displayTotalGaji">Rp 0</span>
-          </div>
+      <div class="bep-section-head">
+        <div>
+          <h3>Fixed Cost BEP</h3>
+          <p>Atur biaya tetap bulanan dari card ringkas. Detail input hanya dibuka saat dibutuhkan.</p>
+        </div>
+        <div class="hidden md:block text-right">
+          <span class="text-[10px] uppercase tracking-[0.16em] font-black text-slate-400">Total Fixed Cost</span>
+          <div id="bepFixedGrandTotal" class="text-xl font-black text-blue-700 tabular-nums">Rp 0</div>
         </div>
       </div>
 
-      <div class="space-y-5 border-b border-slate-100/60 pb-10">
-        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+      <div class="bep-fixed-grid">
+        <div class="bep-fixed-card">
+          <div class="bep-card-top">
+            <div class="bep-card-icon"><i class="ph ph-house text-lg"></i></div>
+            <div class="min-w-0">
+              <div class="bep-card-title">Biaya Sewa Tahunan</div>
+              <div class="bep-card-subtitle">Opsional untuk outlet milik sendiri</div>
+            </div>
+          </div>
           <div>
-            <h3 class="text-lg md:text-xl font-black text-slate-800 tracking-tight">Fixed Cost BEP</h3>
-            <p class="text-sm text-slate-500 font-semibold mt-1">Biaya tetap bulanan khusus Target Titik Impas, dipisah dari HPP variable cost.</p>
+            <div class="bep-card-total" id="bepRentCardTotal">Rp 0 / bulan</div>
+            <div class="bep-status" id="bepRentCardStatus">Boleh dikosongkan atau diisi 0</div>
           </div>
-          <div class="text-right">
-            <span class="text-[10px] uppercase tracking-[0.16em] font-black text-slate-400">Total Fixed Cost</span>
-            <div id="bepFixedGrandTotal" class="text-2xl font-black text-blue-700 tabular-nums">Rp 0</div>
+          <button type="button" class="bep-card-action" onclick="zettOpenBEPFixedDetail('rent')"><i class="ph ph-sliders-horizontal"></i> Atur Sewa</button>
+        </div>
+
+        <div class="bep-fixed-card">
+          <div class="bep-card-top">
+            <div class="bep-card-icon"><i class="ph ph-users-three text-lg"></i></div>
+            <div class="min-w-0">
+              <div class="bep-card-title">Gaji Karyawan</div>
+              <div class="bep-card-subtitle">Kelompok gaji dinamis</div>
+            </div>
+          </div>
+          <div>
+            <div class="bep-card-total" id="bepSalaryTotal">Rp 0 / bulan</div>
+            <div class="bep-status" id="bepSalaryCardStatus">0 karyawan aktif</div>
+          </div>
+          <button type="button" class="bep-card-action" onclick="zettOpenBEPFixedDetail('salary')"><i class="ph ph-sliders-horizontal"></i> Atur Gaji</button>
+        </div>
+
+        <div class="bep-fixed-card">
+          <div class="bep-card-top">
+            <div class="bep-card-icon"><i class="ph ph-washing-machine text-lg"></i></div>
+            <div class="min-w-0">
+              <div class="bep-card-title">Biaya Mesin</div>
+              <div class="bep-card-subtitle">Depresiasi & Perawatan</div>
+            </div>
+          </div>
+          <div>
+            <div class="bep-card-total" id="bepMachineTotal">Rp 0 / bulan</div>
+            <div class="bep-status" id="bepMachineCardStatus">Dana aset operasional</div>
+          </div>
+          <button type="button" class="bep-card-action" onclick="zettOpenBEPFixedDetail('machine')"><i class="ph ph-sliders-horizontal"></i> Atur Mesin</button>
+        </div>
+
+        <div class="bep-fixed-card">
+          <div class="bep-card-top">
+            <div class="bep-card-icon"><i class="ph ph-wifi-high text-lg"></i></div>
+            <div class="min-w-0">
+              <div class="bep-card-title">Internet</div>
+              <div class="bep-card-subtitle">Provider & biaya bulanan</div>
+            </div>
+          </div>
+          <div>
+            <div class="bep-card-total" id="bepInternetTotal">Rp 0 / bulan</div>
+            <div class="bep-status" id="bepInternetCardStatus">Provider belum diisi</div>
+          </div>
+          <button type="button" class="bep-card-action" onclick="zettOpenBEPFixedDetail('internet')"><i class="ph ph-sliders-horizontal"></i> Atur Internet</button>
+        </div>
+
+        <div class="bep-fixed-card">
+          <div class="bep-card-top">
+            <div class="bep-card-icon"><i class="ph ph-dots-three-circle text-lg"></i></div>
+            <div class="min-w-0">
+              <div class="bep-card-title">Lain-Lain</div>
+              <div class="bep-card-subtitle">Biaya tetap tambahan</div>
+            </div>
+          </div>
+          <div>
+            <div class="bep-card-total" id="bepOtherTotal">Rp 0 / bulan</div>
+            <div class="bep-status" id="bepOtherCardStatus">0 item biaya</div>
+          </div>
+          <button type="button" class="bep-card-action" onclick="zettOpenBEPFixedDetail('other')"><i class="ph ph-sliders-horizontal"></i> Atur Lainnya</button>
+        </div>
+
+        <div class="bep-fixed-card bep-fixed-summary">
+          <div class="bep-card-top">
+            <div class="bep-card-icon"><i class="ph ph-chart-donut text-lg"></i></div>
+            <div class="min-w-0">
+              <div class="bep-card-title">Total Fixed Cost Bulanan</div>
+              <div class="bep-card-subtitle">Ringkasan komposisi biaya</div>
+            </div>
+          </div>
+          <div>
+            <div class="bep-card-total" id="bepFixedGrandTotalCard">Rp 0</div>
+            <div class="bep-status" id="bepFixedInsight">Lengkapi data biaya tetap untuk menghitung target BEP.</div>
+          </div>
+          <button type="button" class="bep-card-action" onclick="zettOpenBEPFixedDetail('summary')"><i class="ph ph-chart-bar"></i> Detail</button>
+        </div>
+      </div>
+
+      <div id="bepFixedDetailPanel" class="bep-detail-panel" aria-live="polite">
+        <div class="bep-detail-section" data-bep-detail="rent">
+          <div class="bep-detail-title">
+            <div><h4>Biaya Sewa Tahunan</h4><p>Boleh dikosongkan atau diisi 0 jika outlet milik sendiri.</p></div>
+            <button type="button" class="bep-close-detail" onclick="zettCloseBEPFixedDetail()" aria-label="Tutup detail"><i class="ph ph-x"></i></button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div><span class="bep-label">Status Sewa</span><select id="bepRentStatus" class="bep-select" onchange="zettBEPFixedChange()"><option value="Sewa">Sewa</option><option value="Milik Sendiri">Milik Sendiri</option><option value="Lainnya">Lainnya</option></select></div>
+            <div><span class="bep-label">Biaya Sewa Tahunan</span><input type="text" id="inputSewaTahun" inputmode="numeric" class="bep-input" placeholder="Misal: 30.000.000" oninput="safeFormatAndCalculate(this); zettBEPFixedChange()"></div>
+            <div><span class="bep-label">Catatan</span><input type="text" id="bepRentNote" class="bep-input" placeholder="Opsional" oninput="zettBEPFixedChange()"></div>
+          </div>
+          <div class="bep-summary-strip"><div class="bep-summary-item"><span>Per Bulan</span><strong id="displaySewaBulan">Rp 0</strong></div><div class="bep-summary-item"><span>Per Hari</span><strong id="displaySewaHari">Rp 0</strong></div></div>
+        </div>
+
+        <div class="bep-detail-section" data-bep-detail="salary">
+          <div class="bep-detail-title">
+            <div><h4>Gaji Karyawan</h4><p>Nama/Jabatan, jumlah orang, dan gaji per orang.</p></div>
+            <button type="button" class="bep-close-detail" onclick="zettCloseBEPFixedDetail()" aria-label="Tutup detail"><i class="ph ph-x"></i></button>
+          </div>
+          <div id="bepSalaryRows" class="space-y-2"></div>
+          <button type="button" class="bep-add-btn mt-2" onclick="zettAddBEPSalaryRow()"><i class="ph ph-plus"></i> Tambah Baris</button>
+          <span class="hidden" id="displayTotalGaji">Rp 0</span>
+        </div>
+
+        <div class="bep-detail-section" data-bep-detail="machine">
+          <div class="bep-detail-title">
+            <div><h4>Biaya Mesin</h4><p>Dana tetap bulanan untuk menjaga aset mesin tetap siap operasional.</p></div>
+            <button type="button" class="bep-close-detail" onclick="zettCloseBEPFixedDetail()" aria-label="Tutup detail"><i class="ph ph-x"></i></button>
+          </div>
+          <div id="bepMachineRows" class="space-y-2"></div>
+          <button type="button" class="bep-add-btn mt-2" onclick="zettAddBEPMachineRow()"><i class="ph ph-plus"></i> Tambah Mesin</button>
+        </div>
+
+        <div class="bep-detail-section" data-bep-detail="internet">
+          <div class="bep-detail-title">
+            <div><h4>Internet</h4><p>Jika kosong, sistem menghitung Rp0.</p></div>
+            <button type="button" class="bep-close-detail" onclick="zettCloseBEPFixedDetail()" aria-label="Tutup detail"><i class="ph ph-x"></i></button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><span class="bep-label">Provider</span><input id="bepInternetProvider" class="bep-input" type="text" placeholder="Indihome / Biznet" oninput="zettBEPFixedChange()"></div>
+            <div><span class="bep-label">Biaya Bulanan</span><input id="bepInternetMonthly" class="bep-input" type="text" inputmode="numeric" placeholder="0" oninput="zettMoneyInput(this); zettBEPFixedChange()"></div>
+          </div>
+          <div class="mt-3"><span class="bep-label">Catatan</span><input id="bepInternetNote" class="bep-input" type="text" placeholder="Opsional" oninput="zettBEPFixedChange()"></div>
+        </div>
+
+        <div class="bep-detail-section" data-bep-detail="other">
+          <div class="bep-detail-title">
+            <div><h4>Lain-Lain</h4><p>Iuran keamanan, kebersihan, software, atau biaya tetap daerah.</p></div>
+            <button type="button" class="bep-close-detail" onclick="zettCloseBEPFixedDetail()" aria-label="Tutup detail"><i class="ph ph-x"></i></button>
+          </div>
+          <div id="bepOtherRows" class="space-y-2"></div>
+          <button type="button" class="bep-add-btn mt-2" onclick="zettAddBEPOtherRow()"><i class="ph ph-plus"></i> Tambah Biaya</button>
+        </div>
+
+        <div class="bep-detail-section" data-bep-detail="summary">
+          <div class="bep-detail-title">
+            <div><h4>Komposisi Fixed Cost</h4><p>Bandingkan kontribusi setiap komponen biaya tetap.</p></div>
+            <button type="button" class="bep-close-detail" onclick="zettCloseBEPFixedDetail()" aria-label="Tutup detail"><i class="ph ph-x"></i></button>
+          </div>
+          <div class="bep-summary-strip">
+            <div class="bep-summary-item"><span>Sewa</span><strong id="bepSummaryRent">Rp 0</strong></div>
+            <div class="bep-summary-item"><span>Gaji</span><strong id="bepSummarySalary">Rp 0</strong></div>
+            <div class="bep-summary-item"><span>Mesin</span><strong id="bepSummaryMachine">Rp 0</strong></div>
+            <div class="bep-summary-item"><span>Internet</span><strong id="bepSummaryInternet">Rp 0</strong></div>
+            <div class="bep-summary-item"><span>Lain-Lain</span><strong id="bepSummaryOther">Rp 0</strong></div>
           </div>
         </div>
 
-        <div class="bep-fixed-grid">
-          <div class="bep-fixed-card bep-span-12">
-            <div class="bep-card-head">
-              <div>
-                <div class="bep-card-title">Gaji Karyawan</div>
-                <div class="bep-card-subtitle">Tambahkan beberapa kelompok karyawan jika nominal gajinya berbeda.</div>
-              </div>
-              <div class="bep-card-total" id="bepSalaryTotal">Rp 0 / bulan</div>
-            </div>
-            <div id="bepSalaryRows" class="space-y-2"></div>
-            <button type="button" class="bep-add-btn mt-2" onclick="zettAddBEPSalaryRow()"><i class="ph ph-plus"></i> Tambah Baris</button>
-          </div>
-
-          <div class="bep-fixed-card bep-span-12">
-            <div class="bep-card-head">
-              <div>
-                <div class="bep-card-title">Biaya Mesin</div>
-                <div class="bep-card-subtitle">Depresiasi & Cadangan Perawatan</div>
-              </div>
-              <div class="bep-card-total" id="bepMachineTotal">Rp 0 / bulan</div>
-            </div>
-            <p class="bep-helper mb-3">Biaya ini digunakan sebagai dana tetap bulanan untuk depresiasi dan cadangan perawatan mesin.</p>
-            <div id="bepMachineRows" class="space-y-2"></div>
-            <button type="button" class="bep-add-btn mt-2" onclick="zettAddBEPMachineRow()"><i class="ph ph-plus"></i> Tambah Mesin</button>
-          </div>
-
-          <div class="bep-fixed-card bep-span-6">
-            <div class="bep-card-head">
-              <div>
-                <div class="bep-card-title">Internet</div>
-                <div class="bep-card-subtitle">Masukkan biaya internet bulanan jika digunakan untuk operasional outlet.</div>
-              </div>
-              <div class="bep-card-total" id="bepInternetTotal">Rp 0 / bulan</div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div><span class="bep-label">Provider</span><input id="bepInternetProvider" class="bep-input" type="text" placeholder="Indihome / Biznet" oninput="zettBEPFixedChange()"></div>
-              <div><span class="bep-label">Biaya Bulanan</span><input id="bepInternetMonthly" class="bep-input" type="text" inputmode="numeric" placeholder="0" oninput="zettMoneyInput(this); zettBEPFixedChange()"></div>
-            </div>
-            <div class="mt-3"><span class="bep-label">Catatan</span><input id="bepInternetNote" class="bep-input" type="text" placeholder="Opsional" oninput="zettBEPFixedChange()"></div>
-          </div>
-
-          <div class="bep-fixed-card bep-span-6">
-            <div class="bep-card-head">
-              <div>
-                <div class="bep-card-title">Lain-Lain</div>
-                <div class="bep-card-subtitle">Gunakan untuk biaya tetap tambahan yang tidak masuk kategori lain.</div>
-              </div>
-              <div class="bep-card-total" id="bepOtherTotal">Rp 0 / bulan</div>
-            </div>
-            <div id="bepOtherRows" class="space-y-2"></div>
-            <button type="button" class="bep-add-btn mt-2" onclick="zettAddBEPOtherRow()"><i class="ph ph-plus"></i> Tambah Biaya</button>
-          </div>
-        </div>
-
-        <div class="bep-summary-strip">
-          <div class="bep-summary-item"><span>Sewa</span><strong id="bepSummaryRent">Rp 0</strong></div>
-          <div class="bep-summary-item"><span>Gaji</span><strong id="bepSummarySalary">Rp 0</strong></div>
-          <div class="bep-summary-item"><span>Mesin</span><strong id="bepSummaryMachine">Rp 0</strong></div>
-          <div class="bep-summary-item"><span>Internet</span><strong id="bepSummaryInternet">Rp 0</strong></div>
-          <div class="bep-summary-item"><span>Lain-Lain</span><strong id="bepSummaryOther">Rp 0</strong></div>
+        <div class="bep-save-strip">
+          <span class="text-xs font-bold text-slate-500">Perubahan card langsung masuk perhitungan. Simpan untuk menyimpan ke sheet BEP_Fixed.</span>
+          <button type="button" class="bep-save-btn" onclick="safeProsesSimpanBEP()"><i class="ph ph-cloud-arrow-up"></i> Simpan Fixed Cost</button>
         </div>
         <input type="hidden" id="inputBiayaTetapLain" value="0">
       </div>
