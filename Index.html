@@ -84,6 +84,119 @@
       pointer-events: auto;
     }
 
+    .global-loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(14, 165, 233, 0.18), transparent 18rem),
+        rgba(7, 10, 20, 0.66);
+      backdrop-filter: blur(8px) saturate(1.08);
+      -webkit-backdrop-filter: blur(8px) saturate(1.08);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1), visibility 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .global-loading-overlay.is-active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .global-loading-shell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      transform: translate3d(0, 8px, 0) scale(0.98);
+      transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .global-loading-overlay.is-active .global-loading-shell {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    .global-loading-spinner {
+      position: relative;
+      width: clamp(72px, 10vw, 92px);
+      height: clamp(72px, 10vw, 92px);
+      contain: layout paint;
+    }
+
+    .global-loading-arc {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      border: 3px solid transparent;
+      transform: translateZ(0);
+      will-change: transform;
+    }
+
+    .global-loading-arc-white {
+      inset: 0;
+      border-top-color: rgba(255, 255, 255, 0.96);
+      border-right-color: rgba(255, 255, 255, 0.34);
+      animation: globalLoaderSpin 1.18s cubic-bezier(0.62, 0.05, 0.36, 0.95) infinite;
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+    }
+
+    .global-loading-arc-cyan {
+      inset: 9px;
+      border-right-color: rgba(34, 211, 238, 0.95);
+      border-bottom-color: rgba(34, 211, 238, 0.28);
+      animation: globalLoaderSpinReverse 1.46s cubic-bezier(0.62, 0.05, 0.36, 0.95) infinite;
+      filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.3));
+    }
+
+    .global-loading-arc-pink {
+      inset: 18px;
+      border-left-color: rgba(251, 113, 133, 0.95);
+      border-top-color: rgba(251, 113, 133, 0.28);
+      animation: globalLoaderSpin 1.72s cubic-bezier(0.62, 0.05, 0.36, 0.95) infinite;
+      filter: drop-shadow(0 0 10px rgba(251, 113, 133, 0.28));
+    }
+
+    .global-loading-text {
+      margin-top: 18px;
+      color: #fb7185;
+      font-size: clamp(18px, 2.4vw, 23px);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 0.04em;
+      text-align: center;
+      text-shadow: 0 0 18px rgba(251, 113, 133, 0.28);
+    }
+
+    body.global-loading-active {
+      cursor: progress;
+    }
+
+    @keyframes globalLoaderSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes globalLoaderSpinReverse {
+      to { transform: rotate(-360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .global-loading-overlay,
+      .global-loading-shell {
+        transition: none;
+      }
+
+      .global-loading-arc {
+        animation-duration: 2.4s;
+      }
+    }
+
     .nav-btn {
       transition: all 0.3s ease;
     }
@@ -278,6 +391,17 @@
 </head>
 
 <body class="text-slate-800 antialiased overflow-hidden flex h-screen w-full selection:bg-indigo-100 selection:text-indigo-900">
+
+  <div id="globalLoadingOverlay" class="global-loading-overlay" role="status" aria-live="polite" aria-hidden="true">
+    <div class="global-loading-shell">
+      <div class="global-loading-spinner" aria-hidden="true">
+        <span class="global-loading-arc global-loading-arc-white"></span>
+        <span class="global-loading-arc global-loading-arc-cyan"></span>
+        <span class="global-loading-arc global-loading-arc-pink"></span>
+      </div>
+      <div id="globalLoadingText" class="global-loading-text">Loading...</div>
+    </div>
+  </div>
 
   <!-- =========================================================
        SIDEBAR
@@ -498,6 +622,56 @@
   <!-- =========================================================
        JS MODULES
   ========================================================= -->
+
+  <script>
+    (function() {
+      let loadingDepth = 0;
+      const defaultLoadingText = 'Loading...';
+
+      function getLoadingOverlay() {
+        return document.getElementById('globalLoadingOverlay');
+      }
+
+      function setLoadingText(message) {
+        const text = document.getElementById('globalLoadingText');
+        if (!text) return;
+        text.textContent = typeof message === 'string' && message.trim() ? message : defaultLoadingText;
+      }
+
+      window.showLoading = function(message) {
+        loadingDepth += 1;
+        const overlay = getLoadingOverlay();
+        if (!overlay) return;
+
+        setLoadingText(message);
+        overlay.classList.add('is-active');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('global-loading-active');
+      };
+
+      window.hideLoading = function(force) {
+        loadingDepth = force === true ? 0 : Math.max(loadingDepth - 1, 0);
+        if (loadingDepth > 0) return;
+
+        const overlay = getLoadingOverlay();
+        if (!overlay) return;
+
+        overlay.classList.remove('is-active');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('global-loading-active');
+        setLoadingText(defaultLoadingText);
+      };
+
+      window.zettShowLoading = window.zettShowLoading || window.showLoading;
+      window.zettHideLoading = window.zettHideLoading || window.hideLoading;
+      window.withLoading = window.withLoading || function(task, message) {
+        window.showLoading(message);
+        return Promise.resolve(typeof task === 'function' ? task() : task).finally(function() {
+          window.hideLoading();
+        });
+      };
+    })();
+  </script>
 
   <?!= HtmlService.createHtmlOutputFromFile('JS1').getContent(); ?>
   <?!= HtmlService.createHtmlOutputFromFile('JS2').getContent(); ?>
