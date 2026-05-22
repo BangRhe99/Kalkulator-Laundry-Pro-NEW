@@ -1133,6 +1133,7 @@ function saveKapasitas(payload) {
 
     // [PROFIL->HPP SYNC] Jaga field operasional HPP tetap sama dengan Master_Kapasitas_V2.
     zettSyncOperationalProfileToHPP_(payload, timestamp);
+    syncMasterKapasitasToBEPFixed_({ outletName: payload.namaOutlet });
 
     SpreadsheetApp.flush();
     clearServerCache(); // <--- Reset server cache after update
@@ -1166,6 +1167,29 @@ const BEP_FIXED_HEADERS_ = [
   'Total Fixed Cost Bulanan',
   'Catatan'
 ];
+const BEP_FIXED_OPERATIONAL_HEADERS_ = [
+  'Kategori Laundry',
+  'Jam Buka',
+  'Jam Tutup',
+  'Tutup Hari Minggu',
+  'Durasi Operasional',
+  'Target Okupansi Cuci',
+  'Target Okupansi Kering',
+  'Target Okupansi Setrika',
+  'Estimasi Cuci',
+  'Estimasi Kering',
+  'Estimasi Setrika',
+  'Mesin Cuci',
+  'Mesin Pengering',
+  'Kap Cuci',
+  'Kap Kering',
+  'Durasi Cuci',
+  'Durasi Kering',
+  'Alat Setrika',
+  'Kap Setrika',
+  'Durasi Setrika',
+  'Tipe Mesin Cuci'
+];
 
 function normalizeOutletName_(value) {
   return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -1189,20 +1213,187 @@ function ensureBEPFixedSheet_() {
   let sheet = ss.getSheetByName(SHEET_NAME_BEP_FIXED);
   if (!sheet) sheet = ss.insertSheet(SHEET_NAME_BEP_FIXED);
 
+  const requiredHeaders = BEP_FIXED_HEADERS_.concat(BEP_FIXED_OPERATIONAL_HEADERS_);
   if (sheet.getLastRow() < 1 || sheet.getLastColumn() < 1) {
-    sheet.getRange(1, 1, 1, BEP_FIXED_HEADERS_.length).setValues([BEP_FIXED_HEADERS_]);
+    sheet.getRange(1, 1, 1, requiredHeaders.length).setValues([requiredHeaders]);
     sheet.setFrozenRows(1);
     return sheet;
   }
 
   let map = getHeaderMapByName_(sheet);
-  const missing = BEP_FIXED_HEADERS_.filter(header => !map[header] && !map[header.toLowerCase()]);
+  const missing = requiredHeaders.filter(header => !map[header] && !map[header.toLowerCase()]);
   if (missing.length) {
     sheet.getRange(1, sheet.getLastColumn() + 1, 1, missing.length).setValues([missing]);
     map = getHeaderMapByName_(sheet);
   }
   sheet.setFrozenRows(1);
   return sheet;
+}
+
+function ensureBEPFixedHeaders_() {
+  return ensureBEPFixedSheet_();
+}
+
+function isNonEmptyBEPValue_(value) {
+  return value !== null && value !== undefined && String(value).trim() !== '';
+}
+
+function pickBEPRowValue_(row, map, headers) {
+  for (let i = 0; i < headers.length; i++) {
+    const header = headers[i];
+    const idx = Object.prototype.hasOwnProperty.call(map, header) ? map[header] : null;
+    if (idx === null) continue;
+    const value = row[idx];
+    if (isNonEmptyBEPValue_(value)) return value;
+  }
+  return '';
+}
+
+function buildBEPFixedOperationalValuesFromMaster_(row, map) {
+  const name = pickBEPRowValue_(row, map, ['Nama Outlet', 'Nama Cabang/Outlet']);
+  return {
+    'Nama Outlet': name,
+    'Kategori Laundry': pickBEPRowValue_(row, map, ['Kategori Laundry']),
+    'Jam Buka': pickBEPRowValue_(row, map, ['Jam Buka']),
+    'Jam Tutup': pickBEPRowValue_(row, map, ['Jam Tutup']),
+    'Tutup Hari Minggu': pickBEPRowValue_(row, map, ['Tutup Hari Minggu']),
+    'Durasi Operasional': pickBEPRowValue_(row, map, ['Durasi Operasional']),
+    'Target Okupansi Cuci': pickBEPRowValue_(row, map, ['Target Okupansi Cuci']),
+    'Target Okupansi Kering': pickBEPRowValue_(row, map, ['Target Okupansi Kering']),
+    'Target Okupansi Setrika': pickBEPRowValue_(row, map, ['Target Okupansi Setrika']),
+    'Estimasi Cuci': pickBEPRowValue_(row, map, ['Estimasi Cuci']),
+    'Estimasi Kering': pickBEPRowValue_(row, map, ['Estimasi Kering']),
+    'Estimasi Setrika': pickBEPRowValue_(row, map, ['Estimasi Setrika']),
+    'Mesin Cuci': pickBEPRowValue_(row, map, ['Mesin Cuci']),
+    'Mesin Pengering': pickBEPRowValue_(row, map, ['Mesin Pengering']),
+    'Kap Cuci': pickBEPRowValue_(row, map, ['Kap Cuci']),
+    'Kap Kering': pickBEPRowValue_(row, map, ['Kap Kering']),
+    'Durasi Cuci': pickBEPRowValue_(row, map, ['Durasi Cuci']),
+    'Durasi Kering': pickBEPRowValue_(row, map, ['Durasi Kering']),
+    'Alat Setrika': pickBEPRowValue_(row, map, ['Alat Setrika']),
+    'Kap Setrika': pickBEPRowValue_(row, map, ['Kap Setrika']),
+    'Durasi Setrika': pickBEPRowValue_(row, map, ['Durasi Setrika']),
+    'Tipe Mesin Cuci': pickBEPRowValue_(row, map, ['Tipe Mesin Cuci'])
+  };
+}
+
+function syncMasterKapasitasToBEPFixed_(options) {
+  options = options || {};
+  const targetOnly = normalizeOutletName_(options.outletName || options.namaOutlet || '');
+  const ss = _getSpreadsheet();
+  const source = ss.getSheetByName(SHEET_NAME_KAPASITAS);
+  if (!source || source.getLastRow() < 2) return { inserted: 0, updated: 0, skipped: 0 };
+
+  const target = ensureBEPFixedHeaders_();
+  const sourceMap = getHeaderMap(source);
+  const sourceNameCol = ('Nama Outlet' in sourceMap) ? sourceMap['Nama Outlet'] : (('Nama Cabang/Outlet' in sourceMap) ? sourceMap['Nama Cabang/Outlet'] : null);
+  if (sourceNameCol === null) return { inserted: 0, updated: 0, skipped: 0 };
+
+  const sourceRows = source.getRange(2, 1, source.getLastRow() - 1, source.getLastColumn()).getDisplayValues();
+  const masterByOutlet = {};
+  sourceRows.forEach(function(row) {
+    const rawName = row[sourceNameCol];
+    const normalized = normalizeOutletName_(rawName);
+    if (!normalized || normalized.indexOf('nama outlet') !== -1 || normalized.indexOf('nama cabang') !== -1) return;
+    if (targetOnly && normalized !== targetOnly) return;
+    masterByOutlet[normalized] = buildBEPFixedOperationalValuesFromMaster_(row, sourceMap);
+  });
+
+  const targetKeys = Object.keys(masterByOutlet);
+  if (!targetKeys.length) return { inserted: 0, updated: 0, skipped: 0 };
+
+  const map = getHeaderMapByName_(target);
+  const outletCol = map['Nama Outlet'] || map['nama outlet'];
+  if (!outletCol) throw new Error('Header Nama Outlet tidak ditemukan di BEP_Fixed.');
+
+  const lastCol = target.getLastColumn();
+  const targetRows = target.getLastRow() > 1
+    ? target.getRange(2, 1, target.getLastRow() - 1, lastCol).getValues()
+    : [];
+  const rowByOutlet = {};
+  targetRows.forEach(function(row, index) {
+    const normalized = normalizeOutletName_(row[outletCol - 1]);
+    if (normalized && rowByOutlet[normalized] === undefined) rowByOutlet[normalized] = index;
+  });
+
+  let inserted = 0;
+  let updated = 0;
+  let skipped = 0;
+  const now = Utilities.formatDate(new Date(), 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss');
+  const newRows = [];
+  const changedExistingIndexes = [];
+
+  targetKeys.forEach(function(key) {
+    const values = masterByOutlet[key];
+    if (!values || !values['Nama Outlet']) {
+      skipped++;
+      return;
+    }
+
+    const existingIndex = rowByOutlet[key];
+    const row = existingIndex !== undefined ? targetRows[existingIndex] : new Array(lastCol).fill('');
+    let changed = false;
+
+    if (existingIndex === undefined) {
+      if (map['Timestamp']) row[map['Timestamp'] - 1] = now;
+      row[outletCol - 1] = values['Nama Outlet'];
+      changed = true;
+    } else if (!isNonEmptyBEPValue_(row[outletCol - 1])) {
+      row[outletCol - 1] = values['Nama Outlet'];
+      changed = true;
+    }
+
+    BEP_FIXED_OPERATIONAL_HEADERS_.forEach(function(header) {
+      const col = map[header] || map[String(header).toLowerCase()];
+      if (!col) return;
+      const value = values[header];
+      if (!isNonEmptyBEPValue_(value)) return;
+      if (row[col - 1] !== value) {
+        row[col - 1] = value;
+        changed = true;
+      }
+    });
+
+    if (existingIndex !== undefined) {
+      if (changed) {
+        targetRows[existingIndex] = row;
+        changedExistingIndexes.push(existingIndex);
+        updated++;
+      } else {
+        skipped++;
+      }
+    } else {
+      newRows.push(row);
+      rowByOutlet[key] = targetRows.length + newRows.length - 1;
+      inserted++;
+    }
+  });
+
+  const operationalCols = BEP_FIXED_OPERATIONAL_HEADERS_
+    .map(function(header) { return map[header] || map[String(header).toLowerCase()] || 0; })
+    .filter(function(col) { return col > 0; })
+    .sort(function(a, b) { return a - b; });
+  const colGroups = operationalCols.reduce(function(groups, col) {
+    const last = groups[groups.length - 1];
+    if (last && col === last.end + 1) last.end = col;
+    else groups.push({ start: col, end: col });
+    return groups;
+  }, []);
+
+  changedExistingIndexes.forEach(function(existingIndex) {
+    const sheetRow = existingIndex + 2;
+    const row = targetRows[existingIndex];
+    colGroups.forEach(function(group) {
+      const width = group.end - group.start + 1;
+      target.getRange(sheetRow, group.start, 1, width).setValues([row.slice(group.start - 1, group.end)]);
+    });
+  });
+  if (newRows.length) target.getRange(target.getLastRow() + 1, 1, newRows.length, lastCol).setValues(newRows);
+  if (inserted || updated) {
+    SpreadsheetApp.flush();
+    try { clearServerCache(); } catch (error) {}
+  }
+  return { inserted: inserted, updated: updated, skipped: skipped };
 }
 
 function parseNumberSafe_(value) {
@@ -1311,7 +1502,28 @@ function normalizeBEPFixedPayload_(payload) {
     detailLainLain: cleanOther,
     totalLainLainBulanan: totalLain,
     totalFixedCostBulanan: totalFixed,
-    catatan: String(payload.catatan || payload.catatanSewa || '').trim()
+    catatan: String(payload.catatan || payload.catatanSewa || '').trim(),
+    kategoriLaundry: String(payload.kategoriLaundry || payload['Kategori Laundry'] || '').trim(),
+    jamBuka: payload.jamBuka || payload['Jam Buka'] || '',
+    jamTutup: payload.jamTutup || payload['Jam Tutup'] || '',
+    tutupHariMinggu: payload.tutupHariMinggu || payload.tutupMinggu || payload['Tutup Hari Minggu'] || '',
+    durasiOperasional: payload.durasiOperasional || payload['Durasi Operasional'] || '',
+    targetOkupansiCuci: payload.targetOkupansiCuci || payload['Target Okupansi Cuci'] || '',
+    targetOkupansiKering: payload.targetOkupansiKering || payload['Target Okupansi Kering'] || '',
+    targetOkupansiSetrika: payload.targetOkupansiSetrika || payload['Target Okupansi Setrika'] || '',
+    estimasiCuci: payload.estimasiCuci || payload['Estimasi Cuci'] || '',
+    estimasiKering: payload.estimasiKering || payload['Estimasi Kering'] || '',
+    estimasiSetrika: payload.estimasiSetrika || payload['Estimasi Setrika'] || '',
+    mesinCuci: payload.mesinCuci || payload['Mesin Cuci'] || '',
+    mesinPengering: payload.mesinPengering || payload['Mesin Pengering'] || '',
+    kapCuci: payload.kapCuci || payload['Kap Cuci'] || '',
+    kapKering: payload.kapKering || payload['Kap Kering'] || '',
+    durasiCuci: payload.durasiCuci || payload['Durasi Cuci'] || '',
+    durasiKering: payload.durasiKering || payload['Durasi Kering'] || '',
+    alatSetrika: payload.alatSetrika || payload['Alat Setrika'] || '',
+    kapSetrika: payload.kapSetrika || payload['Kap Setrika'] || '',
+    durasiSetrika: payload.durasiSetrika || payload['Durasi Setrika'] || '',
+    tipeMesinCuci: payload.tipeMesinCuci || payload['Tipe Mesin Cuci'] || ''
   };
 }
 
@@ -1369,6 +1581,7 @@ function upsertBEPFixedByOutlet_(payload) {
 }
 
 function getBEPFixedByOutlet_(outletName) {
+  if (outletName) syncMasterKapasitasToBEPFixed_({ outletName: outletName });
   const sheet = ensureBEPFixedSheet_();
   const map = getHeaderMapByName_(sheet);
   const outletCol = map['Nama Outlet'] || map['nama outlet'];
@@ -1384,7 +1597,7 @@ function getBEPFixedByOutlet_(outletName) {
   for (let i = 0; i < values.length; i++) {
     const row = values[i];
     if (normalizeOutletName_(row[outletCol - 1]) !== targetName) continue;
-    return {
+    const result = {
       namaOutlet: get(row, 'Nama Outlet'),
       statusSewa: get(row, 'Status Sewa') || 'Sewa',
       biayaSewaTahunan: parseNumberSafe_(get(row, 'Biaya Sewa Tahunan')),
@@ -1400,8 +1613,33 @@ function getBEPFixedByOutlet_(outletName) {
       detailLainLain: parseJsonSafe_(get(row, 'Detail Lain Lain JSON'), []),
       totalLainLainBulanan: parseNumberSafe_(get(row, 'Total Lain Lain Bulanan')),
       totalFixedCostBulanan: parseNumberSafe_(get(row, 'Total Fixed Cost Bulanan')),
-      catatan: get(row, 'Catatan')
+      catatan: get(row, 'Catatan'),
+      kategoriLaundry: get(row, 'Kategori Laundry'),
+      jamBuka: get(row, 'Jam Buka'),
+      jamTutup: get(row, 'Jam Tutup'),
+      tutupHariMinggu: get(row, 'Tutup Hari Minggu'),
+      durasiOperasional: get(row, 'Durasi Operasional'),
+      targetOkupansiCuci: get(row, 'Target Okupansi Cuci'),
+      targetOkupansiKering: get(row, 'Target Okupansi Kering'),
+      targetOkupansiSetrika: get(row, 'Target Okupansi Setrika'),
+      estimasiCuci: get(row, 'Estimasi Cuci'),
+      estimasiKering: get(row, 'Estimasi Kering'),
+      estimasiSetrika: get(row, 'Estimasi Setrika'),
+      mesinCuci: get(row, 'Mesin Cuci'),
+      mesinPengering: get(row, 'Mesin Pengering'),
+      kapCuci: get(row, 'Kap Cuci'),
+      kapKering: get(row, 'Kap Kering'),
+      durasiCuci: get(row, 'Durasi Cuci'),
+      durasiKering: get(row, 'Durasi Kering'),
+      alatSetrika: get(row, 'Alat Setrika'),
+      kapSetrika: get(row, 'Kap Setrika'),
+      durasiSetrika: get(row, 'Durasi Setrika'),
+      tipeMesinCuci: get(row, 'Tipe Mesin Cuci')
     };
+    BEP_FIXED_OPERATIONAL_HEADERS_.forEach(function(header) {
+      result[header] = get(row, header);
+    });
+    return result;
   }
   return null;
 }
