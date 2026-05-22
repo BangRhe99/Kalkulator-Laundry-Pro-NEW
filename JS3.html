@@ -1086,4 +1086,448 @@
         releaseLock();
       }
     }
+/* =====================================================================
+ * BEP FIXED COST MODULE - 2026-05-22
+ * Scope: Target Titik Impas / BEP only.
+ * ===================================================================== */
+(function zettBEPFixedCostModule() {
+  var DEFAULT_MACHINES = [
+    { name: 'Mesin Cuci', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 4, annualMaintenance: 0 },
+    { name: 'Mesin Pengering / Dryer', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 },
+    { name: 'Setrika Uap Boiler', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 },
+    { name: 'Setrika Listrik', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 },
+    { name: 'Mesin/Peralatan Lainnya', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 }
+  ];
+
+  var state = {
+    outletName: '',
+    rentStatus: 'Sewa',
+    annualRent: 0,
+    monthlyRent: 0,
+    rentNote: '',
+    salaries: [],
+    machines: [],
+    internetProvider: '',
+    internetMonthly: 0,
+    internetNote: '',
+    others: [],
+    totals: {}
+  };
+
+  function byId(id) { return document.getElementById(id); }
+  function norm(value) { return String(value || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+  function selectedOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+  function finite(n) { n = Number(n); return Number.isFinite(n) ? n : 0; }
+  function parseSafe(value) {
+    if (value === null || value === undefined || value === '') return 0;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+    var raw = String(value).trim().replace(/[^\d,.-]/g, '');
+    if (!raw) return 0;
+    if (raw.indexOf(',') >= 0 && raw.indexOf('.') >= 0) raw = raw.replace(/\./g, '').replace(',', '.');
+    else if (raw.indexOf(',') >= 0) raw = raw.replace(',', '.');
+    else raw = raw.replace(/\./g, '');
+    var n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  }
+  function money(value) {
+    var n = Math.round(finite(value));
+    if (typeof formatRupiah === 'function') {
+      try { return formatRupiah(n); } catch (error) {}
+    }
+    return 'Rp ' + n.toLocaleString('id-ID');
+  }
+  function setText(id, value) { var el = byId(id); if (el) el.textContent = value; }
+  function setValue(id, value) { var el = byId(id); if (el) el.value = value; }
+  function escapeHtml(value) {
+    return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function formatInputValue(value) { return value ? String(Math.round(finite(value))).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''; }
+
+  window.zettMoneyInput = function(input) {
+    if (!input) return;
+    input.value = formatInputValue(parseSafe(input.value));
+  };
+
+  function emptyState(outlet) {
+    state = {
+      outletName: outlet || '',
+      rentStatus: 'Sewa',
+      annualRent: 0,
+      monthlyRent: 0,
+      rentNote: '',
+      salaries: [{ name: '', count: 1, salaryPerPerson: 0 }],
+      machines: DEFAULT_MACHINES.map(function(item) { return Object.assign({}, item); }),
+      internetProvider: '',
+      internetMonthly: 0,
+      internetNote: '',
+      others: [{ name: '', monthlyAmount: 0, note: '' }],
+      totals: {}
+    };
+  }
+
+  function cleanSalary(row) {
+    row = row || {};
+    var count = Math.max(0, finite(parseSafe(row.count)));
+    var salary = Math.max(0, finite(parseSafe(row.salaryPerPerson)));
+    return {
+      name: String(row.name || row.role || '').trim(),
+      count: count,
+      salaryPerPerson: salary,
+      total: count * salary
+    };
+  }
+  function cleanMachine(row) {
+    row = row || {};
+    var units = Math.max(0, parseSafe(row.units));
+    var purchase = Math.max(0, parseSafe(row.purchasePrice));
+    var residual = Math.max(0, parseSafe(row.residualValue));
+    var years = Math.max(0, parseSafe(row.usefulLifeYears));
+    var maintenance = Math.max(0, parseSafe(row.annualMaintenance));
+    var depreciation = years > 0 ? Math.max(0, ((purchase - residual) * units) / (years * 12)) : 0;
+    var maintenanceMonthly = maintenance / 12;
+    return {
+      name: String(row.name || '').trim(),
+      units: units,
+      purchasePrice: purchase,
+      residualValue: residual,
+      usefulLifeYears: years,
+      annualMaintenance: maintenance,
+      depreciationMonthly: depreciation,
+      maintenanceMonthly: maintenanceMonthly,
+      totalMonthly: depreciation + maintenanceMonthly
+    };
+  }
+  function cleanOther(row) {
+    row = row || {};
+    return {
+      name: String(row.name || '').trim(),
+      monthlyAmount: Math.max(0, parseSafe(row.monthlyAmount)),
+      note: String(row.note || '').trim()
+    };
+  }
+
+  function collectFromDom() {
+    state.outletName = selectedOutlet();
+    state.rentStatus = byId('bepRentStatus')?.value || 'Sewa';
+    state.annualRent = parseSafe(byId('inputSewaTahun')?.value);
+    state.monthlyRent = state.annualRent > 0 ? state.annualRent / 12 : 0;
+    state.rentNote = String(byId('bepRentNote')?.value || '').trim();
+    state.internetProvider = String(byId('bepInternetProvider')?.value || '').trim();
+    state.internetMonthly = parseSafe(byId('bepInternetMonthly')?.value);
+    state.internetNote = String(byId('bepInternetNote')?.value || '').trim();
+
+    state.salaries = Array.from(document.querySelectorAll('#bepSalaryRows .bep-row')).map(function(row) {
+      return cleanSalary({
+        name: row.querySelector('[data-bep-field="salary-name"]')?.value,
+        count: row.querySelector('[data-bep-field="salary-count"]')?.value,
+        salaryPerPerson: row.querySelector('[data-bep-field="salary-amount"]')?.value
+      });
+    });
+    state.machines = Array.from(document.querySelectorAll('#bepMachineRows .bep-machine-row')).map(function(row) {
+      return cleanMachine({
+        name: row.querySelector('[data-bep-field="machine-name"]')?.value,
+        units: row.querySelector('[data-bep-field="machine-units"]')?.value,
+        purchasePrice: row.querySelector('[data-bep-field="machine-purchase"]')?.value,
+        residualValue: row.querySelector('[data-bep-field="machine-residual"]')?.value,
+        usefulLifeYears: row.querySelector('[data-bep-field="machine-years"]')?.value,
+        annualMaintenance: row.querySelector('[data-bep-field="machine-maintenance"]')?.value
+      });
+    });
+    state.others = Array.from(document.querySelectorAll('#bepOtherRows .bep-other-row')).map(function(row) {
+      return cleanOther({
+        name: row.querySelector('[data-bep-field="other-name"]')?.value,
+        monthlyAmount: row.querySelector('[data-bep-field="other-amount"]')?.value,
+        note: row.querySelector('[data-bep-field="other-note"]')?.value
+      });
+    });
+  }
+
+  function calculateTotals() {
+    state.monthlyRent = state.annualRent > 0 ? state.annualRent / 12 : 0;
+    state.salaries = (state.salaries || []).map(cleanSalary);
+    state.machines = (state.machines || []).map(cleanMachine);
+    state.others = (state.others || []).map(cleanOther);
+
+    var salaryTotal = state.salaries.reduce(function(sum, row) { return sum + finite(row.total); }, 0);
+    var depreciationTotal = state.machines.reduce(function(sum, row) { return sum + finite(row.depreciationMonthly); }, 0);
+    var maintenanceTotal = state.machines.reduce(function(sum, row) { return sum + finite(row.maintenanceMonthly); }, 0);
+    var machineTotal = state.machines.reduce(function(sum, row) { return sum + finite(row.totalMonthly); }, 0);
+    var otherTotal = state.others.reduce(function(sum, row) { return sum + finite(row.monthlyAmount); }, 0);
+    var internetTotal = finite(state.internetMonthly);
+    var fixedTotal = finite(state.monthlyRent) + salaryTotal + machineTotal + internetTotal + otherTotal;
+
+    state.totals = {
+      salaryTotal: salaryTotal,
+      depreciationTotal: depreciationTotal,
+      maintenanceTotal: maintenanceTotal,
+      machineTotal: machineTotal,
+      internetTotal: internetTotal,
+      otherTotal: otherTotal,
+      fixedTotal: fixedTotal
+    };
+    return state.totals;
+  }
+
+  function syncLegacyInputs() {
+    var totals = calculateTotals();
+    setValue('inputSewaTahun', formatInputValue(state.annualRent));
+    setValue('inputBiayaTetapLain', Math.round(totals.machineTotal + totals.internetTotal + totals.otherTotal));
+    setValue('hiddenTotalBiayaTetap', Math.round(totals.fixedTotal));
+  }
+
+  function renderSalaryRows() {
+    var wrap = byId('bepSalaryRows');
+    if (!wrap) return;
+    wrap.innerHTML = (state.salaries || []).map(function(row, idx) {
+      row = cleanSalary(row);
+      return '<div class="bep-row" data-index="' + idx + '">' +
+        '<input class="bep-input" data-bep-field="salary-name" placeholder="Nama/Jabatan" value="' + escapeHtml(row.name) + '" oninput="zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="salary-count" inputmode="numeric" placeholder="Orang" value="' + escapeHtml(row.count || '') + '" oninput="zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="salary-amount" inputmode="numeric" placeholder="Gaji/orang" value="' + escapeHtml(formatInputValue(row.salaryPerPerson)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
+        '<div class="bep-mini-total">' + money(row.total) + '</div>' +
+        '<button type="button" class="bep-icon-btn" onclick="zettRemoveBEPSalaryRow(' + idx + ')"><i class="ph ph-trash"></i></button>' +
+        '<input type="hidden" class="input-gaji" value="' + Math.round(row.total) + '">' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderMachineRows() {
+    var wrap = byId('bepMachineRows');
+    if (!wrap) return;
+    wrap.innerHTML = (state.machines || []).map(function(row, idx) {
+      row = cleanMachine(row);
+      return '<div class="bep-machine-row" data-index="' + idx + '">' +
+        '<input class="bep-input" data-bep-field="machine-name" placeholder="Nama mesin" value="' + escapeHtml(row.name) + '" oninput="zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="machine-units" inputmode="numeric" placeholder="Unit" value="' + escapeHtml(row.units || '') + '" oninput="zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="machine-purchase" inputmode="numeric" placeholder="Harga/unit" value="' + escapeHtml(formatInputValue(row.purchasePrice)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="machine-residual" inputmode="numeric" placeholder="Residu/unit" value="' + escapeHtml(formatInputValue(row.residualValue)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="machine-years" inputmode="decimal" placeholder="Tahun" value="' + escapeHtml(row.usefulLifeYears || '') + '" oninput="zettBEPFixedChange()">' +
+        '<div class="bep-mini-total">' + money(row.depreciationMonthly) + '</div>' +
+        '<input class="bep-input" data-bep-field="machine-maintenance" inputmode="numeric" placeholder="Rawat/tahun" value="' + escapeHtml(formatInputValue(row.annualMaintenance)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
+        '<div class="bep-mini-total">' + money(row.totalMonthly) + '</div>' +
+        '<button type="button" class="bep-icon-btn" onclick="zettRemoveBEPMachineRow(' + idx + ')"><i class="ph ph-trash"></i></button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderOtherRows() {
+    var wrap = byId('bepOtherRows');
+    if (!wrap) return;
+    wrap.innerHTML = (state.others || []).map(function(row, idx) {
+      row = cleanOther(row);
+      return '<div class="bep-other-row" data-index="' + idx + '">' +
+        '<input class="bep-input" data-bep-field="other-name" placeholder="Nama biaya" value="' + escapeHtml(row.name) + '" oninput="zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="other-amount" inputmode="numeric" placeholder="Nominal/bulan" value="' + escapeHtml(formatInputValue(row.monthlyAmount)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
+        '<input class="bep-input" data-bep-field="other-note" placeholder="Catatan" value="' + escapeHtml(row.note) + '" oninput="zettBEPFixedChange()">' +
+        '<button type="button" class="bep-icon-btn" onclick="zettRemoveBEPOtherRow(' + idx + ')"><i class="ph ph-trash"></i></button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderAll() {
+    calculateTotals();
+    if (byId('bepRentStatus')) byId('bepRentStatus').value = state.rentStatus || 'Sewa';
+    setValue('bepRentNote', state.rentNote || '');
+    setValue('inputSewaTahun', formatInputValue(state.annualRent));
+    setValue('bepInternetProvider', state.internetProvider || '');
+    setValue('bepInternetMonthly', formatInputValue(state.internetMonthly));
+    setValue('bepInternetNote', state.internetNote || '');
+    renderSalaryRows();
+    renderMachineRows();
+    renderOtherRows();
+    updateDisplays();
+  }
+
+  function updateDisplays() {
+    var totals = calculateTotals();
+    syncLegacyInputs();
+    setText('displaySewaBulan', money(state.monthlyRent));
+    var hari = byId('inputMingguTutup') && byId('inputMingguTutup').checked ? 26 : 30;
+    setText('displaySewaHari', money(state.monthlyRent / Math.max(hari, 1)));
+    setText('displayTotalGaji', money(totals.salaryTotal));
+    setText('bepSalaryTotal', money(totals.salaryTotal) + ' / bulan');
+    setText('bepMachineTotal', money(totals.machineTotal) + ' / bulan');
+    setText('bepInternetTotal', money(totals.internetTotal) + ' / bulan');
+    setText('bepOtherTotal', money(totals.otherTotal) + ' / bulan');
+    setText('bepFixedGrandTotal', money(totals.fixedTotal));
+    setText('bepSummaryRent', money(state.monthlyRent));
+    setText('bepSummarySalary', money(totals.salaryTotal));
+    setText('bepSummaryMachine', money(totals.machineTotal));
+    setText('bepSummaryInternet', money(totals.internetTotal));
+    setText('bepSummaryOther', money(totals.otherTotal));
+  }
+
+  function scheduleCalc() {
+    updateDisplays();
+    if (typeof window.calculateAll === 'function') {
+      window.clearTimeout(window.__bepFixedCalcTimer);
+      window.__bepFixedCalcTimer = window.setTimeout(function() {
+        try { window.calculateAll(); } catch (error) {}
+      }, 40);
+    }
+  }
+
+  window.zettBEPFixedChange = function() {
+    collectFromDom();
+    document.querySelectorAll('#bepSalaryRows .bep-row').forEach(function(row, index) {
+      var total = state.salaries[index] ? state.salaries[index].total : 0;
+      var totalEl = row.querySelector('.bep-mini-total');
+      var hidden = row.querySelector('.input-gaji');
+      if (totalEl) totalEl.textContent = money(total);
+      if (hidden) hidden.value = Math.round(total);
+    });
+    document.querySelectorAll('#bepMachineRows .bep-machine-row').forEach(function(row, index) {
+      var item = state.machines[index] || {};
+      var totals = row.querySelectorAll('.bep-mini-total');
+      if (totals[0]) totals[0].textContent = money(item.depreciationMonthly || 0);
+      if (totals[1]) totals[1].textContent = money(item.totalMonthly || 0);
+    });
+    scheduleCalc();
+  };
+  window.zettAddBEPSalaryRow = window.addKaryawan = function() {
+    if (!state.salaries) emptyState(selectedOutlet());
+    collectFromDom();
+    state.salaries.push({ name: '', count: 1, salaryPerPerson: 0 });
+    renderAll();
+    scheduleCalc();
+  };
+  window.zettRemoveBEPSalaryRow = function(index) {
+    collectFromDom();
+    state.salaries.splice(index, 1);
+    if (!state.salaries.length) state.salaries.push({ name: '', count: 1, salaryPerPerson: 0 });
+    renderAll();
+    scheduleCalc();
+  };
+  window.zettAddBEPMachineRow = function() {
+    collectFromDom();
+    state.machines.push({ name: '', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 });
+    renderAll();
+    scheduleCalc();
+  };
+  window.zettRemoveBEPMachineRow = function(index) {
+    collectFromDom();
+    state.machines.splice(index, 1);
+    if (!state.machines.length) state.machines.push({ name: '', units: 1, purchasePrice: 0, residualValue: 0, usefulLifeYears: 3, annualMaintenance: 0 });
+    renderAll();
+    scheduleCalc();
+  };
+  window.zettAddBEPOtherRow = function() {
+    collectFromDom();
+    state.others.push({ name: '', monthlyAmount: 0, note: '' });
+    renderAll();
+    scheduleCalc();
+  };
+  window.zettRemoveBEPOtherRow = function(index) {
+    collectFromDom();
+    state.others.splice(index, 1);
+    if (!state.others.length) state.others.push({ name: '', monthlyAmount: 0, note: '' });
+    renderAll();
+    scheduleCalc();
+  };
+
+  function applyServerData(data, outlet) {
+    emptyState(outlet);
+    if (data) {
+      state.outletName = data.namaOutlet || data['Nama Outlet'] || outlet || '';
+      state.rentStatus = data.statusSewa || data['Status Sewa'] || 'Sewa';
+      state.annualRent = parseSafe(data.biayaSewaTahunan || data['Biaya Sewa Tahunan']);
+      state.monthlyRent = parseSafe(data.biayaSewaBulanan || data['Biaya Sewa Bulanan']) || (state.annualRent / 12);
+      state.rentNote = data.catatanSewa || data.catatan || data['Catatan'] || '';
+      state.salaries = Array.isArray(data.detailGaji) ? data.detailGaji : state.salaries;
+      state.machines = Array.isArray(data.detailMesin) ? data.detailMesin : state.machines;
+      state.internetProvider = data.providerInternet || data['Provider Internet'] || '';
+      state.internetMonthly = parseSafe(data.biayaInternetBulanan || data['Biaya Internet Bulanan']);
+      state.internetNote = data.catatanInternet || '';
+      state.others = Array.isArray(data.detailLainLain) ? data.detailLainLain : state.others;
+    }
+    renderAll();
+    scheduleCalc();
+  }
+
+  window.zettLoadBEPFixedCost = function(outletName) {
+    var outlet = String(outletName || selectedOutlet()).trim();
+    if (!outlet) {
+      emptyState('');
+      renderAll();
+      scheduleCalc();
+      return;
+    }
+    emptyState(outlet);
+    renderAll();
+    if (!window.google || !google.script || !google.script.run) return;
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (norm(selectedOutlet()) !== norm(outlet)) return;
+        applyServerData(res && res.data ? res.data : null, outlet);
+      })
+      .withFailureHandler(function(error) {
+        console.error('Gagal load BEP Fixed:', error);
+        if (norm(selectedOutlet()) === norm(outlet)) applyServerData(null, outlet);
+      })
+      .getBEPFixedCost(outlet);
+  };
+
+  function buildPayload() {
+    collectFromDom();
+    calculateTotals();
+    return {
+      namaOutlet: state.outletName || selectedOutlet(),
+      statusSewa: state.rentStatus,
+      biayaSewaTahunan: state.annualRent,
+      biayaSewaBulanan: state.monthlyRent,
+      catatanSewa: state.rentNote,
+      detailGaji: state.salaries,
+      totalGajiBulanan: state.totals.salaryTotal,
+      detailMesin: state.machines,
+      totalDepresiasiMesinBulanan: state.totals.depreciationTotal,
+      totalCadanganPerawatanMesinBulanan: state.totals.maintenanceTotal,
+      totalBiayaMesinBulanan: state.totals.machineTotal,
+      providerInternet: state.internetProvider,
+      biayaInternetBulanan: state.internetMonthly,
+      catatanInternet: state.internetNote,
+      detailLainLain: state.others,
+      totalLainLainBulanan: state.totals.otherTotal,
+      totalFixedCostBulanan: state.totals.fixedTotal,
+      catatan: [state.rentNote, state.internetNote].filter(Boolean).join(' | ')
+    };
+  }
+  window.zettBuildBEPFixedPayload = buildPayload;
+
+  var originalSave = window.prosesSimpanBEP;
+  window.prosesSimpanBEP = async function() {
+    var outlet = selectedOutlet();
+    if (!outlet) {
+      if (typeof showOmniToast === 'function') showOmniToast('Pilih cabang terlebih dahulu di pojok kanan atas.', 'error');
+      return;
+    }
+    collectFromDom();
+    syncLegacyInputs();
+    if (window.google && google.script && google.script.run) {
+      try { await runServer('saveBEPFixedCost', buildPayload()); } catch (error) { console.error('saveBEPFixedCost gagal:', error); }
+    }
+    if (typeof originalSave === 'function') return originalSave.apply(this, arguments);
+  };
+
+  var originalHandleOutlet = window.handleGlobalOutletChange;
+  window.handleGlobalOutletChange = function(value) {
+    if (typeof originalHandleOutlet === 'function') originalHandleOutlet.apply(this, arguments);
+    window.zettLoadBEPFixedCost(value);
+  };
+
+  var originalSwitch = window.switchMainTab;
+  window.switchMainTab = function(tabName) {
+    document.body.classList.toggle('bep-active', tabName === 'bep');
+    var result = typeof originalSwitch === 'function' ? originalSwitch.apply(this, arguments) : undefined;
+    if (tabName === 'bep') window.zettLoadBEPFixedCost(selectedOutlet());
+    return result;
+  };
+
+  function init() {
+    emptyState(selectedOutlet());
+    renderAll();
+    if (selectedOutlet()) window.zettLoadBEPFixedCost(selectedOutlet());
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+})();
 </script>

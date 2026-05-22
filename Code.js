@@ -1142,6 +1142,288 @@ function saveKapasitas(payload) {
   }
 }
 
+/* =====================================================================
+ * BEP FIXED COST DATA STORE
+ * Sheet: BEP_Fixed. Semua mapping berdasarkan nama header.
+ * ===================================================================== */
+const SHEET_NAME_BEP_FIXED = 'BEP_Fixed';
+const BEP_FIXED_HEADERS_ = [
+  'Timestamp',
+  'Nama Outlet',
+  'Status Sewa',
+  'Biaya Sewa Tahunan',
+  'Biaya Sewa Bulanan',
+  'Detail Gaji JSON',
+  'Total Gaji Bulanan',
+  'Detail Mesin JSON',
+  'Total Depresiasi Mesin Bulanan',
+  'Total Cadangan Perawatan Mesin Bulanan',
+  'Total Biaya Mesin Bulanan',
+  'Provider Internet',
+  'Biaya Internet Bulanan',
+  'Detail Lain Lain JSON',
+  'Total Lain Lain Bulanan',
+  'Total Fixed Cost Bulanan',
+  'Catatan'
+];
+
+function normalizeOutletName_(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function getHeaderMapByName_(sheet) {
+  const map = {};
+  if (!sheet || sheet.getLastColumn() < 1) return map;
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  headers.forEach((header, index) => {
+    const key = String(header || '').trim();
+    if (!key) return;
+    map[key] = index + 1;
+    map[key.toLowerCase()] = index + 1;
+  });
+  return map;
+}
+
+function ensureBEPFixedSheet_() {
+  const ss = _getSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME_BEP_FIXED);
+  if (!sheet) sheet = ss.insertSheet(SHEET_NAME_BEP_FIXED);
+
+  if (sheet.getLastRow() < 1 || sheet.getLastColumn() < 1) {
+    sheet.getRange(1, 1, 1, BEP_FIXED_HEADERS_.length).setValues([BEP_FIXED_HEADERS_]);
+    sheet.setFrozenRows(1);
+    return sheet;
+  }
+
+  let map = getHeaderMapByName_(sheet);
+  const missing = BEP_FIXED_HEADERS_.filter(header => !map[header] && !map[header.toLowerCase()]);
+  if (missing.length) {
+    sheet.getRange(1, sheet.getLastColumn() + 1, 1, missing.length).setValues([missing]);
+    map = getHeaderMapByName_(sheet);
+  }
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+function parseNumberSafe_(value) {
+  if (value === null || value === undefined || value === '') return 0;
+  if (typeof value === 'number') return isFinite(value) ? value : 0;
+  let raw = String(value).trim().replace(/[^\d,.-]/g, '');
+  if (!raw) return 0;
+  if (raw.indexOf(',') >= 0 && raw.indexOf('.') >= 0) raw = raw.replace(/\./g, '').replace(',', '.');
+  else if (raw.indexOf(',') >= 0) raw = raw.replace(',', '.');
+  else raw = raw.replace(/\./g, '');
+  const parsed = Number(raw);
+  return isFinite(parsed) ? parsed : 0;
+}
+
+function toJsonSafe_(value) {
+  try {
+    if (typeof value === 'string') {
+      JSON.parse(value || '[]');
+      return value || '[]';
+    }
+    return JSON.stringify(Array.isArray(value) ? value : []);
+  } catch (error) {
+    return '[]';
+  }
+}
+
+function parseJsonSafe_(value, fallback) {
+  try {
+    if (Array.isArray(value)) return value;
+    if (!value) return fallback;
+    const parsed = JSON.parse(String(value));
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function normalizeBEPFixedPayload_(payload) {
+  payload = payload || {};
+  const detailGaji = parseJsonSafe_(payload.detailGaji, Array.isArray(payload.detailGaji) ? payload.detailGaji : []);
+  const detailMesin = parseJsonSafe_(payload.detailMesin, Array.isArray(payload.detailMesin) ? payload.detailMesin : []);
+  const detailLain = parseJsonSafe_(payload.detailLainLain, Array.isArray(payload.detailLainLain) ? payload.detailLainLain : []);
+
+  const cleanSalary = detailGaji.map(item => {
+    const count = Math.max(0, parseNumberSafe_(item && (item.count || item.jumlahOrang)));
+    const salary = Math.max(0, parseNumberSafe_(item && (item.salaryPerPerson || item.gajiPerOrang)));
+    return {
+      name: String((item && (item.name || item.role || item.nama)) || '').trim(),
+      count: count,
+      salaryPerPerson: salary,
+      total: count * salary
+    };
+  });
+
+  const cleanMachine = detailMesin.map(item => {
+    item = item || {};
+    const units = Math.max(0, parseNumberSafe_(item.units || item.jumlahUnit));
+    const purchase = Math.max(0, parseNumberSafe_(item.purchasePrice || item.hargaBeliPerUnit));
+    const residual = Math.max(0, parseNumberSafe_(item.residualValue || item.nilaiResiduPerUnit));
+    const years = Math.max(0, parseNumberSafe_(item.usefulLifeYears || item.umurManfaatTahun));
+    const annualMaintenance = Math.max(0, parseNumberSafe_(item.annualMaintenance || item.estimasiPerawatanTahunan));
+    const depreciation = years > 0 ? Math.max(0, ((purchase - residual) * units) / (years * 12)) : 0;
+    const maintenanceMonthly = annualMaintenance / 12;
+    return {
+      name: String(item.name || item.namaMesin || '').trim(),
+      units: units,
+      purchasePrice: purchase,
+      residualValue: residual,
+      usefulLifeYears: years,
+      annualMaintenance: annualMaintenance,
+      depreciationMonthly: depreciation,
+      maintenanceMonthly: maintenanceMonthly,
+      totalMonthly: depreciation + maintenanceMonthly
+    };
+  });
+
+  const cleanOther = detailLain.map(item => ({
+    name: String((item && (item.name || item.namaBiaya)) || '').trim(),
+    monthlyAmount: Math.max(0, parseNumberSafe_(item && (item.monthlyAmount || item.nominalBulanan))),
+    note: String((item && (item.note || item.catatan)) || '').trim()
+  }));
+
+  const totalGaji = cleanSalary.reduce((sum, item) => sum + parseNumberSafe_(item.total), 0);
+  const totalDepresiasi = cleanMachine.reduce((sum, item) => sum + parseNumberSafe_(item.depreciationMonthly), 0);
+  const totalPerawatan = cleanMachine.reduce((sum, item) => sum + parseNumberSafe_(item.maintenanceMonthly), 0);
+  const totalMesin = cleanMachine.reduce((sum, item) => sum + parseNumberSafe_(item.totalMonthly), 0);
+  const totalLain = cleanOther.reduce((sum, item) => sum + parseNumberSafe_(item.monthlyAmount), 0);
+  const sewaTahunan = Math.max(0, parseNumberSafe_(payload.biayaSewaTahunan));
+  const sewaBulanan = Math.max(0, parseNumberSafe_(payload.biayaSewaBulanan)) || (sewaTahunan / 12);
+  const internet = Math.max(0, parseNumberSafe_(payload.biayaInternetBulanan));
+  const totalFixed = sewaBulanan + totalGaji + totalMesin + internet + totalLain;
+
+  return {
+    namaOutlet: String(payload.namaOutlet || payload['Nama Outlet'] || '').trim(),
+    statusSewa: String(payload.statusSewa || 'Sewa').trim() || 'Sewa',
+    biayaSewaTahunan: sewaTahunan,
+    biayaSewaBulanan: sewaBulanan,
+    detailGaji: cleanSalary,
+    totalGajiBulanan: totalGaji,
+    detailMesin: cleanMachine,
+    totalDepresiasiMesinBulanan: totalDepresiasi,
+    totalCadanganPerawatanMesinBulanan: totalPerawatan,
+    totalBiayaMesinBulanan: totalMesin,
+    providerInternet: String(payload.providerInternet || '').trim(),
+    biayaInternetBulanan: internet,
+    detailLainLain: cleanOther,
+    totalLainLainBulanan: totalLain,
+    totalFixedCostBulanan: totalFixed,
+    catatan: String(payload.catatan || payload.catatanSewa || '').trim()
+  };
+}
+
+function upsertBEPFixedByOutlet_(payload) {
+  const sheet = ensureBEPFixedSheet_();
+  const data = normalizeBEPFixedPayload_(payload);
+  if (!data.namaOutlet) throw new Error('Nama Outlet wajib diisi.');
+
+  const map = getHeaderMapByName_(sheet);
+  const outletCol = map['Nama Outlet'] || map['nama outlet'];
+  if (!outletCol) throw new Error('Header Nama Outlet tidak ditemukan di BEP_Fixed.');
+
+  const now = Utilities.formatDate(new Date(), 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss');
+  let targetRow = 0;
+  if (sheet.getLastRow() > 1) {
+    const names = sheet.getRange(2, outletCol, sheet.getLastRow() - 1, 1).getDisplayValues();
+    const targetName = normalizeOutletName_(data.namaOutlet);
+    for (let i = 0; i < names.length; i++) {
+      if (normalizeOutletName_(names[i][0]) === targetName) {
+        targetRow = i + 2;
+        break;
+      }
+    }
+  }
+
+  const row = targetRow ? sheet.getRange(targetRow, 1, 1, sheet.getLastColumn()).getValues()[0] : new Array(sheet.getLastColumn()).fill('');
+  const setVal = (header, value) => {
+    const col = map[header] || map[String(header).toLowerCase()];
+    if (col) row[col - 1] = value;
+  };
+
+  setVal('Timestamp', now);
+  setVal('Nama Outlet', data.namaOutlet);
+  setVal('Status Sewa', data.statusSewa);
+  setVal('Biaya Sewa Tahunan', data.biayaSewaTahunan);
+  setVal('Biaya Sewa Bulanan', data.biayaSewaBulanan);
+  setVal('Detail Gaji JSON', toJsonSafe_(data.detailGaji));
+  setVal('Total Gaji Bulanan', data.totalGajiBulanan);
+  setVal('Detail Mesin JSON', toJsonSafe_(data.detailMesin));
+  setVal('Total Depresiasi Mesin Bulanan', data.totalDepresiasiMesinBulanan);
+  setVal('Total Cadangan Perawatan Mesin Bulanan', data.totalCadanganPerawatanMesinBulanan);
+  setVal('Total Biaya Mesin Bulanan', data.totalBiayaMesinBulanan);
+  setVal('Provider Internet', data.providerInternet);
+  setVal('Biaya Internet Bulanan', data.biayaInternetBulanan);
+  setVal('Detail Lain Lain JSON', toJsonSafe_(data.detailLainLain));
+  setVal('Total Lain Lain Bulanan', data.totalLainLainBulanan);
+  setVal('Total Fixed Cost Bulanan', data.totalFixedCostBulanan);
+  setVal('Catatan', data.catatan);
+
+  if (targetRow) sheet.getRange(targetRow, 1, 1, row.length).setValues([row]);
+  else sheet.appendRow(row);
+  SpreadsheetApp.flush();
+  try { clearServerCache(); } catch (error) {}
+  return data;
+}
+
+function getBEPFixedByOutlet_(outletName) {
+  const sheet = ensureBEPFixedSheet_();
+  const map = getHeaderMapByName_(sheet);
+  const outletCol = map['Nama Outlet'] || map['nama outlet'];
+  if (!outletCol || !outletName || sheet.getLastRow() < 2) return null;
+
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getDisplayValues();
+  const targetName = normalizeOutletName_(outletName);
+  const get = (row, header) => {
+    const col = map[header] || map[String(header).toLowerCase()];
+    return col ? row[col - 1] : '';
+  };
+
+  for (let i = 0; i < values.length; i++) {
+    const row = values[i];
+    if (normalizeOutletName_(row[outletCol - 1]) !== targetName) continue;
+    return {
+      namaOutlet: get(row, 'Nama Outlet'),
+      statusSewa: get(row, 'Status Sewa') || 'Sewa',
+      biayaSewaTahunan: parseNumberSafe_(get(row, 'Biaya Sewa Tahunan')),
+      biayaSewaBulanan: parseNumberSafe_(get(row, 'Biaya Sewa Bulanan')),
+      detailGaji: parseJsonSafe_(get(row, 'Detail Gaji JSON'), []),
+      totalGajiBulanan: parseNumberSafe_(get(row, 'Total Gaji Bulanan')),
+      detailMesin: parseJsonSafe_(get(row, 'Detail Mesin JSON'), []),
+      totalDepresiasiMesinBulanan: parseNumberSafe_(get(row, 'Total Depresiasi Mesin Bulanan')),
+      totalCadanganPerawatanMesinBulanan: parseNumberSafe_(get(row, 'Total Cadangan Perawatan Mesin Bulanan')),
+      totalBiayaMesinBulanan: parseNumberSafe_(get(row, 'Total Biaya Mesin Bulanan')),
+      providerInternet: get(row, 'Provider Internet'),
+      biayaInternetBulanan: parseNumberSafe_(get(row, 'Biaya Internet Bulanan')),
+      detailLainLain: parseJsonSafe_(get(row, 'Detail Lain Lain JSON'), []),
+      totalLainLainBulanan: parseNumberSafe_(get(row, 'Total Lain Lain Bulanan')),
+      totalFixedCostBulanan: parseNumberSafe_(get(row, 'Total Fixed Cost Bulanan')),
+      catatan: get(row, 'Catatan')
+    };
+  }
+  return null;
+}
+
+function saveBEPFixedCost(payload) {
+  try {
+    const data = upsertBEPFixedByOutlet_(payload);
+    return { status: 'success', message: 'Fixed Cost BEP berhasil disimpan.', data: data };
+  } catch (error) {
+    return { status: 'error', message: error.toString(), data: null };
+  }
+}
+
+function getBEPFixedCost(outletName) {
+  try {
+    const data = getBEPFixedByOutlet_(outletName);
+    return { status: 'success', data: data || normalizeBEPFixedPayload_({ namaOutlet: outletName }) };
+  } catch (error) {
+    return { status: 'error', message: error.toString(), data: normalizeBEPFixedPayload_({ namaOutlet: outletName }) };
+  }
+}
+
 function saveKapasitasPremium(payload) {
   return saveKapasitas(payload);
 }

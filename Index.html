@@ -88,6 +88,47 @@
       transition: all 0.3s ease;
     }
 
+    body.bep-active #sidebar {
+      width: 272px;
+    }
+
+    body.bep-active #sidebar .nav-btn {
+      min-height: 44px;
+      padding: 0.68rem 0.9rem !important;
+      gap: 0.78rem !important;
+      border-radius: 1rem !important;
+      font-size: 0.82rem;
+      line-height: 1.18;
+      letter-spacing: -0.005em;
+    }
+
+    body.bep-active #sidebar .nav-btn i {
+      font-size: 1.12rem !important;
+      flex: 0 0 auto;
+    }
+
+    body.bep-active #sidebar .nav-btn span {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    body.bep-active #sidebar .custom-scroll {
+      padding-top: 1rem !important;
+      padding-bottom: 1rem !important;
+      row-gap: 0.32rem;
+    }
+
+    @media (max-width: 767px) {
+      body.bep-active #sidebar {
+        width: min(82vw, 272px);
+      }
+
+      body.bep-active #sidebar .nav-btn {
+        min-height: 46px;
+        font-size: 0.84rem;
+      }
+    }
+
     header {
       border-color: #e2e8f0;
     }
@@ -557,6 +598,7 @@
     function switchMainTab(tabName) {
       setActiveMenu(tabName);
       document.body.classList.toggle('hpp-mobile-active', tabName === 'hpp');
+      document.body.classList.toggle('bep-active', tabName === 'bep');
       if (window.innerWidth < 768) {
         closeSidebarMobile();
       }
@@ -799,6 +841,10 @@
         zettRetrySyncHPPFromGSheet();
       } else if (typeof zettSyncHPPFromGSheet === 'function') {
         zettSyncHPPFromGSheet();
+      }
+
+      if (typeof window.zettLoadBEPFixedCost === 'function') {
+        window.zettLoadBEPFixedCost(value);
       }
 
     }
@@ -1105,6 +1151,7 @@
         window.__HPP_FORCE_ZERO_DASHBOARD = false;
         window.__HPP_GSHEET_SYNC_LOCKED = false;
         switchOutlet(outlet);
+        try { if (typeof window.zettLoadBEPFixedCost === 'function') window.zettLoadBEPFixedCost(outlet); } catch (error) {}
         try { if (typeof window.updateHeaderKategoriLaundryInfo === 'function') window.updateHeaderKategoriLaundryInfo(); } catch (error) {}
         setTimeout(function() {
           try { if (typeof window.updateHeaderKategoriLaundryInfo === 'function') window.updateHeaderKategoriLaundryInfo(); } catch (error) {}
@@ -1135,6 +1182,9 @@
           var outlet = currentOutlet();
           if (!outlet) renderInitialZero();
           else switchOutlet(outlet, { noBackgroundRefresh: true });
+        }
+        if (tabName === 'bep' && typeof window.zettLoadBEPFixedCost === 'function') {
+          window.zettLoadBEPFixedCost(currentOutlet());
         }
         return result;
       };
