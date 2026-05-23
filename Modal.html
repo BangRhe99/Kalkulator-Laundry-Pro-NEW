@@ -7656,6 +7656,29 @@ function zettApplyHPPRowToForm(row) {
   zettSetInputValue('inputPelicinKapasitas', row['Chem_Pel_Kapasitas']);
   zettSetInputValue('inputPelicinPemakaian', row['Chem_Pel_Pemakaian']);
 
+  zettSetInputValue('toggleBahanDet', row['Chem_Det_Active']);
+  zettSetSelectValue('bahanDetType', row['Chem_Det_Type']);
+  zettSetInputValue('bahanDetHargaBulk', row['Chem_Det_Harga']);
+  zettSetInputValue('bahanDetKapasitasBulk', row['Chem_Det_Kapasitas']);
+  zettSetInputValue('bahanDetPemakaian', row['Chem_Det_Pemakaian']);
+
+  zettSetInputValue('toggleBahanSof', row['Chem_Sof_Active']);
+  zettSetSelectValue('bahanSofType', row['Chem_Sof_Type']);
+  zettSetInputValue('bahanSofHargaBulk', row['Chem_Sof_Harga']);
+  zettSetInputValue('bahanSofKapasitasBulk', row['Chem_Sof_Kapasitas']);
+  zettSetInputValue('bahanSofPemakaian', row['Chem_Sof_Pemakaian']);
+
+  zettSetInputValue('toggleBahanPar', row['Chem_Par_Active']);
+  zettSetInputValue('bahanParHargaBulk', row['Chem_Par_Harga']);
+  zettSetInputValue('bahanParKapasitasBulk', row['Chem_Par_Kapasitas']);
+  zettSetInputValue('bahanParPemakaian', row['Chem_Par_Pemakaian']);
+
+  zettSetInputValue('toggleBahanPel', row['Chem_Pel_Active']);
+  zettSetSelectValue('bahanPelType', row['Chem_Pel_Type']);
+  zettSetInputValue('bahanPelHargaBulk', row['Chem_Pel_Harga']);
+  zettSetInputValue('bahanPelKapasitasBulk', row['Chem_Pel_Kapasitas']);
+  zettSetInputValue('bahanPelPemakaian', row['Chem_Pel_Pemakaian']);
+
   /* NOTA */
   zettSetSelectValue('inputNotaType', row['Nota_Type']);
   zettSetSelectValue('inputNotaAppFeeType', row['Nota_App_FeeType']);

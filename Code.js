@@ -2891,6 +2891,24 @@ function zettAddPackingAliases20260518_(obj) {
 
 function zettAddChemicalNotaAliases_(obj) {
   if (!obj) return obj;
+  const hasChemicalCostData = function() {
+    return [
+      'Harga Total Deterjen',
+      'Kap Deterjen Liter',
+      'Pemakaian Deterjen Per Kg Ml',
+      'Harga Total Softener',
+      'Kap Softener Liter',
+      'Pemakaian Softener Per Kg Ml',
+      'Harga Total Pewangi',
+      'Kap Pewangi Liter',
+      'Pemakaian Pewangi Per Kg Ml',
+      'Harga Total Pelicin Setrika',
+      'Kap Pelicin Setrika Liter',
+      'Pemakaian Pelicin Setrika Per Kg Ml'
+    ].some(function(key) {
+      return obj[key] !== undefined && obj[key] !== null && obj[key] !== '' && zettToNumber_(obj[key]) > 0;
+    });
+  };
   const chemActive = function(value) {
     const text = String(value === undefined || value === null ? '' : value).trim().toLowerCase();
     if (text === '') return true;
@@ -2931,6 +2949,12 @@ function zettAddChemicalNotaAliases_(obj) {
   obj['Nota_Manual_BiayaTrx'] = zettFirst_(obj, ['Manual Biaya Nota Per Transaksi'], '');
   obj['Nota_RataKg'] = zettFirst_(obj, ['Kap Cuci', 'Nota_RataKg'], '');
 
+  if (!hasChemicalCostData()) {
+    obj['chemical_cost'] = 0;
+    obj['Chemical Cuci Per Load'] = 0;
+    obj['Chemical Cuci Per Kg'] = 0;
+  }
+
   const activeChemicalLoads = [
     { active: obj['Chem_Det_Active'], load: zettFirst_(obj, ['Estimasi Deterjen Per Load'], '') },
     { active: obj['Chem_Sof_Active'], load: zettFirst_(obj, ['Estimasi Softener Per Load'], '') },
@@ -2950,6 +2974,7 @@ function zettAddChemicalNotaAliases_(obj) {
       obj['Chemical Cuci Per Kg'] = effectiveChemicalLoad / Math.max(zettToNumber_(obj['Kap Cuci']) || 1, 1);
     }
   }
+  obj['chemical_cost'] = zettToNumber_(zettFirst_(obj, ['chemical_cost', 'Chemical Cuci Per Kg'], 0)) || 0;
 
   obj['Listrik Kering Per Load'] = zettFirst_(obj, ['Listrik Kering Per Load', 'Listrik Kering /Load', 'Kering Per Load'], '');
   obj['listrikKeringPerLoad'] = obj['Listrik Kering Per Load'];

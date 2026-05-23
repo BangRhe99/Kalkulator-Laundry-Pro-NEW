@@ -1113,7 +1113,13 @@
           clean(pick(row, ['Air Setrika Kg', 'Air Setrika /Kg']));
         var packing = clean(pick(row, ['Total Biaya Packing', 'Packing Per Kg', 'Packing_PP_PerKg'])) ||
           clean(pick(row, ['Packing_PP_PerKg'])) + clean(pick(row, ['Packing_HD_PerKg'])) + clean(pick(row, ['Packing_Jinjing_PerKg']));
-        var bahan = clean(pick(row, ['Total Biaya Chemical', 'Chemical Per Kg', 'Bahan Per Kg']));
+        var bahan = clean(pick(row, [
+          'chemical_cost',
+          'Chemical Cuci Per Kg',
+          'Total Biaya Chemical',
+          'Chemical Per Kg',
+          'Bahan Per Kg'
+        ])) || 0;
         var nota = clean(pick(row, ['Total Biaya Nota', 'Nota Per Kg', 'Admin Nota Per Kg']));
         return { gas: gas, listrik: listrik, air: air, packing: packing, bahan: bahan, nota: nota };
       }
