@@ -6189,6 +6189,35 @@
       const toggle = byId(config.toggle);
       return !toggle || !!toggle.checked;
     }
+    function rowHasSavedChemicalData() {
+      const sourceRow = row();
+      const keys = [
+        'Chem_Det_Harga', 'Chem_Det_Kapasitas', 'Chem_Det_Pemakaian',
+        'Chem_Sof_Harga', 'Chem_Sof_Kapasitas', 'Chem_Sof_Pemakaian',
+        'Chem_Par_Harga', 'Chem_Par_Kapasitas', 'Chem_Par_Pemakaian',
+        'Chem_Pel_Harga', 'Chem_Pel_Kapasitas', 'Chem_Pel_Pemakaian',
+        'Harga Total Deterjen', 'Kap Deterjen Liter', 'Pemakaian Deterjen Per Kg Ml',
+        'Harga Total Softener', 'Kap Softener Liter', 'Pemakaian Softener Per Kg Ml',
+        'Harga Total Pewangi', 'Kap Pewangi Liter', 'Pemakaian Pewangi Per Kg Ml',
+        'Harga Total Pelicin Setrika', 'Kap Pelicin Setrika Liter', 'Pemakaian Pelicin Setrika Per Kg Ml',
+        'chemical_cost', 'Chemical Cuci Per Kg', 'Chemical Cuci Per Load'
+      ];
+      return keys.some(function(key) {
+        return sourceRow[key] !== undefined &&
+          sourceRow[key] !== null &&
+          sourceRow[key] !== '' &&
+          clean(sourceRow[key]) > 0;
+      });
+    }
+    function isChemicalInputInteraction() {
+      const active = document.activeElement;
+      return !!(active && items.some(function(config) {
+        return [
+          config.toggle, config.type, config.harga, config.isi, config.pakai,
+          config.sachetHarga, config.sachetIsi
+        ].includes(active.id);
+      }));
+    }
     function itemLoad(config) {
       if (!isActive(config)) return 0;
       const type = String(byId(config.type)?.value || '').toLowerCase();
@@ -6265,6 +6294,26 @@
     };
     window.calculateBahanBaku = function() {
       formatMoneyInputs();
+      const hasSavedChemical = rowHasSavedChemicalData();
+      const allowDefaultInputCalculation = hasSavedChemical ||
+        window.__zettChemicalUserDirty === true ||
+        isChemicalInputInteraction();
+      if (!allowDefaultInputCalculation) {
+        items.forEach(function(config) {
+          const loadEl = byId(config.load);
+          const kgEl = byId(config.kg);
+          if (loadEl) loadEl.textContent = money(0);
+          if (kgEl) kgEl.textContent = money(0);
+          applyState(config);
+        });
+        const totalEl = byId('displayBiayaBahanTotalKg');
+        if (totalEl) totalEl.textContent = money(0);
+        window.__zettChemicalDashboardActive = false;
+        window.__zettChemicalDashboardLoad = 0;
+        window.__zettChemicalDashboardKg = 0;
+        if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('bahan', 0);
+        return { totalLoad: 0, totalKg: 0, active: false };
+      }
       const cap = kapCuci();
       let totalLoad = 0;
       let totalKg = 0;
@@ -6295,6 +6344,18 @@
       return { totalLoad, totalKg, active: hasActiveChemical };
     };
     document.addEventListener('DOMContentLoaded', function() {
+      items.forEach(function(config) {
+        [
+          config.toggle, config.type, config.harga, config.isi, config.pakai,
+          config.sachetHarga, config.sachetIsi
+        ].forEach(function(id) {
+          const el = byId(id);
+          if (!el || el.__zettChemicalDirtyBound) return;
+          el.__zettChemicalDirtyBound = true;
+          el.addEventListener('input', function() { window.__zettChemicalUserDirty = true; });
+          el.addEventListener('change', function() { window.__zettChemicalUserDirty = true; });
+        });
+      });
       window.toggleBahanInputs();
       window.calculateBahanBaku();
     });
