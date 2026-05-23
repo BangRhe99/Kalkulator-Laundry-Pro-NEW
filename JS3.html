@@ -1366,6 +1366,14 @@
       note: String(row.note || '').trim()
     };
   }
+  function isArchivedMachineRow(row) {
+    row = cleanMachine(row);
+    var source = String(row.source || '').toLowerCase();
+    return row.active === false ||
+      row.units <= 0 ||
+      source.indexOf('bep_fixed') >= 0 ||
+      source.indexOf('arsip') >= 0;
+  }
 
   function collectFromDom() {
     state.outletName = selectedOutlet();
@@ -1461,21 +1469,35 @@
     var wrap = byId('bepMachineRows');
     if (!wrap) return;
     var notice = byId('bepMachineNotice');
+    var machineRows = (state.machines || []).map(cleanMachine);
+    var visibleRows = machineRows.filter(function(row) { return !isArchivedMachineRow(row); });
     if (!state.outletName && !selectedOutlet()) {
       if (notice) notice.innerHTML = '<i class="ph ph-info"></i><span>Pilih cabang terlebih dahulu untuk memuat data mesin dari Profil Operasional.</span>';
       wrap.innerHTML = '';
       return;
     }
-    if (!(state.machines || []).length) {
+    if (!visibleRows.length) {
       if (notice) notice.innerHTML = '<i class="ph ph-warning-circle"></i><span>Data mesin di Profil Operasional belum lengkap. Lengkapi Profil Operasional agar perhitungan Biaya Mesin akurat.</span>';
       wrap.innerHTML = '';
       return;
     }
     if (notice) notice.innerHTML = '<i class="ph ph-check-circle"></i><span>Data mesin otomatis diambil dari Profil Operasional' + (state.category ? ' (' + escapeHtml(state.category) + ')' : '') + '.</span>';
-    wrap.innerHTML = (state.machines || []).map(function(row, idx) {
+    var headerHtml = [
+      '<div class="bep-machine-column-header" aria-hidden="true" style="display:grid;gap:0.75rem;align-items:center;margin:0.35rem 0 0.25rem;color:#64748b;font-size:0.68rem;font-weight:900;text-transform:uppercase;letter-spacing:0;">',
+        '<span></span>',
+        '<span>Harga / Unit</span>',
+        '<span>Nilai Residu</span>',
+        '<span>Umur (Thn)</span>',
+        '<span>Penyusutan</span>',
+        '<span>Biaya Rawat / Thn</span>',
+        '<span>Rawat / Bln</span>',
+        '<span>Total Biaya</span>',
+      '</div>'
+    ].join('');
+    wrap.innerHTML = headerHtml + machineRows.map(function(row, idx) {
       row = cleanMachine(row);
-      var archived = row.active === false || row.units <= 0;
-      return '<div class="bep-machine-row bep-machine-smart-row" data-index="' + idx + '" data-machine-key="' + escapeHtml(row.machineKey) + '" data-machine-name="' + escapeHtml(row.jenisMesin) + '" data-machine-type="' + escapeHtml(row.tipeMesin) + '" data-machine-units="' + escapeHtml(row.jumlahUnit) + '" data-machine-status="' + escapeHtml(row.status) + '" data-machine-source="' + escapeHtml(row.source) + '" data-machine-active="' + (row.active !== false ? 'true' : 'false') + '">' +
+      var archived = isArchivedMachineRow(row);
+      return '<div class="bep-machine-row bep-machine-smart-row" ' + (archived ? 'data-machine-archive-hidden="true" style="display:none;" ' : '') + 'data-index="' + idx + '" data-machine-key="' + escapeHtml(row.machineKey) + '" data-machine-name="' + escapeHtml(row.jenisMesin) + '" data-machine-type="' + escapeHtml(row.tipeMesin) + '" data-machine-units="' + escapeHtml(row.jumlahUnit) + '" data-machine-status="' + escapeHtml(row.status) + '" data-machine-source="' + escapeHtml(row.source) + '" data-machine-active="' + (row.active !== false ? 'true' : 'false') + '">' +
         '<div class="bep-machine-identity">' +
           '<div class="bep-machine-name">' + escapeHtml(row.jenisMesin || row.name || 'Mesin') + '</div>' +
           '<div class="bep-machine-badges">' +
@@ -1493,6 +1515,13 @@
         '<div class="bep-mini-total">' + money(row.totalMonthly) + '</div>' +
       '</div>';
     }).join('');
+    window.requestAnimationFrame(function() {
+      var header = wrap.querySelector('.bep-machine-column-header');
+      var firstRow = wrap.querySelector('.bep-machine-row:not([data-machine-archive-hidden="true"])');
+      if (!header || !firstRow) return;
+      var gridTemplate = window.getComputedStyle(firstRow).gridTemplateColumns;
+      if (gridTemplate && gridTemplate !== 'none') header.style.gridTemplateColumns = gridTemplate;
+    });
   }
 
   function renderOtherRows() {
