@@ -1050,6 +1050,55 @@
       window.hppRenderRequestId = window.hppRenderRequestId || 0;
       window.hppIsLoading = false;
 
+      function ensureBranchLoader() {
+        var existing = byId('zett-branch-premium-loader');
+        if (existing) return existing;
+
+        var style = document.createElement('style');
+        style.id = 'zett-branch-premium-loader-style';
+        style.textContent = [
+          '#zett-branch-premium-loader{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:rgba(248,250,252,.58);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity 180ms ease;}',
+          '#zett-branch-premium-loader.is-active{opacity:1;pointer-events:auto;}',
+          '#zett-branch-premium-loader .zett-loader-shell{width:86px;height:86px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.82);box-shadow:0 22px 70px rgba(79,70,229,.22),0 8px 24px rgba(15,23,42,.08);}',
+          '#zett-branch-premium-loader .zett-loader-donut{width:54px;height:54px;border-radius:50%;background:conic-gradient(from 45deg,#6847f5 0 34%,#d8d0ff 34% 52%,#6847f5 52% 78%,#d8d0ff 78% 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 14px),#000 calc(100% - 13px));mask:radial-gradient(farthest-side,transparent calc(100% - 14px),#000 calc(100% - 13px));animation:zettBranchLoaderSpin .72s linear infinite;}',
+          '@keyframes zettBranchLoaderSpin{to{transform:rotate(360deg)}}'
+        ].join('');
+        document.head.appendChild(style);
+
+        var loader = document.createElement('div');
+        loader.id = 'zett-branch-premium-loader';
+        loader.setAttribute('aria-hidden', 'true');
+        loader.innerHTML = '<div class="zett-loader-shell"><div class="zett-loader-donut"></div></div>';
+        document.body.appendChild(loader);
+        return loader;
+      }
+
+      function showBranchLoader() {
+        var loader = ensureBranchLoader();
+        window.clearTimeout(window.__zettBranchLoaderHideTimer);
+        window.requestAnimationFrame(function() {
+          loader.classList.add('is-active');
+        });
+      }
+
+      function hideBranchLoader() {
+        var loader = byId('zett-branch-premium-loader');
+        if (!loader) return;
+        window.clearTimeout(window.__zettBranchLoaderHideTimer);
+        window.__zettBranchLoaderHideTimer = window.setTimeout(function() {
+          loader.classList.remove('is-active');
+        }, 80);
+      }
+
+      function hideBranchLoaderAfterPaint() {
+        window.requestAnimationFrame(function() {
+          window.requestAnimationFrame(hideBranchLoader);
+        });
+      }
+
+      window.zettShowBranchLoader = showBranchLoader;
+      window.zettHideBranchLoader = hideBranchLoader;
+
       function byId(id) { return document.getElementById(id); }
       function norm(value) { return String(value || '').trim().toLowerCase().replace(/\s+/g, ' '); }
       function currentOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
@@ -1178,6 +1227,7 @@
           updatedAt: Date.now()
         };
         renderValues(values, source || 'hpp-fast-switch');
+        hideBranchLoaderAfterPaint();
         setTimeout(function() {
           if (typeof window.zettRefreshHPPProcessCards === 'function') window.zettRefreshHPPProcessCards();
         }, 120);
@@ -1220,9 +1270,13 @@
         var normalized = norm(outlet);
         if (!outlet || typeof google === 'undefined' || !google.script || !google.script.run) {
           setSoftLoading(false);
+          hideBranchLoaderAfterPaint();
           return;
         }
-        if (activeFetches[normalized] && !force) return;
+        if (activeFetches[normalized] && !force) {
+          window.setTimeout(hideBranchLoaderAfterPaint, 900);
+          return;
+        }
         activeFetches[normalized] = Date.now();
         setSoftLoading(true);
         google.script.run
@@ -1230,12 +1284,16 @@
             delete activeFetches[normalized];
             if (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== normalized) return;
             setSoftLoading(false);
-            if (!response || response.status !== 'success' || !response.data) return;
+            if (!response || response.status !== 'success' || !response.data) {
+              hideBranchLoaderAfterPaint();
+              return;
+            }
             applyRowAtomic(outlet, response.data, requestId, 'hpp-server');
           })
           .withFailureHandler(function(error) {
             delete activeFetches[normalized];
             if (requestId === window.hppRenderRequestId) setSoftLoading(false);
+            hideBranchLoaderAfterPaint();
             console.error('GAGAL LOAD HPP OUTLET:', error);
           })
           .getHPPRowByOutlet(outlet);
@@ -1250,6 +1308,7 @@
         } else {
           renderValues({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 }, 'hpp-initial-zero');
         }
+        hideBranchLoaderAfterPaint();
       }
       function switchOutlet(outlet, options) {
         var config = options || {};
@@ -1328,6 +1387,7 @@
 
       window.handleGlobalOutletChange = function(value) {
         var outlet = String(value || '').trim();
+        if (outlet) showBranchLoader();
         window.__HPP_FORCE_ZERO_DASHBOARD = false;
         window.__HPP_GSHEET_SYNC_LOCKED = false;
         switchOutlet(outlet);

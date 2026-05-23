@@ -317,7 +317,7 @@
       if (tbody) {
         tbody.innerHTML = '' +
           '<tr><td>HPP / Kg</td><td class="td-right">' + money(hpp) + '</td><td class="td-right">-</td><td class="td-right">-</td></tr>' +
-          '<tr><td>Target BEP</td><td class="td-right">' + money(bepRupiah) + '</td><td class="td-right">' + bepKg.toLocaleString('id-ID') + ' Kg</td><td class="td-right">100%</td></tr>' +
+          '<tr><td>Target BEP</td><td class="td-right">' + money(bepRupiah) + '</td><td class="td-right">' + bepKg.toLocaleString('id-ID') + ' Load</td><td class="td-right">100%</td></tr>' +
           '<tr><td>Kapasitas Bulanan</td><td class="td-right">-</td><td class="td-right">' + kapasitas.toLocaleString('id-ID') + ' Kg</td><td class="td-right">' + achievement.toFixed(1) + '%</td></tr>' +
           '<tr><td>Estimasi Laba</td><td class="td-right">' + money(profit) + '</td><td class="td-right">-</td><td class="td-right">-</td></tr>';
       }
@@ -979,10 +979,10 @@
           if(statusText) statusText.innerText = "*Pilih Target Acuan BEP yang valid.";
         }
 
-        if(document.getElementById('displayBEPKg')) document.getElementById('displayBEPKg').innerText = state.bepKg.toFixed(1) + ' Kg';
+        if(document.getElementById('displayBEPKg')) document.getElementById('displayBEPKg').innerText = state.bepKg.toFixed(1) + ' Load';
         if(document.getElementById('displayBEPRupiah')) document.getElementById('displayBEPRupiah').innerText = formatRupiah(state.bepRupiah);
         if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(state.bepRupiah);
-        if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(state.bepKg) ? state.bepKg.toFixed(1) : '0.0') + ' Kg';
+        if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(state.bepKg) ? state.bepKg.toFixed(1) : '0.0') + ' Load';
         if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(Math.max(0, marginKontribusi));
         if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
         if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
