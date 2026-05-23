@@ -11181,6 +11181,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       const context = getDashboardContext();
       const selfService = context.isSelfService;
       const processValues = {};
+      const domWrites = [];
       PROCESS.forEach(item => {
         const detailRows = item.details
           .filter(detail => !detail.when || detail.when(context))
@@ -11197,12 +11198,16 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         const estimateEl = document.querySelector('#view-hpp [data-process-estimate="' + item.key + '"]');
         const detailEl = document.querySelector('#view-hpp [data-process-detail="' + item.key + '"]');
         const nextValue = money(total);
-        if (valueEl && valueEl.textContent !== nextValue) valueEl.textContent = nextValue;
+        if (valueEl && valueEl.textContent !== nextValue) {
+          domWrites.push(function() { valueEl.textContent = nextValue; });
+        }
         if (estimateEl) {
           const cap = context.capacities[item.key] || 1;
           const showEstimate = hasSelectedOutlet && context.showKgEstimate && !(selfService && item.key === 'setrika');
           const nextEstimate = showEstimate ? 'Estimasi ' + money(total / Math.max(cap, 1)) + ' /Kg' : '';
-          if (estimateEl.textContent !== nextEstimate) estimateEl.textContent = nextEstimate;
+          if (estimateEl.textContent !== nextEstimate) {
+            domWrites.push(function() { estimateEl.textContent = nextEstimate; });
+          }
         }
         if (detailEl) {
           const nextDetailHtml = selfService && item.key === 'setrika'
@@ -11210,7 +11215,9 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
             : detailRows
               .map(row => '<div class="hpp-process-detail-row"><span>' + row.label + '</span><strong>' + money(hasSelectedOutlet ? row.value : 0) + '</strong></div>')
               .join('');
-          if (detailEl.innerHTML !== nextDetailHtml) detailEl.innerHTML = nextDetailHtml;
+          if (detailEl.innerHTML !== nextDetailHtml) {
+            domWrites.push(function() { detailEl.innerHTML = nextDetailHtml; });
+          }
         }
       });
 
@@ -11220,9 +11227,18 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         const pctEl = document.querySelector('#view-hpp [data-process-pct="' + item.key + '"]');
         const barEl = document.querySelector('#view-hpp [data-process-bar="' + item.key + '"]');
         const nextPct = pct + '%';
-        if (pctEl && pctEl.textContent !== nextPct) pctEl.textContent = nextPct;
-        if (barEl) barEl.style.setProperty('--process-width', pct + '%');
+        if (pctEl && pctEl.textContent !== nextPct) {
+          domWrites.push(function() { pctEl.textContent = nextPct; });
+        }
+        if (barEl) {
+          domWrites.push(function() { barEl.style.setProperty('--process-width', pct + '%'); });
+        }
       });
+      if (domWrites.length) {
+        window.requestAnimationFrame(function() {
+          domWrites.forEach(function(write) { write(); });
+        });
+      }
     }
 
     function refresh() {

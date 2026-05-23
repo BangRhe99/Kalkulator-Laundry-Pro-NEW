@@ -1043,6 +1043,7 @@
       var originalSwitchMainTab = window.switchMainTab;
       var activeFetches = {};
       var allowPopulate = false;
+      var hppTransitionRenderTimer = null;
 
       window.currentHPPOutlet = window.currentHPPOutlet || '';
       window.hppDashboardCache = window.hppDashboardCache || {};
@@ -1144,19 +1145,25 @@
       function renderValues(values, source) {
         var total = syncState(values);
         requestAnimationFrame(function() {
+          var domWrites = [];
           if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
             window.zettHPPUpdateDashboardFromState(source || 'hpp-fast-switch');
           } else if (window.StateMachine && typeof window.StateMachine.renderDashboard === 'function') {
             window.StateMachine.renderDashboard();
           } else {
             var totalEl = byId('dash-hpp-total');
-            if (totalEl) totalEl.textContent = money(total);
+            if (totalEl) domWrites.push(function() { totalEl.textContent = money(total); });
             HPP_TYPES.forEach(function(type) {
               var valueEl = byId('dash-card-' + type);
               var pctEl = byId('dash-card-' + type + '-pct');
-              if (valueEl) valueEl.textContent = money(values[type]);
-              if (pctEl) pctEl.textContent = total > 0 ? Math.round((values[type] / total) * 100) + '%' : '0%';
+              var nextValue = money(values[type]);
+              var nextPct = total > 0 ? Math.round((values[type] / total) * 100) + '%' : '0%';
+              if (valueEl) domWrites.push(function() { valueEl.textContent = nextValue; });
+              if (pctEl) domWrites.push(function() { pctEl.textContent = nextPct; });
             });
+          }
+          if (domWrites.length) {
+            domWrites.forEach(function(write) { write(); });
           }
         });
       }
@@ -1281,6 +1288,20 @@
           if (requestId === window.hppRenderRequestId) window.__HPP_FAST_SWITCH_ACTIVE = false;
         }, 350);
       }
+      function scheduleHPPTabRender(outlet, options) {
+        var selected = String(outlet || '').trim();
+        var config = options || {};
+        var delay = Number.isFinite(config.delay) ? config.delay : 90;
+        window.clearTimeout(hppTransitionRenderTimer);
+        window.requestAnimationFrame(function() {
+          hppTransitionRenderTimer = window.setTimeout(function() {
+            window.requestAnimationFrame(function() {
+              if (!selected) renderInitialZero();
+              else switchOutlet(selected, { noBackgroundRefresh: true });
+            });
+          }, delay);
+        });
+      }
 
       window.resetHPPDashboardToZero = function() {
         if (currentOutlet() && window.__HPP_FAST_SWITCH_ACTIVE) return;
@@ -1339,8 +1360,7 @@
         }
         if (tabName === 'hpp') {
           var outlet = currentOutlet();
-          if (!outlet) renderInitialZero();
-          else switchOutlet(outlet, { noBackgroundRefresh: true });
+          scheduleHPPTabRender(outlet, { delay: 90 });
         }
         if (tabName === 'bep' && typeof window.zettLoadBEPFixedCost === 'function') {
           window.zettLoadBEPFixedCost(currentOutlet());
@@ -1357,6 +1377,14 @@
           window.StateMachine.renderDashboard = function() {
             if (window.__HPP_ATOMIC_RENDER_LOCK) return;
             return originalRenderDashboard.apply(this, arguments);
+          };
+        }
+
+        if (window.HPPStateMachine && typeof window.HPPStateMachine.renderDashboard === 'function') {
+          var originalHPPRenderDashboard = window.HPPStateMachine.renderDashboard.bind(window.HPPStateMachine);
+          window.HPPStateMachine.renderDashboard = function() {
+            if (window.__HPP_ATOMIC_RENDER_LOCK) return;
+            return originalHPPRenderDashboard.apply(this, arguments);
           };
         }
 
