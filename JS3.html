@@ -682,7 +682,10 @@
           let harga = 0;
           if(el) harga = parseFloat(el.value.replace(/\./g, '')) || 0;
 
-          const margin = harga - biayaVariabel;
+          const hppLayanan = typeof window.zettGetBepServiceHppForPriceId === 'function'
+            ? window.zettGetBepServiceHppForPriceId(layanan.id, biayaVariabel)
+            : biayaVariabel;
+          const margin = harga - hppLayanan;
           let bepQtyBulan = 0;
           let bepOmset = 0;
 
@@ -705,6 +708,7 @@
           <tr class="${rowClass} hover:bg-indigo-50/50 transition-colors group">
             <td class="p-4">
               <span class="font-black text-slate-700 block">${layanan.name}</span>
+              <span class="text-[10px] text-slate-400 font-bold block mt-0.5">HPP: ${formatRupiah(hppLayanan)}</span>
               ${warningText}
             </td>
             <td class="p-4 text-right">
@@ -932,6 +936,9 @@
         if(document.getElementById('hiddenTotalBiayaTetap')) document.getElementById('hiddenTotalBiayaTetap').value = GRAND_TOTAL_BIAYA_TETAP;
         if(document.getElementById('hiddenTotalKapasitasBulan')) document.getElementById('hiddenTotalKapasitasBulan').value = GRAND_TOTAL_KAPASITAS_BULAN;
 
+        if (typeof window.zettSyncBepHppHiddenToReference === 'function') {
+          try { window.zettSyncBepHppHiddenToReference(); } catch (error) {}
+        }
         const biayaVariabelRaw = document.getElementById('inputBiayaVariabel') ? String(document.getElementById('inputBiayaVariabel').value || '0').replace(/\./g, '').replace(',', '.') : '0';
         const biayaVariabel = parseFloat(biayaVariabelRaw) || 0;
 
@@ -979,10 +986,10 @@
           if(statusText) statusText.innerText = "*Pilih Target Acuan BEP yang valid.";
         }
 
-        if(document.getElementById('displayBEPKg')) document.getElementById('displayBEPKg').innerText = state.bepKg.toFixed(1) + ' Load';
+        if(document.getElementById('displayBEPKg')) document.getElementById('displayBEPKg').innerText = state.bepKg.toFixed(1) + ' ' + unitText;
         if(document.getElementById('displayBEPRupiah')) document.getElementById('displayBEPRupiah').innerText = formatRupiah(state.bepRupiah);
         if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(state.bepRupiah);
-        if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(state.bepKg) ? state.bepKg.toFixed(1) : '0.0') + ' Load';
+        if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(state.bepKg) ? state.bepKg.toFixed(1) : '0.0') + ' ' + unitText;
         if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(Math.max(0, marginKontribusi));
         if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
         if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';

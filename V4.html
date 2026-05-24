@@ -261,9 +261,97 @@
     #view-bep .bep-summary-item { border:1px solid var(--bep-border, #DDE7F6); background:var(--bep-card-soft, #F8FBFF); border-radius:1rem; padding:.85rem; }
     #view-bep .bep-summary-item span { display:block; color:var(--bep-muted, #64748B); font-size:.62rem; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
     #view-bep .bep-summary-item strong { display:block; color:var(--bep-ink, #0F172A); font-size:.86rem; font-weight:900; margin-top:.25rem; font-variant-numeric:tabular-nums; }
+    #view-bep .bep-hpp-section {
+      margin-top: clamp(1.6rem, 2.4vw, 2.15rem);
+      padding-top: clamp(1.35rem, 2.2vw, 1.8rem);
+      border-top: 1px solid rgba(221,231,246,.86);
+    }
+    #view-bep .bep-hpp-heading {
+      display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1rem;
+    }
+    #view-bep .bep-hpp-title {
+      display:flex; align-items:flex-start; gap:.82rem; min-width:0;
+    }
+    #view-bep .bep-hpp-title-icon {
+      width:2.65rem; height:2.65rem; border-radius:1rem; flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+      color:#0F766E; background:linear-gradient(135deg, #FFFFFF, #ECFEFF);
+      border:1px solid rgba(153,246,228,.72); box-shadow:0 14px 30px rgba(20,184,166,.10), inset 0 1px 0 rgba(255,255,255,.92);
+    }
+    #view-bep .bep-hpp-title h3 { margin:0; color:var(--bep-ink, #0F172A); font-size:clamp(1.08rem, 2vw, 1.35rem); font-weight:950; letter-spacing:0; line-height:1.1; }
+    #view-bep .bep-hpp-title p { margin:.35rem 0 0; color:var(--bep-muted, #64748B); font-size:.8rem; font-weight:750; line-height:1.45; max-width:42rem; }
+    #view-bep .bep-hpp-sync-badge {
+      align-self:flex-start; display:inline-flex; align-items:center; gap:.42rem; white-space:nowrap;
+      min-height:2.15rem; padding:.48rem .72rem; border-radius:999px; border:1px solid rgba(191,219,254,.9);
+      color:#1D4ED8; background:rgba(239,246,255,.84); font-size:.64rem; font-weight:950; text-transform:uppercase; letter-spacing:.08em;
+      box-shadow:0 10px 22px rgba(37,99,235,.055);
+    }
+    #view-bep .bep-hpp-grid {
+      display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:.9rem; align-items:stretch;
+    }
+    #view-bep .bep-hpp-grid[data-count="3"] { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    #view-bep .bep-hpp-card {
+      --hpp-accent:#2563EB; --hpp-soft:#EFF6FF; --hpp-glow:rgba(37,99,235,.12);
+      position:relative; overflow:hidden; isolation:isolate; min-height:11.4rem;
+      padding:1.05rem; border-radius:1.45rem; border:1px solid rgba(203,213,225,.72);
+      background:
+        radial-gradient(circle at 96% 0%, var(--hpp-glow), transparent 7.8rem),
+        linear-gradient(155deg, rgba(255,255,255,.99), rgba(248,251,255,.92));
+      box-shadow:0 18px 44px rgba(15,23,42,.065), inset 0 1px 0 rgba(255,255,255,.92);
+      display:flex; flex-direction:column; justify-content:space-between; gap:.95rem;
+      transform:translate3d(0,0,0);
+      transition:transform .22s var(--bep-ease), box-shadow .22s var(--bep-ease), border-color .22s var(--bep-ease);
+    }
+    #view-bep .bep-hpp-card::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:linear-gradient(90deg, var(--hpp-accent), transparent 76%); opacity:.78; }
+    #view-bep .bep-hpp-card::after { content:""; position:absolute; width:5.8rem; height:5.8rem; right:-2.7rem; top:-2.8rem; border-radius:999px; background:var(--hpp-accent); opacity:.055; pointer-events:none; }
+    #view-bep .bep-hpp-card:hover { transform:translate3d(0,-2px,0); border-color:rgba(148,163,184,.72); box-shadow:0 24px 56px rgba(15,23,42,.09), 0 14px 30px var(--hpp-glow); }
+    #view-bep .bep-hpp-card.is-cuci { --hpp-accent:#0891B2; --hpp-soft:#ECFEFF; --hpp-glow:rgba(8,145,178,.12); }
+    #view-bep .bep-hpp-card.is-kering { --hpp-accent:#0F766E; --hpp-soft:#F0FDFA; --hpp-glow:rgba(15,118,110,.12); }
+    #view-bep .bep-hpp-card.is-setrika { --hpp-accent:#7C3AED; --hpp-soft:#F5F3FF; --hpp-glow:rgba(124,58,237,.12); }
+    #view-bep .bep-hpp-card.is-combo { --hpp-accent:#B45309; --hpp-soft:#FFFBEB; --hpp-glow:rgba(180,83,9,.11); }
+    #view-bep .bep-hpp-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.85rem; }
+    #view-bep .bep-hpp-name { color:#334155; font-size:.76rem; font-weight:950; line-height:1.25; letter-spacing:0; }
+    #view-bep .bep-hpp-icon {
+      width:2.4rem; height:2.4rem; border-radius:.95rem; flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(135deg, #FFFFFF, var(--hpp-soft)); color:var(--hpp-accent);
+      border:1px solid rgba(255,255,255,.82); box-shadow:0 12px 26px var(--hpp-glow), inset 0 1px 0 rgba(255,255,255,.96);
+    }
+    #view-bep .bep-hpp-icon svg { width:1.22rem; height:1.22rem; display:block; }
+    #view-bep .bep-hpp-value-row { display:flex; align-items:flex-end; gap:.35rem; min-width:0; }
+    #view-bep .bep-hpp-value {
+      color:var(--bep-ink, #0F172A); font-size:clamp(1.72rem, 2.55vw, 2.25rem); font-weight:950; line-height:.96;
+      font-variant-numeric:tabular-nums; letter-spacing:0; white-space:nowrap;
+    }
+    #view-bep .bep-hpp-unit { color:var(--bep-soft-text, #94A3B8); font-size:.72rem; font-weight:950; line-height:1.25; padding-bottom:.12rem; white-space:nowrap; }
+    #view-bep .bep-hpp-meta { color:var(--bep-muted, #64748B); font-size:.69rem; font-weight:760; line-height:1.35; min-height:1.85rem; }
+    #view-bep .bep-hpp-foot { display:flex; align-items:center; justify-content:space-between; gap:.55rem; }
+    #view-bep .bep-hpp-badge {
+      display:inline-flex; align-items:center; gap:.32rem; max-width:100%; min-height:1.65rem; padding:.32rem .55rem; border-radius:999px;
+      border:1px solid rgba(203,213,225,.8); background:rgba(255,255,255,.76); color:#475569;
+      font-size:.6rem; font-weight:950; text-transform:uppercase; letter-spacing:.055em; white-space:nowrap;
+    }
+    #view-bep .bep-hpp-badge.is-safe { color:#047857; background:#ECFDF5; border-color:#A7F3D0; }
+    #view-bep .bep-hpp-badge.is-thin { color:#B45309; background:#FFFBEB; border-color:#FDE68A; }
+    #view-bep .bep-hpp-badge.is-warn { color:#BE123C; background:#FFF1F2; border-color:#FECDD3; }
+    #view-bep .bep-hpp-source { color:#94A3B8; font-size:.62rem; font-weight:850; white-space:nowrap; }
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-name,
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-value,
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-unit,
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-meta,
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-badge,
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-source {
+      color:transparent !important; border-color:transparent; background:linear-gradient(90deg, #E2E8F0 0%, #F8FAFC 42%, #E2E8F0 78%); background-size:220% 100%;
+      animation:bepHppShimmer 1.15s ease-in-out infinite; border-radius:.6rem;
+    }
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-value { width:8.5rem; height:2.1rem; display:block; }
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-unit { width:2.8rem; height:1rem; display:block; }
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-meta { width:82%; height:1.8rem; }
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-badge { width:6.2rem; height:1.65rem; }
+    #view-bep .bep-hpp-card.is-loading .bep-hpp-source { width:4.8rem; height:.9rem; }
+    @keyframes bepHppShimmer { 0% { background-position:120% 0; } 100% { background-position:-120% 0; } }
     @media (max-width: 1023px) {
       #view-bep .bep-kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
       #view-bep .bep-fixed-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      #view-bep .bep-hpp-grid, #view-bep .bep-hpp-grid[data-count="3"] { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
     @media (max-width: 900px) {
       #view-bep .bep-row, #view-bep .bep-machine-row, #view-bep .bep-other-row { grid-template-columns: 1fr; padding:.85rem; border:1px solid var(--bep-border, #DDE7F6); border-radius:1rem; background:var(--bep-card-soft, #F8FBFF); }
@@ -282,6 +370,10 @@
       #view-bep .bep-card-head { flex-direction: column; }
       #view-bep .bep-summary-strip { grid-template-columns: 1fr; }
       #view-bep .bep-save-strip { flex-direction:column; align-items:stretch; }
+      #view-bep .bep-hpp-heading { flex-direction:column; }
+      #view-bep .bep-hpp-grid, #view-bep .bep-hpp-grid[data-count="3"] { grid-template-columns:1fr; gap:.82rem; }
+      #view-bep .bep-hpp-card { border-radius:1.15rem; min-height:10.5rem; padding:1rem; }
+      #view-bep .bep-hpp-sync-badge { white-space:normal; }
     }
   </style>
   <div id="view-bep" class="main-view hidden animate-fade-in space-y-8">
@@ -497,26 +589,22 @@
         <input type="hidden" id="inputBiayaTetapLain" value="0">
       </div>
 
-      <div class="space-y-6 border-t border-slate-100/60 pt-10">
-        <label class="block text-[clamp(1rem,2vw,1.25rem)] font-extrabold text-slate-800 flex items-center gap-3 tracking-tight"><i class="ph ph-coins text-emerald-500 text-2xl"></i> Setup Biaya Produksi</label>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          <div class="bg-indigo-50/60 backdrop-blur-xl p-6 md:p-8 rounded-[1.5rem] border border-indigo-200/60 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)] hover:shadow-[0_12px_40px_rgba(79,70,229,0.1)] transition-all duration-500 transform-gpu hover:-translate-y-1 relative overflow-hidden flex flex-col justify-center space-y-4 md:col-span-2">
-            <div class="absolute right-0 top-0 opacity-[0.05] pointer-events-none transform translate-x-4 -translate-y-4"><i class="ph ph-chart-line text-[10rem]"></i></div>
-            <div class="relative z-10">
-              <label class="block text-xs font-extrabold text-indigo-900 uppercase tracking-widest">Total Biaya Variabel / Kg</label>
-              <p class="text-[10px] text-indigo-600/80 mt-1.5 font-bold leading-tight max-w-[80%]">Otomatis terisi dari tab Master Biaya HPP. Anda masih bisa mengeditnya manual.</p>
-            </div>
-            <div class="relative z-10 flex items-center">
-              <span class="absolute left-5 text-base font-black text-indigo-500">Rp</span>
-              <input type="text" id="inputBiayaVariabel" class="w-full pl-14 pr-5 py-4 rounded-[1rem] border border-indigo-300/80 font-black text-indigo-900 bg-white/90 focus:ring-[4px] focus:ring-indigo-500/20 focus:border-indigo-500 text-xl shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)] hover:shadow-sm tabular-nums [font-feature-settings:'tnum'] transition-all duration-300 outline-none" placeholder="0" oninput="safeFormatAndCalculate(this)">
+      <div class="bep-hpp-section" id="bepHppServiceSummarySection">
+        <div class="bep-hpp-heading">
+          <div class="bep-hpp-title">
+            <div class="bep-hpp-title-icon"><i class="ph ph-chart-donut text-xl"></i></div>
+            <div>
+              <h3>Ringkasan HPP Layanan</h3>
+              <p>Biaya dasar per layanan yang digunakan untuk menghitung margin kontribusi &amp; target BEP.</p>
             </div>
           </div>
-
+          <span class="bep-hpp-sync-badge"><i class="ph ph-arrows-clockwise"></i> Tersinkron otomatis</span>
         </div>
+        <input type="hidden" id="inputBiayaVariabel" value="0">
+        <div id="bepHppServiceCards" class="bep-hpp-grid" data-count="4" aria-live="polite"></div>
       </div>
 
-      <div class="mt-12 border-t border-slate-100/60 pt-10">
+      <div class="mt-9 border-t border-slate-100/60 pt-8">
         <h3 class="font-extrabold text-slate-800 text-[clamp(1.25rem,2vw,1.5rem)] flex items-center gap-3 mb-8 tracking-tight">
           <div class="bg-rose-100/60 p-2 rounded-[1rem] text-rose-500 border border-rose-200/50 shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)]"><i class="ph ph-target"></i></div>
           Target BEP Bulanan
@@ -703,6 +791,325 @@
     </div>
   </div>
 <script>
+(function zettBepHppServiceSummaryPatch20260524() {
+  var renderTimer = null;
+  var loadingTimer = null;
+  var lastSignature = '';
+  var SERVICE_META = {
+    cuci: { label: 'HPP Cuci Saja', tone: 'is-cuci', icon: 'ph-washing-machine', unitKey: 'wash', insight: 'Biaya dasar produksi' },
+    cuciKering: { label: 'HPP Cuci + Kering', tone: 'is-combo', icon: 'ph-stack', unitKey: 'bundle', insight: 'Dipakai untuk margin kontribusi' },
+    kering: { label: 'HPP Kering Saja', tone: 'is-kering', icon: 'ph-wind', unitKey: 'dry', insight: 'Sumber: Struktur Biaya HPP' },
+    cuciSetrika: { label: 'HPP Cuci + Setrika', tone: 'is-combo', icon: 'ph-sparkle', unitKey: 'bundle', insight: 'Dipakai untuk target BEP' },
+    setrika: { label: 'HPP Setrika Saja', tone: 'is-setrika', icon: 'ph-sparkle', unitKey: 'iron', insight: 'Tersinkron otomatis' }
+  };
+
+  function byId(id) { return document.getElementById(id); }
+  function normalize(value) {
+    if (typeof window.zettNormalizeName === 'function') return window.zettNormalizeName(value);
+    return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+  function clean(value) {
+    if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+    var raw = String(value || '').trim().replace(/[^\d.,-]/g, '');
+    if (!raw) return 0;
+    if (raw.indexOf(',') > -1 && raw.indexOf('.') > -1) {
+      raw = raw.lastIndexOf(',') > raw.lastIndexOf('.') ? raw.replace(/\./g, '').replace(',', '.') : raw.replace(/,/g, '');
+    } else if (raw.indexOf(',') > -1) {
+      raw = raw.replace(',', '.');
+    } else {
+      raw = raw.replace(/\.(?=\d{3}(\D|$))/g, '');
+    }
+    return Number(raw) || 0;
+  }
+  function money(value) {
+    if (typeof window.formatRupiah === 'function') return window.formatRupiah(Math.round(Number(value) || 0));
+    return 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
+  }
+  function selectedOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+  function isNoOutlet(value) {
+    var text = normalize(value);
+    return !text || text === '-' || text === 'pilih cabang' || text === 'pilih outlet' || text === 'pilih cabang laundry' || text === 'semua cabang';
+  }
+  function getSources() {
+    var sources = [];
+    if (Array.isArray(window.__ZETT_FRESH_HPP_ROWS)) sources.push(window.__ZETT_FRESH_HPP_ROWS);
+    if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) sources.push(masterDataHPP);
+    if (Array.isArray(window.masterDataHPP)) sources.push(window.masterDataHPP);
+    try {
+      if (window.APP_STATE?.data?.master?.hpp) sources.push(window.APP_STATE.data.master.hpp);
+      if (Array.isArray(window.APP_STATE?.data?.hppMaster)) sources.push(window.APP_STATE.data.hppMaster);
+    } catch (error) {}
+    return sources;
+  }
+  function findRowByOutlet(outlet) {
+    var key = normalize(outlet);
+    if (!key) return null;
+    if (typeof window.zettFindActiveHPPRow === 'function') {
+      var active = window.zettFindActiveHPPRow();
+      var activeName = normalize(active?.namaOutlet || active?.['Nama Outlet'] || active?.['Nama_Outlet']);
+      if (active && activeName === key) return active;
+    }
+    var sources = getSources();
+    for (var i = 0; i < sources.length; i++) {
+      var found = sources[i].find(function(row) {
+        return normalize(row?.namaOutlet || row?.['Nama Outlet'] || row?.['Nama_Outlet']) === key;
+      });
+      if (found) return found;
+    }
+    return null;
+  }
+  function findOutletRow(outlet) {
+    var key = normalize(outlet);
+    var sources = [];
+    if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) sources.push(masterDataCabang);
+    if (Array.isArray(window.masterDataCabang)) sources.push(window.masterDataCabang);
+    try { if (window.APP_STATE?.data?.master?.cabang) sources.push(window.APP_STATE.data.master.cabang); } catch (error) {}
+    sources = sources.concat(getSources());
+    for (var i = 0; i < sources.length; i++) {
+      var found = sources[i].find(function(row) {
+        return normalize(row?.namaOutlet || row?.['Nama Outlet'] || row?.['Nama_Outlet']) === key;
+      });
+      if (found) return found;
+    }
+    return null;
+  }
+  function pickNumber(row, keys) {
+    row = row || {};
+    for (var i = 0; i < keys.length; i++) {
+      var value = clean(row[keys[i]]);
+      if (value > 0) return value;
+    }
+    return 0;
+  }
+  function categoryContext(row, outletRow) {
+    var category = String(outletRow?.kategori || outletRow?.kategoriLaundry || outletRow?.['Kategori Laundry'] || row?.kategoriLaundry || row?.['Kategori Laundry'] || byId('inputKategori')?.value || '').toLowerCase();
+    return {
+      raw: category,
+      isSelf: category.indexOf('self') > -1,
+      isHybrid: category.indexOf('hybrid') > -1,
+      isDrop: category.indexOf('drop') > -1 || category.indexOf('kilo') > -1
+    };
+  }
+  function getUnit(context, serviceKey) {
+    if (context.isSelf) return '/Load';
+    if (serviceKey === 'kering' && context.isHybrid) return '/Load';
+    return '/Kg';
+  }
+  function getCapacity(row, keys) {
+    return Math.max(pickNumber(row, keys) || 1, 1);
+  }
+  function getAtomicHpp(row, context) {
+    var capCuci = getCapacity(row, ['Kap Cuci', 'cuciKg', 'Kapasitas Cuci']);
+    var capKering = getCapacity(row, ['Kap Kering', 'pengeringKg', 'Kapasitas Kering']);
+    var capSetrika = getCapacity(row, ['Kap Setrika', 'setrikaKg', 'Kg Setrika', 'Kapasitas Setrika']);
+    var cuciLoad = pickNumber(row, ['HPP Cuci Saja Per Load', 'HPP Cuci Per Load', 'Total HPP Cuci Per Load']) ||
+      pickNumber(row, ['Listrik Pompa Per Load', 'Listrik Pompa /Load']) +
+      pickNumber(row, ['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']) +
+      pickNumber(row, ['Air Per Load', 'Air Cuci Per Load', 'Air Cuci /Load']) +
+      pickNumber(row, ['Chemical Cuci Per Load', 'Bahan Cuci Per Load']) +
+      pickNumber(row, ['HPP Aplikasi Per Load', 'Transaksi Apps Per Load', 'Kasir Per Order']) +
+      pickNumber(row, ['HPP Nota Transaksi Per Load', 'Nota Transaksi Per Load', 'Nota Per Order']);
+    var cuciKg = pickNumber(row, ['HPP Cuci Saja Per Kg', 'HPP Cuci Per Kg', 'Total HPP Cuci Per Kg']) ||
+      pickNumber(row, ['Cuci Per Kg', 'Listrik Cuci Per Kg', 'Listrik Cuci /Kg']) +
+      pickNumber(row, ['Air Per Kg', 'Air Cuci Per Kg', 'Air Cuci /Kg']) +
+      pickNumber(row, ['Chemical Cuci Per Kg', 'Bahan Per Kg', 'chemical_cost']) +
+      pickNumber(row, ['Packing Per Kg', 'Total Biaya Packing']) +
+      pickNumber(row, ['Nota Per Kg', 'Admin Nota Per Kg']) ||
+      (cuciLoad > 0 ? cuciLoad / capCuci : 0);
+    var keringLoad = pickNumber(row, ['HPP Kering Saja Per Load', 'HPP Kering Per Load', 'Total HPP Kering Per Load']) ||
+      pickNumber(row, ['Kering Per Load', 'Listrik Kering Per Load', 'Listrik Kering /Load']) +
+      pickNumber(row, ['Estimasi Biaya Gas', 'Gas Per Load', 'Gas Kering Per Load', 'Gas Kering /Load']);
+    var keringKg = pickNumber(row, ['HPP Kering Saja Per Kg', 'HPP Kering Per Kg', 'Total HPP Kering Per Kg']) ||
+      pickNumber(row, ['Kering Per Kg', 'Listrik Kering Per Kg', 'Listrik Kering /Kg']) +
+      pickNumber(row, ['Gas Per Kg', 'Gas Kering Per Kg', 'Gas Kering /Kg']) ||
+      (keringLoad > 0 ? keringLoad / capKering : 0);
+    var setrikaKg = pickNumber(row, ['HPP Setrika Saja Per Kg', 'HPP Setrika Per Kg', 'Total HPP Setrika Per Kg', 'Setrika Per Kg', 'Listrik Setrika Kg', 'Air Setrika Kg']);
+    var setrikaJam = pickNumber(row, ['HPP Setrika Per Jam', 'Setrika Per Jam', 'Listrik Setrika Jam', 'Listrik Setrika Per Jam', 'Gas Setrika Per Jam', 'Air Setrika Jam']);
+    if (!setrikaKg && setrikaJam > 0) setrikaKg = setrikaJam / capSetrika;
+    return {
+      cuci: context.isSelf ? cuciLoad : cuciKg,
+      kering: context.isSelf || (context.isHybrid && !keringKg) ? keringLoad : keringKg,
+      setrika: setrikaKg
+    };
+  }
+  function getFinalService(row, keys) { return pickNumber(row, keys); }
+  function getSummary(outletName) {
+    var outlet = String(outletName || selectedOutlet()).trim();
+    var noOutlet = isNoOutlet(outlet);
+    var row = noOutlet ? null : findRowByOutlet(outlet);
+    var outletRow = noOutlet ? null : findOutletRow(outlet);
+    var context = categoryContext(row, outletRow);
+    if (noOutlet) context = { isSelf: false, isHybrid: false, isDrop: true, raw: '' };
+    var atomic = row ? getAtomicHpp(row, context) : { cuci: 0, kering: 0, setrika: 0 };
+    var cuci = getFinalService(row, ['HPP Cuci Saja', 'HPP Cuci Saja Final', 'HPP Cuci', 'Total HPP Cuci']) || atomic.cuci;
+    var kering = getFinalService(row, ['HPP Kering Saja', 'HPP Kering Saja Final', 'HPP Kering', 'Total HPP Kering']) || atomic.kering;
+    var setrika = getFinalService(row, ['HPP Setrika Saja', 'HPP Setrika Saja Final', 'HPP Setrika', 'Total HPP Setrika']) || atomic.setrika;
+    var cuciKering = getFinalService(row, ['HPP Cuci + Kering', 'HPP Cuci Kering', 'HPP Cuci Lipat', 'HPP Cuci + Kering Final']) || ((cuci > 0 || kering > 0) ? cuci + kering : 0);
+    var cuciSetrika = getFinalService(row, ['HPP Cuci + Setrika', 'HPP Cuci Setrika', 'HPP Cuci + Setrika Final']) || ((cuci > 0 || setrika > 0) ? cuci + setrika : 0);
+    var services = context.isSelf
+      ? ['cuci', 'cuciKering', 'kering']
+      : ['cuci', 'cuciKering', 'cuciSetrika', 'setrika'];
+    if (context.isHybrid) {
+      services = ['cuci', 'cuciKering', 'cuciSetrika', 'setrika'].filter(function(key) {
+        var values = { cuci: cuci, cuciKering: cuciKering, cuciSetrika: cuciSetrika, setrika: setrika };
+        return values[key] > 0 || key === 'cuci' || key === 'cuciKering';
+      });
+    }
+    return {
+      outlet: outlet,
+      noOutlet: noOutlet,
+      rowFound: !!row,
+      context: context,
+      values: { cuci: cuci, kering: kering, setrika: setrika, cuciKering: cuciKering, cuciSetrika: cuciSetrika },
+      services: services
+    };
+  }
+  function priceByService(key) {
+    var id = key === 'cuciSetrika' ? 'cs_price_1' : key === 'cuciKering' ? 'cl_price_1' : key === 'cuci' ? 'c_price_1' : key === 'setrika' ? 'ss_price_1' : '';
+    return id ? clean(byId(id)?.value || '') : 0;
+  }
+  function statusFor(value, price, summary) {
+    if (summary.noOutlet) return { text: 'Pilih cabang', tone: 'is-warn' };
+    if (!summary.rowFound || value <= 0) return { text: 'HPP belum lengkap', tone: 'is-warn' };
+    if (!price) return { text: 'Harga belum diisi', tone: '' };
+    var margin = price - value;
+    if (margin <= 0) return { text: 'Margin tidak aman', tone: 'is-warn' };
+    if (margin / price < .22) return { text: 'Margin tipis', tone: 'is-thin' };
+    return { text: 'Margin aman', tone: 'is-safe' };
+  }
+  function iconMarkup(icon) {
+    if (icon === 'ph-sparkle') {
+      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.7 4.8L18.5 9.5l-4.8 1.7L12 16l-1.7-4.8-4.8-1.7 4.8-1.7L12 3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M18 14l.9 2.4L21.2 17l-2.3.8L18 20l-.8-2.2-2.4-.8 2.4-.8L18 14Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+    }
+    return '<i class="ph ' + icon + '"></i>';
+  }
+  function renderCards(options) {
+    var grid = byId('bepHppServiceCards');
+    if (!grid) return;
+    var loading = !!(options && options.loading);
+    var summary = getSummary();
+    var signature = JSON.stringify([summary.outlet, summary.noOutlet, summary.rowFound, summary.services, summary.values, loading]);
+    if (!loading && signature === lastSignature) return;
+    lastSignature = signature;
+    grid.dataset.count = String(summary.services.length || 4);
+    grid.innerHTML = summary.services.map(function(key) {
+      var meta = SERVICE_META[key];
+      var value = Number(summary.values[key]) || 0;
+      var status = statusFor(value, priceByService(key), summary);
+      var unit = getUnit(summary.context, key);
+      return [
+        '<article class="bep-hpp-card ' + meta.tone + (loading ? ' is-loading' : '') + '" data-bep-hpp-service="' + key + '">',
+          '<div class="bep-hpp-top">',
+            '<div class="bep-hpp-name">' + meta.label + '</div>',
+            '<div class="bep-hpp-icon">' + iconMarkup(meta.icon) + '</div>',
+          '</div>',
+          '<div>',
+            '<div class="bep-hpp-value-row"><strong class="bep-hpp-value">' + money(value) + '</strong><span class="bep-hpp-unit">' + unit + '</span></div>',
+            '<div class="bep-hpp-meta">' + meta.insight + '</div>',
+          '</div>',
+          '<div class="bep-hpp-foot">',
+            '<span class="bep-hpp-badge ' + status.tone + '">' + status.text + '</span>',
+            '<span class="bep-hpp-source">Struktur HPP</span>',
+          '</div>',
+        '</article>'
+      ].join('');
+    }).join('');
+    syncHiddenToReference(summary);
+  }
+  function selectedReferenceService() {
+    var ref = String(byId('bepReference')?.value || '');
+    if (ref.indexOf('cs_') === 0) return 'cuciSetrika';
+    if (ref.indexOf('cl_') === 0) return 'cuciKering';
+    if (ref.indexOf('c_') === 0) return 'cuci';
+    if (ref.indexOf('ss_') === 0) return 'setrika';
+    return 'cuciSetrika';
+  }
+  function syncHiddenToReference(summary) {
+    summary = summary || getSummary();
+    var key = selectedReferenceService();
+    var value = Number(summary.values[key]) || 0;
+    var input = byId('inputBiayaVariabel');
+    if (input) input.value = String(Math.round(value));
+    return value;
+  }
+  function scheduleRender(delay, loading) {
+    window.clearTimeout(renderTimer);
+    if (loading) renderCards({ loading: true });
+    renderTimer = window.setTimeout(function() {
+      renderCards();
+      if (typeof window.calculateAll === 'function') window.calculateAll();
+    }, Number.isFinite(delay) ? delay : 80);
+  }
+
+  window.zettGetBepHppServiceSummary_ = getSummary;
+  window.zettRenderBepHppServiceCards = function() { renderCards(); };
+  window.zettSyncBepHppHiddenToReference = syncHiddenToReference;
+  window.zettGetBepServiceHppForPriceId = function(priceId, fallback) {
+    var previous = byId('bepReference')?.value;
+    var map = { cs_price_1: 'cuciSetrika', cs_price_2: 'cuciSetrika', cl_price_1: 'cuciKering', c_price_1: 'cuci', ss_price_1: 'setrika' };
+    var summary = getSummary();
+    var key = map[priceId] || selectedReferenceService();
+    var value = Number(summary.values[key]) || 0;
+    if (previous) void previous;
+    return value > 0 ? value : (Number(fallback) || 0);
+  };
+
+  document.addEventListener('change', function(event) {
+    if (!event.target) return;
+    if (event.target.id === 'inputNamaHPP') {
+      lastSignature = '';
+      scheduleRender(160, true);
+      window.clearTimeout(loadingTimer);
+      loadingTimer = window.setTimeout(function() { scheduleRender(0, false); }, 520);
+    }
+    if (event.target.id === 'bepReference' || event.target.id === 'inputKategori') scheduleRender(0, false);
+  });
+  document.addEventListener('input', function(event) {
+    if (event.target && /^(cs|cl|c|ss)_price_/.test(event.target.id || '')) scheduleRender(0, false);
+  });
+
+  function patchExternalHooks(attempt) {
+    if (typeof window.zettStoreFreshHPPRow === 'function' && !window.zettStoreFreshHPPRow.__bepHppSummaryPatched) {
+      var oldStore = window.zettStoreFreshHPPRow;
+      window.zettStoreFreshHPPRow = function(row) {
+        var result = oldStore.apply(this, arguments);
+        var rowName = normalize(row?.namaOutlet || row?.['Nama Outlet'] || row?.['Nama_Outlet']);
+        if (rowName && rowName === normalize(selectedOutlet())) scheduleRender(0, false);
+        return result;
+      };
+      window.zettStoreFreshHPPRow.__bepHppSummaryPatched = true;
+    }
+    if (typeof window.zettHPPUpdateDashboardFromState === 'function' && !window.zettHPPUpdateDashboardFromState.__bepHppSummaryPatched) {
+      var oldUpdate = window.zettHPPUpdateDashboardFromState;
+      window.zettHPPUpdateDashboardFromState = function() {
+        var result = oldUpdate.apply(this, arguments);
+        scheduleRender(0, false);
+        return result;
+      };
+      window.zettHPPUpdateDashboardFromState.__bepHppSummaryPatched = true;
+    }
+    if (attempt < 8 && (
+      typeof window.zettStoreFreshHPPRow !== 'function' ||
+      typeof window.zettHPPUpdateDashboardFromState !== 'function'
+    )) {
+      window.setTimeout(function() { patchExternalHooks(attempt + 1); }, 250);
+    }
+  }
+
+  var oldSafeCalculateAll = window.safeCalculateAll;
+  window.safeCalculateAll = function() {
+    syncHiddenToReference();
+    if (typeof oldSafeCalculateAll === 'function') return oldSafeCalculateAll.apply(this, arguments);
+    if (typeof window.calculateAll === 'function') window.calculateAll();
+  };
+  function init() {
+    renderCards();
+    patchExternalHooks(0);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+})();
+
 function safeFormatAndCalculate(inputEl) {
   if (typeof formatRupiahInput === 'function') {
     formatRupiahInput(inputEl);
