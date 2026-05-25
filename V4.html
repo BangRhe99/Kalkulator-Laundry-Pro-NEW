@@ -346,15 +346,16 @@
     #view-bep .bep-hpp-input-grid { display:grid; grid-template-columns:minmax(7.2rem, 1fr) minmax(5.1rem, .72fr); gap:.56rem; align-items:end; margin-top:0; }
     #view-bep .bep-hpp-field { min-width:0; }
     #view-bep .bep-hpp-field label { display:block; margin-bottom:.26rem; color:#8A92A6; font-size:10.5px; font-weight:760; line-height:1.15; letter-spacing:0; }
-    #view-bep .bep-hpp-label-row { display:flex; align-items:center; gap:.28rem; margin-bottom:.26rem; color:#8A92A6; font-size:10.5px; font-weight:760; line-height:1.15; letter-spacing:0; position:relative; }
+    #view-bep .bep-hpp-label-row { display:flex; align-items:center; gap:0; margin-bottom:.26rem; color:#8A92A6; font-size:10.5px; font-weight:760; line-height:1.15; letter-spacing:0; position:relative; }
     #view-bep .bep-hpp-label-row label { margin:0; }
     #view-bep .bep-hpp-info-btn {
-      width:1rem; height:1rem; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
-      border:1px solid rgba(148,163,184,.45); background:rgba(255,255,255,.88); color:#64748B; font-size:.66rem; line-height:1;
-      transition:color .16s var(--bep-ease), border-color .16s var(--bep-ease), box-shadow .16s var(--bep-ease), background-color .16s var(--bep-ease);
+      width:auto; height:auto; margin-left:5px; padding:0; border:0; border-radius:0; background:transparent;
+      display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; color:#8A92A6; font-size:12px; line-height:1;
+      vertical-align:middle; box-shadow:none; transition:color .16s var(--bep-ease), transform .16s var(--bep-ease);
     }
     #view-bep .bep-hpp-info-btn:hover,
-    #view-bep .bep-hpp-info-btn:focus-visible { color:var(--hpp-accent); border-color:rgba(20,184,166,.56); background:#FFFFFF; box-shadow:0 6px 16px rgba(15,23,42,.09); outline:none; }
+    #view-bep .bep-hpp-info-btn:focus-visible { color:#6C757D; background:transparent; box-shadow:none; outline:none; transform:translateY(-.5px); }
+    #view-bep .bep-hpp-info-btn svg { width:12px; height:12px; display:block; stroke:currentColor; stroke-width:1.45; fill:none; }
     #view-bep .bep-hpp-tooltip {
       position:absolute; right:0; top:1.45rem; z-index:8; width:min(17rem, 78vw); pointer-events:none;
       opacity:0; transform:translate3d(0,-4px,0) scale(.98); transform-origin:top right;
@@ -1184,7 +1185,7 @@
           '<input id="bepServicePrice_' + key + '" class="bep-hpp-input" data-bep-service-input="price" data-service-key="' + key + '" inputmode="numeric" value="' + formatInputNumber(price) + '"' + disabledAttr + '>',
         '</div>',
         '<div class="bep-hpp-field">',
-          '<div class="bep-hpp-label-row"><label for="bepServiceProp_' + key + '">Proporsi Penjualan (%)</label><button type="button" class="bep-hpp-info-btn" data-bep-prop-info aria-label="Info Proporsi Penjualan"><i class="ph ph-info"></i></button><div class="bep-hpp-tooltip" role="tooltip">Proporsi Penjualan adalah perkiraan porsi minat pelanggan. Contoh sederhana: Jika dari 100 orang pelanggan yang datang, ada 40 orang yang memilih layanan ini, maka isi dengan angka 40. Total keseluruhan dari semua layanan aktif harus 100%.</div></div>',
+          '<div class="bep-hpp-label-row"><label for="bepServiceProp_' + key + '">Proporsi Penjualan (%)</label><button type="button" class="bep-hpp-info-btn" data-bep-prop-info aria-label="Info Proporsi Penjualan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.25 2.25 0 0 1 4.35.8c0 1.9-2.15 2.15-2.15 3.7"/><path d="M12 17h.01"/></svg></button><div class="bep-hpp-tooltip" role="tooltip">Proporsi Penjualan adalah perkiraan porsi minat pelanggan. Contoh sederhana: Jika dari 100 orang pelanggan yang datang, ada 40 orang yang memilih layanan ini, maka isi dengan angka 40. Total keseluruhan dari semua layanan aktif harus 100%.</div></div>',
           '<input id="bepServiceProp_' + key + '" class="bep-hpp-input" data-bep-service-input="prop" data-service-key="' + key + '" inputmode="decimal" value="' + (prop ? String(prop).replace('.', ',') : '0') + '"' + disabledAttr + '>',
         '</div>',
       '</div>'
