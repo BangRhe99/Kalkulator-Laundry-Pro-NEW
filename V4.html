@@ -306,10 +306,30 @@
     #view-bep .bep-hpp-card:hover { transform:translate3d(0,-2px,0); border-color:rgba(148,163,184,.72); box-shadow:0 24px 56px rgba(15,23,42,.09), 0 14px 30px var(--hpp-glow); }
     #view-bep .bep-hpp-card.is-cuci { --hpp-accent:#0891B2; --hpp-soft:#ECFEFF; --hpp-glow:rgba(8,145,178,.12); }
     #view-bep .bep-hpp-card.is-kering { --hpp-accent:#0F766E; --hpp-soft:#F0FDFA; --hpp-glow:rgba(15,118,110,.12); }
+    #view-bep .bep-hpp-card.is-disabled { opacity:.72; }
     #view-bep .bep-hpp-card.is-setrika { --hpp-accent:#7C3AED; --hpp-soft:#F5F3FF; --hpp-glow:rgba(124,58,237,.12); }
     #view-bep .bep-hpp-card.is-combo { --hpp-accent:#B45309; --hpp-soft:#FFFBEB; --hpp-glow:rgba(180,83,9,.11); }
     #view-bep .bep-hpp-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.85rem; }
     #view-bep .bep-hpp-name { color:#334155; font-size:.76rem; font-weight:950; line-height:1.25; letter-spacing:0; }
+    #view-bep .bep-hpp-title-stack { min-width:0; display:flex; flex-direction:column; gap:.55rem; }
+    #view-bep .bep-hpp-toggle {
+      display:inline-flex; align-items:center; gap:.42rem; align-self:flex-start; position:relative; z-index:2;
+      color:#0F766E; background:#F0FDFA; border:1px solid #99F6E4; border-radius:999px;
+      padding:.24rem .46rem .24rem .24rem; font-size:.58rem; font-weight:950; text-transform:uppercase; letter-spacing:.06em;
+    }
+    #view-bep .bep-hpp-toggle input { position:absolute; opacity:0; pointer-events:none; }
+    #view-bep .bep-hpp-toggle-knob {
+      width:2rem; height:1.08rem; border-radius:999px; background:#0F766E; padding:.13rem; box-shadow:inset 0 0 0 1px rgba(15,118,110,.16);
+      transition:background-color .18s var(--bep-ease);
+    }
+    #view-bep .bep-hpp-toggle-knob::before {
+      content:""; display:block; width:.82rem; height:.82rem; border-radius:999px; background:#FFFFFF;
+      transform:translateX(.92rem); transition:transform .18s var(--bep-ease);
+      box-shadow:0 2px 5px rgba(15,23,42,.18);
+    }
+    #view-bep .bep-hpp-toggle input:not(:checked) + .bep-hpp-toggle-knob { background:#CBD5E1; }
+    #view-bep .bep-hpp-toggle input:not(:checked) + .bep-hpp-toggle-knob::before { transform:translateX(0); }
+    #view-bep .bep-hpp-toggle input:focus-visible + .bep-hpp-toggle-knob { outline:2px solid #14B8A6; outline-offset:2px; }
     #view-bep .bep-hpp-icon {
       width:2.4rem; height:2.4rem; border-radius:.95rem; flex:0 0 auto; display:flex; align-items:center; justify-content:center;
       background:linear-gradient(135deg, #FFFFFF, var(--hpp-soft)); color:var(--hpp-accent);
@@ -795,6 +815,7 @@
   var renderTimer = null;
   var loadingTimer = null;
   var lastSignature = '';
+  var dryOnlyDefault = true;
   var SERVICE_META = {
     cuci: { label: 'HPP Cuci Saja', tone: 'is-cuci', icon: 'ph-washing-machine', unitKey: 'wash', insight: 'Biaya dasar produksi' },
     cuciKering: { label: 'HPP Cuci + Kering', tone: 'is-combo', icon: 'ph-stack', unitKey: 'bundle', insight: 'Dipakai untuk margin kontribusi' },
@@ -826,6 +847,21 @@
     return 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
   }
   function selectedOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+  function dryOnlyStorageKey(outlet) { return 'zett:bep:self-service:kering-saja:' + normalize(outlet || selectedOutlet() || 'default'); }
+  function isDryOnlyEnabled(outlet) {
+    try {
+      var stored = window.localStorage ? window.localStorage.getItem(dryOnlyStorageKey(outlet)) : null;
+      if (stored === '0') return false;
+      if (stored === '1') return true;
+    } catch (error) {}
+    return dryOnlyDefault;
+  }
+  function setDryOnlyEnabled(value, outlet) {
+    dryOnlyDefault = !!value;
+    try {
+      if (window.localStorage) window.localStorage.setItem(dryOnlyStorageKey(outlet), value ? '1' : '0');
+    } catch (error) {}
+  }
   function isNoOutlet(value) {
     var text = normalize(value);
     return !text || text === '-' || text === 'pilih cabang' || text === 'pilih outlet' || text === 'pilih cabang laundry' || text === 'semua cabang';
@@ -881,6 +917,9 @@
     }
     return 0;
   }
+  function sumParts(row, keysList) {
+    return keysList.reduce(function(total, keys) { return total + pickNumber(row, keys); }, 0);
+  }
   function categoryContext(row, outletRow) {
     var category = String(outletRow?.kategori || outletRow?.kategoriLaundry || outletRow?.['Kategori Laundry'] || row?.kategoriLaundry || row?.['Kategori Laundry'] || byId('inputKategori')?.value || '').toLowerCase();
     return {
@@ -902,7 +941,19 @@
     var capCuci = getCapacity(row, ['Kap Cuci', 'cuciKg', 'Kapasitas Cuci']);
     var capKering = getCapacity(row, ['Kap Kering', 'pengeringKg', 'Kapasitas Kering']);
     var capSetrika = getCapacity(row, ['Kap Setrika', 'setrikaKg', 'Kg Setrika', 'Kapasitas Setrika']);
-    var cuciLoad = pickNumber(row, ['HPP Cuci Saja Per Load', 'HPP Cuci Per Load', 'Total HPP Cuci Per Load']) ||
+    var notaLoad = pickNumber(row, ['Nota Transaksi /Load', 'Nota Transaksi Per Load', 'HPP Nota Transaksi Per Load', 'Nota Per Order']);
+    var appsLoad = pickNumber(row, ['Transaksi Aps /Load', 'Transaksi Aps Per Load', 'Transaksi Apps /Load', 'Transaksi Apps Per Load', 'HPP Aplikasi Per Load', 'Kasir Per Order']);
+    var listrikKeringLoad = pickNumber(row, ['Listrik Kering /Load', 'Listrik Kering Per Load', 'Kering Per Load']);
+    var gasKeringLoad = pickNumber(row, ['Gas Kering /Load', 'Gas Kering Per Load', 'Gas Per Load', 'Estimasi Biaya Gas']);
+    var selfCuciLoad = sumParts(row, [
+      ['Nota Transaksi /Load', 'Nota Transaksi Per Load', 'HPP Nota Transaksi Per Load', 'Nota Per Order'],
+      ['Transaksi Aps /Load', 'Transaksi Aps Per Load', 'Transaksi Apps /Load', 'Transaksi Apps Per Load', 'HPP Aplikasi Per Load', 'Kasir Per Order'],
+      ['Air Cuci /Load', 'Air Cuci Per Load', 'Air Per Load'],
+      ['Listrik Cuci /Load', 'Listrik Cuci Per Load', 'Cuci Per Load'],
+      ['Listrik Pompa /Load', 'Listrik Pompa Per Load']
+    ]);
+    var selfKeringLoad = notaLoad + appsLoad + listrikKeringLoad + gasKeringLoad;
+    var cuciLoad = context.isSelf ? selfCuciLoad : pickNumber(row, ['HPP Cuci Saja Per Load', 'HPP Cuci Per Load', 'Total HPP Cuci Per Load']) ||
       pickNumber(row, ['Listrik Pompa Per Load', 'Listrik Pompa /Load']) +
       pickNumber(row, ['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']) +
       pickNumber(row, ['Air Per Load', 'Air Cuci Per Load', 'Air Cuci /Load']) +
@@ -916,7 +967,7 @@
       pickNumber(row, ['Packing Per Kg', 'Total Biaya Packing']) +
       pickNumber(row, ['Nota Per Kg', 'Admin Nota Per Kg']) ||
       (cuciLoad > 0 ? cuciLoad / capCuci : 0);
-    var keringLoad = pickNumber(row, ['HPP Kering Saja Per Load', 'HPP Kering Per Load', 'Total HPP Kering Per Load']) ||
+    var keringLoad = context.isSelf ? selfKeringLoad : pickNumber(row, ['HPP Kering Saja Per Load', 'HPP Kering Per Load', 'Total HPP Kering Per Load']) ||
       pickNumber(row, ['Kering Per Load', 'Listrik Kering Per Load', 'Listrik Kering /Load']) +
       pickNumber(row, ['Estimasi Biaya Gas', 'Gas Per Load', 'Gas Kering Per Load', 'Gas Kering /Load']);
     var keringKg = pickNumber(row, ['HPP Kering Saja Per Kg', 'HPP Kering Per Kg', 'Total HPP Kering Per Kg']) ||
@@ -929,7 +980,8 @@
     return {
       cuci: context.isSelf ? cuciLoad : cuciKg,
       kering: context.isSelf || (context.isHybrid && !keringKg) ? keringLoad : keringKg,
-      setrika: setrikaKg
+      setrika: setrikaKg,
+      selfCuciKering: selfCuciLoad + listrikKeringLoad + gasKeringLoad
     };
   }
   function getFinalService(row, keys) { return pickNumber(row, keys); }
@@ -940,11 +992,11 @@
     var outletRow = noOutlet ? null : findOutletRow(outlet);
     var context = categoryContext(row, outletRow);
     if (noOutlet) context = { isSelf: false, isHybrid: false, isDrop: true, raw: '' };
-    var atomic = row ? getAtomicHpp(row, context) : { cuci: 0, kering: 0, setrika: 0 };
-    var cuci = getFinalService(row, ['HPP Cuci Saja', 'HPP Cuci Saja Final', 'HPP Cuci', 'Total HPP Cuci']) || atomic.cuci;
-    var kering = getFinalService(row, ['HPP Kering Saja', 'HPP Kering Saja Final', 'HPP Kering', 'Total HPP Kering']) || atomic.kering;
+    var atomic = row ? getAtomicHpp(row, context) : { cuci: 0, kering: 0, setrika: 0, selfCuciKering: 0 };
+    var cuci = context.isSelf ? atomic.cuci : getFinalService(row, ['HPP Cuci Saja', 'HPP Cuci Saja Final', 'HPP Cuci', 'Total HPP Cuci']) || atomic.cuci;
+    var kering = context.isSelf ? atomic.kering : getFinalService(row, ['HPP Kering Saja', 'HPP Kering Saja Final', 'HPP Kering', 'Total HPP Kering']) || atomic.kering;
     var setrika = getFinalService(row, ['HPP Setrika Saja', 'HPP Setrika Saja Final', 'HPP Setrika', 'Total HPP Setrika']) || atomic.setrika;
-    var cuciKering = getFinalService(row, ['HPP Cuci + Kering', 'HPP Cuci Kering', 'HPP Cuci Lipat', 'HPP Cuci + Kering Final']) || ((cuci > 0 || kering > 0) ? cuci + kering : 0);
+    var cuciKering = context.isSelf ? atomic.selfCuciKering : getFinalService(row, ['HPP Cuci + Kering', 'HPP Cuci Kering', 'HPP Cuci Lipat', 'HPP Cuci + Kering Final']) || ((cuci > 0 || kering > 0) ? cuci + kering : 0);
     var cuciSetrika = getFinalService(row, ['HPP Cuci + Setrika', 'HPP Cuci Setrika', 'HPP Cuci + Setrika Final']) || ((cuci > 0 || setrika > 0) ? cuci + setrika : 0);
     var services = context.isSelf
       ? ['cuci', 'cuciKering', 'kering']
@@ -960,12 +1012,14 @@
       noOutlet: noOutlet,
       rowFound: !!row,
       context: context,
+      dryOnlyEnabled: !context.isSelf || isDryOnlyEnabled(outlet),
       values: { cuci: cuci, kering: kering, setrika: setrika, cuciKering: cuciKering, cuciSetrika: cuciSetrika },
       services: services
     };
   }
   function priceByService(key) {
     var id = key === 'cuciSetrika' ? 'cs_price_1' : key === 'cuciKering' ? 'cl_price_1' : key === 'cuci' ? 'c_price_1' : key === 'setrika' ? 'ss_price_1' : '';
+    if (key === 'kering') id = ['ks_price_1', 'k_price_1', 'dry_price_1'].find(function(candidate) { return byId(candidate); }) || '';
     return id ? clean(byId(id)?.value || '') : 0;
   }
   function statusFor(value, price, summary) {
@@ -988,19 +1042,21 @@
     if (!grid) return;
     var loading = !!(options && options.loading);
     var summary = getSummary();
-    var signature = JSON.stringify([summary.outlet, summary.noOutlet, summary.rowFound, summary.services, summary.values, loading]);
+    var signature = JSON.stringify([summary.outlet, summary.noOutlet, summary.rowFound, summary.services, summary.values, summary.dryOnlyEnabled, loading]);
     if (!loading && signature === lastSignature) return;
     lastSignature = signature;
     grid.dataset.count = String(summary.services.length || 4);
     grid.innerHTML = summary.services.map(function(key) {
       var meta = SERVICE_META[key];
       var value = Number(summary.values[key]) || 0;
-      var status = statusFor(value, priceByService(key), summary);
+      var isInactiveDry = key === 'kering' && summary.context.isSelf && !summary.dryOnlyEnabled;
+      var status = isInactiveDry ? { text: 'Dinonaktifkan', tone: '' } : statusFor(value, priceByService(key), summary);
       var unit = getUnit(summary.context, key);
+      var toggle = key === 'kering' && summary.context.isSelf ? '<label class="bep-hpp-toggle" title="Aktifkan/nonaktifkan layanan Kering Saja"><input type="checkbox" id="bepDryOnlyToggle" ' + (summary.dryOnlyEnabled ? 'checked' : '') + '><span class="bep-hpp-toggle-knob"></span><span>' + (summary.dryOnlyEnabled ? 'ON' : 'OFF') + '</span></label>' : '';
       return [
-        '<article class="bep-hpp-card ' + meta.tone + (loading ? ' is-loading' : '') + '" data-bep-hpp-service="' + key + '">',
+        '<article class="bep-hpp-card ' + meta.tone + (loading ? ' is-loading' : '') + (isInactiveDry ? ' is-disabled' : '') + '" data-bep-hpp-service="' + key + '">',
           '<div class="bep-hpp-top">',
-            '<div class="bep-hpp-name">' + meta.label + '</div>',
+            '<div class="bep-hpp-title-stack"><div class="bep-hpp-name">' + meta.label + '</div>' + toggle + '</div>',
             '<div class="bep-hpp-icon">' + iconMarkup(meta.icon) + '</div>',
           '</div>',
           '<div>',
@@ -1018,9 +1074,11 @@
   }
   function selectedReferenceService() {
     var ref = String(byId('bepReference')?.value || '');
-    if (ref.indexOf('cs_') === 0) return 'cuciSetrika';
+    var summary = getSummary();
+    if (ref.indexOf('cs_') === 0) return summary.context.isSelf ? 'cuciKering' : 'cuciSetrika';
     if (ref.indexOf('cl_') === 0) return 'cuciKering';
     if (ref.indexOf('c_') === 0) return 'cuci';
+    if (ref.indexOf('ks_') === 0 || ref.indexOf('dry_') === 0 || ref === 'kering') return 'kering';
     if (ref.indexOf('ss_') === 0) return 'setrika';
     return 'cuciSetrika';
   }
@@ -1042,12 +1100,13 @@
   }
 
   window.zettGetBepHppServiceSummary_ = getSummary;
+  window.zettIsBepDryOnlyEnabled = function() { return getSummary().dryOnlyEnabled; };
   window.zettRenderBepHppServiceCards = function() { renderCards(); };
   window.zettSyncBepHppHiddenToReference = syncHiddenToReference;
   window.zettGetBepServiceHppForPriceId = function(priceId, fallback) {
     var previous = byId('bepReference')?.value;
-    var map = { cs_price_1: 'cuciSetrika', cs_price_2: 'cuciSetrika', cl_price_1: 'cuciKering', c_price_1: 'cuci', ss_price_1: 'setrika' };
     var summary = getSummary();
+    var map = { cuciSetrika: 'cuciSetrika', cuciKering: 'cuciKering', cuci: 'cuci', setrika: 'setrika', cs_price_1: summary.context.isSelf ? 'cuciKering' : 'cuciSetrika', cs_price_2: summary.context.isSelf ? 'cuciKering' : 'cuciSetrika', cl_price_1: 'cuciKering', c_price_1: 'cuci', ss_price_1: 'setrika', ks_price_1: 'kering', k_price_1: 'kering', dry_price_1: 'kering', kering: 'kering' };
     var key = map[priceId] || selectedReferenceService();
     var value = Number(summary.values[key]) || 0;
     if (previous) void previous;
@@ -1056,6 +1115,11 @@
 
   document.addEventListener('change', function(event) {
     if (!event.target) return;
+    if (event.target.id === 'bepDryOnlyToggle') {
+      setDryOnlyEnabled(event.target.checked, selectedOutlet());
+      lastSignature = '';
+      scheduleRender(0, false);
+    }
     if (event.target.id === 'inputNamaHPP') {
       lastSignature = '';
       scheduleRender(160, true);
@@ -1065,7 +1129,7 @@
     if (event.target.id === 'bepReference' || event.target.id === 'inputKategori') scheduleRender(0, false);
   });
   document.addEventListener('input', function(event) {
-    if (event.target && /^(cs|cl|c|ss)_price_/.test(event.target.id || '')) scheduleRender(0, false);
+    if (event.target && /^(cs|cl|c|ss|ks|k|dry)_price_/.test(event.target.id || '')) scheduleRender(0, false);
   });
 
   function patchExternalHooks(attempt) {

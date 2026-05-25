@@ -658,7 +658,10 @@
       if(!tbody) return;
       
       const tipeLaundry = document.getElementById('bepTipeLaundry') ? document.getElementById('bepTipeLaundry').value : 'kg';
-      const satuan = tipeLaundry === 'load' ? 'Load' : 'Kg';
+      const summaryBepHpp = typeof window.zettGetBepHppServiceSummary_ === 'function' ? window.zettGetBepHppServiceSummary_() : null;
+      const categoryText = String(document.getElementById('inputKategori') ? document.getElementById('inputKategori').value : '').toLowerCase();
+      const isSelfServiceBEP = tipeLaundry === 'load' || categoryText.indexOf('self') > -1 || !!(summaryBepHpp && summaryBepHpp.context && summaryBepHpp.context.isSelf);
+      const satuan = isSelfServiceBEP ? 'Load' : 'Kg';
       
       let washerKg = 1;
       document.querySelectorAll('.input-mesin-cuci').forEach((el, index) => {
@@ -667,13 +670,20 @@
       if(washerKg <= 0) washerKg = 1;
 
       const hariPerMinggu = mingguTutup ? 6 : 7;
+      const dryOnlyEnabled = typeof window.zettIsBepDryOnlyEnabled === 'function' ? window.zettIsBepDryOnlyEnabled() : true;
+      const dryPriceId = ['ks_price_1', 'k_price_1', 'dry_price_1'].find(id => document.getElementById(id)) || 'kering';
 
-      const layananList = [
-          { id: 'cs_price_1', name: 'Cuci Setrika' },
-          { id: 'cl_price_1', name: 'Cuci Lipat' },
-          { id: 'c_price_1', name: 'Cuci Saja' },
-          { id: 'ss_price_1', name: 'Setrika Saja' }
-      ];
+      const layananList = isSelfServiceBEP
+        ? [
+            { id: 'cl_price_1', serviceKey: 'cuciKering', name: 'Cuci + Kering' },
+            { id: 'c_price_1', serviceKey: 'cuci', name: 'Cuci Saja' }
+          ].concat(dryOnlyEnabled ? [{ id: dryPriceId, serviceKey: 'kering', name: 'Kering Saja' }] : [])
+        : [
+            { id: 'cs_price_1', serviceKey: 'cuciSetrika', name: 'Cuci Setrika' },
+            { id: 'cl_price_1', serviceKey: 'cuciKering', name: 'Cuci Lipat' },
+            { id: 'c_price_1', serviceKey: 'cuci', name: 'Cuci Saja' },
+            { id: 'ss_price_1', serviceKey: 'setrika', name: 'Setrika Saja' }
+          ];
 
       let html = '';
 
@@ -683,7 +693,7 @@
           if(el) harga = parseFloat(el.value.replace(/\./g, '')) || 0;
 
           const hppLayanan = typeof window.zettGetBepServiceHppForPriceId === 'function'
-            ? window.zettGetBepServiceHppForPriceId(layanan.id, biayaVariabel)
+            ? window.zettGetBepServiceHppForPriceId(layanan.serviceKey || layanan.id, biayaVariabel)
             : biayaVariabel;
           const margin = harga - hppLayanan;
           let bepQtyBulan = 0;
@@ -695,7 +705,7 @@
           }
 
           let displayQtyBulan = bepQtyBulan;
-          if (tipeLaundry === 'load') displayQtyBulan = bepQtyBulan / washerKg;
+          if (isSelfServiceBEP) displayQtyBulan = bepQtyBulan;
 
           let targetBulan = margin > 0 ? displayQtyBulan : 0;
           let targetHari = margin > 0 ? (displayQtyBulan / operasionalHari) : 0;
