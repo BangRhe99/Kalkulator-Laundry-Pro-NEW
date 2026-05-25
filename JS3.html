@@ -794,10 +794,30 @@
       }, 80);
     }
 
+    function parseBEPNumber(value) {
+      if (value === null || value === undefined) return 0;
+      if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+      let str = String(value).trim();
+      if (!str) return 0;
+      str = str
+        .replace(/Rp/gi, '')
+        .replace(/load/gi, '')
+        .replace(/hari/gi, '')
+        .replace(/bulan/gi, '')
+        .replace(/\//g, '')
+        .replace(/\s+/g, '');
+      if (str.includes(',')) {
+        str = str.replace(/\./g, '').replace(',', '.');
+      } else {
+        const thousandPattern = /^-?\d{1,3}(\.\d{3})+$/;
+        if (thousandPattern.test(str)) str = str.replace(/\./g, '');
+      }
+      const num = Number(str);
+      return Number.isFinite(num) ? num : 0;
+    }
+
     function readBEPFixedCostForKPI() {
-      const raw = document.getElementById('hiddenTotalBiayaTetap') ? String(document.getElementById('hiddenTotalBiayaTetap').value || '0') : '0';
-      const value = Number(raw.replace(/\./g, '').replace(',', '.'));
-      return Number.isFinite(value) ? Math.max(0, value) : 0;
+      return Math.max(0, parseBEPNumber(document.getElementById('hiddenTotalBiayaTetap')?.value));
     }
 
     function isBEPOutletSelectedForKPI() {
@@ -806,6 +826,8 @@
     }
 
     function renderEmptyBEPTopKPI() {
+      bepBaseMetricsCache = null;
+      window.__BEP_WEIGHTED_METRICS__ = null;
       const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
       if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(0);
       if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = '0 ' + unitText;
@@ -826,9 +848,9 @@
 
       return Object.keys(mix || {}).map(key => {
         const item = mix[key] || {};
-        const price = Number(item.price);
-        const hpp = Number(item.hpp);
-        const proporsi = Number(item.proporsi);
+        const price = parseBEPNumber(item.price);
+        const hpp = parseBEPNumber(item.hpp);
+        const proporsi = parseBEPNumber(item.proporsi);
         return {
           key,
           active: item.active !== false,
@@ -870,7 +892,7 @@
     }
 
     function getBEPOperatingDays() {
-      const shown = Number(String(document.getElementById('displayHariOperasional')?.innerText || '').replace(/[^\d.-]/g, ''));
+      const shown = parseBEPNumber(document.getElementById('displayHariOperasional')?.innerText);
       if (Number.isFinite(shown) && shown > 0) return shown;
       if (document.getElementById('inputMingguTutup')) return document.getElementById('inputMingguTutup').checked ? 26 : 30;
       return 30;
@@ -879,12 +901,14 @@
     function getBEPBaseMetrics(sourceMix) {
       if (!isBEPOutletSelectedForKPI()) {
         bepBaseMetricsCache = null;
+        window.__BEP_WEIGHTED_METRICS__ = null;
         return null;
       }
       const fixedCost = readBEPFixedCostForKPI();
       const weighted = calculateBEPWeightedMetrics(fixedCost, sourceMix);
       if (!weighted) {
         bepBaseMetricsCache = null;
+        window.__BEP_WEIGHTED_METRICS__ = null;
         return null;
       }
       bepBaseMetricsCache = {
@@ -896,6 +920,7 @@
         omzetMinimalBEP: Number.isFinite(weighted.revenueBEP) ? weighted.revenueBEP : 0,
         operatingDays: getBEPOperatingDays()
       };
+      window.__BEP_WEIGHTED_METRICS__ = Object.assign({}, bepBaseMetricsCache);
       return bepBaseMetricsCache;
     }
 
@@ -911,15 +936,7 @@
     }
 
     function cleanBEPTargetProfit(value) {
-      const raw = String(value ?? '').replace(/[^\d,.-]/g, '');
-      if (!raw) return 0;
-      const normalized = raw.indexOf(',') >= 0 && raw.indexOf('.') >= 0
-        ? raw.replace(/\./g, '').replace(',', '.')
-        : raw.indexOf(',') >= 0
-          ? raw.replace(',', '.')
-          : raw.replace(/\./g, '');
-      const number = Number(normalized);
-      return Number.isFinite(number) ? Math.max(0, number) : 0;
+      return Math.max(0, parseBEPNumber(value));
     }
 
     function formatBEPIntegerInput(value) {
