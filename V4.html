@@ -352,13 +352,14 @@
     #view-bep .bep-hpp-field label { display:block; margin:0; color:#8A92A6; font-size:10.5px; font-weight:760; line-height:1.15; letter-spacing:0; }
     #view-bep .bep-hpp-label-row { display:flex; align-items:flex-end; gap:0; margin:0; color:#8A92A6; font-size:10.5px; font-weight:760; line-height:1.15; letter-spacing:0; position:relative; }
     #view-bep .bep-hpp-label-row label { margin:0; }
+    #view-bep .bep-hpp-label-inline { display:inline-flex; align-items:center; gap:4px; line-height:1.15; }
     #view-bep .bep-hpp-info-btn {
-      width:auto; height:1em; margin-left:5px; padding:0; border:0; border-radius:0; background:transparent;
+      width:auto; height:1em; margin-left:0; padding:0; border:0; border-radius:0; background:transparent;
       display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; color:#8A92A6; font-size:12px; line-height:1;
-      vertical-align:middle; box-shadow:none; transition:color .16s var(--bep-ease), transform .16s var(--bep-ease);
+      vertical-align:middle; transform:translateY(1px); box-shadow:none; transition:color .16s var(--bep-ease), transform .16s var(--bep-ease);
     }
     #view-bep .bep-hpp-info-btn:hover,
-    #view-bep .bep-hpp-info-btn:focus-visible { color:#6C757D; background:transparent; box-shadow:none; outline:none; transform:translateY(-.5px); }
+    #view-bep .bep-hpp-info-btn:focus-visible { color:#6C757D; background:transparent; box-shadow:none; outline:none; transform:translateY(.5px); }
     #view-bep .bep-hpp-info-btn svg { width:12px; height:12px; display:block; stroke:currentColor; stroke-width:1.45; fill:none; }
     #view-bep .bep-hpp-tooltip {
       position:absolute; right:0; top:1.45rem; z-index:8; width:min(17rem, 78vw); pointer-events:none;
@@ -1186,7 +1187,7 @@
       '<div class="bep-hpp-input-grid">',
         '<div class="bep-hpp-label-split">',
           '<div class="bep-hpp-label-row"><label for="bepServicePrice_' + key + '">Harga Jual Layanan</label></div>',
-          '<div class="bep-hpp-label-row"><label for="bepServiceProp_' + key + '">Proporsi Penjualan (%)</label><button type="button" class="bep-hpp-info-btn" data-bep-prop-info aria-label="Info Proporsi Penjualan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.25 2.25 0 0 1 4.35.8c0 1.9-2.15 2.15-2.15 3.7"/><path d="M12 17h.01"/></svg></button><div class="bep-hpp-tooltip" role="tooltip">Proporsi Penjualan adalah perkiraan porsi minat pelanggan. Contoh sederhana: Jika dari 100 orang pelanggan yang datang, ada 40 orang yang memilih layanan ini, maka isi dengan angka 40. Total keseluruhan dari semua layanan aktif harus 100%.</div></div>',
+          '<div class="bep-hpp-label-row"><span class="bep-hpp-label-inline"><label for="bepServiceProp_' + key + '">Proporsi Penjualan (%)</label><button type="button" class="bep-hpp-info-btn" data-bep-prop-info aria-label="Info Proporsi Penjualan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.25 2.25 0 0 1 4.35.8c0 1.9-2.15 2.15-2.15 3.7"/><path d="M12 17h.01"/></svg></button></span><div class="bep-hpp-tooltip" role="tooltip">Proporsi Penjualan adalah perkiraan porsi minat pelanggan. Contoh sederhana: Jika dari 100 orang pelanggan yang datang, ada 40 orang yang memilih layanan ini, maka isi dengan angka 40. Total keseluruhan dari semua layanan aktif harus 100%.</div></div>',
         '</div>',
         '<div class="bep-hpp-input-split">',
           '<div class="bep-hpp-field">',
