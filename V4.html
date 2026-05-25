@@ -355,12 +355,12 @@
     #view-bep .bep-hpp-label-inline { display:inline-flex; align-items:center; gap:4px; line-height:1.15; }
     #view-bep .bep-hpp-info-btn {
       width:auto; height:1em; margin-left:0; padding:0; border:0; border-radius:0; background:transparent;
-      display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; color:#8A92A6; font-size:12px; line-height:1;
-      vertical-align:middle; transform:translateY(1px); box-shadow:none; transition:color .16s var(--bep-ease), transform .16s var(--bep-ease);
+      display:inline-block; color:#8A92A6; font-size:12px; line-height:1; vertical-align:middle;
+      transform:translateY(-1px); box-shadow:none; transition:color .16s var(--bep-ease), transform .16s var(--bep-ease);
     }
     #view-bep .bep-hpp-info-btn:hover,
-    #view-bep .bep-hpp-info-btn:focus-visible { color:#6C757D; background:transparent; box-shadow:none; outline:none; transform:translateY(.5px); }
-    #view-bep .bep-hpp-info-btn svg { width:12px; height:12px; display:block; stroke:currentColor; stroke-width:1.45; fill:none; }
+    #view-bep .bep-hpp-info-btn:focus-visible { color:#6C757D; background:transparent; box-shadow:none; outline:none; transform:translateY(-1px); }
+    #view-bep .bep-hpp-info-btn svg { width:12px; height:12px; display:inline-block; vertical-align:middle; stroke:currentColor; stroke-width:1.45; fill:none; }
     #view-bep .bep-hpp-tooltip {
       position:absolute; right:0; top:1.45rem; z-index:8; width:min(17rem, 78vw); pointer-events:none;
       opacity:0; transform:translate3d(0,-4px,0) scale(.98); transform-origin:top right;
@@ -1081,6 +1081,10 @@
     var number = Math.round(clean(value));
     return number ? number.toLocaleString('id-ID') : '';
   }
+  function formatThousandsInputValue(value) {
+    var rawValue = String(value || '').replace(/[^0-9]/g, '');
+    return rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
   function syncSalesMixState(summary) {
     summary = summary || getSummary();
     var mix = {};
@@ -1191,7 +1195,7 @@
         '</div>',
         '<div class="bep-hpp-input-split">',
           '<div class="bep-hpp-field">',
-          '<input id="bepServicePrice_' + key + '" class="bep-hpp-input" data-bep-service-input="price" data-service-key="' + key + '" inputmode="numeric" value="' + formatInputNumber(price) + '"' + disabledAttr + '>',
+          '<input type="text" id="bepServicePrice_' + key + '" class="bep-hpp-input" data-bep-service-input="price" data-service-key="' + key + '" inputmode="numeric" value="' + formatInputNumber(price) + '"' + disabledAttr + '>',
           '</div>',
           '<div class="bep-hpp-field">',
           '<input id="bepServiceProp_' + key + '" class="bep-hpp-input" data-bep-service-input="prop" data-service-key="' + key + '" inputmode="decimal" value="' + (prop ? String(prop).replace('.', ',') : '0') + '"' + disabledAttr + '>',
@@ -1320,10 +1324,12 @@
       var serviceKey = event.target.getAttribute('data-service-key');
       var field = event.target.getAttribute('data-bep-service-input');
       if (serviceKey && field) {
+        var nextValue = event.target.value;
         if (field === 'price') {
-          event.target.value = formatInputNumber(event.target.value);
+          nextValue = event.target.value.replace(/[^0-9]/g, '');
+          event.target.value = formatThousandsInputValue(nextValue);
         }
-        setServiceInputState(serviceKey, field, event.target.value, selectedOutlet());
+        setServiceInputState(serviceKey, field, nextValue, selectedOutlet());
         updateServiceMargin(serviceKey);
         if (typeof window.calculateAll === 'function') window.calculateAll();
       }
