@@ -349,13 +349,22 @@
     #view-bep .bep-hpp-field { min-width:0; }
     #view-bep .bep-hpp-field label { display:block; margin:0; padding:0; color:#8A92A6; font-size:10.5px; font-weight:760; line-height:1; letter-spacing:0; }
     #view-bep .bep-hpp-tooltip {
-      position:absolute; right:0; top:1.45rem; z-index:8; width:min(17rem, 78vw); pointer-events:none;
+      display:none; position:absolute; right:0; top:1.45rem; z-index:8; width:min(17rem, 78vw); pointer-events:none;
       opacity:0; transform:translate3d(0,-4px,0) scale(.98); transform-origin:top right;
       padding:.72rem .78rem; border-radius:.8rem; border:1px solid rgba(203,213,225,.82);
       background:rgba(255,255,255,.98); color:#475569; box-shadow:0 18px 42px rgba(15,23,42,.14), inset 0 1px 0 rgba(255,255,255,.92);
       font-size:11px; font-weight:650; line-height:1.45; text-transform:none; letter-spacing:0;
       transition:opacity .16s var(--bep-ease), transform .16s var(--bep-ease);
     }
+    .bep-hpp-summary-tooltip-portal {
+      position:fixed; z-index:9999; width:min(300px, calc(100vw - 24px)); pointer-events:none;
+      opacity:0; transform:translate3d(0,4px,0) scale(.98); transform-origin:bottom center;
+      padding:.72rem .78rem; border-radius:.8rem; border:1px solid rgba(203,213,225,.82);
+      background:rgba(255,255,255,.98); color:#475569; box-shadow:0 18px 42px rgba(15,23,42,.14), inset 0 1px 0 rgba(255,255,255,.92);
+      font-size:11px; font-weight:650; line-height:1.45; text-transform:none; letter-spacing:0;
+      transition:opacity .16s cubic-bezier(0.22, 1, 0.36, 1), transform .16s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .bep-hpp-summary-tooltip-portal.is-visible { opacity:1; transform:translate3d(0,0,0) scale(1); }
     #view-bep .bep-hpp-label-row:hover .bep-hpp-tooltip,
     #view-bep .bep-hpp-label-row:focus-within .bep-hpp-tooltip,
     #view-bep .bep-hpp-label-row.is-tooltip-open .bep-hpp-tooltip { opacity:1; transform:translate3d(0,0,0) scale(1); }
@@ -1328,6 +1337,72 @@
     }
     if (event.target && /^(cs|cl|c|ss|ks|k|dry)_price_/.test(event.target.id || '')) scheduleRender(0, false);
   });
+  var activePropTooltipButton = null;
+  var pinnedPropTooltipButton = null;
+  function propTooltipEl() {
+    var el = document.querySelector('.bep-hpp-summary-tooltip-portal');
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'bep-hpp-summary-tooltip-portal';
+      el.setAttribute('role', 'tooltip');
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+  function positionPropTooltip(button) {
+    var tip = propTooltipEl();
+    var text = button.getAttribute('title') || button.closest('.bep-hpp-label-row')?.querySelector('.bep-hpp-tooltip')?.textContent || '';
+    tip.textContent = text;
+    tip.classList.add('is-visible');
+    tip.style.left = '12px';
+    tip.style.top = '12px';
+    var rect = button.getBoundingClientRect();
+    var tipRect = tip.getBoundingClientRect();
+    var margin = 12;
+    var gap = 10;
+    var left = rect.left + (rect.width / 2) - (tipRect.width / 2);
+    left = Math.max(margin, Math.min(left, window.innerWidth - tipRect.width - margin));
+    var top = rect.top - tipRect.height - gap;
+    if (top < margin) top = rect.bottom + gap;
+    top = Math.max(margin, Math.min(top, window.innerHeight - tipRect.height - margin));
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  function showPropTooltip(button, pinned) {
+    if (!button) return;
+    activePropTooltipButton = button;
+    if (pinned) pinnedPropTooltipButton = button;
+    positionPropTooltip(button);
+  }
+  function hidePropTooltip(force) {
+    if (!force && pinnedPropTooltipButton) return;
+    activePropTooltipButton = null;
+    pinnedPropTooltipButton = null;
+    var tip = document.querySelector('.bep-hpp-summary-tooltip-portal');
+    if (tip) tip.classList.remove('is-visible');
+  }
+  document.addEventListener('mouseover', function(event) {
+    var infoButton = event.target && event.target.closest ? event.target.closest('[data-bep-prop-info]') : null;
+    if (infoButton) showPropTooltip(infoButton, false);
+  });
+  document.addEventListener('mouseout', function(event) {
+    var infoButton = event.target && event.target.closest ? event.target.closest('[data-bep-prop-info]') : null;
+    if (infoButton && !pinnedPropTooltipButton) hidePropTooltip(true);
+  });
+  document.addEventListener('focusin', function(event) {
+    var infoButton = event.target && event.target.closest ? event.target.closest('[data-bep-prop-info]') : null;
+    if (infoButton) showPropTooltip(infoButton, false);
+  });
+  document.addEventListener('focusout', function(event) {
+    var infoButton = event.target && event.target.closest ? event.target.closest('[data-bep-prop-info]') : null;
+    if (infoButton && !pinnedPropTooltipButton) hidePropTooltip(true);
+  });
+  window.addEventListener('scroll', function() {
+    if (activePropTooltipButton) positionPropTooltip(activePropTooltipButton);
+  }, true);
+  window.addEventListener('resize', function() {
+    if (activePropTooltipButton) positionPropTooltip(activePropTooltipButton);
+  });
   document.addEventListener('click', function(event) {
     var infoButton = event.target && event.target.closest ? event.target.closest('[data-bep-prop-info]') : null;
     document.querySelectorAll('#view-bep .bep-hpp-label-row.is-tooltip-open').forEach(function(row) {
@@ -1336,8 +1411,12 @@
     if (infoButton) {
       var row = infoButton.closest('.bep-hpp-label-row');
       if (row) row.classList.toggle('is-tooltip-open');
+      if (pinnedPropTooltipButton === infoButton) hidePropTooltip(true);
+      else showPropTooltip(infoButton, true);
       event.preventDefault();
       event.stopPropagation();
+    } else {
+      hidePropTooltip(true);
     }
   });
 
