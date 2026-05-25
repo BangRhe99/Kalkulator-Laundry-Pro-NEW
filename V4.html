@@ -816,6 +816,7 @@
   var loadingTimer = null;
   var lastSignature = '';
   var dryOnlyDefault = true;
+  var liveCostSyncing = false;
   var SERVICE_META = {
     cuci: { label: 'HPP Cuci Saja', tone: 'is-cuci', icon: 'ph-washing-machine', unitKey: 'wash', insight: 'Biaya dasar produksi' },
     cuciKering: { label: 'HPP Cuci + Kering', tone: 'is-combo', icon: 'ph-stack', unitKey: 'bundle', insight: 'Dipakai untuk margin kontribusi' },
@@ -917,8 +918,33 @@
     }
     return 0;
   }
-  function sumParts(row, keysList) {
-    return keysList.reduce(function(total, keys) { return total + pickNumber(row, keys); }, 0);
+  function readMoneyById(id) {
+    var el = byId(id);
+    return el ? clean(el.textContent || el.value) : 0;
+  }
+  function findDetailValue(containerId, labels) {
+    var container = byId(containerId);
+    if (!container) return 0;
+    var needles = labels.map(function(label) { return String(label).toLowerCase(); });
+    var rows = Array.prototype.slice.call(container.querySelectorAll('div'));
+    for (var i = 0; i < rows.length; i++) {
+      var label = String(rows[i].querySelector('span')?.textContent || '').toLowerCase();
+      if (needles.some(function(needle) { return label.indexOf(needle) > -1; })) {
+        return clean(rows[i].querySelector('strong')?.textContent || rows[i].textContent);
+      }
+    }
+    return 0;
+  }
+  function liveOrRowNumber(row, ids, detailContainerId, detailLabels, rowKeys) {
+    var values = [];
+    (ids || []).forEach(function(id) { values.push(readMoneyById(id)); });
+    if (detailContainerId && detailLabels) values.push(findDetailValue(detailContainerId, detailLabels));
+    if (rowKeys) values.push(pickNumber(row, rowKeys));
+    for (var i = 0; i < values.length; i++) {
+      var value = Number(values[i]) || 0;
+      if (value > 0) return value;
+    }
+    return 0;
   }
   function categoryContext(row, outletRow) {
     var category = String(outletRow?.kategori || outletRow?.kategoriLaundry || outletRow?.['Kategori Laundry'] || row?.kategoriLaundry || row?.['Kategori Laundry'] || byId('inputKategori')?.value || '').toLowerCase();
@@ -941,17 +967,14 @@
     var capCuci = getCapacity(row, ['Kap Cuci', 'cuciKg', 'Kapasitas Cuci']);
     var capKering = getCapacity(row, ['Kap Kering', 'pengeringKg', 'Kapasitas Kering']);
     var capSetrika = getCapacity(row, ['Kap Setrika', 'setrikaKg', 'Kg Setrika', 'Kapasitas Setrika']);
-    var notaLoad = pickNumber(row, ['Nota Transaksi /Load', 'Nota Transaksi Per Load', 'HPP Nota Transaksi Per Load', 'Nota Per Order']);
-    var appsLoad = pickNumber(row, ['Transaksi Aps /Load', 'Transaksi Aps Per Load', 'Transaksi Apps /Load', 'Transaksi Apps Per Load', 'HPP Aplikasi Per Load', 'Kasir Per Order']);
-    var listrikKeringLoad = pickNumber(row, ['Listrik Kering /Load', 'Listrik Kering Per Load', 'Kering Per Load']);
-    var gasKeringLoad = pickNumber(row, ['Gas Kering /Load', 'Gas Kering Per Load', 'Gas Per Load', 'Estimasi Biaya Gas']);
-    var selfCuciLoad = sumParts(row, [
-      ['Nota Transaksi /Load', 'Nota Transaksi Per Load', 'HPP Nota Transaksi Per Load', 'Nota Per Order'],
-      ['Transaksi Aps /Load', 'Transaksi Aps Per Load', 'Transaksi Apps /Load', 'Transaksi Apps Per Load', 'HPP Aplikasi Per Load', 'Kasir Per Order'],
-      ['Air Cuci /Load', 'Air Cuci Per Load', 'Air Per Load'],
-      ['Listrik Cuci /Load', 'Listrik Cuci Per Load', 'Cuci Per Load'],
-      ['Listrik Pompa /Load', 'Listrik Pompa Per Load']
-    ]);
+    var pompaLoad = liveOrRowNumber(row, ['dispListrikPompaLoad'], 'dash-card-listrik-details', ['Listrik Pompa /Load'], ['Listrik Pompa Per Load', 'Listrik Pompa /Load']);
+    var listrikCuciLoad = liveOrRowNumber(row, ['dispListrikCuciLoad'], 'dash-card-listrik-details', ['Listrik Cuci /Load'], ['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']);
+    var airCuciLoad = liveOrRowNumber(row, ['dispAirCuciLoad'], 'dash-card-air-details', ['Air Cuci /Load'], ['Air Per Load', 'Air Cuci Per Load', 'Air Cuci /Load']);
+    var appsLoad = liveOrRowNumber(row, ['dispNotaAppLoad'], '', [], ['HPP Aplikasi Per Load', 'Transaksi Aps Per Load', 'Transaksi Aps /Load', 'Transaksi Apps Per Load', 'Transaksi Apps /Load', 'transaksiAppsPerLoad', 'Kasir Per Order', 'Nota_App_HargaTrx']);
+    var notaLoad = liveOrRowNumber(row, ['dispNotaCostTrx'], '', [], ['HPP Nota Transaksi Per Load', 'Nota Transaksi Per Load', 'Nota Transaksi /Load', 'notaTransaksiPerLoad', 'Nota Per Order', 'Nota_Thermal_Harga']);
+    var listrikKeringLoad = liveOrRowNumber(row, ['dispListrikPengeringLoad'], 'dash-card-listrik-details', ['Listrik Kering /Load'], ['Listrik Kering Per Load', 'Listrik Kering /Load', 'Kering Per Load', 'listrikKeringPerLoad', 'listrikKeringLoad', 'keringElectricPerLoad']);
+    var gasKeringLoad = liveOrRowNumber(row, ['displayEstimasiBiayaGas'], 'dash-card-gas-details', ['Gas Kering /Load'], ['Estimasi Biaya Gas', 'Gas Per Load', 'Gas Kering Per Load', 'Gas Kering /Load']);
+    var selfCuciLoad = pompaLoad + listrikCuciLoad + airCuciLoad + appsLoad + notaLoad;
     var selfKeringLoad = notaLoad + appsLoad + listrikKeringLoad + gasKeringLoad;
     var cuciLoad = context.isSelf ? selfCuciLoad : pickNumber(row, ['HPP Cuci Saja Per Load', 'HPP Cuci Per Load', 'Total HPP Cuci Per Load']) ||
       pickNumber(row, ['Listrik Pompa Per Load', 'Listrik Pompa /Load']) +
@@ -1166,8 +1189,29 @@
     if (typeof oldSafeCalculateAll === 'function') return oldSafeCalculateAll.apply(this, arguments);
     if (typeof window.calculateAll === 'function') window.calculateAll();
   };
+  function observeLiveCostNodes() {
+    if (observeLiveCostNodes.done || typeof MutationObserver !== 'function') return;
+    observeLiveCostNodes.done = true;
+    var ids = ['dispListrikPompaLoad', 'dispListrikCuciLoad', 'dispAirCuciLoad', 'dispNotaAppLoad', 'dispNotaCostTrx', 'dispListrikPengeringLoad', 'displayEstimasiBiayaGas'];
+    var observer = new MutationObserver(function() {
+      if (liveCostSyncing) return;
+      liveCostSyncing = true;
+      lastSignature = '';
+      window.clearTimeout(renderTimer);
+      renderTimer = window.setTimeout(function() {
+        renderCards();
+        if (typeof window.calculateAll === 'function') window.calculateAll();
+        window.setTimeout(function() { liveCostSyncing = false; }, 80);
+      }, 0);
+    });
+    ids.forEach(function(id) {
+      var el = byId(id);
+      if (el) observer.observe(el, { childList: true, characterData: true, subtree: true });
+    });
+  }
   function init() {
     renderCards();
+    observeLiveCostNodes();
     patchExternalHooks(0);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
