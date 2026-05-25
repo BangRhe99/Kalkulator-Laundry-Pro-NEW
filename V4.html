@@ -1283,6 +1283,7 @@
     if (loading) renderCards({ loading: true });
     renderTimer = window.setTimeout(function() {
       renderCards();
+      if (typeof window.renderBEPTopKPIOnly === 'function') window.renderBEPTopKPIOnly();
       if (typeof window.calculateAll === 'function') window.calculateAll();
     }, Number.isFinite(delay) ? delay : 80);
   }
@@ -1313,9 +1314,9 @@
     }
     if (event.target.id === 'inputNamaHPP') {
       lastSignature = '';
-      scheduleRender(160, true);
+      scheduleRender(0, true);
       window.clearTimeout(loadingTimer);
-      loadingTimer = window.setTimeout(function() { scheduleRender(0, false); }, 520);
+      loadingTimer = window.setTimeout(function() { scheduleRender(0, false); }, 180);
     }
     if (event.target.id === 'bepReference' || event.target.id === 'inputKategori') scheduleRender(0, false);
   });
@@ -1331,6 +1332,7 @@
         }
         setServiceInputState(serviceKey, field, nextValue, selectedOutlet());
         updateServiceMargin(serviceKey);
+        if (typeof window.renderBEPTopKPIOnly === 'function') window.renderBEPTopKPIOnly();
         if (typeof window.calculateAll === 'function') window.calculateAll();
       }
       return;
@@ -1465,6 +1467,7 @@
       window.clearTimeout(renderTimer);
       renderTimer = window.setTimeout(function() {
         renderCards();
+        if (typeof window.renderBEPTopKPIOnly === 'function') window.renderBEPTopKPIOnly();
         if (typeof window.calculateAll === 'function') window.calculateAll();
         window.setTimeout(function() { liveCostSyncing = false; }, 80);
       }, 0);

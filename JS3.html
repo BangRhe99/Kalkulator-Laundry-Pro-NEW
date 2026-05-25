@@ -792,11 +792,33 @@
       }, 80);
     }
 
-    function getBEPServiceMixData() {
-      let mix = {};
+    function readBEPFixedCostForKPI() {
+      const raw = document.getElementById('hiddenTotalBiayaTetap') ? String(document.getElementById('hiddenTotalBiayaTetap').value || '0') : '0';
+      const value = Number(raw.replace(/\./g, '').replace(',', '.'));
+      return Number.isFinite(value) ? Math.max(0, value) : 0;
+    }
+
+    function isBEPOutletSelectedForKPI() {
+      const text = String(document.getElementById('inputNamaHPP')?.value || '').trim().toLowerCase();
+      return !!text && text !== '-' && text.indexOf('pilih') !== 0;
+    }
+
+    function renderEmptyBEPTopKPI() {
+      const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
+      if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(0);
+      if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = '0 ' + unitText;
+      if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(0);
+      if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
+      if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
+      if(document.getElementById('bepKpiMarginNote')) document.getElementById('bepKpiMarginNote').innerText = 'Harga perlu dinaikkan';
+      return true;
+    }
+
+    function getBEPServiceMixData(sourceMix) {
+      let mix = sourceMix || {};
       if (typeof window.zettGetBepSalesMix === 'function') {
-        try { mix = window.zettGetBepSalesMix() || {}; } catch (error) { mix = {}; }
-      } else if (window.zettBepSalesMix && typeof window.zettBepSalesMix === 'object') {
+        try { mix = sourceMix || window.zettGetBepSalesMix() || {}; } catch (error) { mix = sourceMix || {}; }
+      } else if (!sourceMix && window.zettBepSalesMix && typeof window.zettBepSalesMix === 'object') {
         mix = window.zettBepSalesMix;
       }
 
@@ -815,8 +837,10 @@
       }).filter(item => item.active && item.proporsi > 0);
     }
 
-    function calculateBEPKPIFromServiceMix(fixedCost) {
-      const services = getBEPServiceMixData();
+    function calculateBEPWeightedMetrics(fixedCost, sourceMix) {
+      fixedCost = Number(fixedCost);
+      if (!Number.isFinite(fixedCost) || fixedCost <= 0) fixedCost = 0;
+      const services = getBEPServiceMixData(sourceMix);
       const totalProporsi = services.reduce((sum, item) => sum + item.proporsi, 0);
       if (totalProporsi <= 0) return null;
 
@@ -827,14 +851,43 @@
         return sum;
       }, { weightedMargin: 0, weightedPrice: 0 });
 
-      const volumeBEP = totals.weightedMargin > 0 ? fixedCost / totals.weightedMargin : 0;
+      const volumeExact = totals.weightedMargin > 0 ? fixedCost / totals.weightedMargin : 0;
+      const volumeRoundedUp = volumeExact > 0 && Number.isFinite(volumeExact) ? Math.ceil(volumeExact) : 0;
+      const revenueBEP = totals.weightedMargin > 0 && totals.weightedPrice > 0 ? volumeRoundedUp * totals.weightedPrice : 0;
       return {
         weightedMargin: totals.weightedMargin,
         weightedPrice: totals.weightedPrice,
-        volumeBEP,
-        revenueBEP: volumeBEP * totals.weightedPrice
+        volumeExact,
+        volumeRoundedUp,
+        revenueBEP
       };
     }
+
+    function calculateBEPKPIFromServiceMix(fixedCost, sourceMix) {
+      return calculateBEPWeightedMetrics(fixedCost, sourceMix);
+    }
+
+    function renderBEPTopKPIOnly(sourceMix) {
+      if (!isBEPOutletSelectedForKPI()) return renderEmptyBEPTopKPI();
+      const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
+      const metrics = calculateBEPWeightedMetrics(readBEPFixedCostForKPI(), sourceMix);
+      if (!metrics) return renderEmptyBEPTopKPI();
+      const margin = Number.isFinite(metrics.weightedMargin) ? metrics.weightedMargin : 0;
+      const volume = margin > 0 ? metrics.volumeRoundedUp : 0;
+      const revenue = margin > 0 ? metrics.revenueBEP : 0;
+      if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(revenue);
+      if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = volume + ' ' + unitText;
+      if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(margin);
+      if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
+      if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
+      if(document.getElementById('bepKpiMarginNote')) document.getElementById('bepKpiMarginNote').innerText = margin > 0 ? 'Bisnis punya kontribusi positif' : 'Harga perlu dinaikkan';
+      return true;
+    }
+
+    window.renderBEPTopKPIOnly = renderBEPTopKPIOnly;
+    window.addEventListener('zett:bep-sales-mix-change', event => {
+      renderBEPTopKPIOnly(event && event.detail ? event.detail : undefined);
+    });
 
     function _coreCalculateAll() {
       try {
@@ -1043,11 +1096,11 @@
         if(document.getElementById('displayBEPKg')) document.getElementById('displayBEPKg').innerText = state.bepKg.toFixed(1) + ' ' + unitText;
         if(document.getElementById('displayBEPRupiah')) document.getElementById('displayBEPRupiah').innerText = formatRupiah(state.bepRupiah);
         const bepKpiFromServiceMix = calculateBEPKPIFromServiceMix(GRAND_TOTAL_BIAYA_TETAP);
-        const bepKpiMargin = bepKpiFromServiceMix ? bepKpiFromServiceMix.weightedMargin : marginKontribusi;
-        const bepKpiVolume = bepKpiFromServiceMix ? bepKpiFromServiceMix.volumeBEP : state.bepKg;
-        const bepKpiRevenue = bepKpiFromServiceMix ? bepKpiFromServiceMix.revenueBEP : state.bepRupiah;
+        const bepKpiMargin = bepKpiFromServiceMix ? bepKpiFromServiceMix.weightedMargin : 0;
+        const bepKpiVolume = bepKpiFromServiceMix ? bepKpiFromServiceMix.volumeRoundedUp : 0;
+        const bepKpiRevenue = bepKpiFromServiceMix ? bepKpiFromServiceMix.revenueBEP : 0;
         if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(bepKpiRevenue);
-        if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(bepKpiVolume) ? bepKpiVolume.toFixed(1) : '0.0') + ' ' + unitText;
+        if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(bepKpiVolume) ? bepKpiVolume : 0) + ' ' + unitText;
         if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(bepKpiMargin);
         if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
         if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
@@ -1654,11 +1707,17 @@
     setText('bepSummaryMachine', money(totals.machineTotal));
     setText('bepSummaryInternet', money(totals.internetTotal));
     setText('bepSummaryOther', money(totals.otherTotal));
+    if (typeof window.renderBEPTopKPIOnly === 'function') {
+      try { window.renderBEPTopKPIOnly(); } catch (error) {}
+    }
     if (!selected) setOutletState('', 'idle');
   }
 
   function scheduleCalc() {
     updateDisplays();
+    if (typeof window.renderBEPTopKPIOnly === 'function') {
+      try { window.renderBEPTopKPIOnly(); } catch (error) {}
+    }
     if (typeof window.calculateAll === 'function') {
       window.clearTimeout(window.__bepFixedCalcTimer);
       window.__bepFixedCalcTimer = window.setTimeout(function() {
@@ -1809,7 +1868,7 @@
       loadBEPDashboardByOutlet('', { force: true });
       return;
     }
-    var delay = options && options.immediate ? 0 : 90;
+    var delay = options && typeof options.delay === 'number' ? options.delay : 0;
     bepLoadTimer = window.setTimeout(function() {
       loadBEPDashboardByOutlet(outlet, options || {});
     }, delay);
