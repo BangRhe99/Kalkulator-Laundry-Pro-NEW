@@ -785,6 +785,8 @@
     // [ZETTBOT REVISI: DEBOUNCED MASTER CALCULATION]
     // Mencegah frame-drop atau freezing pada chart saat user mengetik cepat
     let calcAllTimeout;
+    let bepProfitRenderTimer;
+    let bepBaseMetricsCache = null;
     function calculateAll() {
       clearTimeout(calcAllTimeout);
       calcAllTimeout = setTimeout(() => {
@@ -867,11 +869,118 @@
       return calculateBEPWeightedMetrics(fixedCost, sourceMix);
     }
 
-    function renderBEPTopKPIOnly(sourceMix) {
-      if (!isBEPOutletSelectedForKPI()) return renderEmptyBEPTopKPI();
+    function getBEPOperatingDays() {
+      const shown = Number(String(document.getElementById('displayHariOperasional')?.innerText || '').replace(/[^\d.-]/g, ''));
+      if (Number.isFinite(shown) && shown > 0) return shown;
+      if (document.getElementById('inputMingguTutup')) return document.getElementById('inputMingguTutup').checked ? 26 : 30;
+      return 30;
+    }
+
+    function getBEPBaseMetrics(sourceMix) {
+      if (!isBEPOutletSelectedForKPI()) {
+        bepBaseMetricsCache = null;
+        return null;
+      }
+      const fixedCost = readBEPFixedCostForKPI();
+      const weighted = calculateBEPWeightedMetrics(fixedCost, sourceMix);
+      if (!weighted) {
+        bepBaseMetricsCache = null;
+        return null;
+      }
+      bepBaseMetricsCache = {
+        fixedCost,
+        weightedContributionMargin: Number.isFinite(weighted.weightedMargin) ? weighted.weightedMargin : 0,
+        weightedAveragePrice: Number.isFinite(weighted.weightedPrice) ? weighted.weightedPrice : 0,
+        volumeMinimalBEPExact: Number.isFinite(weighted.volumeExact) ? weighted.volumeExact : 0,
+        volumeMinimalBEPDisplay: Number.isFinite(weighted.volumeRoundedUp) ? weighted.volumeRoundedUp : 0,
+        omzetMinimalBEP: Number.isFinite(weighted.revenueBEP) ? weighted.revenueBEP : 0,
+        operatingDays: getBEPOperatingDays()
+      };
+      return bepBaseMetricsCache;
+    }
+
+    function calculateBEPDailyTargets(metrics) {
+      metrics = metrics || bepBaseMetricsCache || getBEPBaseMetrics();
+      const days = Math.max(1, Number(metrics && metrics.operatingDays) || 30);
+      const volume = Math.max(0, Number(metrics && metrics.volumeMinimalBEPDisplay) || 0);
+      const revenue = Math.max(0, Number(metrics && metrics.omzetMinimalBEP) || 0);
+      return {
+        loadMinimalPerHari: volume > 0 ? Math.ceil(volume / days) : 0,
+        omzetMinimalPerHari: revenue > 0 ? Math.ceil(revenue / days) : 0
+      };
+    }
+
+    function cleanBEPTargetProfit(value) {
+      const raw = String(value ?? '').replace(/[^\d,.-]/g, '');
+      if (!raw) return 0;
+      const normalized = raw.indexOf(',') >= 0 && raw.indexOf('.') >= 0
+        ? raw.replace(/\./g, '').replace(',', '.')
+        : raw.indexOf(',') >= 0
+          ? raw.replace(',', '.')
+          : raw.replace(/\./g, '');
+      const number = Number(normalized);
+      return Number.isFinite(number) ? Math.max(0, number) : 0;
+    }
+
+    function formatBEPIntegerInput(value) {
+      const n = Math.round(cleanBEPTargetProfit(value));
+      return n ? n.toLocaleString('id-ID') : '';
+    }
+
+    function calculateBEPTargetProfit(targetProfit, metrics) {
+      metrics = metrics || bepBaseMetricsCache || getBEPBaseMetrics();
+      const profit = Math.max(0, Number(targetProfit) || 0);
+      const margin = Number(metrics && metrics.weightedContributionMargin) || 0;
+      const price = Number(metrics && metrics.weightedAveragePrice) || 0;
+      const days = Math.max(1, Number(metrics && metrics.operatingDays) || 30);
+      const targetVolumeExact = margin > 0 ? ((Number(metrics.fixedCost) || 0) + profit) / margin : 0;
+      const targetVolumeDisplay = targetVolumeExact > 0 && Number.isFinite(targetVolumeExact) ? Math.ceil(targetVolumeExact) : 0;
+      return {
+        targetProfit: profit,
+        targetVolumeExact,
+        targetVolumeDisplay,
+        targetOmzet: targetVolumeDisplay > 0 && price > 0 ? targetVolumeDisplay * price : 0,
+        targetLoadPerHari: targetVolumeDisplay > 0 ? Math.ceil(targetVolumeDisplay / days) : 0
+      };
+    }
+
+    function updateBEPProfitSimulationOnly() {
+      const input = document.getElementById('bepTargetProfitInput');
+      const targetProfit = cleanBEPTargetProfit(input ? input.value : 3000000);
+      const sim = calculateBEPTargetProfit(targetProfit);
       const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
-      const metrics = calculateBEPWeightedMetrics(readBEPFixedCostForKPI(), sourceMix);
-      if (!metrics) return renderEmptyBEPTopKPI();
+      if(document.getElementById('bepProfitTargetRevenue')) document.getElementById('bepProfitTargetRevenue').innerText = formatRupiah(sim.targetOmzet);
+      if(document.getElementById('bepProfitTargetLoadMonth')) document.getElementById('bepProfitTargetLoadMonth').innerText = sim.targetVolumeDisplay + ' ' + unitText + ' / bulan';
+      if(document.getElementById('bepProfitTargetLoadDay')) document.getElementById('bepProfitTargetLoadDay').innerText = sim.targetLoadPerHari + ' ' + unitText + ' / hari';
+    }
+
+    function renderBEPDailyAndProfitCards(sourceMix) {
+      const metrics = getBEPBaseMetrics(sourceMix);
+      const daily = calculateBEPDailyTargets(metrics);
+      const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
+      if(document.getElementById('bepDailyLoadTarget')) document.getElementById('bepDailyLoadTarget').innerText = daily.loadMinimalPerHari + ' ' + unitText + ' / hari';
+      if(document.getElementById('bepDailyRevenueTarget')) document.getElementById('bepDailyRevenueTarget').innerText = formatRupiah(daily.omzetMinimalPerHari) + ' / hari';
+      updateBEPProfitSimulationOnly();
+    }
+
+    function renderBEPTopKPIOnly(sourceMix) {
+      if (!isBEPOutletSelectedForKPI()) {
+        renderEmptyBEPTopKPI();
+        renderBEPDailyAndProfitCards(sourceMix);
+        return true;
+      }
+      const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
+      const baseMetrics = getBEPBaseMetrics(sourceMix);
+      const metrics = baseMetrics ? {
+        weightedMargin: baseMetrics.weightedContributionMargin,
+        volumeRoundedUp: baseMetrics.volumeMinimalBEPDisplay,
+        revenueBEP: baseMetrics.omzetMinimalBEP
+      } : null;
+      if (!metrics) {
+        renderEmptyBEPTopKPI();
+        renderBEPDailyAndProfitCards(sourceMix);
+        return true;
+      }
       const margin = Number.isFinite(metrics.weightedMargin) ? metrics.weightedMargin : 0;
       const volume = margin > 0 ? metrics.volumeRoundedUp : 0;
       const revenue = margin > 0 ? metrics.revenueBEP : 0;
@@ -881,10 +990,21 @@
       if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
       if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
       if(document.getElementById('bepKpiMarginNote')) document.getElementById('bepKpiMarginNote').innerText = margin > 0 ? 'Bisnis punya kontribusi positif' : 'Harga perlu dinaikkan';
+      renderBEPDailyAndProfitCards(sourceMix);
       return true;
     }
 
     window.renderBEPTopKPIOnly = renderBEPTopKPIOnly;
+    window.renderBEPDailyAndProfitCards = renderBEPDailyAndProfitCards;
+    window.updateBEPProfitSimulationOnly = updateBEPProfitSimulationOnly;
+    document.addEventListener('input', event => {
+      if (!event.target || event.target.id !== 'bepTargetProfitInput') return;
+      event.target.value = formatBEPIntegerInput(event.target.value);
+      clearTimeout(bepProfitRenderTimer);
+      bepProfitRenderTimer = setTimeout(() => {
+        window.requestAnimationFrame(updateBEPProfitSimulationOnly);
+      }, 100);
+    });
     window.addEventListener('zett:bep-sales-mix-change', event => {
       renderBEPTopKPIOnly(event && event.detail ? event.detail : undefined);
     });
@@ -1105,6 +1225,7 @@
         if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
         if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
         if(document.getElementById('bepKpiMarginNote')) document.getElementById('bepKpiMarginNote').innerText = bepKpiMargin > 0 ? 'Bisnis punya kontribusi positif' : 'Harga perlu dinaikkan';
+        renderBEPDailyAndProfitCards();
         
         updateBEPChart(GRAND_TOTAL_BIAYA_TETAP, biayaVariabel, refPrice, state.bepKg, GRAND_TOTAL_KAPASITAS_BULAN);
         updateTargetPenjualanTable(GRAND_TOTAL_BIAYA_TETAP, biayaVariabel, operasionalHariPerBulan, mingguTutup);

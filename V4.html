@@ -178,6 +178,61 @@
     #view-bep .bep-card-subtitle { font-size: .7rem; color: var(--bep-muted); font-weight: 750; line-height: 1.35; margin-top: .18rem; }
     #view-bep .bep-card-total { font-size: 20px; font-weight: 800; color: var(--bep-primary, #2563EB); white-space: nowrap; font-variant-numeric: tabular-nums; line-height:1.05; }
     #view-bep .bep-status { font-size:11px; color:var(--bep-muted, #64748B); font-weight:600; line-height:1.35; min-height:1.9rem; }
+    #view-bep .bep-target-plus-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin-top:1.2rem; }
+    #view-bep .bep-target-plus-card {
+      --bep-plus-accent:#0EA5E9;
+      --bep-plus-soft:#E0F2FE;
+      --bep-plus-glow:rgba(14,165,233,.12);
+      position:relative;
+      overflow:hidden;
+      min-height:10.6rem;
+      padding:1.12rem 1.18rem;
+      border-radius:1.15rem;
+      border:1px solid rgba(203,213,225,.78);
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.98), rgba(248,251,255,.92)),
+        linear-gradient(135deg, var(--bep-plus-soft), transparent 52%);
+      box-shadow:0 18px 42px rgba(15,23,42,.06), 0 10px 26px var(--bep-plus-glow), inset 0 1px 0 rgba(255,255,255,.94);
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:.9rem;
+      transform:translate3d(0,0,0);
+      transition:transform .22s var(--bep-ease), box-shadow .22s var(--bep-ease), border-color .22s var(--bep-ease);
+    }
+    #view-bep .bep-target-plus-card:hover { transform:translate3d(0,-2px,0); border-color:rgba(147,197,253,.9); box-shadow:0 24px 52px rgba(15,23,42,.085), 0 14px 30px var(--bep-plus-glow); }
+    #view-bep .bep-target-plus-card.is-revenue { --bep-plus-accent:#10B981; --bep-plus-soft:#ECFDF5; --bep-plus-glow:rgba(16,185,129,.12); }
+    #view-bep .bep-target-plus-card.is-profit { --bep-plus-accent:#7C3AED; --bep-plus-soft:#F5F3FF; --bep-plus-glow:rgba(124,58,237,.12); }
+    #view-bep .bep-plus-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.85rem; }
+    #view-bep .bep-plus-title { font-size:13px; font-weight:900; color:var(--bep-ink); letter-spacing:0; line-height:1.22; }
+    #view-bep .bep-plus-subtitle { margin-top:.22rem; font-size:11px; line-height:1.38; color:var(--bep-muted); font-weight:650; }
+    #view-bep .bep-plus-icon { width:2.45rem; height:2.45rem; flex:0 0 auto; border-radius:.95rem; display:flex; align-items:center; justify-content:center; color:var(--bep-plus-accent); background:linear-gradient(135deg,#fff,var(--bep-plus-soft)); border:1px solid rgba(255,255,255,.86); box-shadow:0 10px 24px var(--bep-plus-glow), inset 0 1px 0 rgba(255,255,255,.96); }
+    #view-bep .bep-plus-icon i { font-size:1.18rem; line-height:1; }
+    #view-bep .bep-plus-value { display:block; color:var(--bep-ink); font-size:clamp(24px,2vw,32px); line-height:1; font-weight:950; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    #view-bep .bep-plus-unit { display:block; margin-top:.4rem; color:var(--bep-muted); font-size:11px; font-weight:800; }
+    #view-bep .bep-profit-input-wrap { display:grid; gap:.4rem; }
+    #view-bep .bep-profit-input-wrap label { font-size:10px; color:var(--bep-muted); font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
+    #view-bep .bep-profit-input {
+      width:100%;
+      height:2.55rem;
+      border-radius:.9rem;
+      border:1px solid rgba(196,181,253,.75);
+      background:rgba(255,255,255,.9);
+      color:var(--bep-ink);
+      font-size:13px;
+      font-weight:900;
+      outline:none;
+      padding:0 .9rem;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.92), 0 8px 18px rgba(124,58,237,.06);
+    }
+    #view-bep .bep-profit-input:focus { border-color:#A78BFA; box-shadow:0 0 0 4px rgba(124,58,237,.12), inset 0 1px 0 rgba(255,255,255,.95); }
+    #view-bep .bep-profit-main { display:flex; align-items:flex-end; justify-content:space-between; gap:.8rem; }
+    #view-bep .bep-profit-main span { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--bep-muted); font-weight:900; }
+    #view-bep .bep-profit-main strong { color:var(--bep-ink); font-size:clamp(20px,1.6vw,27px); line-height:1; font-weight:950; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    #view-bep .bep-profit-metrics { display:grid; grid-template-columns:1fr 1fr; gap:.55rem; }
+    #view-bep .bep-profit-pill { border:1px solid rgba(221,231,246,.9); background:rgba(255,255,255,.76); border-radius:.85rem; padding:.62rem .7rem; }
+    #view-bep .bep-profit-pill span { display:block; font-size:10px; color:var(--bep-muted); font-weight:800; line-height:1.15; }
+    #view-bep .bep-profit-pill strong { display:block; margin-top:.25rem; color:var(--bep-ink); font-size:13px; font-weight:950; font-variant-numeric:tabular-nums; white-space:nowrap; }
     #view-bep .bep-card-action {
       align-self:flex-start; display:inline-flex; align-items:center; gap:.4rem; border:1px solid var(--bep-border-strong, #C7D7F2); background:#fff; color:var(--bep-primary, #2563EB);
       border-radius:.8rem; min-height:2.2rem; padding:.52rem .72rem; font-size:.68rem; font-weight:950; text-transform:uppercase; letter-spacing:.08em;
@@ -411,6 +466,8 @@
       #view-bep .bep-kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
       #view-bep .bep-fixed-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
       #view-bep .bep-hpp-grid, #view-bep .bep-hpp-grid[data-count="3"] { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      #view-bep .bep-target-plus-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      #view-bep .bep-target-plus-card.is-profit { grid-column:1 / -1; }
     }
     @media (max-width: 900px) {
       #view-bep .bep-row, #view-bep .bep-machine-row, #view-bep .bep-other-row { grid-template-columns: 1fr; padding:.85rem; border:1px solid var(--bep-border, #DDE7F6); border-radius:1rem; background:var(--bep-card-soft, #F8FBFF); }
@@ -434,6 +491,10 @@
       #view-bep .bep-hpp-card { border-radius:1.15rem; min-height:10.5rem; padding:1rem; }
       #view-bep .bep-hpp-input-grid { grid-template-columns:1fr 1fr; gap:.55rem; }
       #view-bep .bep-hpp-sync-badge { white-space:normal; }
+      #view-bep .bep-target-plus-grid { grid-template-columns:1fr; gap:.85rem; }
+      #view-bep .bep-target-plus-card.is-profit { grid-column:auto; }
+      #view-bep .bep-target-plus-card { min-height:9.8rem; padding:1rem; border-radius:1rem; }
+      #view-bep .bep-profit-metrics { grid-template-columns:1fr; }
     }
   </style>
   <div id="view-bep" class="main-view hidden animate-fade-in space-y-8">
@@ -662,6 +723,58 @@
         </div>
         <input type="hidden" id="inputBiayaVariabel" value="0">
         <div id="bepHppServiceCards" class="bep-hpp-grid" data-count="4" aria-live="polite"></div>
+      </div>
+
+      <div class="bep-target-plus-grid" id="bepTargetPlusCards" aria-live="polite">
+        <article class="bep-target-plus-card is-load">
+          <div class="bep-plus-top">
+            <div>
+              <div class="bep-plus-title">Load Minimal per Hari</div>
+              <div class="bep-plus-subtitle">Target harian agar outlet tidak rugi.</div>
+            </div>
+            <div class="bep-plus-icon"><i class="ph ph-calendar-check"></i></div>
+          </div>
+          <div>
+            <strong id="bepDailyLoadTarget" class="bep-plus-value">0 Load / hari</strong>
+            <span class="bep-plus-unit">berdasarkan hari operasional</span>
+          </div>
+        </article>
+
+        <article class="bep-target-plus-card is-revenue">
+          <div class="bep-plus-top">
+            <div>
+              <div class="bep-plus-title">Omzet Minimal per Hari</div>
+              <div class="bep-plus-subtitle">Target omzet harian agar tidak rugi.</div>
+            </div>
+            <div class="bep-plus-icon"><i class="ph ph-currency-circle-dollar"></i></div>
+          </div>
+          <div>
+            <strong id="bepDailyRevenueTarget" class="bep-plus-value">Rp 0 / hari</strong>
+            <span class="bep-plus-unit">berdasarkan hari operasional</span>
+          </div>
+        </article>
+
+        <article class="bep-target-plus-card is-profit">
+          <div class="bep-plus-top">
+            <div>
+              <div class="bep-plus-title">Simulasi Target Profit</div>
+              <div class="bep-plus-subtitle">Hitung target omzet &amp; load untuk mengejar laba tertentu.</div>
+            </div>
+            <div class="bep-plus-icon"><i class="ph ph-sparkle"></i></div>
+          </div>
+          <div class="bep-profit-input-wrap">
+            <label for="bepTargetProfitInput">Target Laba Bulanan</label>
+            <input id="bepTargetProfitInput" class="bep-profit-input" type="text" inputmode="numeric" value="3.000.000">
+          </div>
+          <div class="bep-profit-main">
+            <span>Target Omzet</span>
+            <strong id="bepProfitTargetRevenue">Rp 0</strong>
+          </div>
+          <div class="bep-profit-metrics">
+            <div class="bep-profit-pill"><span>Target Load / Bulan</span><strong id="bepProfitTargetLoadMonth">0 Load / bulan</strong></div>
+            <div class="bep-profit-pill"><span>Target Load / Hari</span><strong id="bepProfitTargetLoadDay">0 Load / hari</strong></div>
+          </div>
+        </article>
       </div>
 
       <div class="mt-9 border-t border-slate-100/60 pt-8">
