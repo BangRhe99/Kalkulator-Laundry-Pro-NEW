@@ -792,6 +792,50 @@
       }, 80);
     }
 
+    function getBEPServiceMixData() {
+      let mix = {};
+      if (typeof window.zettGetBepSalesMix === 'function') {
+        try { mix = window.zettGetBepSalesMix() || {}; } catch (error) { mix = {}; }
+      } else if (window.zettBepSalesMix && typeof window.zettBepSalesMix === 'object') {
+        mix = window.zettBepSalesMix;
+      }
+
+      return Object.keys(mix || {}).map(key => {
+        const item = mix[key] || {};
+        const price = Number(item.price);
+        const hpp = Number(item.hpp);
+        const proporsi = Number(item.proporsi);
+        return {
+          key,
+          active: item.active !== false,
+          price: Number.isFinite(price) ? price : 0,
+          hpp: Number.isFinite(hpp) ? hpp : 0,
+          proporsi: Number.isFinite(proporsi) ? Math.max(0, proporsi) : 0
+        };
+      }).filter(item => item.active && item.proporsi > 0);
+    }
+
+    function calculateBEPKPIFromServiceMix(fixedCost) {
+      const services = getBEPServiceMixData();
+      const totalProporsi = services.reduce((sum, item) => sum + item.proporsi, 0);
+      if (totalProporsi <= 0) return null;
+
+      const totals = services.reduce((sum, item) => {
+        const proporsiInternal = item.proporsi / totalProporsi;
+        sum.weightedMargin += (item.price - item.hpp) * proporsiInternal;
+        sum.weightedPrice += item.price * proporsiInternal;
+        return sum;
+      }, { weightedMargin: 0, weightedPrice: 0 });
+
+      const volumeBEP = totals.weightedMargin > 0 ? fixedCost / totals.weightedMargin : 0;
+      return {
+        weightedMargin: totals.weightedMargin,
+        weightedPrice: totals.weightedPrice,
+        volumeBEP,
+        revenueBEP: volumeBEP * totals.weightedPrice
+      };
+    }
+
     function _coreCalculateAll() {
       try {
         isKapasitasSaved = false; 
@@ -998,12 +1042,16 @@
 
         if(document.getElementById('displayBEPKg')) document.getElementById('displayBEPKg').innerText = state.bepKg.toFixed(1) + ' ' + unitText;
         if(document.getElementById('displayBEPRupiah')) document.getElementById('displayBEPRupiah').innerText = formatRupiah(state.bepRupiah);
-        if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(state.bepRupiah);
-        if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(state.bepKg) ? state.bepKg.toFixed(1) : '0.0') + ' ' + unitText;
-        if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(Math.max(0, marginKontribusi));
+        const bepKpiFromServiceMix = calculateBEPKPIFromServiceMix(GRAND_TOTAL_BIAYA_TETAP);
+        const bepKpiMargin = bepKpiFromServiceMix ? bepKpiFromServiceMix.weightedMargin : marginKontribusi;
+        const bepKpiVolume = bepKpiFromServiceMix ? bepKpiFromServiceMix.volumeBEP : state.bepKg;
+        const bepKpiRevenue = bepKpiFromServiceMix ? bepKpiFromServiceMix.revenueBEP : state.bepRupiah;
+        if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(bepKpiRevenue);
+        if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(bepKpiVolume) ? bepKpiVolume.toFixed(1) : '0.0') + ' ' + unitText;
+        if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(bepKpiMargin);
         if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
         if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
-        if(document.getElementById('bepKpiMarginNote')) document.getElementById('bepKpiMarginNote').innerText = marginKontribusi > 0 ? 'Bisnis punya kontribusi positif' : 'Harga perlu dinaikkan';
+        if(document.getElementById('bepKpiMarginNote')) document.getElementById('bepKpiMarginNote').innerText = bepKpiMargin > 0 ? 'Bisnis punya kontribusi positif' : 'Harga perlu dinaikkan';
         
         updateBEPChart(GRAND_TOTAL_BIAYA_TETAP, biayaVariabel, refPrice, state.bepKg, GRAND_TOTAL_KAPASITAS_BULAN);
         updateTargetPenjualanTable(GRAND_TOTAL_BIAYA_TETAP, biayaVariabel, operasionalHariPerBulan, mingguTutup);
