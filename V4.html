@@ -61,7 +61,7 @@
       transform: translate3d(0,0,0); transition: transform .2s var(--bep-ease), background-color .2s var(--bep-ease), border-color .2s var(--bep-ease), color .2s var(--bep-ease), box-shadow .2s var(--bep-ease);
     }
     #view-bep .bep-premium-btn:hover { transform: translate3d(0,-1px,0); border-color:#93C5FD; box-shadow: 0 14px 28px rgba(37,99,235,.13); }
-    #view-bep .bep-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 1rem; margin-top: 1rem; }
+    #view-bep .bep-kpi-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; margin-top: 1rem; }
     #view-bep .bep-kpi-card {
       position: relative;
       overflow: hidden;
@@ -82,7 +82,9 @@
     #view-bep .bep-kpi-card::after { content:""; position:absolute; width:.55rem; height:.55rem; right:1rem; top:1rem; border-radius:999px; background:var(--bep-kpi-accent); box-shadow:0 0 0 .28rem var(--bep-kpi-soft), 0 0 1.1rem var(--bep-kpi-glow); pointer-events:none; }
     #view-bep .bep-kpi-card:nth-child(2) { --bep-kpi-accent: var(--bep-success, #10B981); --bep-kpi-soft: var(--bep-success-soft, #ECFDF5); --bep-kpi-glow: rgba(16,185,129,.11); --bep-kpi-line-end:#A7F3D0; }
     #view-bep .bep-kpi-card:nth-child(3) { --bep-kpi-accent: var(--bep-sky, #38BDF8); --bep-kpi-soft: var(--bep-sky-soft, #E0F2FE); --bep-kpi-glow: rgba(56,189,248,.13); --bep-kpi-line-end:#BAE6FD; }
-    #view-bep .bep-kpi-card:nth-child(4) { --bep-kpi-accent: var(--bep-violet, #7C3AED); --bep-kpi-soft: var(--bep-violet-soft, #F3E8FF); --bep-kpi-glow: rgba(124,58,237,.10); --bep-kpi-line-end:#DDD6FE; }
+    #view-bep .bep-kpi-card:nth-child(4) { --bep-kpi-accent: #0EA5E9; --bep-kpi-soft: #E0F2FE; --bep-kpi-glow: rgba(14,165,233,.12); --bep-kpi-line-end:#BAE6FD; }
+    #view-bep .bep-kpi-card:nth-child(5) { --bep-kpi-accent: #4F46E5; --bep-kpi-soft: #EEF2FF; --bep-kpi-glow: rgba(79,70,229,.11); --bep-kpi-line-end:#C7D2FE; }
+    #view-bep .bep-kpi-card:nth-child(6) { --bep-kpi-accent: var(--bep-violet, #7C3AED); --bep-kpi-soft: var(--bep-violet-soft, #F3E8FF); --bep-kpi-glow: rgba(124,58,237,.10); --bep-kpi-line-end:#DDD6FE; }
     #view-bep .bep-kpi-card:hover { transform: translate3d(0,-2px,0); border-color: rgba(147,197,253,.85); box-shadow: 0 24px 52px rgba(15,23,42,.085), 0 12px 28px var(--bep-kpi-glow); }
     #view-bep .bep-kpi-card,
     #view-bep .bep-fixed-card,
@@ -116,7 +118,26 @@
     #view-bep .bep-kpi-copy { min-width:0; }
     #view-bep .bep-kpi-value { display:block; color:var(--bep-ink, #0F172A); font-size:clamp(22px,1.8vw,30px); font-weight:900; font-variant-numeric:tabular-nums; line-height:1; white-space:nowrap; }
     #view-bep .bep-kpi-note { display:block; color:var(--bep-muted, #64748B); font-size:12px; font-weight:600; margin-top:.45rem; line-height:1.35; }
-    #view-bep .bep-fixed-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top:1.35rem; align-items:stretch; }
+    #view-bep .bep-fixed-toggle {
+      align-self:flex-start; display:inline-flex; align-items:center; gap:.38rem; min-height:2.05rem; padding:.45rem .65rem;
+      border-radius:.72rem; border:1px solid rgba(147,197,253,.65); background:rgba(255,255,255,.82); color:#2563EB;
+      font-size:10px; font-weight:950; text-transform:uppercase; letter-spacing:.06em; box-shadow:0 8px 18px rgba(37,99,235,.07);
+      transition:transform .18s var(--bep-ease), box-shadow .18s var(--bep-ease), border-color .18s var(--bep-ease);
+    }
+    #view-bep .bep-fixed-toggle:hover { transform:translate3d(0,-1px,0); border-color:#93C5FD; box-shadow:0 12px 24px rgba(37,99,235,.11); }
+    #view-bep .bep-fixed-toggle i { font-size:.95rem; transition:transform .18s var(--bep-ease); }
+    #view-bep .bep-kpi-card.is-fixed-open .bep-fixed-toggle i { transform:rotate(180deg); }
+    #view-bep .bep-fixed-collapsible { max-height:0; overflow:hidden; opacity:0; transition:max-height .24s var(--bep-ease), opacity .18s var(--bep-ease), margin-top .18s var(--bep-ease); }
+    #view-bep .bep-kpi-card.is-fixed-open .bep-fixed-collapsible { max-height:28rem; opacity:1; margin-top:.25rem; }
+    #view-bep .bep-fixed-mini-list { display:grid; gap:.48rem; padding-top:.15rem; }
+    #view-bep .bep-fixed-mini-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:.55rem; align-items:center; padding:.55rem; border:1px solid rgba(221,231,246,.88); border-radius:.82rem; background:rgba(255,255,255,.72); }
+    #view-bep .bep-fixed-mini-icon { width:1.8rem; height:1.8rem; border-radius:.65rem; display:flex; align-items:center; justify-content:center; color:var(--bep-kpi-accent); background:var(--bep-kpi-soft); flex:0 0 auto; }
+    #view-bep .bep-fixed-mini-name { display:block; color:var(--bep-ink); font-size:11px; font-weight:900; line-height:1.18; }
+    #view-bep .bep-fixed-mini-note { display:block; color:var(--bep-muted); font-size:10px; font-weight:650; line-height:1.24; margin-top:.15rem; }
+    #view-bep .bep-fixed-mini-amount { display:block; color:var(--bep-ink); font-size:11px; font-weight:950; font-variant-numeric:tabular-nums; white-space:nowrap; text-align:right; }
+    #view-bep .bep-fixed-mini-action { justify-self:end; grid-column:3; border:1px solid rgba(199,215,242,.9); background:#fff; color:#2563EB; border-radius:.62rem; padding:.32rem .45rem; font-size:9px; font-weight:950; text-transform:uppercase; letter-spacing:.04em; }
+    #view-bep .bep-fixed-grid { display:none !important; }
+    #view-bep .bep-fixed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top:1.35rem; align-items:stretch; }
     #view-bep .bep-fixed-card {
       --bep-card-accent: var(--bep-primary, #2563EB);
       --bep-card-accent-soft: var(--bep-primary-light, #EFF6FF);
@@ -178,7 +199,7 @@
     #view-bep .bep-card-subtitle { font-size: .7rem; color: var(--bep-muted); font-weight: 750; line-height: 1.35; margin-top: .18rem; }
     #view-bep .bep-card-total { font-size: 20px; font-weight: 800; color: var(--bep-primary, #2563EB); white-space: nowrap; font-variant-numeric: tabular-nums; line-height:1.05; }
     #view-bep .bep-status { font-size:11px; color:var(--bep-muted, #64748B); font-weight:600; line-height:1.35; min-height:1.9rem; }
-    #view-bep .bep-target-plus-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin-top:1.2rem; }
+    #view-bep .bep-target-plus-grid { display:grid; grid-template-columns:1fr; gap:1rem; margin-top:1.2rem; }
     #view-bep .bep-target-plus-card {
       --bep-plus-accent:#0EA5E9;
       --bep-plus-soft:#E0F2FE;
@@ -511,10 +532,40 @@
 
       <div class="bep-kpi-grid">
         <div class="bep-kpi-card">
-          <span class="bep-kpi-label">Total Fixed Cost / Bulan</span>
+          <span class="bep-kpi-label">Total Biaya Tetap Bulanan</span>
           <div class="bep-kpi-body">
             <span class="bep-kpi-icon"><i class="ph ph-wallet"></i></span>
-            <div class="bep-kpi-copy"><strong id="bepKpiFixedTotal" class="bep-kpi-value">Rp 0</strong><span id="bepKpiFixedNote" class="bep-kpi-note">Total Biaya Tetap Per Bulan</span></div>
+            <div class="bep-kpi-copy"><strong id="bepKpiFixedTotal" class="bep-kpi-value">Rp 0</strong><span id="bepKpiFixedNote" class="bep-kpi-note">Ringkasan seluruh pengeluaran tetap outlet</span></div>
+          </div>
+          <button type="button" id="bepFixedSummaryToggle" class="bep-fixed-toggle" onclick="zettToggleBEPFixedSummaryDetails()" aria-expanded="false" aria-controls="bepFixedSummaryDetails"><i class="ph ph-caret-down"></i><span>Lihat Detail Biaya Tetap</span></button>
+          <div id="bepFixedSummaryDetails" class="bep-fixed-collapsible">
+            <div class="bep-fixed-mini-list">
+              <div class="bep-fixed-mini-row">
+                <span class="bep-fixed-mini-icon"><i class="ph ph-house"></i></span>
+                <span><strong class="bep-fixed-mini-name">Sewa Tempat</strong><span id="bepFixedMiniRentNote" class="bep-fixed-mini-note">Opsional jika outlet milik sendiri</span></span>
+                <span><strong id="bepFixedMiniRentAmount" class="bep-fixed-mini-amount">Rp 0 / bulan</strong><button type="button" class="bep-fixed-mini-action" onclick="zettOpenBEPFixedDetail('rent')">Atur</button></span>
+              </div>
+              <div class="bep-fixed-mini-row">
+                <span class="bep-fixed-mini-icon"><i class="ph ph-users-three"></i></span>
+                <span><strong class="bep-fixed-mini-name">Total Gaji Tim</strong><span id="bepFixedMiniSalaryNote" class="bep-fixed-mini-note">0 karyawan aktif</span></span>
+                <span><strong id="bepFixedMiniSalaryAmount" class="bep-fixed-mini-amount">Rp 0 / bulan</strong><button type="button" class="bep-fixed-mini-action" onclick="zettOpenBEPFixedDetail('salary')">Atur</button></span>
+              </div>
+              <div class="bep-fixed-mini-row">
+                <span class="bep-fixed-mini-icon"><i class="ph ph-washing-machine"></i></span>
+                <span><strong class="bep-fixed-mini-name">Biaya Mesin</strong><span id="bepFixedMiniMachineNote" class="bep-fixed-mini-note">Depresiasi &amp; perawatan</span></span>
+                <span><strong id="bepFixedMiniMachineAmount" class="bep-fixed-mini-amount">Rp 0 / bulan</strong><button type="button" class="bep-fixed-mini-action" onclick="zettOpenBEPFixedDetail('machine')">Atur</button></span>
+              </div>
+              <div class="bep-fixed-mini-row">
+                <span class="bep-fixed-mini-icon"><i class="ph ph-wifi-high"></i></span>
+                <span><strong class="bep-fixed-mini-name">Biaya Internet Per Bulan</strong><span id="bepFixedMiniInternetNote" class="bep-fixed-mini-note">Provider &amp; biaya bulanan</span></span>
+                <span><strong id="bepFixedMiniInternetAmount" class="bep-fixed-mini-amount">Rp 0 / bulan</strong><button type="button" class="bep-fixed-mini-action" onclick="zettOpenBEPFixedDetail('internet')">Atur</button></span>
+              </div>
+              <div class="bep-fixed-mini-row">
+                <span class="bep-fixed-mini-icon"><i class="ph ph-dots-three-circle"></i></span>
+                <span><strong class="bep-fixed-mini-name">Biaya Tetap Lainnya</strong><span id="bepFixedMiniOtherNote" class="bep-fixed-mini-note">Pengeluaran tetap tambahan</span></span>
+                <span><strong id="bepFixedMiniOtherAmount" class="bep-fixed-mini-amount">Rp 0 / bulan</strong><button type="button" class="bep-fixed-mini-action" onclick="zettOpenBEPFixedDetail('other')">Atur</button></span>
+              </div>
+            </div>
           </div>
         </div>
         <div class="bep-kpi-card">
@@ -525,10 +576,24 @@
           </div>
         </div>
         <div class="bep-kpi-card">
+          <span class="bep-kpi-label">Omzet Minimal per Hari</span>
+          <div class="bep-kpi-body">
+            <span class="bep-kpi-icon"><i class="ph ph-currency-circle-dollar"></i></span>
+            <div class="bep-kpi-copy"><strong id="bepDailyRevenueTarget" class="bep-kpi-value">Rp 0 / hari</strong><span class="bep-kpi-note">Target omzet harian agar tidak rugi</span></div>
+          </div>
+        </div>
+        <div class="bep-kpi-card">
           <span class="bep-kpi-label">Volume Minimal BEP</span>
           <div class="bep-kpi-body">
             <span class="bep-kpi-icon"><i class="ph ph-scales"></i></span>
             <div class="bep-kpi-copy"><strong id="bepKpiTargetVolume" class="bep-kpi-value">0 Kg</strong><span id="bepKpiVolumeNote" class="bep-kpi-note">Target Volume Agar Tidak Rugi</span></div>
+          </div>
+        </div>
+        <div class="bep-kpi-card">
+          <span class="bep-kpi-label">Load Minimal per Hari</span>
+          <div class="bep-kpi-body">
+            <span class="bep-kpi-icon"><i class="ph ph-calendar-check"></i></span>
+            <div class="bep-kpi-copy"><strong id="bepDailyLoadTarget" class="bep-kpi-value">0 Load / hari</strong><span class="bep-kpi-note">Target harian agar outlet tidak rugi</span></div>
           </div>
         </div>
         <div class="bep-kpi-card">
@@ -726,34 +791,6 @@
       </div>
 
       <div class="bep-target-plus-grid" id="bepTargetPlusCards" aria-live="polite">
-        <article class="bep-target-plus-card is-load">
-          <div class="bep-plus-top">
-            <div>
-              <div class="bep-plus-title">Load Minimal per Hari</div>
-              <div class="bep-plus-subtitle">Target harian agar outlet tidak rugi.</div>
-            </div>
-            <div class="bep-plus-icon"><i class="ph ph-calendar-check"></i></div>
-          </div>
-          <div>
-            <strong id="bepDailyLoadTarget" class="bep-plus-value">0 Load / hari</strong>
-            <span class="bep-plus-unit">berdasarkan hari operasional</span>
-          </div>
-        </article>
-
-        <article class="bep-target-plus-card is-revenue">
-          <div class="bep-plus-top">
-            <div>
-              <div class="bep-plus-title">Omzet Minimal per Hari</div>
-              <div class="bep-plus-subtitle">Target omzet harian agar tidak rugi.</div>
-            </div>
-            <div class="bep-plus-icon"><i class="ph ph-currency-circle-dollar"></i></div>
-          </div>
-          <div>
-            <strong id="bepDailyRevenueTarget" class="bep-plus-value">Rp 0 / hari</strong>
-            <span class="bep-plus-unit">berdasarkan hari operasional</span>
-          </div>
-        </article>
-
         <article class="bep-target-plus-card is-profit">
           <div class="bep-plus-top">
             <div>

@@ -1542,6 +1542,17 @@
     });
   };
 
+  window.zettToggleBEPFixedSummaryDetails = function() {
+    var card = byId('bepFixedSummaryDetails')?.closest('.bep-kpi-card');
+    var button = byId('bepFixedSummaryToggle');
+    if (!card || !button) return;
+    var isOpen = !card.classList.contains('is-fixed-open');
+    card.classList.toggle('is-fixed-open', isOpen);
+    button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    var label = button.querySelector('span');
+    if (label) label.textContent = isOpen ? 'Sembunyikan Detail' : 'Lihat Detail Biaya Tetap';
+  };
+
   window.zettMoneyInput = function(input) {
     if (!input) return;
     input.value = formatInputValue(parseSafe(input.value));
@@ -1845,6 +1856,16 @@
     setText('bepSummaryMachine', money(totals.machineTotal));
     setText('bepSummaryInternet', money(totals.internetTotal));
     setText('bepSummaryOther', money(totals.otherTotal));
+    setText('bepFixedMiniRentAmount', money(state.monthlyRent) + ' / bulan');
+    setText('bepFixedMiniRentNote', state.annualRent > 0 ? ('Dari sewa tahunan ' + money(state.annualRent)) : 'Opsional jika outlet milik sendiri');
+    setText('bepFixedMiniSalaryAmount', money(totals.salaryTotal) + ' / bulan');
+    setText('bepFixedMiniSalaryNote', totalEmployees > 0 ? (compactCount(totalEmployees, 'karyawan') + ' aktif, ' + compactCount(salaryActive.length, 'kelompok')) : '0 karyawan aktif');
+    setText('bepFixedMiniMachineAmount', money(totals.machineTotal) + ' / bulan');
+    setText('bepFixedMiniMachineNote', machineActive.length ? (compactCount(machineActive.length, 'jenis mesin') + ' dari Profil Operasional') : 'Depresiasi & perawatan');
+    setText('bepFixedMiniInternetAmount', money(totals.internetTotal) + ' / bulan');
+    setText('bepFixedMiniInternetNote', state.internetProvider ? ('Provider: ' + state.internetProvider) : 'Provider & biaya bulanan');
+    setText('bepFixedMiniOtherAmount', money(totals.otherTotal) + ' / bulan');
+    setText('bepFixedMiniOtherNote', otherActive.length ? compactCount(otherActive.length, 'item biaya') : 'Pengeluaran tetap tambahan');
     if (typeof window.renderBEPTopKPIOnly === 'function') {
       try { window.renderBEPTopKPIOnly(); } catch (error) {}
     }
