@@ -935,6 +935,66 @@
       };
     }
 
+    function setBEPText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.innerText = text;
+    }
+
+    function readBEPFixedComponentFromSummary() {
+      const rows = [
+        { label: 'Sewa Tempat', value: parseBEPNumber(document.getElementById('bepSummaryRent')?.innerText) },
+        { label: 'Gaji Tim', value: parseBEPNumber(document.getElementById('bepSummarySalary')?.innerText) },
+        { label: 'Biaya Mesin', value: parseBEPNumber(document.getElementById('bepSummaryMachine')?.innerText) },
+        { label: 'Internet', value: parseBEPNumber(document.getElementById('bepSummaryInternet')?.innerText) },
+        { label: 'Biaya Lainnya', value: parseBEPNumber(document.getElementById('bepSummaryOther')?.innerText) }
+      ];
+      return rows.reduce((best, row) => row.value > best.value ? row : best, { label: 'Biaya tetap', value: 0 });
+    }
+
+    function updateBEPDashboardArchitecture(metrics, daily) {
+      const outlet = String(document.getElementById('inputNamaHPP')?.value || '').trim();
+      const ref = document.getElementById('bepReference');
+      const refLabel = ref && ref.options && ref.selectedIndex >= 0 ? ref.options[ref.selectedIndex].text : 'Harga layanan aktif';
+      const days = Math.max(1, Number(metrics && metrics.operatingDays) || getBEPOperatingDays());
+      const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
+      const dailyRevenue = Math.max(0, Number(daily && daily.omzetMinimalPerHari) || 0);
+      const dailyLoad = Math.max(0, Number(daily && daily.loadMinimalPerHari) || 0);
+      const revenue = Math.max(0, Number(metrics && metrics.omzetMinimalBEP) || 0);
+      const margin = Number(metrics && metrics.weightedContributionMargin) || 0;
+      const driver = readBEPFixedComponentFromSummary();
+
+      setBEPText('bepContextOutlet', outlet && outlet !== '-' ? outlet : 'Pilih outlet');
+      setBEPText('bepContextDays', days + ' hari / bulan');
+      setBEPText('bepContextReference', refLabel || 'Harga layanan aktif');
+
+      if (!metrics) {
+        setBEPText('bepExecutiveHeadline', 'Target BEP menunggu data outlet.');
+        setBEPText('bepExecutiveMonitoring', 'Pilih outlet dan lengkapi biaya tetap untuk membaca target omzet serta load harian.');
+        setBEPText('bepExecutiveDiagnosis', 'Biaya dan HPP belum lengkap.');
+        setBEPText('bepExecutiveDriver', 'Komponen biaya terbesar akan muncul setelah data biaya tetap tersedia.');
+        setBEPText('bepExecutiveActionTitle', 'Lengkapi data dasar.');
+        setBEPText('bepExecutiveAction', 'Mulai dari biaya tetap, lalu cek HPP layanan dan simulasi profit.');
+        return;
+      }
+
+      if (margin <= 0) {
+        setBEPText('bepExecutiveHeadline', 'Margin kontribusi belum aman.');
+        setBEPText('bepExecutiveMonitoring', 'Harga layanan belum cukup menutup HPP, sehingga BEP tidak sehat untuk dikejar dengan volume saja.');
+        setBEPText('bepExecutiveDiagnosis', 'Penyebab utama ada di harga jual atau HPP layanan.');
+        setBEPText('bepExecutiveDriver', 'Cek layanan dengan HPP paling tinggi sebelum menentukan target load.');
+        setBEPText('bepExecutiveActionTitle', 'Perbaiki margin dulu.');
+        setBEPText('bepExecutiveAction', 'Naikkan harga layanan yang tipis atau turunkan HPP sebelum mengejar transaksi tambahan.');
+        return;
+      }
+
+      setBEPText('bepExecutiveHeadline', 'Kejar ' + dailyLoad + ' ' + unitText + ' / hari untuk impas.');
+      setBEPText('bepExecutiveMonitoring', 'Omzet aman minimal ' + formatRupiah(revenue) + ' / bulan, setara ' + formatRupiah(dailyRevenue) + ' / hari.');
+      setBEPText('bepExecutiveDiagnosis', driver.value > 0 ? (driver.label + ' paling menekan BEP.') : 'Biaya tetap belum menjadi tekanan utama.');
+      setBEPText('bepExecutiveDriver', driver.value > 0 ? ('Nilainya ' + formatRupiah(driver.value) + ' / bulan. Makin tinggi biaya ini, makin tinggi target omzet harian.') : 'Pantau HPP dan proporsi layanan untuk menjaga margin kontribusi.');
+      setBEPText('bepExecutiveActionTitle', dailyLoad > 25 ? 'Turunkan tekanan BEP.' : 'Target operasional siap.');
+      setBEPText('bepExecutiveAction', dailyLoad > 25 ? 'Evaluasi biaya tetap terbesar dan dorong layanan dengan margin kontribusi tertinggi.' : 'Gunakan simulasi profit untuk menetapkan target laba berikutnya.');
+    }
+
     function cleanBEPTargetProfit(value) {
       return Math.max(0, parseBEPNumber(value));
     }
@@ -977,6 +1037,7 @@
       const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
       if(document.getElementById('bepDailyLoadTarget')) document.getElementById('bepDailyLoadTarget').innerText = daily.loadMinimalPerHari + ' ' + unitText + ' / hari';
       if(document.getElementById('bepDailyRevenueTarget')) document.getElementById('bepDailyRevenueTarget').innerText = formatRupiah(daily.omzetMinimalPerHari) + ' / hari';
+      updateBEPDashboardArchitecture(metrics, daily);
       updateBEPProfitSimulationOnly();
     }
 

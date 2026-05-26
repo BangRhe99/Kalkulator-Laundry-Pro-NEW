@@ -75,6 +75,57 @@
       isolation: isolate;
     }
     #view-bep .bep-fixed-cost-premium::before { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(115deg, rgba(255,255,255,.5), transparent 38%); opacity:.72; z-index:-1; }
+    #view-bep .bep-dashboard-context {
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:12px;
+      margin-bottom:14px;
+    }
+    #view-bep .bep-context-tile {
+      min-height:58px;
+      border:1px solid rgba(221,231,246,.88);
+      border-radius:18px;
+      background:linear-gradient(145deg, rgba(255,255,255,.94), rgba(248,251,255,.86));
+      box-shadow:0 10px 24px rgba(15,23,42,.04), inset 0 1px 0 rgba(255,255,255,.9);
+      padding:11px 14px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    #view-bep .bep-context-icon {
+      width:32px;
+      height:32px;
+      border-radius:11px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+      color:#2563EB;
+      background:#EFF6FF;
+      border:1px solid #DBEAFE;
+    }
+    #view-bep .bep-context-icon i { font-size:16px; line-height:1; }
+    #view-bep .bep-context-label {
+      display:block;
+      color:#748196;
+      font-size:10px;
+      font-weight:850;
+      text-transform:uppercase;
+      letter-spacing:.075em;
+      line-height:1.1;
+    }
+    #view-bep .bep-context-value {
+      display:block;
+      margin-top:3px;
+      color:#0B1220;
+      font-size:13px;
+      font-weight:900;
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
     #view-bep .bep-fixed-cost-premium .bep-hero {
       padding: 16px 20px;
       border-color: rgba(215,226,243,.82);
@@ -189,6 +240,47 @@
       border-color: rgba(213,225,243,.88);
       background: rgba(255,255,255,.78);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.84);
+    }
+    #view-bep .bep-executive-strip {
+      display:grid;
+      grid-template-columns:1.1fr 1fr 1fr;
+      gap:12px;
+      margin-top:14px;
+    }
+    #view-bep .bep-executive-card {
+      border:1px solid rgba(213,225,243,.86);
+      border-radius:18px;
+      background:linear-gradient(145deg, rgba(255,255,255,.94), rgba(248,251,255,.86));
+      padding:13px 15px;
+      box-shadow:0 12px 28px rgba(15,23,42,.045), inset 0 1px 0 rgba(255,255,255,.9);
+      min-width:0;
+    }
+    #view-bep .bep-executive-card.is-action {
+      background:linear-gradient(145deg, rgba(255,255,255,.95), rgba(245,243,255,.86));
+    }
+    #view-bep .bep-executive-card span {
+      display:block;
+      color:#6B7A90;
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      line-height:1.1;
+    }
+    #view-bep .bep-executive-card strong {
+      display:block;
+      margin-top:5px;
+      color:#0B1220;
+      font-size:15px;
+      font-weight:950;
+      line-height:1.22;
+    }
+    #view-bep .bep-executive-card p {
+      margin-top:5px;
+      color:#66758B;
+      font-size:12px;
+      font-weight:650;
+      line-height:1.35;
     }
     #view-bep .bep-kpi-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; margin-top: 1rem; }
     #view-bep .bep-kpi-card {
@@ -614,6 +706,8 @@
     #view-bep .bep-hpp-card.is-loading .bep-hpp-source { width:4.8rem; height:.9rem; }
     @keyframes bepHppShimmer { 0% { background-position:120% 0; } 100% { background-position:-120% 0; } }
     @media (max-width: 1023px) {
+      #view-bep .bep-dashboard-context,
+      #view-bep .bep-executive-strip { grid-template-columns:1fr; }
       #view-bep .bep-fixed-cost-premium .bep-kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
       #view-bep .bep-kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
       #view-bep .bep-fixed-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -634,6 +728,8 @@
       #view-bep .bep-fixed-cost-premium .bep-kpi-body { align-items: center; gap: 9px; }
       #view-bep .bep-fixed-cost-premium .bep-kpi-icon { width: 32px; height: 32px; border-radius: 11px; }
       #view-bep .bep-fixed-cost-premium .bep-kpi-value { white-space: normal; overflow-wrap: anywhere; }
+      #view-bep .bep-dashboard-context { gap:10px; margin-bottom:12px; }
+      #view-bep .bep-context-value { white-space:normal; }
       #view-bep .bep-shell { padding: 1rem; border-radius: 1.15rem; background:linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 58%, #F8FAFC 100%) !important; }
       #view-bep .bep-hero { flex-direction:column; }
       #view-bep .bep-kpi-card, #view-bep .bep-fixed-card { box-shadow:0 12px 28px rgba(15,23,42,.055); }
@@ -659,6 +755,20 @@
   <div id="view-bep" class="main-view hidden animate-fade-in space-y-8">
     
     <div class="bep-shell bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.03),0_2px_12px_rgba(0,0,0,0.01)] border border-slate-100/80 transform-gpu will-change-transform transition-all duration-500 ease-out animate-fade-in">
+      <div class="bep-dashboard-context" aria-label="Filter dan konteks dashboard BEP">
+        <div class="bep-context-tile">
+          <span class="bep-context-icon"><i class="ph ph-storefront"></i></span>
+          <span><span class="bep-context-label">Outlet / Cabang</span><strong class="bep-context-value" id="bepContextOutlet">Pilih outlet</strong></span>
+        </div>
+        <div class="bep-context-tile">
+          <span class="bep-context-icon"><i class="ph ph-calendar-blank"></i></span>
+          <span><span class="bep-context-label">Hari Operasional</span><strong class="bep-context-value" id="bepContextDays">30 hari / bulan</strong></span>
+        </div>
+        <div class="bep-context-tile">
+          <span class="bep-context-icon"><i class="ph ph-crosshair"></i></span>
+          <span><span class="bep-context-label">Acuan BEP</span><strong class="bep-context-value" id="bepContextReference">Harga layanan aktif</strong></span>
+        </div>
+      </div>
       <section class="bep-fixed-cost-premium">
       <div class="bep-hero">
         <div>
@@ -742,6 +852,23 @@
             <div class="bep-kpi-copy"><strong id="bepKpiMargin" class="bep-kpi-value">Rp 0</strong><span id="bepKpiMarginNote" class="bep-kpi-note">Harga jual - biaya variabel</span></div>
           </div>
         </div>
+      </div>
+      <div class="bep-executive-strip" aria-live="polite">
+        <article class="bep-executive-card">
+          <span>Apa yang terjadi?</span>
+          <strong id="bepExecutiveHeadline">Target BEP menunggu data outlet.</strong>
+          <p id="bepExecutiveMonitoring">Pilih outlet dan lengkapi biaya tetap untuk membaca target omzet serta load harian.</p>
+        </article>
+        <article class="bep-executive-card">
+          <span>Kenapa terjadi?</span>
+          <strong id="bepExecutiveDiagnosis">Biaya dan HPP belum lengkap.</strong>
+          <p id="bepExecutiveDriver">Komponen biaya terbesar akan muncul setelah data biaya tetap tersedia.</p>
+        </article>
+        <article class="bep-executive-card is-action">
+          <span>Apa tindakannya?</span>
+          <strong id="bepExecutiveActionTitle">Lengkapi data dasar.</strong>
+          <p id="bepExecutiveAction">Mulai dari biaya tetap, lalu cek HPP layanan dan simulasi profit.</p>
+        </article>
       </div>
       </section>
 
