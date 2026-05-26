@@ -1310,17 +1310,17 @@
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card {
       position:relative;
-      min-height:150px !important;
-      padding:20px !important;
-      border-radius:20px !important;
+      min-height:152px !important;
+      padding:18px 18px 17px !important;
+      border-radius:22px !important;
       border:1px solid rgba(147,197,253,.62) !important;
       overflow:hidden;
       isolation:isolate;
       display:flex;
       flex-direction:column;
-      justify-content:space-between !important;
-      gap:12px !important;
-      box-shadow:0 12px 28px rgba(15,23,42,.07), inset 0 1px 0 rgba(255,255,255,.86) !important;
+      justify-content:flex-start !important;
+      gap:16px !important;
+      box-shadow:0 12px 28px rgba(15,23,42,.065), inset 0 1px 0 rgba(255,255,255,.88) !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card::before {
       content:"" !important;
@@ -1341,10 +1341,10 @@
       box-shadow:0 0 0 5px rgba(59,130,246,.10) !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card.is-primary {
-      min-height:168px !important;
+      min-height:166px !important;
       border-color:rgba(96,165,250,.72) !important;
-      background:linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 48%, #E0F2FE 100%) !important;
-      box-shadow:0 16px 34px rgba(37,99,235,.105), inset 0 1px 0 rgba(255,255,255,.92) !important;
+      background:linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 46%, #E0F2FE 100%) !important;
+      box-shadow:0 16px 34px rgba(37,99,235,.10), inset 0 1px 0 rgba(255,255,255,.92) !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card.is-primary:nth-child(2) {
       background:linear-gradient(135deg, #FFFFFF 0%, #EEF2FF 50%, #E0F2FE 100%) !important;
@@ -1353,47 +1353,58 @@
       background:linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 48%, #EEF2FF 100%) !important;
       border-color:rgba(196,181,253,.48) !important;
     }
+    #view-bep .bep-fixed-cost-premium .bep-decision-hero-header {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+      padding-right:16px;
+    }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-label {
       margin:0 !important;
-      padding-right:18px !important;
+      padding-right:0 !important;
       color:#475569 !important;
-      font-size:11px !important;
-      font-weight:800 !important;
-      letter-spacing:.075em !important;
-      line-height:1.2 !important;
+      font-size:10.75px !important;
+      font-weight:850 !important;
+      letter-spacing:.07em !important;
+      line-height:1.18 !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-body {
-      align-items:flex-end !important;
-      gap:12px !important;
+      display:block !important;
+      min-width:0;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-icon {
-      width:38px !important;
-      height:38px !important;
-      border-radius:13px !important;
+      width:34px !important;
+      height:34px !important;
+      border-radius:12px !important;
+      flex:0 0 34px !important;
       color:#2563EB !important;
       background:rgba(255,255,255,.78) !important;
       border-color:rgba(147,197,253,.58) !important;
-      box-shadow:0 8px 18px rgba(37,99,235,.10) !important;
+      box-shadow:0 7px 16px rgba(37,99,235,.095) !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-icon i {
+      font-size:17px !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-value {
       color:#0F172A !important;
-      font-size:clamp(25px, 2.15vw, 36px) !important;
+      font-size:clamp(24px, 2vw, 34px) !important;
       font-weight:800 !important;
-      line-height:1 !important;
+      line-height:1.02 !important;
       letter-spacing:0 !important;
       white-space:normal;
       overflow-wrap:anywhere;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card.is-primary .bep-kpi-value {
-      font-size:clamp(28px, 2.45vw, 42px) !important;
+      font-size:clamp(27px, 2.32vw, 40px) !important;
       font-weight:850 !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-note {
-      margin-top:6px !important;
-      color:#64748B !important;
-      font-size:12px !important;
+      margin-top:7px !important;
+      color:#53657A !important;
+      font-size:11.75px !important;
       font-weight:650 !important;
-      line-height:1.28 !important;
+      line-height:1.3 !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card:hover {
       transform:translate3d(0,-1px,0) !important;
@@ -1420,8 +1431,8 @@
         min-height:auto !important;
         padding:18px !important;
       }
-      #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-body {
-        align-items:center !important;
+      #view-bep .bep-fixed-cost-premium .bep-decision-hero-header {
+        padding-right:18px;
       }
     }
   </style>
@@ -1440,30 +1451,38 @@
 
       <div class="bep-kpi-grid bep-fixed-cost-grid">
         <div class="bep-kpi-card bep-decision-hero-card is-primary">
-          <span class="bep-kpi-label">Load Minimal per Hari</span>
-          <div class="bep-kpi-body">
+          <div class="bep-decision-hero-header">
             <span class="bep-kpi-icon"><i class="ph ph-calendar-check"></i></span>
+            <span class="bep-kpi-label">Load Minimal per Hari</span>
+          </div>
+          <div class="bep-kpi-body">
             <div class="bep-kpi-copy"><strong id="bepDailyLoadTarget" class="bep-kpi-value">0 Load / hari</strong><span class="bep-kpi-note">Target harian agar outlet tidak rugi</span></div>
           </div>
         </div>
         <div class="bep-kpi-card bep-decision-hero-card is-primary">
-          <span class="bep-kpi-label">Omzet Minimal per Hari</span>
-          <div class="bep-kpi-body">
+          <div class="bep-decision-hero-header">
             <span class="bep-kpi-icon"><i class="ph ph-currency-circle-dollar"></i></span>
+            <span class="bep-kpi-label">Omzet Minimal per Hari</span>
+          </div>
+          <div class="bep-kpi-body">
             <div class="bep-kpi-copy"><strong id="bepDailyRevenueTarget" class="bep-kpi-value">Rp 0 / hari</strong><span class="bep-kpi-note">Target omzet harian agar tidak rugi</span></div>
           </div>
         </div>
         <div class="bep-kpi-card bep-decision-hero-card is-secondary">
-          <span class="bep-kpi-label">Omzet Minimal BEP</span>
-          <div class="bep-kpi-body">
+          <div class="bep-decision-hero-header">
             <span class="bep-kpi-icon"><i class="ph ph-trend-up"></i></span>
+            <span class="bep-kpi-label">Omzet Minimal BEP</span>
+          </div>
+          <div class="bep-kpi-body">
             <div class="bep-kpi-copy"><strong id="bepKpiTargetRevenue" class="bep-kpi-value">Rp 0</strong><span id="bepKpiRevenueNote" class="bep-kpi-note">Batas Aman Agar Tidak Rugi</span></div>
           </div>
         </div>
         <div class="bep-kpi-card bep-decision-hero-card is-secondary">
-          <span class="bep-kpi-label">Volume Minimal BEP</span>
-          <div class="bep-kpi-body">
+          <div class="bep-decision-hero-header">
             <span class="bep-kpi-icon"><i class="ph ph-scales"></i></span>
+            <span class="bep-kpi-label">Volume Minimal BEP</span>
+          </div>
+          <div class="bep-kpi-body">
             <div class="bep-kpi-copy"><strong id="bepKpiTargetVolume" class="bep-kpi-value">0 Kg</strong><span id="bepKpiVolumeNote" class="bep-kpi-note">Target Volume Agar Tidak Rugi</span></div>
           </div>
         </div>
