@@ -1078,6 +1078,303 @@
         padding:20px;
       }
     }
+
+    /* Hyper Premium Light Mode override for camera-readable Enterprise SaaS UI */
+    #view-bep {
+      --bep-primary:#2563EB;
+      --bep-primary-soft:#DBEAFE;
+      --bep-primary-light:#EFF6FF;
+      --bep-sky:#0284C7;
+      --bep-sky-soft:#E0F2FE;
+      --bep-violet:#4F46E5;
+      --bep-violet-soft:#EEF2FF;
+      --bep-success:#059669;
+      --bep-success-soft:#ECFDF5;
+      --bep-warning:#D97706;
+      --bep-warning-soft:#FFFBEB;
+      --bep-ink:#0F172A;
+      --bep-muted:#64748B;
+      --bep-soft-text:#94A3B8;
+      --bep-bg:#F8FAFC;
+      --bep-card:#FFFFFF;
+      --bep-card-soft:#F8FAFC;
+      --bep-border:#E2E8F0;
+      --bep-border-strong:#CBD5E1;
+      --bep-shadow-soft:0 4px 6px -1px rgba(15,23,42,.05), 0 2px 4px -1px rgba(15,23,42,.03);
+      --bep-shadow-blue:0 8px 20px rgba(37,99,235,.08), 0 2px 6px rgba(15,23,42,.04);
+      font-family:Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:#F8FAFC !important;
+      color:#0F172A;
+      letter-spacing:0;
+    }
+    #view-bep .bep-shell {
+      background:#F8FAFC !important;
+      border:1px solid #E2E8F0 !important;
+      border-radius:16px !important;
+      box-shadow:0 8px 24px rgba(15,23,42,.06) !important;
+      backdrop-filter:none !important;
+    }
+    #view-bep .bep-dashboard-context,
+    #view-bep .bep-executive-strip {
+      gap:16px;
+    }
+    #view-bep .bep-context-tile,
+    #view-bep .bep-executive-card,
+    #view-bep .bep-fixed-cost-premium,
+    #view-bep .bep-fixed-cost-premium .bep-hero,
+    #view-bep .bep-fixed-cost-premium .bep-kpi-card,
+    #view-bep .bep-hpp-card,
+    #view-bep .bep-target-plus-card,
+    #view-bep .bep-detail-panel,
+    #view-bep .bep-summary-item,
+    #view-bep .bep-profit-pill,
+    #view-bep .bep-plus-icon,
+    #view-bep .bep-hpp-title-icon,
+    #view-bep .mt-9 > div {
+      clip-path:none !important;
+      border-radius:12px !important;
+      border:1px solid #E2E8F0 !important;
+      background:#FFFFFF !important;
+      box-shadow:0 4px 6px -1px rgba(15,23,42,.05), 0 2px 4px -1px rgba(15,23,42,.03) !important;
+      backdrop-filter:none !important;
+    }
+    #view-bep .bep-fixed-cost-premium,
+    #view-bep .bep-hpp-section,
+    #view-bep .bep-target-plus-grid,
+    #view-bep .mt-9 {
+      border-top-color:#E2E8F0 !important;
+    }
+    #view-bep .bep-fixed-cost-premium {
+      padding:24px !important;
+      border-radius:16px !important;
+    }
+    #view-bep .bep-fixed-cost-premium::before,
+    #view-bep .bep-fixed-cost-premium .bep-kpi-card::before,
+    #view-bep .bep-hpp-card::before,
+    #view-bep .bep-target-plus-card::before {
+      display:none !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-kpi-card::after {
+      content:"" !important;
+      width:8px !important;
+      height:8px !important;
+      inset:24px 24px auto auto !important;
+      border-radius:999px !important;
+      background:var(--bep-kpi-accent, #2563EB) !important;
+      box-shadow:none !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-kpi-grid,
+    #view-bep .bep-hpp-grid,
+    #view-bep .bep-hpp-grid[data-count="3"],
+    #view-bep .bep-target-plus-grid {
+      gap:16px !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-kpi-card,
+    #view-bep .bep-hpp-card,
+    #view-bep .bep-target-plus-card {
+      min-height:auto !important;
+      padding:24px !important;
+      gap:12px !important;
+      justify-content:flex-start !important;
+      transform:translate3d(0,0,0);
+    }
+    #view-bep .bep-fixed-cost-premium .bep-kpi-card:hover,
+    #view-bep .bep-hpp-card:hover,
+    #view-bep .bep-target-plus-card:hover {
+      transform:translate3d(0,-1px,0) !important;
+      border-color:#CBD5E1 !important;
+      box-shadow:0 10px 24px rgba(15,23,42,.08), 0 2px 6px rgba(15,23,42,.04) !important;
+    }
+    #view-bep .bep-context-icon,
+    #view-bep .bep-kpi-icon,
+    #view-bep .bep-hpp-icon,
+    #view-bep .bep-card-icon {
+      display:flex !important;
+      width:36px !important;
+      height:36px !important;
+      border-radius:10px !important;
+      color:#2563EB !important;
+      background:#EFF6FF !important;
+      border:1px solid #DBEAFE !important;
+      box-shadow:none !important;
+      clip-path:none !important;
+    }
+    #view-bep .bep-kpi-icon i,
+    #view-bep .bep-context-icon i { font-size:17px !important; }
+    #view-bep .bep-kpi-label,
+    #view-bep .bep-context-label,
+    #view-bep .bep-executive-card span,
+    #view-bep .bep-plus-title,
+    #view-bep .bep-profit-input-wrap label,
+    #view-bep .bep-hpp-name,
+    #view-bep .bep-hpp-field label,
+    #view-bep .bep-summary-item span,
+    #view-bep .bep-card-title {
+      color:#64748B !important;
+      text-shadow:none !important;
+      letter-spacing:.05em !important;
+      text-transform:uppercase;
+      font-size:12px;
+      font-weight:600 !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-kpi-label {
+      margin-bottom:8px;
+      padding-right:24px;
+      line-height:1.25;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-kpi-body {
+      align-items:center !important;
+      gap:12px !important;
+    }
+    #view-bep .bep-kpi-value,
+    #view-bep .bep-context-value,
+    #view-bep .bep-executive-card strong,
+    #view-bep .bep-hpp-value,
+    #view-bep .bep-profit-main strong,
+    #view-bep .bep-profit-pill strong,
+    #view-bep .bep-summary-item strong,
+    #view-bep .bep-card-total,
+    #view-bep .mt-9 h3,
+    #view-bep .mt-9 h4,
+    #view-bep .mt-9 strong,
+    #view-bep .mt-9 #displayBEPKg,
+    #view-bep .mt-9 #displayBEPRupiah {
+      color:#0F172A !important;
+      text-shadow:none !important;
+      font-feature-settings:"tnum" 1, "lnum" 1;
+      font-variant-numeric:tabular-nums;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-kpi-value {
+      font-size:clamp(24px, 2vw, 30px) !important;
+      font-weight:700 !important;
+      line-height:1.05 !important;
+      letter-spacing:0 !important;
+      white-space:normal;
+    }
+    #view-bep .bep-kpi-note,
+    #view-bep .bep-executive-card p,
+    #view-bep .bep-plus-subtitle,
+    #view-bep .bep-hpp-title p,
+    #view-bep .bep-hpp-unit,
+    #view-bep .bep-hpp-margin-text,
+    #view-bep .bep-status,
+    #view-bep .bep-card-subtitle,
+    #view-bep .mt-9 p,
+    #view-bep .mt-9 label,
+    #view-bep .mt-9 th,
+    #view-bep .mt-9 td,
+    #view-bep .mt-9 span {
+      color:#64748B !important;
+      text-shadow:none !important;
+      line-height:1.4;
+    }
+    #view-bep .bep-executive-card.is-action {
+      border-left:4px solid #2563EB !important;
+      background:#FFFFFF !important;
+    }
+    #view-bep .bep-fixed-toggle,
+    #view-bep .bep-card-action,
+    #view-bep .bep-add-btn,
+    #view-bep .bep-close-detail,
+    #view-bep .bep-save-btn,
+    #view-bep .bep-hpp-toggle,
+    #view-bep .bep-hpp-badge,
+    #view-bep .bep-hpp-margin-percent {
+      clip-path:none !important;
+      border-radius:8px !important;
+      border-color:#CBD5E1 !important;
+      background:#FFFFFF !important;
+      color:#2563EB !important;
+      box-shadow:0 1px 2px rgba(15,23,42,.04) !important;
+    }
+    #view-bep .bep-fixed-toggle {
+      min-height:32px !important;
+      padding:6px 12px !important;
+      border-radius:999px !important;
+      background:#EFF6FF !important;
+      border-color:#BFDBFE !important;
+      font-size:11px !important;
+    }
+    #view-bep .bep-input,
+    #view-bep .bep-select,
+    #view-bep .bep-profit-input,
+    #view-bep .bep-hpp-input,
+    #view-bep #bepReference,
+    #view-bep #bepTipeLaundry {
+      clip-path:none !important;
+      border-radius:8px !important;
+      border-color:#CBD5E1 !important;
+      background:#FFFFFF !important;
+      color:#0F172A !important;
+      box-shadow:0 1px 2px rgba(15,23,42,.04) !important;
+    }
+    #view-bep .bep-hpp-card {
+      min-height:184px !important;
+    }
+    #view-bep .bep-hpp-card::after {
+      content:"" !important;
+      height:4px !important;
+      left:24px !important;
+      right:24px !important;
+      bottom:20px !important;
+      top:auto !important;
+      border-radius:999px !important;
+      background:linear-gradient(90deg, #2563EB, #93C5FD) !important;
+      opacity:1 !important;
+      box-shadow:none !important;
+    }
+    #view-bep .bep-hpp-value { font-size:clamp(24px, 2vw, 30px) !important; }
+    #view-bep .bep-hpp-input-grid,
+    #view-bep .bep-hpp-foot {
+      border-top:1px solid #E2E8F0 !important;
+      padding-top:12px !important;
+    }
+    #view-bep .mt-9 > div.bg-\[\#0f172a\],
+    #view-bep .mt-9 > div {
+      background:#FFFFFF !important;
+      border-color:#E2E8F0 !important;
+    }
+    #view-bep .mt-9 h3 > div,
+    #view-bep .mt-9 h4 > div {
+      background:#EFF6FF !important;
+      border:1px solid #DBEAFE !important;
+      color:#2563EB !important;
+      border-radius:10px !important;
+      box-shadow:none !important;
+    }
+    #view-bep .mt-9 table,
+    #view-bep .mt-9 thead tr,
+    #view-bep .mt-9 tbody {
+      background:#FFFFFF !important;
+      border-color:#E2E8F0 !important;
+    }
+    @media (max-width: 640px) {
+      #view-bep .bep-shell {
+        border-radius:16px !important;
+        background:#F8FAFC !important;
+        box-shadow:0 8px 24px rgba(15,23,42,.06) !important;
+      }
+      #view-bep .bep-fixed-cost-premium,
+      #view-bep .bep-fixed-cost-premium .bep-hero,
+      #view-bep .bep-fixed-cost-premium .bep-kpi-card,
+      #view-bep .bep-hpp-card,
+      #view-bep .bep-target-plus-card {
+        border-radius:12px !important;
+        border-color:#E2E8F0 !important;
+        background:#FFFFFF !important;
+        box-shadow:0 4px 6px -1px rgba(15,23,42,.05), 0 2px 4px -1px rgba(15,23,42,.03) !important;
+      }
+      #view-bep .bep-fixed-cost-premium .bep-kpi-grid,
+      #view-bep .bep-hpp-grid,
+      #view-bep .bep-hpp-grid[data-count="3"],
+      #view-bep .bep-target-plus-grid { gap:16px; }
+      #view-bep .bep-fixed-cost-premium .bep-kpi-card,
+      #view-bep .bep-hpp-card,
+      #view-bep .bep-target-plus-card {
+        min-height:auto !important;
+        padding:24px !important;
+      }
+    }
   </style>
   <div id="view-bep" class="main-view hidden animate-fade-in space-y-8">
     
