@@ -952,9 +952,6 @@
     }
 
     function updateBEPDashboardArchitecture(metrics, daily) {
-      const outlet = String(document.getElementById('inputNamaHPP')?.value || '').trim();
-      const ref = document.getElementById('bepReference');
-      const refLabel = ref && ref.options && ref.selectedIndex >= 0 ? ref.options[ref.selectedIndex].text : 'Harga layanan aktif';
       const days = Math.max(1, Number(metrics && metrics.operatingDays) || getBEPOperatingDays());
       const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
       const dailyRevenue = Math.max(0, Number(daily && daily.omzetMinimalPerHari) || 0);
@@ -962,10 +959,6 @@
       const revenue = Math.max(0, Number(metrics && metrics.omzetMinimalBEP) || 0);
       const margin = Number(metrics && metrics.weightedContributionMargin) || 0;
       const driver = readBEPFixedComponentFromSummary();
-
-      setBEPText('bepContextOutlet', outlet && outlet !== '-' ? outlet : 'Pilih outlet');
-      setBEPText('bepContextDays', days + ' hari / bulan');
-      setBEPText('bepContextReference', refLabel || 'Harga layanan aktif');
 
       if (!metrics) {
         setBEPText('bepExecutiveHeadline', 'Target BEP menunggu data outlet.');
