@@ -1506,6 +1506,9 @@
   function invalidateBEPCache(outlet) {
     var key = bepCacheKey(outlet || selectedOutlet());
     if (key && window.bepOutletCache[key]) delete window.bepOutletCache[key];
+    if (key && window.localStorage) {
+      try { window.localStorage.removeItem(bepStorageKey(outlet || key)); } catch (error) {}
+    }
   }
   window.invalidateBEPCache = invalidateBEPCache;
   function setBEPLoadingState(isLoading, soft) {
@@ -2066,7 +2069,7 @@
     if (bepActiveFetches[key] && !config.force) {
       var activeCached = getCachedBEPOutlet(outlet);
       if (activeCached) renderBEPDashboardFast(activeCached.data, outlet);
-      setBEPLoadingState(true, !!activeCached);
+      setBEPLoadingState(!activeCached, !!activeCached);
       return;
     }
 
@@ -2080,8 +2083,8 @@
     if (cached && !config.force) {
       renderBEPDashboardFast(cached.data, outlet);
       if (cacheFresh) return;
-      setBEPLoadingState(true, true);
-      setOutletState('Memuat data BEP: ' + outlet, 'loading');
+      setBEPLoadingState(false, true);
+      setOutletState('Data BEP aktif: ' + outlet, 'ready');
     } else {
       emptyState(outlet);
       renderAll();
@@ -2117,14 +2120,19 @@
 
   window.zettLoadBEPFixedCost = function(outletName, options) {
     var outlet = String(outletName || selectedOutlet()).trim();
+    var config = options || {};
     window.clearTimeout(bepLoadTimer);
     if (!outlet) {
       loadBEPDashboardByOutlet('', { force: true });
       return;
     }
-    var delay = options && typeof options.delay === 'number' ? options.delay : 0;
+    if (!config.force && getCachedBEPOutlet(outlet)) {
+      loadBEPDashboardByOutlet(outlet, config);
+      return;
+    }
+    var delay = typeof config.delay === 'number' ? config.delay : 0;
     bepLoadTimer = window.setTimeout(function() {
-      loadBEPDashboardByOutlet(outlet, options || {});
+      loadBEPDashboardByOutlet(outlet, config);
     }, delay);
   };
 
