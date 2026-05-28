@@ -1400,6 +1400,21 @@
       font-weight:850 !important;
       line-height:1.04 !important;
     }
+    #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-value-inline {
+      display:inline-flex;
+      align-items:baseline;
+      gap:4px;
+      flex-wrap:wrap;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-value-suffix {
+      color:#64748B;
+      font-size:.34em;
+      font-weight:700;
+      line-height:1.08;
+      letter-spacing:.01em;
+      white-space:nowrap;
+      transform:translateY(-.03em);
+    }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-note {
       margin-top:7px !important;
       color:#53657A !important;
@@ -1457,7 +1472,7 @@
             <span class="bep-kpi-label">Load Minimal per Hari</span>
           </div>
           <div class="bep-kpi-body">
-            <div class="bep-kpi-copy"><strong id="bepDailyLoadTarget" class="bep-kpi-value">0 Load / hari</strong><span class="bep-kpi-note">Target harian agar outlet tidak rugi</span></div>
+            <div class="bep-kpi-copy"><strong id="bepDailyLoadTarget" class="bep-kpi-value"><span class="bep-value-inline"><span class="bep-value-main">0 Load</span><span class="bep-value-suffix">/hari</span></span></strong><span class="bep-kpi-note">Target harian agar outlet tidak rugi</span></div>
           </div>
         </div>
         <div class="bep-kpi-card bep-decision-hero-card is-primary">
@@ -1466,7 +1481,7 @@
             <span class="bep-kpi-label">Omzet Minimal per Hari</span>
           </div>
           <div class="bep-kpi-body">
-            <div class="bep-kpi-copy"><strong id="bepDailyRevenueTarget" class="bep-kpi-value">Rp 0 / hari</strong><span class="bep-kpi-note">Target omzet harian agar tidak rugi</span></div>
+            <div class="bep-kpi-copy"><strong id="bepDailyRevenueTarget" class="bep-kpi-value"><span class="bep-value-inline"><span class="bep-value-main">Rp 0</span><span class="bep-value-suffix">/hari</span></span></strong><span class="bep-kpi-note">Target omzet harian agar tidak rugi</span></div>
           </div>
         </div>
         <div class="bep-kpi-card bep-decision-hero-card is-secondary">
@@ -1475,7 +1490,7 @@
             <span class="bep-kpi-label">Omzet Minimal BEP</span>
           </div>
           <div class="bep-kpi-body">
-            <div class="bep-kpi-copy"><strong id="bepKpiTargetRevenue" class="bep-kpi-value">Rp 0</strong><span id="bepKpiRevenueNote" class="bep-kpi-note">Batas Aman Agar Tidak Rugi</span></div>
+            <div class="bep-kpi-copy"><strong id="bepKpiTargetRevenue" class="bep-kpi-value"><span class="bep-value-inline"><span class="bep-value-main">Rp 0</span><span class="bep-value-suffix">/bulan</span></span></strong><span id="bepKpiRevenueNote" class="bep-kpi-note">Batas Aman Agar Tidak Rugi</span></div>
           </div>
         </div>
         <div class="bep-kpi-card bep-decision-hero-card is-secondary">
@@ -1484,7 +1499,7 @@
             <span class="bep-kpi-label">Volume Minimal BEP</span>
           </div>
           <div class="bep-kpi-body">
-            <div class="bep-kpi-copy"><strong id="bepKpiTargetVolume" class="bep-kpi-value">0 Kg</strong><span id="bepKpiVolumeNote" class="bep-kpi-note">Target Volume Agar Tidak Rugi</span></div>
+            <div class="bep-kpi-copy"><strong id="bepKpiTargetVolume" class="bep-kpi-value"><span class="bep-value-inline"><span class="bep-value-main">0 Kg</span><span class="bep-value-suffix">/bulan</span></span></strong><span id="bepKpiVolumeNote" class="bep-kpi-note">Target Volume Agar Tidak Rugi</span></div>
           </div>
         </div>
         <div class="bep-kpi-card">

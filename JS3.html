@@ -829,8 +829,8 @@
       bepBaseMetricsCache = null;
       window.__BEP_WEIGHTED_METRICS__ = null;
       const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
-      if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(0);
-      if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = '0 ' + unitText;
+      setBEPHeroValue('bepKpiTargetRevenue', formatRupiah(0), '/bulan');
+      setBEPHeroValue('bepKpiTargetVolume', '0 ' + unitText, '/bulan');
       if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(0);
       if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
       if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
@@ -940,6 +940,23 @@
       if (el) el.innerText = text;
     }
 
+    function setBEPHeroValue(id, main, suffix) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = '';
+      const wrap = document.createElement('span');
+      wrap.className = 'bep-value-inline';
+      const mainEl = document.createElement('span');
+      mainEl.className = 'bep-value-main';
+      mainEl.textContent = main;
+      const suffixEl = document.createElement('span');
+      suffixEl.className = 'bep-value-suffix';
+      suffixEl.textContent = suffix;
+      wrap.appendChild(mainEl);
+      wrap.appendChild(suffixEl);
+      el.appendChild(wrap);
+    }
+
     function readBEPFixedComponentFromSummary() {
       const rows = [
         { label: 'Sewa Tempat', value: parseBEPNumber(document.getElementById('bepSummaryRent')?.innerText) },
@@ -1028,8 +1045,8 @@
       const metrics = getBEPBaseMetrics(sourceMix);
       const daily = calculateBEPDailyTargets(metrics);
       const unitText = document.getElementById('inputKategori') && document.getElementById('inputKategori').value === 'Self Service' ? 'Load' : 'Kg';
-      if(document.getElementById('bepDailyLoadTarget')) document.getElementById('bepDailyLoadTarget').innerText = daily.loadMinimalPerHari + ' ' + unitText + ' / hari';
-      if(document.getElementById('bepDailyRevenueTarget')) document.getElementById('bepDailyRevenueTarget').innerText = formatRupiah(daily.omzetMinimalPerHari) + ' / hari';
+      setBEPHeroValue('bepDailyLoadTarget', daily.loadMinimalPerHari + ' ' + unitText, '/hari');
+      setBEPHeroValue('bepDailyRevenueTarget', formatRupiah(daily.omzetMinimalPerHari), '/hari');
       updateBEPDashboardArchitecture(metrics, daily);
       updateBEPProfitSimulationOnly();
     }
@@ -1055,8 +1072,8 @@
       const margin = Number.isFinite(metrics.weightedMargin) ? metrics.weightedMargin : 0;
       const volume = margin > 0 ? metrics.volumeRoundedUp : 0;
       const revenue = margin > 0 ? metrics.revenueBEP : 0;
-      if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(revenue);
-      if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = volume + ' ' + unitText;
+      setBEPHeroValue('bepKpiTargetRevenue', formatRupiah(revenue), '/bulan');
+      setBEPHeroValue('bepKpiTargetVolume', volume + ' ' + unitText, '/bulan');
       if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(margin);
       if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
       if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
@@ -1290,8 +1307,8 @@
         const bepKpiMargin = bepKpiFromServiceMix ? bepKpiFromServiceMix.weightedMargin : 0;
         const bepKpiVolume = bepKpiFromServiceMix ? bepKpiFromServiceMix.volumeRoundedUp : 0;
         const bepKpiRevenue = bepKpiFromServiceMix ? bepKpiFromServiceMix.revenueBEP : 0;
-        if(document.getElementById('bepKpiTargetRevenue')) document.getElementById('bepKpiTargetRevenue').innerText = formatRupiah(bepKpiRevenue);
-        if(document.getElementById('bepKpiTargetVolume')) document.getElementById('bepKpiTargetVolume').innerText = (isFinite(bepKpiVolume) ? bepKpiVolume : 0) + ' ' + unitText;
+        setBEPHeroValue('bepKpiTargetRevenue', formatRupiah(bepKpiRevenue), '/bulan');
+        setBEPHeroValue('bepKpiTargetVolume', (isFinite(bepKpiVolume) ? bepKpiVolume : 0) + ' ' + unitText, '/bulan');
         if(document.getElementById('bepKpiMargin')) document.getElementById('bepKpiMargin').innerText = formatRupiah(bepKpiMargin);
         if(document.getElementById('bepKpiRevenueNote')) document.getElementById('bepKpiRevenueNote').innerText = 'Batas Aman Agar Tidak Rugi';
         if(document.getElementById('bepKpiVolumeNote')) document.getElementById('bepKpiVolumeNote').innerText = 'Target Volume Agar Tidak Rugi';
@@ -1427,6 +1444,7 @@
   var bepActiveRequestId = 0;
   var bepLoadTimer = 0;
   var bepActiveOutletKey = '';
+  var bepActiveFetches = {};
   window.bepOutletCache = window.bepOutletCache || {};
 
   function byId(id) { return document.getElementById(id); }
@@ -1465,15 +1483,25 @@
     return [outletName, jenisMesin, tipeMesin].map(function(value) { return norm(value); }).join('|');
   }
   function bepCacheKey(outlet) { return norm(outlet); }
+  function bepStorageKey(outlet) { return 'zett:bep:fixed-cache:' + bepCacheKey(outlet); }
   function getCachedBEPOutlet(outlet) {
     var key = bepCacheKey(outlet);
     var cached = key ? window.bepOutletCache[key] : null;
+    if (!cached && key && window.localStorage) {
+      try {
+        cached = JSON.parse(window.localStorage.getItem(bepStorageKey(outlet)) || 'null');
+        if (cached && cached.data) window.bepOutletCache[key] = cached;
+      } catch (error) {}
+    }
     return cached && cached.data ? cached : null;
   }
   function cacheBEPOutletData(outlet, data) {
     var key = bepCacheKey(outlet || (data && (data.namaOutlet || data['Nama Outlet'])));
     if (!key || !data) return;
     window.bepOutletCache[key] = { data: data, updatedAt: Date.now() };
+    if (window.localStorage) {
+      try { window.localStorage.setItem(bepStorageKey(outlet || key), JSON.stringify(window.bepOutletCache[key])); } catch (error) {}
+    }
   }
   function invalidateBEPCache(outlet) {
     var key = bepCacheKey(outlet || selectedOutlet());
@@ -2022,10 +2050,10 @@
     var outlet = String(outletName || selectedOutlet()).trim();
     var key = bepCacheKey(outlet);
     var config = options || {};
-    var requestId = ++bepActiveRequestId;
-    bepActiveOutletKey = key;
 
     if (!outlet) {
+      ++bepActiveRequestId;
+      bepActiveOutletKey = key;
       if (isBEPFixedFormOpen()) window.zettCloseBEPFixedDetail();
       emptyState('');
       renderAll();
@@ -2034,6 +2062,16 @@
       setBEPLoadingState(false, false);
       return;
     }
+
+    if (bepActiveFetches[key] && !config.force) {
+      var activeCached = getCachedBEPOutlet(outlet);
+      if (activeCached) renderBEPDashboardFast(activeCached.data, outlet);
+      setBEPLoadingState(true, !!activeCached);
+      return;
+    }
+
+    var requestId = ++bepActiveRequestId;
+    bepActiveOutletKey = key;
 
     if (isBEPFixedFormOpen() && norm(state.outletName) !== key) window.zettCloseBEPFixedDetail();
 
@@ -2055,8 +2093,10 @@
       setBEPLoadingState(false, false);
       return;
     }
+    bepActiveFetches[key] = Date.now();
     google.script.run
       .withSuccessHandler(function(res) {
+        delete bepActiveFetches[key];
         if (requestId !== bepActiveRequestId || bepActiveOutletKey !== key || norm(selectedOutlet()) !== key) return;
         var data = res && res.data ? res.data : null;
         var responseKey = data ? bepCacheKey(data.namaOutlet || data['Nama Outlet'] || outlet) : key;
@@ -2065,6 +2105,7 @@
         renderBEPDashboardFast(data, outlet);
       })
       .withFailureHandler(function(error) {
+        delete bepActiveFetches[key];
         console.error('Gagal load BEP Fixed:', error);
         if (requestId !== bepActiveRequestId || bepActiveOutletKey !== key || norm(selectedOutlet()) !== key) return;
         setBEPLoadingState(false, false);
