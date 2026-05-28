@@ -1789,6 +1789,176 @@
         padding-right:18px;
       }
     }
+
+    /* Final BEP dashboard layout: compact laptop view, neutral top KPI cards, one-row bottom cards. */
+    #view-bep .bep-fixed-cost-premium {
+      padding:18px !important;
+      border-radius:14px !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
+      grid-template-columns:repeat(4, minmax(0, 1fr)) !important;
+      gap:12px !important;
+      margin-top:0 !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4) {
+      min-height:126px !important;
+      padding:15px 15px 14px !important;
+      border-radius:14px !important;
+      border:1px solid #E2E8F0 !important;
+      background:#FFFFFF !important;
+      box-shadow:none !important;
+      gap:13px !important;
+      --bep-kpi-soft:#F8FAFC;
+      --bep-kpi-glow:transparent;
+      --bep-kpi-border:#E2E8F0;
+      --bep-kpi-icon-bg:#F8FAFC;
+      --bep-kpi-icon-shadow:transparent;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4)::before {
+      display:none !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4)::after {
+      width:7px !important;
+      height:7px !important;
+      inset:14px 14px auto auto !important;
+      box-shadow:none !important;
+      background:var(--bep-kpi-accent) !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(1) {
+      --bep-kpi-accent:#2563EB;
+      --bep-kpi-suffix:#2563EB;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(2) {
+      --bep-kpi-accent:#0891B2;
+      --bep-kpi-suffix:#0891B2;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(3) {
+      --bep-kpi-accent:#6366F1;
+      --bep-kpi-suffix:#6366F1;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(4) {
+      --bep-kpi-accent:#C026D3;
+      --bep-kpi-suffix:#C026D3;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4) .bep-kpi-icon,
+    #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-icon {
+      width:32px !important;
+      height:32px !important;
+      flex:0 0 32px !important;
+      border-radius:10px !important;
+      color:var(--bep-kpi-accent) !important;
+      background:#F8FAFC !important;
+      border:1px solid #E2E8F0 !important;
+      box-shadow:none !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4) .bep-kpi-icon::before {
+      display:none !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4) .bep-kpi-icon i {
+      color:var(--bep-kpi-accent) !important;
+      filter:none !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-label,
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4) .bep-kpi-label {
+      color:var(--bep-kpi-accent) !important;
+      font-size:10.5px !important;
+      font-weight:760 !important;
+      letter-spacing:.06em !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-value {
+      font-size:clamp(23px, 1.72vw, 31px) !important;
+      font-weight:800 !important;
+      letter-spacing:0 !important;
+      color:#0F172A !important;
+      text-shadow:none !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-note,
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4) .bep-kpi-note {
+      color:#64748B !important;
+      font-size:11px !important;
+      line-height:1.25 !important;
+      margin-top:6px !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-decision-hero-card:hover,
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4):hover {
+      transform:none !important;
+      border-color:#CBD5E1 !important;
+      box-shadow:none !important;
+    }
+    #view-bep .bep-fixed-visual-section {
+      grid-template-columns:minmax(0, 1.42fr) minmax(330px, .82fr) !important;
+      gap:12px !important;
+      margin-top:12px !important;
+    }
+    #view-bep .bep-fixed-visual-panel {
+      padding:13px !important;
+      border-radius:14px !important;
+      box-shadow:0 8px 20px rgba(15,23,42,.045), inset 0 1px 0 rgba(255,255,255,.9) !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid {
+      grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+      gap:12px !important;
+      margin-top:12px !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid > .bep-kpi-card,
+    #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid > .bep-summary-profit-card {
+      min-height:190px !important;
+      padding:16px !important;
+      border-radius:14px !important;
+      background:#FFFFFF !important;
+      border:1px solid #E2E8F0 !important;
+      box-shadow:0 6px 16px rgba(15,23,42,.045) !important;
+    }
+    #view-bep .bep-summary-profit-card {
+      margin:0 !important;
+      gap:10px !important;
+    }
+    #view-bep .bep-summary-profit-card .bep-plus-top {
+      gap:10px;
+    }
+    #view-bep .bep-summary-profit-card .bep-plus-subtitle {
+      display:none;
+    }
+    #view-bep .bep-summary-profit-card .bep-profit-input-wrap {
+      gap:5px;
+    }
+    #view-bep .bep-summary-profit-card .bep-profit-input {
+      height:36px !important;
+    }
+    #view-bep .bep-summary-profit-card .bep-profit-main {
+      align-items:flex-start;
+      flex-direction:column;
+      gap:5px;
+    }
+    #view-bep .bep-summary-profit-card .bep-profit-main strong {
+      font-size:clamp(19px, 1.35vw, 24px) !important;
+      white-space:normal;
+    }
+    #view-bep .bep-summary-profit-card .bep-profit-pill {
+      padding:8px 9px !important;
+    }
+    #view-bep .bep-summary-profit-card .bep-profit-pill strong {
+      white-space:normal;
+      font-size:11.5px !important;
+      line-height:1.2;
+    }
+    @media (max-width: 1180px) {
+      #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
+        grid-template-columns:repeat(4, minmax(0, 1fr)) !important;
+      }
+      #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid {
+        grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+      }
+    }
+    @media (max-width: 980px) {
+      #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
+        grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+      }
+      #view-bep .bep-fixed-visual-section,
+      #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid {
+        grid-template-columns:1fr !important;
+      }
+    }
   </style>
   <div id="view-bep" class="main-view hidden animate-fade-in space-y-8">
     
@@ -1862,7 +2032,7 @@
           </div>
           <div class="bep-fixed-donut-wrap">
             <div id="bepFixedDonutChart" class="bep-fixed-donut" aria-label="Donut chart komposisi biaya tetap">
-              <div class="bep-fixed-donut-center"><span>Terbesar</span><strong id="bepFixedDonutTotal">0%</strong></div>
+              <div class="bep-fixed-donut-center"><span>Terbesar</span><strong id="bepFixedDonutTotal">100%</strong></div>
             </div>
             <div id="bepFixedDonutLegend" class="bep-fixed-legend" aria-live="polite"></div>
           </div>
@@ -1914,6 +2084,27 @@
             <div class="bep-kpi-copy"><strong id="bepKpiMargin" class="bep-kpi-value">Rp 0</strong><span id="bepKpiMarginNote" class="bep-kpi-note">Harga jual - biaya variabel</span></div>
           </div>
         </div>
+        <article class="bep-target-plus-card is-profit bep-summary-profit-card">
+          <div class="bep-plus-top">
+            <div>
+              <div class="bep-plus-title">Simulasi Target Profit</div>
+              <div class="bep-plus-subtitle">Hitung target omzet &amp; load untuk mengejar laba tertentu.</div>
+            </div>
+            <div class="bep-plus-icon"><i class="ph ph-sparkle"></i></div>
+          </div>
+          <div class="bep-profit-input-wrap">
+            <label for="bepTargetProfitInput">Target Laba Bulanan</label>
+            <input id="bepTargetProfitInput" class="bep-profit-input" type="text" inputmode="numeric" value="3.000.000">
+          </div>
+          <div class="bep-profit-main">
+            <span>Target Omzet</span>
+            <strong id="bepProfitTargetRevenue">Rp 0</strong>
+          </div>
+          <div class="bep-profit-metrics">
+            <div class="bep-profit-pill"><span>Target Load / Bulan</span><strong id="bepProfitTargetLoadMonth">0 Load / bulan</strong></div>
+            <div class="bep-profit-pill"><span>Target Load / Hari</span><strong id="bepProfitTargetLoadDay">0 Load / hari</strong></div>
+          </div>
+        </article>
       </div>
       <div class="bep-executive-strip" aria-live="polite">
         <article class="bep-executive-card">
@@ -2117,30 +2308,6 @@
         </div>
         <input type="hidden" id="inputBiayaVariabel" value="0">
         <div id="bepHppServiceCards" class="bep-hpp-grid" data-count="4" aria-live="polite"></div>
-      </div>
-
-      <div class="bep-target-plus-grid" id="bepTargetPlusCards" aria-live="polite">
-        <article class="bep-target-plus-card is-profit">
-          <div class="bep-plus-top">
-            <div>
-              <div class="bep-plus-title">Simulasi Target Profit</div>
-              <div class="bep-plus-subtitle">Hitung target omzet &amp; load untuk mengejar laba tertentu.</div>
-            </div>
-            <div class="bep-plus-icon"><i class="ph ph-sparkle"></i></div>
-          </div>
-          <div class="bep-profit-input-wrap">
-            <label for="bepTargetProfitInput">Target Laba Bulanan</label>
-            <input id="bepTargetProfitInput" class="bep-profit-input" type="text" inputmode="numeric" value="3.000.000">
-          </div>
-          <div class="bep-profit-main">
-            <span>Target Omzet</span>
-            <strong id="bepProfitTargetRevenue">Rp 0</strong>
-          </div>
-          <div class="bep-profit-metrics">
-            <div class="bep-profit-pill"><span>Target Load / Bulan</span><strong id="bepProfitTargetLoadMonth">0 Load / bulan</strong></div>
-            <div class="bep-profit-pill"><span>Target Load / Hari</span><strong id="bepProfitTargetLoadDay">0 Load / hari</strong></div>
-          </div>
-        </article>
       </div>
 
       <div class="mt-9 border-t border-slate-100/60 pt-8">
