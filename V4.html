@@ -1792,25 +1792,26 @@
 
     /* Final BEP dashboard layout: compact laptop view, neutral top KPI cards, one-row bottom cards. */
     #view-bep .bep-fixed-cost-premium {
-      padding:18px !important;
-      border-radius:14px !important;
+      padding:16px !important;
+      border-radius:18px !important;
       display:flex !important;
       flex-direction:column !important;
+      gap:0 !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
       grid-template-columns:repeat(4, minmax(0, 1fr)) !important;
-      gap:14px !important;
+      gap:16px !important;
       margin-top:0 !important;
       order:1 !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4) {
-      min-height:158px !important;
-      padding:22px 18px !important;
+      min-height:138px !important;
+      padding:18px 18px !important;
       border-radius:18px !important;
       border:1px solid rgba(15,23,42,.03) !important;
       background:#FFFFFF !important;
-      box-shadow:0 8px 30px rgba(15,23,42,.04), 0 1px 2px rgba(15,23,42,.018) !important;
-      gap:16px !important;
+      box-shadow:0 8px 28px rgba(15,23,42,.038), 0 1px 2px rgba(15,23,42,.018) !important;
+      gap:12px !important;
       justify-content:center !important;
       --bep-kpi-soft:#F8FAFC;
       --bep-kpi-glow:transparent;
@@ -1866,7 +1867,7 @@
       letter-spacing:.06em !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card .bep-kpi-value {
-      font-size:clamp(23px, 1.72vw, 31px) !important;
+      font-size:clamp(22px, 1.58vw, 29px) !important;
       font-weight:800 !important;
       letter-spacing:0 !important;
       color:#0F172A !important;
@@ -1877,7 +1878,7 @@
       color:#64748B !important;
       font-size:11px !important;
       line-height:1.25 !important;
-      margin-top:6px !important;
+      margin-top:5px !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-decision-hero-card:hover,
     #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4):hover {
@@ -1886,24 +1887,24 @@
       box-shadow:0 12px 34px rgba(15,23,42,.05), 0 1px 2px rgba(15,23,42,.02) !important;
     }
     #view-bep .bep-fixed-visual-section {
-      grid-template-columns:minmax(0, 1.42fr) minmax(330px, .82fr) !important;
+      grid-template-columns:minmax(0, 1.9fr) minmax(320px, 1fr) !important;
       gap:16px !important;
-      margin-top:18px !important;
+      margin-top:16px !important;
       order:2 !important;
       flex:1 1 auto !important;
-      min-height:420px !important;
+      min-height:390px !important;
     }
     #view-bep .bep-fixed-visual-panel {
-      padding:13px !important;
+      padding:15px !important;
       border-radius:18px !important;
       border-color:rgba(15,23,42,.03) !important;
-      box-shadow:0 8px 30px rgba(15,23,42,.04), 0 1px 2px rgba(15,23,42,.018), inset 0 1px 0 rgba(255,255,255,.92) !important;
+      box-shadow:0 8px 28px rgba(15,23,42,.038), 0 1px 2px rgba(15,23,42,.018), inset 0 1px 0 rgba(255,255,255,.92) !important;
       min-height:100% !important;
       display:flex !important;
       flex-direction:column !important;
     }
     #view-bep .bep-fixed-visual-head {
-      margin-bottom:8px !important;
+      margin-bottom:6px !important;
     }
     #view-bep .bep-fixed-visual-total {
       padding:4px 12px !important;
@@ -1913,16 +1914,18 @@
       flex:1 1 auto !important;
       min-height:0 !important;
       justify-content:center !important;
-      gap:1.05rem !important;
-      padding-block:10px !important;
+      gap:.78rem !important;
+      padding-block:8px !important;
     }
     #view-bep .bep-fixed-bar-row {
-      min-height:42px !important;
+      min-height:38px !important;
       align-items:center !important;
       align-content:center !important;
+      grid-template-columns:minmax(116px, .72fr) minmax(0, 2.35fr) minmax(104px, auto) !important;
+      gap:12px !important;
     }
     #view-bep .bep-fixed-bar-track {
-      height:24px !important;
+      height:20px !important;
       border-radius:999px !important;
       background:rgba(15,23,42,.05) !important;
     }
@@ -1931,6 +1934,7 @@
     }
     #view-bep .bep-fixed-bar-value {
       font-weight:920 !important;
+      font-size:12px !important;
     }
     #view-bep .bep-fixed-donut-wrap {
       flex:1 1 auto !important;
@@ -1939,23 +1943,23 @@
       flex-direction:row !important;
       align-items:center !important;
       justify-content:center !important;
-      gap:2rem !important;
+      gap:1.45rem !important;
       text-align:left !important;
     }
     #view-bep .bep-fixed-donut {
-      width:172px !important;
-      flex:0 0 172px !important;
+      width:158px !important;
+      flex:0 0 158px !important;
     }
     #view-bep .bep-fixed-legend {
-      width:min(100%, 280px) !important;
+      width:min(100%, 250px) !important;
       flex:0 0 auto !important;
-      gap:10px !important;
+      gap:8px !important;
     }
     #view-bep .bep-fixed-legend-row {
       display:flex !important;
       align-items:center !important;
       justify-content:space-between !important;
-      gap:10px !important;
+      gap:9px !important;
     }
     #view-bep .bep-fixed-legend-name {
       flex:1 1 auto !important;
@@ -1980,22 +1984,22 @@
     }
     #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid {
       grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
-      gap:12px !important;
-      margin-top:12px !important;
+      gap:16px !important;
+      margin-top:16px !important;
       order:3 !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-executive-strip {
       order:4 !important;
-      margin-top:12px !important;
+      margin-top:16px !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid > .bep-kpi-card,
     #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid > .bep-summary-profit-card {
-      min-height:190px !important;
+      min-height:176px !important;
       padding:16px !important;
-      border-radius:14px !important;
+      border-radius:18px !important;
       background:#FFFFFF !important;
-      border:1px solid #E2E8F0 !important;
-      box-shadow:0 6px 16px rgba(15,23,42,.045) !important;
+      border:1px solid rgba(15,23,42,.03) !important;
+      box-shadow:0 8px 28px rgba(15,23,42,.038), 0 1px 2px rgba(15,23,42,.018) !important;
     }
     #view-bep .bep-summary-profit-card {
       margin:0 !important;
