@@ -1959,7 +1959,18 @@
         grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
       }
     }
-    @media (max-width: 980px) {
+    @media (min-width: 768px) and (max-width: 980px) {
+      #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
+        grid-template-columns:repeat(4, minmax(0, 1fr)) !important;
+      }
+      #view-bep .bep-fixed-visual-section {
+        grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) !important;
+      }
+      #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid {
+        grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+      }
+    }
+    @media (max-width: 767px) {
       #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
         grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
       }
