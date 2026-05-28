@@ -1794,11 +1794,14 @@
     #view-bep .bep-fixed-cost-premium {
       padding:18px !important;
       border-radius:14px !important;
+      display:flex !important;
+      flex-direction:column !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
       grid-template-columns:repeat(4, minmax(0, 1fr)) !important;
       gap:12px !important;
       margin-top:0 !important;
+      order:1 !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-decision-hero-card:nth-child(-n+4) {
       min-height:126px !important;
@@ -1889,6 +1892,7 @@
       grid-template-columns:minmax(0, 1.42fr) minmax(330px, .82fr) !important;
       gap:12px !important;
       margin-top:12px !important;
+      order:2 !important;
     }
     #view-bep .bep-fixed-visual-panel {
       padding:13px !important;
@@ -1898,6 +1902,11 @@
     #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid {
       grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
       gap:12px !important;
+      margin-top:12px !important;
+      order:3 !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-executive-strip {
+      order:4 !important;
       margin-top:12px !important;
     }
     #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid > .bep-kpi-card,
