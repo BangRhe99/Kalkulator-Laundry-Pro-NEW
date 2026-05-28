@@ -1552,6 +1552,193 @@
     #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid > .bep-kpi-card:not(.bep-decision-hero-card) {
       grid-column:span 2;
     }
+    #view-bep .bep-fixed-cost-premium .bep-hero,
+    #view-bep .bep-executive-strip {
+      display:none !important;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
+      margin-top:0 !important;
+    }
+    #view-bep .bep-fixed-visual-section {
+      display:grid;
+      grid-template-columns:minmax(0, 7fr) minmax(260px, 3fr);
+      gap:16px;
+      margin-top:18px;
+      align-items:stretch;
+    }
+    #view-bep .bep-fixed-visual-panel {
+      border:1px solid rgba(203,213,225,.92);
+      border-radius:18px;
+      background:
+        radial-gradient(circle at 92% 4%, rgba(37,99,235,.07), transparent 12rem),
+        linear-gradient(145deg, rgba(255,255,255,.98), rgba(248,251,255,.94));
+      box-shadow:0 16px 38px rgba(15,23,42,.07), inset 0 1px 0 rgba(255,255,255,.92);
+      padding:18px;
+      min-width:0;
+    }
+    #view-bep .bep-fixed-visual-head {
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:16px;
+    }
+    #view-bep .bep-fixed-visual-title {
+      color:#0F172A;
+      font-size:15px;
+      font-weight:900;
+      line-height:1.15;
+    }
+    #view-bep .bep-fixed-visual-subtitle {
+      color:#64748B;
+      font-size:11.5px;
+      font-weight:700;
+      line-height:1.35;
+      margin-top:4px;
+    }
+    #view-bep .bep-fixed-visual-total {
+      color:#2563EB;
+      font-size:13px;
+      font-weight:900;
+      white-space:nowrap;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(37,99,235,.22);
+      background:rgba(239,246,255,.9);
+    }
+    #view-bep .bep-fixed-bar-list {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    #view-bep .bep-fixed-bar-row {
+      display:grid;
+      grid-template-columns:minmax(112px, .95fr) minmax(0, 2.05fr) minmax(94px, auto);
+      gap:12px;
+      align-items:center;
+    }
+    #view-bep .bep-fixed-bar-label,
+    #view-bep .bep-fixed-bar-value {
+      color:#0F172A;
+      font-size:12px;
+      font-weight:850;
+      line-height:1.2;
+    }
+    #view-bep .bep-fixed-bar-value {
+      text-align:right;
+      font-variant-numeric:tabular-nums;
+    }
+    #view-bep .bep-fixed-bar-track {
+      height:14px;
+      border-radius:999px;
+      background:rgba(226,232,240,.78);
+      overflow:hidden;
+      box-shadow:inset 0 1px 2px rgba(15,23,42,.07);
+    }
+    #view-bep .bep-fixed-bar-fill {
+      display:block;
+      height:100%;
+      width:var(--bep-fixed-bar-width, 0%);
+      border-radius:inherit;
+      background:var(--bep-fixed-chart-color, #2563EB);
+      box-shadow:0 8px 18px var(--bep-fixed-chart-glow, rgba(37,99,235,.18));
+    }
+    #view-bep .bep-fixed-donut-wrap {
+      display:grid;
+      place-items:center;
+      gap:14px;
+    }
+    #view-bep .bep-fixed-donut {
+      width:min(210px, 100%);
+      aspect-ratio:1;
+      border-radius:999px;
+      background:conic-gradient(#E2E8F0 0 100%);
+      position:relative;
+      box-shadow:0 18px 40px rgba(15,23,42,.1), inset 0 1px 0 rgba(255,255,255,.9);
+    }
+    #view-bep .bep-fixed-donut::after {
+      content:"";
+      position:absolute;
+      inset:24%;
+      border-radius:inherit;
+      background:linear-gradient(145deg, #FFFFFF, #F8FAFC);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.96), 0 1px 2px rgba(15,23,42,.06);
+    }
+    #view-bep .bep-fixed-donut-center {
+      position:absolute;
+      inset:31%;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+    #view-bep .bep-fixed-donut-center span {
+      color:#64748B;
+      font-size:10px;
+      font-weight:800;
+      line-height:1;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+    #view-bep .bep-fixed-donut-center strong {
+      margin-top:4px;
+      color:#0F172A;
+      font-size:14px;
+      font-weight:900;
+      line-height:1.05;
+    }
+    #view-bep .bep-fixed-legend {
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      gap:9px;
+    }
+    #view-bep .bep-fixed-legend-row {
+      display:grid;
+      grid-template-columns:auto minmax(0, 1fr) auto;
+      gap:8px;
+      align-items:center;
+      color:#0F172A;
+      font-size:11.5px;
+      font-weight:800;
+      line-height:1.2;
+    }
+    #view-bep .bep-fixed-legend-dot {
+      width:9px;
+      height:9px;
+      border-radius:999px;
+      background:var(--bep-fixed-chart-color, #2563EB);
+      box-shadow:0 0 0 4px var(--bep-fixed-chart-soft, rgba(37,99,235,.12));
+    }
+    #view-bep .bep-fixed-legend-name {
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    #view-bep .bep-fixed-legend-percent {
+      color:#475569;
+      font-variant-numeric:tabular-nums;
+    }
+    #view-bep .bep-fixed-chart-empty {
+      min-height:170px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      color:#64748B;
+      font-size:12px;
+      font-weight:750;
+      line-height:1.4;
+      border:1px dashed rgba(148,163,184,.45);
+      border-radius:14px;
+      background:rgba(248,250,252,.74);
+    }
+    #view-bep.bep-fixed-form-mode .bep-fixed-visual-section {
+      display:none !important;
+    }
     @media (max-width: 1180px) {
       #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
         grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
@@ -1563,6 +1750,16 @@
     @media (max-width: 640px) {
       #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
         grid-template-columns:1fr !important;
+      }
+      #view-bep .bep-fixed-visual-section {
+        grid-template-columns:1fr;
+      }
+      #view-bep .bep-fixed-bar-row {
+        grid-template-columns:1fr;
+        gap:7px;
+      }
+      #view-bep .bep-fixed-bar-value {
+        text-align:left;
       }
       #view-bep .bep-fixed-cost-premium .bep-decision-hero-card,
       #view-bep .bep-fixed-cost-premium .bep-decision-hero-card.is-primary {
@@ -1689,6 +1886,33 @@
       </section>
 
       <div id="bepFixedGrandTotal" class="hidden">Rp 0</div>
+
+      <section class="bep-fixed-visual-section" aria-label="Visualisasi Biaya Tetap Bulanan">
+        <div class="bep-fixed-visual-panel">
+          <div class="bep-fixed-visual-head">
+            <div>
+              <div class="bep-fixed-visual-title">Biaya Tetap Bulanan</div>
+              <div class="bep-fixed-visual-subtitle">Urutan komponen biaya dari terbesar ke terkecil.</div>
+            </div>
+            <div class="bep-fixed-visual-total" id="bepFixedChartTotal">Rp 0</div>
+          </div>
+          <div id="bepFixedBarChart" class="bep-fixed-bar-list" aria-live="polite"></div>
+        </div>
+        <div class="bep-fixed-visual-panel">
+          <div class="bep-fixed-visual-head">
+            <div>
+              <div class="bep-fixed-visual-title">Komposisi Biaya</div>
+              <div class="bep-fixed-visual-subtitle">Persentase kontribusi tiap kategori.</div>
+            </div>
+          </div>
+          <div class="bep-fixed-donut-wrap">
+            <div id="bepFixedDonutChart" class="bep-fixed-donut" aria-label="Donut chart komposisi biaya tetap">
+              <div class="bep-fixed-donut-center"><span>Total</span><strong id="bepFixedDonutTotal">Rp 0</strong></div>
+            </div>
+            <div id="bepFixedDonutLegend" class="bep-fixed-legend" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
 
       <div class="bep-fixed-grid">
         <div class="bep-fixed-card">
