@@ -1562,8 +1562,8 @@
     #view-bep .bep-fixed-visual-section {
       display:grid;
       grid-template-columns:minmax(0, 7fr) minmax(260px, 3fr);
-      gap:16px;
-      margin-top:18px;
+      gap:14px;
+      margin-top:14px;
       align-items:stretch;
     }
     #view-bep .bep-fixed-visual-panel {
@@ -1573,7 +1573,7 @@
         radial-gradient(circle at 92% 4%, rgba(37,99,235,.07), transparent 12rem),
         linear-gradient(145deg, rgba(255,255,255,.98), rgba(248,251,255,.94));
       box-shadow:0 16px 38px rgba(15,23,42,.07), inset 0 1px 0 rgba(255,255,255,.92);
-      padding:18px;
+      padding:14px;
       min-width:0;
     }
     #view-bep .bep-fixed-visual-head {
@@ -1581,7 +1581,7 @@
       align-items:flex-start;
       justify-content:space-between;
       gap:12px;
-      margin-bottom:16px;
+      margin-bottom:12px;
     }
     #view-bep .bep-fixed-visual-title {
       color:#0F172A;
@@ -1609,12 +1609,12 @@
     #view-bep .bep-fixed-bar-list {
       display:flex;
       flex-direction:column;
-      gap:12px;
+      gap:9px;
     }
     #view-bep .bep-fixed-bar-row {
       display:grid;
-      grid-template-columns:minmax(112px, .95fr) minmax(0, 2.05fr) minmax(94px, auto);
-      gap:12px;
+      grid-template-columns:minmax(112px, .85fr) minmax(0, 2.25fr) minmax(94px, auto);
+      gap:10px;
       align-items:center;
     }
     #view-bep .bep-fixed-bar-label,
@@ -1644,12 +1644,15 @@
       box-shadow:0 8px 18px var(--bep-fixed-chart-glow, rgba(37,99,235,.18));
     }
     #view-bep .bep-fixed-donut-wrap {
-      display:grid;
-      place-items:center;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
       gap:14px;
+      min-height:148px;
     }
     #view-bep .bep-fixed-donut {
-      width:min(210px, 100%);
+      width:132px;
+      flex:0 0 132px;
       aspect-ratio:1;
       border-radius:999px;
       background:conic-gradient(#E2E8F0 0 100%);
@@ -1685,15 +1688,16 @@
     #view-bep .bep-fixed-donut-center strong {
       margin-top:4px;
       color:#0F172A;
-      font-size:14px;
+      font-size:18px;
       font-weight:900;
       line-height:1.05;
     }
     #view-bep .bep-fixed-legend {
-      width:100%;
+      flex:1 1 auto;
+      min-width:0;
       display:flex;
       flex-direction:column;
-      gap:9px;
+      gap:8px;
     }
     #view-bep .bep-fixed-legend-row {
       display:grid;
@@ -1723,7 +1727,7 @@
       font-variant-numeric:tabular-nums;
     }
     #view-bep .bep-fixed-chart-empty {
-      min-height:170px;
+      min-height:126px;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -1739,6 +1743,15 @@
     #view-bep.bep-fixed-form-mode .bep-fixed-visual-section {
       display:none !important;
     }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid {
+      grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+      gap:14px !important;
+      margin-top:14px !important;
+      align-items:stretch;
+    }
+    #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid > .bep-kpi-card {
+      grid-column:auto !important;
+    }
     @media (max-width: 1180px) {
       #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
         grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
@@ -1753,6 +1766,12 @@
       }
       #view-bep .bep-fixed-visual-section {
         grid-template-columns:1fr;
+      }
+      #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid {
+        grid-template-columns:1fr !important;
+      }
+      #view-bep .bep-fixed-donut-wrap {
+        align-items:flex-start;
       }
       #view-bep .bep-fixed-bar-row {
         grid-template-columns:1fr;
@@ -1821,6 +1840,36 @@
             <div class="bep-kpi-copy"><strong id="bepKpiTargetVolume" class="bep-kpi-value"><span class="bep-value-inline"><span class="bep-value-main">0 Kg</span><span class="bep-value-suffix">/bulan</span></span></strong><span id="bepKpiVolumeNote" class="bep-kpi-note">Target Volume Agar Tidak Rugi</span></div>
           </div>
         </div>
+      </div>
+
+      <section class="bep-fixed-visual-section" aria-label="Visualisasi Biaya Tetap Bulanan">
+        <div class="bep-fixed-visual-panel">
+          <div class="bep-fixed-visual-head">
+            <div>
+              <div class="bep-fixed-visual-title">Biaya Tetap Bulanan</div>
+              <div class="bep-fixed-visual-subtitle">Urutan komponen biaya dari terbesar ke terkecil.</div>
+            </div>
+            <div class="bep-fixed-visual-total" id="bepFixedChartTotal">Rp 0</div>
+          </div>
+          <div id="bepFixedBarChart" class="bep-fixed-bar-list" aria-live="polite"></div>
+        </div>
+        <div class="bep-fixed-visual-panel">
+          <div class="bep-fixed-visual-head">
+            <div>
+              <div class="bep-fixed-visual-title">Komposisi Biaya</div>
+              <div class="bep-fixed-visual-subtitle">Persentase kontribusi tiap kategori.</div>
+            </div>
+          </div>
+          <div class="bep-fixed-donut-wrap">
+            <div id="bepFixedDonutChart" class="bep-fixed-donut" aria-label="Donut chart komposisi biaya tetap">
+              <div class="bep-fixed-donut-center"><span>Terbesar</span><strong id="bepFixedDonutTotal">0%</strong></div>
+            </div>
+            <div id="bepFixedDonutLegend" class="bep-fixed-legend" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="bep-kpi-grid bep-fixed-summary-grid">
         <div class="bep-kpi-card">
           <span class="bep-kpi-label">Total Biaya Tetap Bulanan</span>
           <div class="bep-kpi-body">
@@ -1886,33 +1935,6 @@
       </section>
 
       <div id="bepFixedGrandTotal" class="hidden">Rp 0</div>
-
-      <section class="bep-fixed-visual-section" aria-label="Visualisasi Biaya Tetap Bulanan">
-        <div class="bep-fixed-visual-panel">
-          <div class="bep-fixed-visual-head">
-            <div>
-              <div class="bep-fixed-visual-title">Biaya Tetap Bulanan</div>
-              <div class="bep-fixed-visual-subtitle">Urutan komponen biaya dari terbesar ke terkecil.</div>
-            </div>
-            <div class="bep-fixed-visual-total" id="bepFixedChartTotal">Rp 0</div>
-          </div>
-          <div id="bepFixedBarChart" class="bep-fixed-bar-list" aria-live="polite"></div>
-        </div>
-        <div class="bep-fixed-visual-panel">
-          <div class="bep-fixed-visual-head">
-            <div>
-              <div class="bep-fixed-visual-title">Komposisi Biaya</div>
-              <div class="bep-fixed-visual-subtitle">Persentase kontribusi tiap kategori.</div>
-            </div>
-          </div>
-          <div class="bep-fixed-donut-wrap">
-            <div id="bepFixedDonutChart" class="bep-fixed-donut" aria-label="Donut chart komposisi biaya tetap">
-              <div class="bep-fixed-donut-center"><span>Total</span><strong id="bepFixedDonutTotal">Rp 0</strong></div>
-            </div>
-            <div id="bepFixedDonutLegend" class="bep-fixed-legend" aria-live="polite"></div>
-          </div>
-        </div>
-      </section>
 
       <div class="bep-fixed-grid">
         <div class="bep-fixed-card">
