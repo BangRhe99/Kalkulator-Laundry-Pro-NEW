@@ -7754,36 +7754,41 @@ function zettApplyHPPRowToForm(row) {
 }
 
 function zettRunHPPCalculationAfterSync() {
-  if (typeof updateGasDefault === 'function') updateGasDefault();
-  if (typeof calculateGas === 'function') calculateGas();
+  const tasks = [
+    function() { if (typeof updateGasDefault === 'function') updateGasDefault(); },
+    function() { if (typeof calculateGas === 'function') calculateGas(); },
+    function() { if (typeof toggleSetrikaInputs === 'function') toggleSetrikaInputs(); },
+    function() { if (typeof calculateListrik === 'function') calculateListrik(); },
+    function() { if (typeof toggleAirInputs === 'function') toggleAirInputs(); },
+    function() { if (typeof calculateAir === 'function') calculateAir(); },
+    function() { if (typeof calculatePacking === 'function') calculatePacking(); },
+    function() { if (typeof toggleBahanActive === 'function') toggleBahanActive(); },
+    function() { if (typeof toggleBahanInputs === 'function') toggleBahanInputs(); },
+    function() { if (typeof calculateBahanBaku === 'function') calculateBahanBaku(); },
+    function() { if (typeof toggleNotaInputs === 'function') toggleNotaInputs(); },
+    function() { if (typeof calculateNota === 'function') calculateNota(); },
+    function() {
+      if (
+        typeof window.HPPStateMachine !== 'undefined' &&
+        typeof window.HPPStateMachine.calculateTotal === 'function'
+      ) {
+        window.HPPStateMachine.calculateTotal();
+      }
+    },
+    function() {
+      if (
+        typeof window.StateMachine !== 'undefined' &&
+        typeof window.StateMachine.calculateTotal === 'function'
+      ) {
+        window.StateMachine.calculateTotal();
+      }
+    }
+  ];
 
-  if (typeof toggleSetrikaInputs === 'function') toggleSetrikaInputs();
-  if (typeof calculateListrik === 'function') calculateListrik();
-
-  if (typeof toggleAirInputs === 'function') toggleAirInputs();
-  if (typeof calculateAir === 'function') calculateAir();
-
-  if (typeof calculatePacking === 'function') calculatePacking();
-
-  if (typeof toggleBahanActive === 'function') toggleBahanActive();
-  if (typeof toggleBahanInputs === 'function') toggleBahanInputs();
-  if (typeof calculateBahanBaku === 'function') calculateBahanBaku();
-
-  if (typeof toggleNotaInputs === 'function') toggleNotaInputs();
-  if (typeof calculateNota === 'function') calculateNota();
-
-  if (
-    typeof window.HPPStateMachine !== 'undefined' &&
-    typeof window.HPPStateMachine.calculateTotal === 'function'
-  ) {
-    window.HPPStateMachine.calculateTotal();
-  }
-
-  if (
-    typeof window.StateMachine !== 'undefined' &&
-    typeof window.StateMachine.calculateTotal === 'function'
-  ) {
-    window.StateMachine.calculateTotal();
+  if (typeof window.zettRunHPPTaskQueue_ === 'function') {
+    window.zettRunHPPTaskQueue_(window.__zettBranchSwitchToken, tasks);
+  } else {
+    tasks.forEach(function(task) { task(); });
   }
 }
 

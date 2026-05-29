@@ -1485,6 +1485,54 @@ document.addEventListener('click', function(e) {
     }
 });
 
+function zettSetHPPSelectionLoading(isLoading) {
+    const dashboard = document.getElementById('hpp-dashboard-view');
+    const formView = document.getElementById('hpp-form-view');
+    [dashboard, formView].forEach(function(el) {
+        if (!el) return;
+        el.classList.toggle('hpp-loading-lite', !!isLoading);
+        if (isLoading) el.setAttribute('aria-busy', 'true');
+        else el.removeAttribute('aria-busy');
+    });
+}
+
+function zettRunHPPTaskQueue(token, tasks, onDone) {
+    const queue = Array.isArray(tasks) ? tasks.filter(function(task) { return typeof task === 'function'; }) : [];
+    let index = 0;
+
+    function finish() {
+        if (typeof onDone === 'function') {
+            try { onDone(); } catch (error) { console.error('HPP queue done error:', error); }
+        }
+    }
+
+    function runNext() {
+        if (token && window.__zettBranchSwitchToken && window.__zettBranchSwitchToken !== token) {
+            finish();
+            return;
+        }
+        if (index >= queue.length) {
+            finish();
+            return;
+        }
+
+        const task = queue[index++];
+        setTimeout(function() {
+            try { task(); }
+            catch (error) {
+                console.error('HPP async task error:', error);
+                if (typeof showOmniToast === 'function') showOmniToast('Sebagian data Struktur Biaya gagal diproses. Coba pilih outlet lagi.', 'error');
+            }
+            runNext();
+        }, 0);
+    }
+
+    runNext();
+}
+
+window.zettSetHPPSelectionLoading = zettSetHPPSelectionLoading;
+window.zettRunHPPTaskQueue_ = zettRunHPPTaskQueue;
+
 if (!window.__zettHPPSelectListenerBound) {
     window.__zettHPPSelectListenerBound = true;
     document.addEventListener('change', function(e) {
@@ -1493,9 +1541,11 @@ if (!window.__zettHPPSelectListenerBound) {
         const switchToken = Date.now() + ':' + outletName;
         window.__zettBranchSwitchToken = switchToken;
         const cabang = masterDataCabang.find(c => String(c.namaOutlet || '').trim() === outletName);
+        zettSetHPPSelectionLoading(!!outletName);
 
         if (!outletName) {
             if (typeof resetHPPDashboardToZero === 'function') resetHPPDashboardToZero();
+            zettSetHPPSelectionLoading(false);
         } else {
             if (cabang) {
                 zettPatchOperationalProfileToLocalHPP(cabang);
@@ -1507,9 +1557,13 @@ if (!window.__zettHPPSelectListenerBound) {
             }
             requestAnimationFrame(() => {
                 if (window.__zettBranchSwitchToken !== switchToken) return;
-                if (typeof populateFormHPP === 'function') populateFormHPP(outletName);
-                if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(outletName);
-                if (typeof window.zettRefreshActiveHPPRowFromServer === 'function') window.zettRefreshActiveHPPRowFromServer(outletName);
+                zettRunHPPTaskQueue(switchToken, [
+                    function() { if (typeof populateFormHPP === 'function') populateFormHPP(outletName); },
+                    function() { if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(outletName); },
+                    function() { if (typeof window.zettRefreshActiveHPPRowFromServer === 'function') window.zettRefreshActiveHPPRowFromServer(outletName); }
+                ], function() {
+                    if (window.__zettBranchSwitchToken === switchToken) zettSetHPPSelectionLoading(false);
+                });
             });
         }
 
@@ -2633,19 +2687,27 @@ async function prosesSimpanBEP() {
     zettSetVal('notaManualLembarTrx', zettPick(hppData, ['Manual Ply Per Transaksi', 'Nota_Manual_LembarTrx'], ''));
     zettSetVal('notaRataKg', '');
 
-    if (typeof toggleAirInputs === 'function') toggleAirInputs();
-    if (typeof toggleBahanActive === 'function') toggleBahanActive();
-    if (typeof toggleBahanInputs === 'function') toggleBahanInputs();
-    if (typeof toggleNotaInputs === 'function') toggleNotaInputs();
-    if (typeof calculateGas === 'function') calculateGas();
-    if (typeof calculateListrik === 'function') calculateListrik();
-    if (typeof calculateAir === 'function') calculateAir();
-    if (typeof calculatePacking === 'function') calculatePacking();
-    if (typeof calculateBahanBaku === 'function') calculateBahanBaku();
-    if (typeof calculateNota === 'function') calculateNota();
-    if (typeof toggleActionButtons === 'function') toggleActionButtons();
-    if (typeof checkHPPLock === 'function') checkHPPLock();
-    if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(namaCabang);
+    var followUpTasks = [
+      function() { if (typeof toggleAirInputs === 'function') toggleAirInputs(); },
+      function() { if (typeof toggleBahanActive === 'function') toggleBahanActive(); },
+      function() { if (typeof toggleBahanInputs === 'function') toggleBahanInputs(); },
+      function() { if (typeof toggleNotaInputs === 'function') toggleNotaInputs(); },
+      function() { if (typeof calculateGas === 'function') calculateGas(); },
+      function() { if (typeof calculateListrik === 'function') calculateListrik(); },
+      function() { if (typeof calculateAir === 'function') calculateAir(); },
+      function() { if (typeof calculatePacking === 'function') calculatePacking(); },
+      function() { if (typeof calculateBahanBaku === 'function') calculateBahanBaku(); },
+      function() { if (typeof calculateNota === 'function') calculateNota(); },
+      function() { if (typeof toggleActionButtons === 'function') toggleActionButtons(); },
+      function() { if (typeof checkHPPLock === 'function') checkHPPLock(); },
+      function() { if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(namaCabang); }
+    ];
+
+    if (typeof window.zettRunHPPTaskQueue_ === 'function') {
+      window.zettRunHPPTaskQueue_(window.__zettBranchSwitchToken, followUpTasks);
+    } else {
+      followUpTasks.forEach(function(task) { task(); });
+    }
   };
 
   // Tambahkan field ukuran packing ke payload jika input tersedia, tanpa mengubah fungsi simpanDataHPP lama.
