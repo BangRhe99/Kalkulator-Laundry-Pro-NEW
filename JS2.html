@@ -378,7 +378,11 @@ function applyCabangUIData() {
         selectHPP.value = isValidHPP ? curHPP : '';
         
         if (selectHPP.value && typeof populateFormHPP === 'function') {
-            populateFormHPP(selectHPP.value);
+            if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
+                window.zettWithHPPPopulationGuard_(function() { populateFormHPP(selectHPP.value); });
+            } else {
+                populateFormHPP(selectHPP.value);
+            }
         } else if (typeof resetHPPDashboardToZero === 'function') {
             resetHPPDashboardToZero();
         }
@@ -1141,7 +1145,11 @@ function pilihCabang(namaCabang, cardEl) {
     if (typeof populateFormHPP === 'function') {
         requestAnimationFrame(() => {
             if (window.__zettBranchSwitchToken !== switchToken) return;
-            populateFormHPP(namaCabang);
+            if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
+                window.zettWithHPPPopulationGuard_(function() { populateFormHPP(namaCabang); });
+            } else {
+                populateFormHPP(namaCabang);
+            }
             if (typeof window.zettRefreshActiveHPPRowFromServer === 'function') {
                 window.zettRefreshActiveHPPRowFromServer(namaCabang);
             }
@@ -1496,9 +1504,25 @@ function zettSetHPPSelectionLoading(isLoading) {
     });
 }
 
+function zettIsHPPPopulating() {
+    return (window.__zettHPPPopulateDepth || 0) > 0;
+}
+
+function zettWithHPPPopulationGuard(fn) {
+    window.__zettHPPPopulateDepth = (window.__zettHPPPopulateDepth || 0) + 1;
+    try {
+        return typeof fn === 'function' ? fn() : undefined;
+    } finally {
+        setTimeout(function() {
+            window.__zettHPPPopulateDepth = Math.max(0, (window.__zettHPPPopulateDepth || 1) - 1);
+        }, 80);
+    }
+}
+
 function zettRunHPPTaskQueue(token, tasks, onDone) {
     const queue = Array.isArray(tasks) ? tasks.filter(function(task) { return typeof task === 'function'; }) : [];
     let index = 0;
+    const startedAt = Date.now();
 
     function finish() {
         if (typeof onDone === 'function') {
@@ -1511,26 +1535,35 @@ function zettRunHPPTaskQueue(token, tasks, onDone) {
             finish();
             return;
         }
+        if (Date.now() - startedAt > 15000) {
+            console.warn('HPP task queue stopped after timeout.');
+            finish();
+            return;
+        }
         if (index >= queue.length) {
             finish();
             return;
         }
 
         const task = queue[index++];
-        setTimeout(function() {
-            try { task(); }
-            catch (error) {
-                console.error('HPP async task error:', error);
-                if (typeof showOmniToast === 'function') showOmniToast('Sebagian data Struktur Biaya gagal diproses. Coba pilih outlet lagi.', 'error');
-            }
-            runNext();
-        }, 0);
+        requestAnimationFrame(function() {
+            setTimeout(function() {
+                try { task(); }
+                catch (error) {
+                    console.error('HPP async task error:', error);
+                    if (typeof showOmniToast === 'function') showOmniToast('Sebagian data Struktur Biaya gagal diproses. Coba pilih outlet lagi.', 'error');
+                }
+                runNext();
+            }, 0);
+        });
     }
 
     runNext();
 }
 
 window.zettSetHPPSelectionLoading = zettSetHPPSelectionLoading;
+window.zettIsHPPPopulating_ = zettIsHPPPopulating;
+window.zettWithHPPPopulationGuard_ = zettWithHPPPopulationGuard;
 window.zettRunHPPTaskQueue_ = zettRunHPPTaskQueue;
 
 if (!window.__zettHPPSelectListenerBound) {
@@ -1558,7 +1591,11 @@ if (!window.__zettHPPSelectListenerBound) {
             requestAnimationFrame(() => {
                 if (window.__zettBranchSwitchToken !== switchToken) return;
                 zettRunHPPTaskQueue(switchToken, [
-                    function() { if (typeof populateFormHPP === 'function') populateFormHPP(outletName); },
+                    function() {
+                        if (typeof populateFormHPP === 'function') {
+                            zettWithHPPPopulationGuard(function() { populateFormHPP(outletName); });
+                        }
+                    },
                     function() { if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(outletName); },
                     function() { if (typeof window.zettRefreshActiveHPPRowFromServer === 'function') window.zettRefreshActiveHPPRowFromServer(outletName); }
                 ], function() {
@@ -2710,6 +2747,21 @@ async function prosesSimpanBEP() {
     }
   };
 
+  if (typeof window.populateFormHPP === 'function' && !window.populateFormHPP.__zettPopulateGuarded) {
+    var zettOriginalPopulateFormHPP = window.populateFormHPP;
+    window.populateFormHPP = function() {
+      var args = arguments;
+      var ctx = this;
+      if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
+        return window.zettWithHPPPopulationGuard_(function() {
+          return zettOriginalPopulateFormHPP.apply(ctx, args);
+        });
+      }
+      return zettOriginalPopulateFormHPP.apply(this, arguments);
+    };
+    window.populateFormHPP.__zettPopulateGuarded = true;
+  }
+
   // Tambahkan field ukuran packing ke payload jika input tersedia, tanpa mengubah fungsi simpanDataHPP lama.
   var oldBackgroundSyncHPP = window.backgroundSyncHPP;
   if (typeof oldBackgroundSyncHPP === 'function') {
@@ -2847,6 +2899,7 @@ async function prosesSimpanBEP() {
   }
   function bindOutletTransition() {
     document.addEventListener('change', function(event) {
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (!event.target || event.target.id !== 'inputNamaHPP') return;
       showOutletSoftLoading();
       window.setTimeout(function() {

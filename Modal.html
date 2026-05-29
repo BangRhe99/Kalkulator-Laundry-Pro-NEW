@@ -2190,17 +2190,21 @@
     }
 
     function runHppCalculators() {
-      try { if (typeof toggleAirInputs === 'function') toggleAirInputs(); } catch(e) { console.error(e); }
-      try { if (typeof toggleBahanActive === 'function') toggleBahanActive(); } catch(e) { console.error(e); }
-      try { if (typeof toggleBahanInputs === 'function') toggleBahanInputs(); } catch(e) { console.error(e); }
-      try { if (typeof toggleNotaInputs === 'function') toggleNotaInputs(); } catch(e) { console.error(e); }
-      try { if (typeof calculateGas === 'function') calculateGas(); } catch(e) { console.error(e); }
-      try { if (typeof calculateListrik === 'function') calculateListrik(); } catch(e) { console.error(e); }
-      try { if (typeof calculateAir === 'function') calculateAir(); } catch(e) { console.error(e); }
-      try { if (typeof calculatePacking === 'function') calculatePacking(); } catch(e) { console.error(e); }
-      try { if (typeof calculateBahanBaku === 'function') calculateBahanBaku(); } catch(e) { console.error(e); }
-      try { if (typeof calculateNota === 'function') calculateNota(); } catch(e) { console.error(e); }
-      try { if (typeof StateMachine !== 'undefined' && StateMachine.calculateTotal) StateMachine.calculateTotal(); } catch(e) { console.error(e); }
+      const tasks = [
+        function() { if (typeof toggleAirInputs === 'function') toggleAirInputs(); },
+        function() { if (typeof toggleBahanActive === 'function') toggleBahanActive(); },
+        function() { if (typeof toggleBahanInputs === 'function') toggleBahanInputs(); },
+        function() { if (typeof toggleNotaInputs === 'function') toggleNotaInputs(); },
+        function() { if (typeof calculateGas === 'function') calculateGas(); },
+        function() { if (typeof calculateListrik === 'function') calculateListrik(); },
+        function() { if (typeof calculateAir === 'function') calculateAir(); },
+        function() { if (typeof calculatePacking === 'function') calculatePacking(); },
+        function() { if (typeof calculateBahanBaku === 'function') calculateBahanBaku(); },
+        function() { if (typeof calculateNota === 'function') calculateNota(); },
+        function() { if (typeof StateMachine !== 'undefined' && StateMachine.calculateTotal) StateMachine.calculateTotal(); }
+      ];
+      if (typeof window.zettRunHPPTaskQueue_ === 'function') window.zettRunHPPTaskQueue_(window.__zettBranchSwitchToken, tasks);
+      else tasks.forEach(function(task) { try { task(); } catch(e) { console.error(e); } });
     }
 
     function restoreOldHppData() {
@@ -2208,7 +2212,13 @@
       const namaCabang = selectHPP ? selectHPP.value : '';
 
       if (namaCabang && typeof populateFormHPP === 'function') {
-        try { populateFormHPP(namaCabang); } catch(e) { console.error('populateFormHPP error:', e); }
+        try {
+          if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
+            window.zettWithHPPPopulationGuard_(function() { populateFormHPP(namaCabang); });
+          } else {
+            populateFormHPP(namaCabang);
+          }
+        } catch(e) { console.error('populateFormHPP error:', e); }
       } else if (!namaCabang && typeof loadHPPFromLocal === 'function') {
         try { loadHPPFromLocal(); } catch(e) { console.error('loadHPPFromLocal error:', e); }
       }
@@ -2928,25 +2938,35 @@
     function restoreHppDataForSelectedOutlet() {
       const outlet = getCurrentHppOutlet();
       if (outlet && typeof populateFormHPP === 'function') {
-        try { populateFormHPP(outlet); } catch (error) { console.error('populateFormHPP error:', error); }
+        try {
+          if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
+            window.zettWithHPPPopulationGuard_(function() { populateFormHPP(outlet); });
+          } else {
+            populateFormHPP(outlet);
+          }
+        } catch (error) { console.error('populateFormHPP error:', error); }
       } else if (typeof loadHPPFromLocal === 'function') {
         try { loadHPPFromLocal(); } catch (error) { console.error('loadHPPFromLocal error:', error); }
       }
 
-      try { if (typeof toggleActionButtons === 'function') toggleActionButtons(); } catch (error) { console.error(error); }
-      try { if (typeof checkHPPLock === 'function') checkHPPLock(); } catch (error) { console.error(error); }
-      try { if (typeof updateGasDefault === 'function') updateGasDefault(); } catch (error) { console.error(error); }
-      try { if (typeof toggleAirInputs === 'function') toggleAirInputs(); } catch (error) { console.error(error); }
-      try { if (typeof toggleBahanActive === 'function') toggleBahanActive(); } catch (error) { console.error(error); }
-      try { if (typeof toggleBahanInputs === 'function') toggleBahanInputs(); } catch (error) { console.error(error); }
-      try { if (typeof toggleNotaInputs === 'function') toggleNotaInputs(); } catch (error) { console.error(error); }
-      try { if (typeof calculateGas === 'function') calculateGas(); } catch (error) { console.error(error); }
-      try { if (typeof calculateListrik === 'function') calculateListrik(); } catch (error) { console.error(error); }
-      try { if (typeof calculateAir === 'function') calculateAir(); } catch (error) { console.error(error); }
-      try { if (typeof calculatePacking === 'function') calculatePacking(); } catch (error) { console.error(error); }
-      try { if (typeof calculateBahanBaku === 'function') calculateBahanBaku(); } catch (error) { console.error(error); }
-      try { if (typeof calculateNota === 'function') calculateNota(); } catch (error) { console.error(error); }
-      try { if (window.StateMachine && typeof window.StateMachine.calculateTotal === 'function') window.StateMachine.calculateTotal(); } catch (error) { console.error(error); }
+      const tasks = [
+        function() { if (typeof toggleActionButtons === 'function') toggleActionButtons(); },
+        function() { if (typeof checkHPPLock === 'function') checkHPPLock(); },
+        function() { if (typeof updateGasDefault === 'function') updateGasDefault(); },
+        function() { if (typeof toggleAirInputs === 'function') toggleAirInputs(); },
+        function() { if (typeof toggleBahanActive === 'function') toggleBahanActive(); },
+        function() { if (typeof toggleBahanInputs === 'function') toggleBahanInputs(); },
+        function() { if (typeof toggleNotaInputs === 'function') toggleNotaInputs(); },
+        function() { if (typeof calculateGas === 'function') calculateGas(); },
+        function() { if (typeof calculateListrik === 'function') calculateListrik(); },
+        function() { if (typeof calculateAir === 'function') calculateAir(); },
+        function() { if (typeof calculatePacking === 'function') calculatePacking(); },
+        function() { if (typeof calculateBahanBaku === 'function') calculateBahanBaku(); },
+        function() { if (typeof calculateNota === 'function') calculateNota(); },
+        function() { if (window.StateMachine && typeof window.StateMachine.calculateTotal === 'function') window.StateMachine.calculateTotal(); }
+      ];
+      if (typeof window.zettRunHPPTaskQueue_ === 'function') window.zettRunHPPTaskQueue_(window.__zettBranchSwitchToken, tasks);
+      else tasks.forEach(function(task) { try { task(); } catch (error) { console.error(error); } });
     }
 
     function openFormSmooth(type, title) {
@@ -5444,6 +5464,11 @@
       const state = window.hppLoadState;
       const now = Date.now();
 
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) {
+        renderCachedHPPDashboard('populate-cache');
+        return;
+      }
+
       if (window.__HPP_GSHEET_SYNC_LOCKED === true) {
         console.log('HPP dashboard update skipped because GSheet sync is locked');
         return;
@@ -6090,6 +6115,7 @@
       patchRowApply();
       patchPopulateForm();
       document.addEventListener('change', function(event) {
+        if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
         if (event.target && (event.target.id === 'inputNamaHPP' || event.target.closest('#tab-nota'))) {
           if (event.target.id === 'notaAppFeeType') {
             debugNotaKasir('dropdown metode berubah', {
@@ -6101,6 +6127,7 @@
         }
       });
       document.addEventListener('input', function(event) {
+        if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
         if (event.target && event.target.closest('#tab-nota')) calculateNotaKasir();
       });
       window.setTimeout(function() {
@@ -6836,9 +6863,11 @@ window.saveGasHPPData = function(event) {
   document.addEventListener('DOMContentLoaded', function() {
     syncNewOrExistingGasForm();
     document.addEventListener('change', function(event) {
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori')) setTimeout(syncNewOrExistingGasForm, 60);
     });
     document.addEventListener('input', function(event) {
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (event.target && ['inputGasKapasitas', 'inputGasHarga', 'inputGasJam'].includes(event.target.id)) {
         requestAnimationFrame(zettRenderGasLpgCard);
       }
@@ -7158,6 +7187,7 @@ window.saveGasHPPData = function(event) {
     zettRenderElectricAnalysisForm();
     setTimeout(function() { if (typeof window.calculateListrik === 'function') window.calculateListrik(); }, 80);
     document.addEventListener('change', function(event) {
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori')) {
         setTimeout(function() { zettRenderElectricAnalysisForm(); window.calculateListrik(); }, 60);
       }
@@ -7417,6 +7447,7 @@ window.saveGasHPPData = function(event) {
     zettRenderWaterAnalysisForm();
     window.calculateAir();
     document.addEventListener('change', function(event) {
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori' || event.target.id === 'toggleSetrikaListrik')) {
         setTimeout(window.calculateAir, 60);
       }
@@ -7514,16 +7545,38 @@ function zettFindActiveHPPRow() {
   }
 
   const activeName = zettNormalizeName(outletName);
+  const cache = window.__ZETT_HPP_ACTIVE_ROW_CACHE || {};
+  if (
+    cache.name === activeName &&
+    cache.source === dataHPP &&
+    cache.length === dataHPP.length &&
+    cache.row
+  ) {
+    return cache.row;
+  }
+
   const row = dataHPP.find(item => {
     const itemName = item?.namaOutlet || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '';
     return zettNormalizeName(itemName) === activeName;
   });
 
   if (!row) {
+    window.__ZETT_HPP_ACTIVE_ROW_CACHE = {
+      name: activeName,
+      source: dataHPP,
+      length: dataHPP.length,
+      row: null
+    };
     console.log('Data HPP outlet tidak ditemukan');
     return null;
   }
 
+  window.__ZETT_HPP_ACTIVE_ROW_CACHE = {
+    name: activeName,
+    source: dataHPP,
+    length: dataHPP.length,
+    row: row
+  };
   return row;
 }
 
@@ -7547,6 +7600,7 @@ function zettStoreFreshHPPRow(row) {
   } else {
     window.__ZETT_FRESH_HPP_ROWS.unshift(row);
   }
+  window.__ZETT_HPP_ACTIVE_ROW_CACHE = null;
 
   if (Array.isArray(window.masterDataHPP)) {
     const masterIndex = window.masterDataHPP.findIndex(item => {
@@ -7572,6 +7626,11 @@ function zettRefreshActiveHPPRowFromServer(outletName, options) {
   };
   window.__ZETT_HPP_ROW_LOADS = window.__ZETT_HPP_ROW_LOADS || {};
   const normalizedOutlet = zettNormalizeName(outlet);
+  const inflight = window.__ZETT_HPP_ROW_LOADS[normalizedOutlet];
+  if (inflight && Date.now() - inflight < 12000 && !config.force) {
+    return;
+  }
+
   const cachedRow = (Array.isArray(window.__ZETT_FRESH_HPP_ROWS) ? window.__ZETT_FRESH_HPP_ROWS : [])
     .find(item => zettNormalizeName(item?.namaOutlet || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '') === normalizedOutlet);
 
@@ -7580,32 +7639,44 @@ function zettRefreshActiveHPPRowFromServer(outletName, options) {
   }
 
   if (cachedRow && !config.force) {
-    zettApplyHPPRowToForm(cachedRow);
+    if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
+      window.zettWithHPPPopulationGuard_(function() { zettApplyHPPRowToForm(cachedRow); });
+    } else {
+      zettApplyHPPRowToForm(cachedRow);
+    }
     zettRunHPPCalculationAfterSync();
   }
 
-  const inflight = window.__ZETT_HPP_ROW_LOADS[normalizedOutlet];
-  if (inflight && Date.now() - inflight < 12000 && !config.force) {
-    return;
-  }
   window.__ZETT_HPP_ROW_LOADS[normalizedOutlet] = Date.now();
+  const syncToken = Date.now() + ':' + normalizedOutlet;
+  window.__ZETT_HPP_ACTIVE_SYNC_TOKEN = syncToken;
 
   google.script.run
     .withSuccessHandler(function(response) {
       delete window.__ZETT_HPP_ROW_LOADS[normalizedOutlet];
+      if (window.__ZETT_HPP_ACTIVE_SYNC_TOKEN !== syncToken) return;
       if (!response || response.status !== 'success' || !response.data) return;
       const activeOutlet = document.getElementById('inputNamaHPP')?.value || '';
       if (zettNormalizeName(activeOutlet) !== zettNormalizeName(outlet)) return;
 
       zettStoreFreshHPPRow(response.data);
-      zettApplyHPPRowToForm(response.data);
+      if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
+        window.zettWithHPPPopulationGuard_(function() { zettApplyHPPRowToForm(response.data); });
+      } else {
+        zettApplyHPPRowToForm(response.data);
+      }
       zettRunHPPCalculationAfterSync();
 
       if (config.openType && typeof window.openHPPForm === 'function') {
         const activeType = window.zettGetActiveHPPType ? window.zettGetActiveHPPType() : '';
         if (activeType === config.openType) {
           requestAnimationFrame(function() {
-            zettApplyHPPRowToForm(response.data);
+            if (window.__ZETT_HPP_ACTIVE_SYNC_TOKEN !== syncToken) return;
+            if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
+              window.zettWithHPPPopulationGuard_(function() { zettApplyHPPRowToForm(response.data); });
+            } else {
+              zettApplyHPPRowToForm(response.data);
+            }
             if (typeof calculateGas === 'function') calculateGas();
           });
         }
@@ -7613,6 +7684,7 @@ function zettRefreshActiveHPPRowFromServer(outletName, options) {
     })
     .withFailureHandler(function() {
       delete window.__ZETT_HPP_ROW_LOADS[normalizedOutlet];
+      if (window.__ZETT_HPP_ACTIVE_SYNC_TOKEN === syncToken) window.__ZETT_HPP_ACTIVE_SYNC_TOKEN = null;
     })
     .getHPPRowByOutlet(outlet);
 }
@@ -7822,12 +7894,20 @@ function zettApplyHPPDashboardFallback(row) {
 }
 
 function zettSyncHPPFromGSheet() {
+  if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) {
+    return false;
+  }
   const row = zettFindActiveHPPRow();
   if (!row) return false;
 
-  zettApplyHPPRowToForm(row);
+  if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
+    window.zettWithHPPPopulationGuard_(function() { zettApplyHPPRowToForm(row); });
+  } else {
+    zettApplyHPPRowToForm(row);
+  }
 
   setTimeout(() => {
+    if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
     zettRunHPPCalculationAfterSync();
     zettApplyHPPDashboardFallback(row);
     window.__HPP_GSHEET_SYNC_LOCKED = true;
@@ -9697,6 +9777,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
 
     function scheduleRefresh() {
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       window.clearTimeout(updateTimer);
       updateTimer = window.setTimeout(refreshPremiumUi, 60);
     }
@@ -11270,6 +11351,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     };
 
     function scheduleRefresh() {
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       window.clearTimeout(timer);
       timer = window.setTimeout(refresh, 90);
     }
