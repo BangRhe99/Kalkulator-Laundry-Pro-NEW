@@ -6218,6 +6218,10 @@
       patchRowApply();
       patchPopulateForm();
       document.addEventListener('change', function(event) {
+        if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+          console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+          return;
+        }
         if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
         if (event.target && (event.target.id === 'inputNamaHPP' || event.target.closest('#tab-nota'))) {
           if (event.target.id === 'notaAppFeeType') {
@@ -6967,6 +6971,10 @@ window.saveGasHPPData = function(event) {
   document.addEventListener('DOMContentLoaded', function() {
     syncNewOrExistingGasForm();
     document.addEventListener('change', function(event) {
+      if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+        console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+        return;
+      }
       if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori')) setTimeout(syncNewOrExistingGasForm, 60);
     });
@@ -7291,6 +7299,10 @@ window.saveGasHPPData = function(event) {
     zettRenderElectricAnalysisForm();
     setTimeout(function() { if (typeof window.calculateListrik === 'function') window.calculateListrik(); }, 80);
     document.addEventListener('change', function(event) {
+      if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+        console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+        return;
+      }
       if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori')) {
         setTimeout(function() { zettRenderElectricAnalysisForm(); window.calculateListrik(); }, 60);
@@ -7551,6 +7563,10 @@ window.saveGasHPPData = function(event) {
     zettRenderWaterAnalysisForm();
     window.calculateAir();
     document.addEventListener('change', function(event) {
+      if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+        console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+        return;
+      }
       if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori' || event.target.id === 'toggleSetrikaListrik')) {
         setTimeout(window.calculateAir, 60);
@@ -7562,23 +7578,28 @@ window.saveGasHPPData = function(event) {
 function zettSetInputValue(id, value) {
   const el = document.getElementById(id);
   if (!el) return;
+  if (id === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = true;
 
   if (el.type === 'checkbox') {
     el.checked = value === true || value === 'TRUE' || value === 'Ya' || value === 'Aktif' || value === '1';
+    if (id === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = false;
     return;
   }
 
   if (id === 'inputGasHarga') {
     el.value = value == null || value === '' ? '' : zettFormatNumberID(value);
+    if (id === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = false;
     return;
   }
 
   el.value = value == null ? '' : value;
+  if (id === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = false;
 }
 
 function zettSetSelectValue(id, value) {
   const el = document.getElementById(id);
   if (!el || value == null) return;
+  if (id === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = true;
 
   const raw = String(value).trim();
   el.value = raw;
@@ -7590,6 +7611,7 @@ function zettSetSelectValue(id, value) {
       }
     });
   }
+  if (id === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = false;
 }
 
 function zettGetHPPMasterDataSources() {
@@ -11504,6 +11526,10 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       }
 
       document.addEventListener('change', event => {
+        if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+          console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+          return;
+        }
         if (event.target && (event.target.id === 'inputNamaHPP' || event.target.closest('#view-hpp'))) scheduleRefresh();
       });
       document.addEventListener('input', event => {

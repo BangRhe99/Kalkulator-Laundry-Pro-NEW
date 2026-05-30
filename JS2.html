@@ -375,7 +375,9 @@ function applyCabangUIData() {
             .join('');
         
         const isValidHPP = curHPP && masterDataCabang.some(c => String(c.namaOutlet) === String(curHPP));
+        window.__HPP_PROGRAMMATIC_UPDATE__ = true;
         selectHPP.value = isValidHPP ? curHPP : '';
+        window.__HPP_PROGRAMMATIC_UPDATE__ = false;
         
         if (selectHPP.value && typeof populateFormHPP === 'function') {
             if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
@@ -1012,12 +1014,15 @@ function formatRupiah(angka) {
 function safeSetSelect(elementId, targetValue) {
     const el = document.getElementById(elementId);
     if(!el || !targetValue) return;
-    let cleanVal = String(targetValue).trim(); el.value = cleanVal;
+    let cleanVal = String(targetValue).trim();
+    if (elementId === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = true;
+    el.value = cleanVal;
     if(el.value !== cleanVal) {
         for(let opt of el.options) {
             if(opt.value.toLowerCase() === cleanVal.toLowerCase() || opt.textContent.trim().toLowerCase() === cleanVal.toLowerCase()) { el.value = opt.value; break; }
         }
     }
+    if (elementId === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = false;
 }
 
 function showFormKapasitas(isNew = true) {
@@ -1157,7 +1162,11 @@ function pilihCabang(namaCabang, cardEl) {
 
     document.getElementById('inputNama').value = cabang.namaOutlet;
     const globalHeaderDropdown = document.getElementById('inputNamaHPP');
-    if(globalHeaderDropdown) globalHeaderDropdown.value = cabang.namaOutlet;
+    if(globalHeaderDropdown) {
+        window.__HPP_PROGRAMMATIC_UPDATE__ = true;
+        globalHeaderDropdown.value = cabang.namaOutlet;
+        window.__HPP_PROGRAMMATIC_UPDATE__ = false;
+    }
     if(document.getElementById('inputKategori')) document.getElementById('inputKategori').value = cabang.kategori || 'Drop Off/Kiloan';
     
     let jBuka = formatJamOperasional(cabang.jamBuka);
@@ -1617,6 +1626,10 @@ if (!window.__zettHPPSelectListenerBound) {
     window.__zettHPPSelectListenerBound = true;
     document.addEventListener('change', function(e) {
         if (!e.target || e.target.id !== 'inputNamaHPP') return;
+        if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+            console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+            return;
+        }
         const outletName = String(e.target.value || '').trim();
         const handledSwitch = window.__HPP_SAFE_SWITCH_LAST || {};
         if (
@@ -2958,6 +2971,10 @@ async function prosesSimpanBEP() {
     document.addEventListener('change', function(event) {
       if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (!event.target || event.target.id !== 'inputNamaHPP') return;
+      if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+        console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+        return;
+      }
       if (window.__HPP_SAFE_SWITCH_ACTIVE === true) return;
       showOutletSoftLoading();
       window.setTimeout(function() {

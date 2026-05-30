@@ -228,7 +228,11 @@
       if (!el) return;
       var current = id === 'inputNamaHPP' ? (el.value || '') : (selectedName || el.value || '');
       el.innerHTML = html;
-      if (current) el.value = current;
+      if (current) {
+        if (id === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = true;
+        el.value = current;
+        if (id === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = false;
+      }
       if (id !== 'inputNamaHPP' && !el.value && outlets.length > 0) el.value = outlets[0].namaOutlet;
       if (id === 'inputNamaHPP' && !el.value && typeof resetHPPDashboardToZero === 'function') resetHPPDashboardToZero();
     });
@@ -418,7 +422,11 @@
         var selectedHPP = selectHPP ? String(selectHPP.value || '').trim() : '';
 
         if (!selectedHPP) {
-          if (selectHPP) selectHPP.value = '';
+          if (selectHPP) {
+            window.__HPP_PROGRAMMATIC_UPDATE__ = true;
+            selectHPP.value = '';
+            window.__HPP_PROGRAMMATIC_UPDATE__ = false;
+          }
           if (typeof resetHPPDashboardToZero === 'function') {
             resetHPPDashboardToZero();
           }
@@ -2186,6 +2194,10 @@
   }
 
   window.zettLoadBEPFixedCost = function(outletName, options) {
+    if (document.querySelector('#view-hpp:not(.hidden)') || document.querySelector('.hpp-container') || document.body?.classList?.contains('hpp-page')) {
+      console.warn('[STAGE_5_BEP_BLOCKED_WHILE_HPP_ACTIVE]');
+      return;
+    }
     var outlet = String(outletName || selectedOutlet()).trim();
     var config = options || {};
     var isBepPage = !!(document.body && document.body.classList && document.body.classList.contains('bep-active'));
@@ -2274,6 +2286,10 @@
 
   var originalHandleOutlet = window.handleGlobalOutletChange;
   window.handleGlobalOutletChange = function(value) {
+    if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+      console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+      return;
+    }
     var isBepPage = !!(document.body && document.body.classList && document.body.classList.contains('bep-active'));
     var hppView = document.getElementById('view-hpp');
     var isHppPage = !!(hppView && !hppView.classList.contains('hidden'));
