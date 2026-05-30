@@ -1048,6 +1048,28 @@
       var isSwitchingHPPOutlet = false;
       var latestHPPOutletRequestId = window.latestHPPOutletRequestId || 0;
       window.ZETT_DEBUG_HPP_OUTLET = window.ZETT_DEBUG_HPP_OUTLET ?? true;
+      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_2_ACA_RUNTIME');
+      if (!window.__HPP_STAGE2_GLOBAL_ERROR_BOUND) {
+        window.__HPP_STAGE2_GLOBAL_ERROR_BOUND = true;
+        var previousWindowOnError = window.onerror;
+        window.onerror = function(message, source, lineno, colno, error) {
+          console.error('[GLOBAL_RUNTIME_ERROR]', {
+            message: message,
+            source: source,
+            lineno: lineno,
+            colno: colno,
+            error: error,
+            stack: error && error.stack
+          });
+          if (typeof previousWindowOnError === 'function') {
+            return previousWindowOnError.apply(this, arguments);
+          }
+          return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+          console.error('[GLOBAL_UNHANDLED_PROMISE_REJECTION]', event.reason);
+        });
+      }
 
       window.currentHPPOutlet = window.currentHPPOutlet || '';
       window.hppDashboardCache = window.hppDashboardCache || {};
@@ -1061,6 +1083,12 @@
       function hppDebugError() {
         if (!window.ZETT_DEBUG_HPP_OUTLET) return;
         try { console.error.apply(console, arguments); } catch (error) {}
+      }
+      function hppTrace(label, payload) {
+        try {
+          if (arguments.length > 1) console.log(label, payload);
+          else console.log(label);
+        } catch (error) {}
       }
       function ensureBranchLoader() {
         var existing = byId('zett-branch-premium-loader');
@@ -1113,6 +1141,7 @@
 
       function byId(id) { return document.getElementById(id); }
       function norm(value) { return String(value || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+      function normalizeOutletNameHPP(value) { return norm(value); }
       function currentOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
       function safeNumberHPP(value) {
         if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
@@ -1217,7 +1246,7 @@
         return sanitizeHPPValues({ gas: gas, listrik: listrik, air: air, packing: packing, bahan: bahan, nota: nota });
       }
       function findRow(outlet) {
-        var name = norm(outlet);
+        var name = normalizeOutletNameHPP(outlet);
         var sources = [];
         if (Array.isArray(window.__ZETT_FRESH_HPP_ROWS)) sources.push(window.__ZETT_FRESH_HPP_ROWS);
         if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) sources.push(masterDataHPP);
@@ -1226,22 +1255,54 @@
           if (window.APP_STATE?.data?.master?.hpp) sources.push(window.APP_STATE.data.master.hpp);
         } catch (error) {}
 
+        var availableOutlets = [];
+        sources.forEach(function(rows) {
+          if (!Array.isArray(rows)) return;
+          rows.forEach(function(item) {
+            availableOutlets.push(item?.namaOutlet || item?.outlet || item?.cabang || item?.namaCabang || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '');
+          });
+        });
+        hppTrace('[HPP_OUTLET_MATCH_DEBUG]', {
+          selectedOutlet: outlet,
+          normalizedSelected: name,
+          availableOutlets: availableOutlets
+        });
+
         for (var s = 0; s < sources.length; s++) {
           var found = sources[s].find(function(item) {
-            return norm(item?.namaOutlet || item?.['Nama Outlet'] || item?.['Nama_Outlet']) === name;
+            var itemName = item?.namaOutlet || item?.outlet || item?.cabang || item?.namaCabang || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '';
+            return normalizeOutletNameHPP(itemName) === name;
           });
           if (found) return found;
         }
         return null;
       }
       function renderValues(values, source) {
+        hppTrace('[HPP_TRACE_09_BEFORE_RENDER_VALUES]');
+        window.__HPP_RENDER_COUNTER__ = window.__HPP_RENDER_COUNTER__ || 0;
+        window.__HPP_RENDER_COUNTER__ += 1;
+        console.log('[HPP_RENDER_COUNTER]', window.__HPP_RENDER_COUNTER__);
+        window.clearTimeout(window.__HPP_RENDER_COUNTER_RESET_TIMER__);
+        window.__HPP_RENDER_COUNTER_RESET_TIMER__ = window.setTimeout(function() {
+          window.__HPP_RENDER_COUNTER__ = 0;
+        }, 1800);
+        if (window.__HPP_RENDER_COUNTER__ > 30) {
+          console.warn('[HPP_RENDER_LOOP_GUARD]', {
+            count: window.__HPP_RENDER_COUNTER__,
+            source: source,
+            outlet: currentOutlet()
+          });
+          return;
+        }
         values = sanitizeHPPValues(values);
         var total = syncState(values);
         requestAnimationFrame(function() {
           var domWrites = [];
           if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
+            hppTrace('[HPP_TRACE_10_BEFORE_RENDER_DASHBOARD]');
             window.zettHPPUpdateDashboardFromState(source || 'hpp-fast-switch');
           } else if (window.StateMachine && typeof window.StateMachine.renderDashboard === 'function') {
+            hppTrace('[HPP_TRACE_10_BEFORE_RENDER_DASHBOARD]');
             window.StateMachine.renderDashboard();
           } else {
             var totalEl = byId('dash-hpp-total');
@@ -1268,6 +1329,7 @@
       }
       function renderHPPZeroState() {
         destroyLegacyHPPChartIfAny();
+        console.warn('[HPP_ROW_NOT_FOUND_ZERO_STATE]', currentOutlet());
         renderValues({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 }, 'hpp-zero-state');
         if (typeof window.zettResetHPPProcessCardsToZero === 'function') {
           try { window.zettResetHPPProcessCardsToZero(); } catch (error) {}
@@ -1307,11 +1369,18 @@
       }
       function applyRowAtomic(outlet, row, requestId, source) {
         if (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== norm(outlet)) return;
+        if (!row || typeof row !== 'object' || Array.isArray(row)) {
+          console.warn('[HPP_ROW_NOT_FOUND_ZERO_STATE]', outlet);
+          renderHPPZeroState();
+          return;
+        }
         window.__HPP_ATOMIC_RENDER_LOCK = true;
         try {
           hppDebugLog('[HPP_RENDER_START]', outlet);
           hppDebugLog('[HPP_OUTLET_DATA_RAW]', row || {});
           hppDebugLog('[HPP_OUTLET_DATA_NORMALIZED]', sanitizeHPPValues(fallbackValuesFromRow(row || {})));
+          hppTrace('[HPP_TRACE_06_ROW_KEYS]', Object.keys(row || {}));
+          hppTrace('[HPP_TRACE_07_BEFORE_APPLY_ROW]', row);
           window.currentHPPOutlet = outlet;
           if (typeof zettStoreFreshHPPRow === 'function' && row) zettStoreFreshHPPRow(row);
           if (typeof zettApplyHPPRowToForm === 'function' && row) zettApplyHPPRowToForm(row);
@@ -1326,11 +1395,17 @@
           allowPopulate = false;
           window.__HPP_ATOMIC_RENDER_LOCK = false;
         }
+        hppTrace('[HPP_TRACE_08_AFTER_APPLY_ROW]', {
+          hppDataState: window.hppDataState || null,
+          appStateHpp: window.APP_STATE?.data?.hpp || null
+        });
         captureAndCache(outlet, row, source);
         hppDebugLog('[HPP_RENDER_DONE]', outlet);
+        hppTrace('[HPP_TRACE_DONE]', outlet);
       }
       function fetchOutletRow(outlet, requestId, force) {
-        var normalized = norm(outlet);
+        var normalized = normalizeOutletNameHPP(outlet);
+        hppTrace('[HPP_TRACE_03_FETCH_START]', normalized);
         if (!outlet || typeof google === 'undefined' || !google.script || !google.script.run) {
           setSoftLoading(false);
           renderHPPZeroState();
@@ -1348,10 +1423,13 @@
             if (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== normalized) return;
             setSoftLoading(false);
             hppDebugLog('[HPP_OUTLET_DATA_RAW]', response);
+            hppTrace('[HPP_TRACE_04_FETCH_RESULT_RAW]', response);
             if (!response || response.status !== 'success' || !response.data) {
+              hppTrace('[HPP_TRACE_05_ROW_FOUND]', false);
               renderHPPZeroState();
               return;
             }
+            hppTrace('[HPP_TRACE_05_ROW_FOUND]', true);
             hppDebugLog('[HPP_OUTLET_DATA_NORMALIZED]', sanitizeHPPValues(fallbackValuesFromRow(response.data)));
             applyRowAtomic(outlet, response.data, requestId, 'hpp-server');
           })
@@ -1378,6 +1456,9 @@
       function switchOutlet(outlet, options) {
         var config = options || {};
         var selected = String(outlet || '').trim();
+        var normalizedSelected = normalizeOutletNameHPP(selected);
+        hppTrace('[HPP_TRACE_01_OUTLET_SELECTED]', selected);
+        hppTrace('[HPP_TRACE_02_NORMALIZED_OUTLET]', normalizedSelected);
         var requestId = ++latestHPPOutletRequestId;
         window.latestHPPOutletRequestId = latestHPPOutletRequestId;
         hppDebugLog('[HPP_OUTLET_CHANGE]', selected);
@@ -1393,9 +1474,10 @@
         window.currentHPPOutlet = selected;
         window.__HPP_FAST_SWITCH_ACTIVE = true;
 
-        var normalized = norm(selected);
+        var normalized = normalizedSelected;
         var cached = window.hppDashboardCache[normalized];
         var row = (cached && cached.row) || findRow(selected);
+        hppTrace('[HPP_TRACE_05_ROW_FOUND]', !!row);
 
         if (cached && cached.values) {
           renderValues(cached.values, 'hpp-cache');
@@ -1457,6 +1539,13 @@
       window.handleGlobalOutletChange = function(value) {
         var outlet = String(value || '').trim();
         if (isSwitchingHPPOutlet) return;
+        try {
+          var activeEvent = window.event;
+          if (activeEvent && activeEvent.target && activeEvent.target.id === 'inputNamaHPP') {
+            if (typeof activeEvent.stopImmediatePropagation === 'function') activeEvent.stopImmediatePropagation();
+            else if (typeof activeEvent.stopPropagation === 'function') activeEvent.stopPropagation();
+          }
+        } catch (error) {}
         isSwitchingHPPOutlet = true;
         window.__HPP_SAFE_SWITCH_ACTIVE = true;
         window.__HPP_SAFE_SWITCH_LAST = { outlet: outlet, at: Date.now() };

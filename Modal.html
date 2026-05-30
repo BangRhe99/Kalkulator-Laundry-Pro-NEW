@@ -1972,6 +1972,7 @@
     },
     
     renderDashboard: function() {
+      console.log('[HPP_TRACE_10_BEFORE_RENDER_DASHBOARD]');
       const clean = value => {
         if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
         const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''));
@@ -2009,6 +2010,7 @@
       const labelsContainer = document.getElementById('hpp-donut-labels');
 
       if (donut && displayTotal > 0) {
+        console.log('[HPP_TRACE_11_BEFORE_UPDATE_DONUT]');
         let pctGas = (gas / displayTotal) * 100;
         let pctListrik = (listrik / displayTotal) * 100;
         let pctAir = (air / displayTotal) * 100;
@@ -5366,6 +5368,7 @@
     function updateDonut(total, values) {
       const donut = byId('hpp-donut-chart');
       if (!donut) return;
+      console.log('[HPP_TRACE_11_BEFORE_UPDATE_DONUT]');
       total = safeNumberHPP(total);
       values = values || {};
       HPP_TYPES.forEach(type => { values[type] = Math.max(0, safeNumberHPP(values[type])); });
@@ -5376,6 +5379,7 @@
       }
 
       if (total <= 0) {
+        console.warn('[HPP_DONUT_SKIP_INVALID_TOTAL]', { total: total, safeTotal: total });
         donut.style.setProperty('--p-gas', '0%');
         donut.style.setProperty('--p-listrik', '0%');
         donut.style.setProperty('--p-air', '0%');
@@ -5386,11 +5390,11 @@
         return;
       }
 
-      const pctGas = (values.gas / total) * 100;
-      const pctListrik = (values.listrik / total) * 100;
-      const pctAir = (values.air / total) * 100;
-      const pctPacking = (values.packing / total) * 100;
-      const pctBahan = (values.bahan / total) * 100;
+      const pctGas = Math.min(100, Math.max(0, (values.gas / total) * 100));
+      const pctListrik = Math.min(100, Math.max(0, (values.listrik / total) * 100));
+      const pctAir = Math.min(100, Math.max(0, (values.air / total) * 100));
+      const pctPacking = Math.min(100, Math.max(0, (values.packing / total) * 100));
+      const pctBahan = Math.min(100, Math.max(0, (values.bahan / total) * 100));
 
       const cGas = pctGas;
       const cListrik = cGas + pctListrik;
@@ -7594,7 +7598,20 @@ function zettGetHPPMasterDataSources() {
     }
   } catch (error) {}
 
-  return candidates.find(arr => Array.isArray(arr) && arr.length > 0) || [];
+  const merged = [];
+  const seen = {};
+  candidates.forEach(arr => {
+    if (!Array.isArray(arr)) return;
+    arr.forEach(row => {
+      if (!row || typeof row !== 'object') return;
+      const rowName = row.namaOutlet || row.outlet || row.cabang || row.namaCabang || row['Nama Outlet'] || row['Nama_Outlet'] || '';
+      const key = zettNormalizeName(rowName) || ('__row_' + merged.length);
+      if (seen[key]) return;
+      seen[key] = true;
+      merged.push(row);
+    });
+  });
+  return merged;
 }
 
 function zettFindActiveHPPRow() {
@@ -7623,8 +7640,14 @@ function zettFindActiveHPPRow() {
     return cache.row;
   }
 
+  console.log('[HPP_OUTLET_MATCH_DEBUG]', {
+    selectedOutlet: outletName,
+    normalizedSelected: activeName,
+    availableOutlets: dataHPP.map(item => item?.namaOutlet || item?.outlet || item?.cabang || item?.namaCabang || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '')
+  });
+
   const row = dataHPP.find(item => {
-    const itemName = item?.namaOutlet || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '';
+    const itemName = item?.namaOutlet || item?.outlet || item?.cabang || item?.namaCabang || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '';
     return zettNormalizeName(itemName) === activeName;
   });
 

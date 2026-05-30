@@ -626,6 +626,7 @@ const StateMachine = {
   },
   
   renderDashboard: function() {
+    console.log('[HPP_TRACE_10_BEFORE_RENDER_DASHBOARD]');
     const clean = value => {
       if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
       const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''));
@@ -668,6 +669,7 @@ const StateMachine = {
     const labelsContainer = document.getElementById('hpp-donut-labels');
 
     if (donut && t > 0) {
+      console.log('[HPP_TRACE_11_BEFORE_UPDATE_DONUT]');
       let pctGas = (gas / t) * 100; let pctListrik = (listrik / t) * 100; let pctAir = (air / t) * 100;
       let pctPacking = (packing / t) * 100; let pctBahan = (bahan / t) * 100; let pctNota = (nota / t) * 100;
       let cGas = pctGas; let cListrik = cGas + pctListrik; let cAir = cListrik + pctAir;
@@ -2941,6 +2943,7 @@ async function prosesSimpanBEP() {
     document.addEventListener('change', function(event) {
       if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (!event.target || event.target.id !== 'inputNamaHPP') return;
+      if (window.__HPP_SAFE_SWITCH_ACTIVE === true) return;
       showOutletSoftLoading();
       window.setTimeout(function() {
         applyPackingBusinessRules();

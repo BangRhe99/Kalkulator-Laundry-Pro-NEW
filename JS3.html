@@ -2269,8 +2269,10 @@
 
   var originalHandleOutlet = window.handleGlobalOutletChange;
   window.handleGlobalOutletChange = function(value) {
-    if (typeof originalHandleOutlet === 'function') originalHandleOutlet.apply(this, arguments);
-    window.zettLoadBEPFixedCost(value);
+    if (typeof originalHandleOutlet === 'function') return originalHandleOutlet.apply(this, arguments);
+    if (document.body && document.body.classList.contains('bep-active')) {
+      window.zettLoadBEPFixedCost(value);
+    }
   };
 
   var originalSwitch = window.switchMainTab;
