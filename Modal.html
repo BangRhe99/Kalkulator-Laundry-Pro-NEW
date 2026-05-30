@@ -1973,6 +1973,21 @@
     
     renderDashboard: function() {
       console.log('[HPP_TRACE_10_BEFORE_RENDER_DASHBOARD]');
+      if (!window.__HPP_RENDER_LOOP_ZEROING__) {
+        window.__HPP_RENDER_COUNTER__ = window.__HPP_RENDER_COUNTER__ || 0;
+        window.__HPP_RENDER_COUNTER__ += 1;
+        console.log('[HPP_RENDER_COUNTER]', window.__HPP_RENDER_COUNTER__);
+      }
+      if (!window.__HPP_RENDER_LOOP_ZEROING__ && window.__HPP_RENDER_COUNTER__ > 20) {
+        console.error('[HPP_RENDER_LOOP_DETECTED]', {
+          selectedOutlet: document.getElementById('inputNamaHPP')?.value || '',
+          counter: window.__HPP_RENDER_COUNTER__
+        });
+        if (typeof window.renderHPPZeroState === 'function') {
+          window.renderHPPZeroState(document.getElementById('inputNamaHPP')?.value || '', { skipRenderLoopCounter: true });
+        }
+        return;
+      }
       const clean = value => {
         if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
         const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''));
@@ -5415,6 +5430,22 @@
     }
 
     function updateDashboardFromState(source) {
+      console.log('[HPP_TRACE_10_BEFORE_RENDER_DASHBOARD]');
+      if (!window.__HPP_RENDER_LOOP_ZEROING__) {
+        window.__HPP_RENDER_COUNTER__ = window.__HPP_RENDER_COUNTER__ || 0;
+        window.__HPP_RENDER_COUNTER__ += 1;
+        console.log('[HPP_RENDER_COUNTER]', window.__HPP_RENDER_COUNTER__);
+      }
+      if (!window.__HPP_RENDER_LOOP_ZEROING__ && window.__HPP_RENDER_COUNTER__ > 20) {
+        console.error('[HPP_RENDER_LOOP_DETECTED]', {
+          selectedOutlet: byId('inputNamaHPP')?.value || '',
+          counter: window.__HPP_RENDER_COUNTER__
+        });
+        if (typeof window.renderHPPZeroState === 'function') {
+          window.renderHPPZeroState(byId('inputNamaHPP')?.value || '', { skipRenderLoopCounter: true });
+        }
+        return;
+      }
       const sourceTag = source || 'state';
       if (window.__HPP_GSHEET_SYNC_LOCKED === true && sourceTag !== 'gsheet') {
         console.log('HPP dashboard update skipped because GSheet sync is locked');
@@ -6469,6 +6500,7 @@
 
 function zettNormalizeName(value) {
   return String(value || '')
+    .replace(/\u00A0/g, ' ')
     .trim()
     .toLowerCase()
     .replace(/\s+/g, ' ');

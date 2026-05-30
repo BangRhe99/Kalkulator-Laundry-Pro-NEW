@@ -2188,6 +2188,11 @@
   window.zettLoadBEPFixedCost = function(outletName, options) {
     var outlet = String(outletName || selectedOutlet()).trim();
     var config = options || {};
+    var isBepPage = !!(document.body && document.body.classList && document.body.classList.contains('bep-active'));
+    if (!isBepPage) {
+      console.warn('[BEP_LOAD_SKIPPED_NOT_ON_BEP_PAGE]', outlet);
+      return;
+    }
     window.clearTimeout(bepLoadTimer);
     if (!outlet) {
       loadBEPDashboardByOutlet('', { force: true });
@@ -2269,8 +2274,19 @@
 
   var originalHandleOutlet = window.handleGlobalOutletChange;
   window.handleGlobalOutletChange = function(value) {
-    if (typeof originalHandleOutlet === 'function') return originalHandleOutlet.apply(this, arguments);
-    if (document.body && document.body.classList.contains('bep-active')) {
+    var isBepPage = !!(document.body && document.body.classList && document.body.classList.contains('bep-active'));
+    var hppView = document.getElementById('view-hpp');
+    var isHppPage = !!(hppView && !hppView.classList.contains('hidden'));
+    if (typeof originalHandleOutlet === 'function') {
+      var result = originalHandleOutlet.apply(this, arguments);
+      if (isHppPage && !isBepPage) console.warn('[HPP_ISOLATION_SKIP_BEP_LOAD]', value);
+      return result;
+    }
+    if (isHppPage && !isBepPage) {
+      console.warn('[HPP_ISOLATION_SKIP_BEP_LOAD]', value);
+      return;
+    }
+    if (isBepPage) {
       window.zettLoadBEPFixedCost(value);
     }
   };
@@ -2286,7 +2302,9 @@
   function init() {
     emptyState(selectedOutlet());
     renderAll();
-    if (selectedOutlet()) window.zettLoadBEPFixedCost(selectedOutlet(), { immediate: true });
+    if (document.body && document.body.classList.contains('bep-active') && selectedOutlet()) {
+      window.zettLoadBEPFixedCost(selectedOutlet(), { immediate: true });
+    }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();

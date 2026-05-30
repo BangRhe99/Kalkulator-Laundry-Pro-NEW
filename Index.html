@@ -997,7 +997,11 @@
       }
 
       if (typeof window.zettLoadBEPFixedCost === 'function') {
-        window.zettLoadBEPFixedCost(value);
+        if (document.body && document.body.classList && document.body.classList.contains('bep-active')) {
+          window.zettLoadBEPFixedCost(value);
+        } else {
+          console.warn('[HPP_ISOLATION_SKIP_BEP_LOAD]', value);
+        }
       }
 
     }
@@ -1048,7 +1052,7 @@
       var isSwitchingHPPOutlet = false;
       var latestHPPOutletRequestId = window.latestHPPOutletRequestId || 0;
       window.ZETT_DEBUG_HPP_OUTLET = window.ZETT_DEBUG_HPP_OUTLET ?? true;
-      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_2_ACA_RUNTIME');
+      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_4_ACA_ISOLATION');
       if (!window.__HPP_STAGE2_GLOBAL_ERROR_BOUND) {
         window.__HPP_STAGE2_GLOBAL_ERROR_BOUND = true;
         var previousWindowOnError = window.onerror;
@@ -1140,9 +1144,61 @@
       window.zettHideBranchLoader = hideBranchLoader;
 
       function byId(id) { return document.getElementById(id); }
-      function norm(value) { return String(value || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+      function norm(value) { return String(value || '').replace(/\u00A0/g, ' ').trim().toLowerCase().replace(/\s+/g, ' '); }
       function normalizeOutletNameHPP(value) { return norm(value); }
       function currentOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+      function isOnHPPPage() {
+        var hppView = byId('view-hpp');
+        return !!(
+          (document.body && document.body.classList && document.body.classList.contains('hpp-page')) ||
+          (hppView && !hppView.classList.contains('hidden')) ||
+          document.querySelector('[data-page="hpp"]') ||
+          document.querySelector('.hpp-container')
+        );
+      }
+      function isOnBEPPage() {
+        return !!(document.body && document.body.classList && document.body.classList.contains('bep-active'));
+      }
+      function beginAcaTrace(selectedOutlet, requestId) {
+        var normalizedOutlet = normalizeOutletNameHPP(selectedOutlet);
+        window.__HPP_ACA_TRACE_ACTIVE__ = normalizedOutlet.indexOf('aca laundry') !== -1;
+        window.__HPP_ACA_TRACE_STEP__ = 'start';
+        if (!window.__HPP_ACA_TRACE_ACTIVE__) return;
+        console.group('[HPP_ACA_RUNTIME_TRACE]');
+        console.log('[01 selectedOutlet]', selectedOutlet);
+        console.log('[02 normalizedOutlet]', normalizedOutlet);
+        console.log('[03 currentPage]', {
+          hasInputNamaHPP: !!document.querySelector('#inputNamaHPP'),
+          url: location.href,
+          activeElement: document.activeElement && document.activeElement.id
+        });
+        console.log('[04 lockStatus]', {
+          hppLock: window.__HPP_OUTLET_SWITCH_LOCK__,
+          requestId: requestId
+        });
+      }
+      function acaStep(step, label, payload) {
+        window.__HPP_ACA_TRACE_STEP__ = step;
+        if (!window.__HPP_ACA_TRACE_ACTIVE__) return;
+        if (arguments.length > 2) console.log(label, payload);
+        else console.log(label);
+      }
+      function crashPoint(selectedOutlet, error) {
+        var normalizedOutlet = normalizeOutletNameHPP(selectedOutlet);
+        console.error('[HPP_ACA_RUNTIME_CRASH_POINT]', {
+          step: window.__HPP_ACA_TRACE_STEP__ || 'unknown',
+          selectedOutlet: selectedOutlet,
+          normalizedOutlet: normalizedOutlet,
+          error: error,
+          stack: error && error.stack
+        });
+      }
+      function endAcaTrace() {
+        if (!window.__HPP_ACA_TRACE_ACTIVE__) return;
+        console.log('[15 done]');
+        console.groupEnd();
+        window.__HPP_ACA_TRACE_ACTIVE__ = false;
+      }
       function safeNumberHPP(value) {
         if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
         var raw = String(value ?? '').trim();
@@ -1246,6 +1302,7 @@
         return sanitizeHPPValues({ gas: gas, listrik: listrik, air: air, packing: packing, bahan: bahan, nota: nota });
       }
       function findRow(outlet) {
+        acaStep('before findRow', '[05 beforeFetch]');
         var name = normalizeOutletNameHPP(outlet);
         var sources = [];
         if (Array.isArray(window.__ZETT_FRESH_HPP_ROWS)) sources.push(window.__ZETT_FRESH_HPP_ROWS);
@@ -1255,6 +1312,7 @@
           if (window.APP_STATE?.data?.master?.hpp) sources.push(window.APP_STATE.data.master.hpp);
         } catch (error) {}
 
+        acaStep('raw sources', '[06 rawSources]', sources);
         var availableOutlets = [];
         sources.forEach(function(rows) {
           if (!Array.isArray(rows)) return;
@@ -1262,6 +1320,12 @@
             availableOutlets.push(item?.namaOutlet || item?.outlet || item?.cabang || item?.namaCabang || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '');
           });
         });
+        acaStep('available outlets', '[07 availableOutlets]', availableOutlets);
+        if (window.__HPP_ACA_TRACE_ACTIVE__) {
+          console.table(availableOutlets.map(function(raw) {
+            return { raw: raw, normalized: normalizeOutletNameHPP(raw) };
+          }));
+        }
         hppTrace('[HPP_OUTLET_MATCH_DEBUG]', {
           selectedOutlet: outlet,
           normalizedSelected: name,
@@ -1273,11 +1337,21 @@
             var itemName = item?.namaOutlet || item?.outlet || item?.cabang || item?.namaCabang || item?.['Nama Outlet'] || item?.['Nama_Outlet'] || '';
             return normalizeOutletNameHPP(itemName) === name;
           });
-          if (found) return found;
+          if (found) {
+            acaStep('matched row', '[08 matchedRow]', found);
+            acaStep('matched row keys', '[09 matchedRowKeys]', Object.keys(found || {}));
+            return found;
+          }
         }
+        console.warn('[HPP_ACA_ROW_NOT_FOUND]', {
+          selectedOutlet: outlet,
+          normalizedSelected: name,
+          availableOutlets: availableOutlets
+        });
         return null;
       }
       function renderValues(values, source) {
+        acaStep('before renderValues', '[12 beforeRenderValues]');
         hppTrace('[HPP_TRACE_09_BEFORE_RENDER_VALUES]');
         window.__HPP_RENDER_COUNTER__ = window.__HPP_RENDER_COUNTER__ || 0;
         window.__HPP_RENDER_COUNTER__ += 1;
@@ -1285,13 +1359,16 @@
         window.clearTimeout(window.__HPP_RENDER_COUNTER_RESET_TIMER__);
         window.__HPP_RENDER_COUNTER_RESET_TIMER__ = window.setTimeout(function() {
           window.__HPP_RENDER_COUNTER__ = 0;
-        }, 1800);
-        if (window.__HPP_RENDER_COUNTER__ > 30) {
-          console.warn('[HPP_RENDER_LOOP_GUARD]', {
+        }, 3000);
+        if (window.__HPP_RENDER_COUNTER__ > 20) {
+          console.error('[HPP_RENDER_LOOP_DETECTED]', {
             count: window.__HPP_RENDER_COUNTER__,
+            selectedOutlet: currentOutlet(),
+            counter: window.__HPP_RENDER_COUNTER__,
             source: source,
             outlet: currentOutlet()
           });
+          renderHPPZeroState(currentOutlet(), { skipRenderLoopCounter: true });
           return;
         }
         values = sanitizeHPPValues(values);
@@ -1299,9 +1376,11 @@
         requestAnimationFrame(function() {
           var domWrites = [];
           if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
+            acaStep('before renderDashboard', '[13 beforeRenderDashboard]');
             hppTrace('[HPP_TRACE_10_BEFORE_RENDER_DASHBOARD]');
             window.zettHPPUpdateDashboardFromState(source || 'hpp-fast-switch');
           } else if (window.StateMachine && typeof window.StateMachine.renderDashboard === 'function') {
+            acaStep('before renderDashboard', '[13 beforeRenderDashboard]');
             hppTrace('[HPP_TRACE_10_BEFORE_RENDER_DASHBOARD]');
             window.StateMachine.renderDashboard();
           } else {
@@ -1327,16 +1406,30 @@
           window.hppCostChart = null;
         }
       }
-      function renderHPPZeroState() {
+      function renderHPPZeroState(outletName, options) {
+        var config = options || {};
         destroyLegacyHPPChartIfAny();
-        console.warn('[HPP_ROW_NOT_FOUND_ZERO_STATE]', currentOutlet());
-        renderValues({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 }, 'hpp-zero-state');
+        console.warn('[HPP_ROW_NOT_FOUND_ZERO_STATE]', outletName || currentOutlet());
+        if (config.skipRenderLoopCounter) {
+          syncState({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 });
+          try {
+            window.__HPP_RENDER_LOOP_ZEROING__ = true;
+            if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('hpp-zero-state-loop-guard');
+          } catch (error) {
+          } finally {
+            window.__HPP_RENDER_LOOP_ZEROING__ = false;
+          }
+        } else {
+          renderValues({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 }, 'hpp-zero-state');
+        }
         if (typeof window.zettResetHPPProcessCardsToZero === 'function') {
           try { window.zettResetHPPProcessCardsToZero(); } catch (error) {}
         }
         hideBranchLoaderAfterPaint();
         setSoftLoading(false);
+        endAcaTrace();
       }
+      window.renderHPPZeroState = renderHPPZeroState;
       function captureAndCache(outlet, row, source) {
         var values = sanitizeHPPValues(readState());
         var total = HPP_TYPES.reduce(function(sum, type) { return sum + values[type]; }, 0);
@@ -1370,12 +1463,13 @@
       function applyRowAtomic(outlet, row, requestId, source) {
         if (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== norm(outlet)) return;
         if (!row || typeof row !== 'object' || Array.isArray(row)) {
-          console.warn('[HPP_ROW_NOT_FOUND_ZERO_STATE]', outlet);
-          renderHPPZeroState();
+          console.warn('[HPP_FORCE_ZERO_STATE_INVALID_ROW]', outlet);
+          renderHPPZeroState(outlet);
           return;
         }
         window.__HPP_ATOMIC_RENDER_LOCK = true;
         try {
+          acaStep('before applyRowAtomic', '[10 beforeApplyRow]');
           hppDebugLog('[HPP_RENDER_START]', outlet);
           hppDebugLog('[HPP_OUTLET_DATA_RAW]', row || {});
           hppDebugLog('[HPP_OUTLET_DATA_NORMALIZED]', sanitizeHPPValues(fallbackValuesFromRow(row || {})));
@@ -1399,16 +1493,22 @@
           hppDataState: window.hppDataState || null,
           appStateHpp: window.APP_STATE?.data?.hpp || null
         });
+        acaStep('after apply row', '[11 afterApplyRowState]', {
+          hppDataState: window.hppDataState || null,
+          appStateHpp: window.APP_STATE?.data?.hpp || null
+        });
         captureAndCache(outlet, row, source);
         hppDebugLog('[HPP_RENDER_DONE]', outlet);
         hppTrace('[HPP_TRACE_DONE]', outlet);
+        endAcaTrace();
       }
       function fetchOutletRow(outlet, requestId, force) {
         var normalized = normalizeOutletNameHPP(outlet);
+        acaStep('before fetchOutletRow', '[05 beforeFetch]');
         hppTrace('[HPP_TRACE_03_FETCH_START]', normalized);
         if (!outlet || typeof google === 'undefined' || !google.script || !google.script.run) {
           setSoftLoading(false);
-          renderHPPZeroState();
+          renderHPPZeroState(outlet);
           return;
         }
         if (activeFetches[normalized] && !force) {
@@ -1426,7 +1526,7 @@
             hppTrace('[HPP_TRACE_04_FETCH_RESULT_RAW]', response);
             if (!response || response.status !== 'success' || !response.data) {
               hppTrace('[HPP_TRACE_05_ROW_FOUND]', false);
-              renderHPPZeroState();
+              renderHPPZeroState(outlet);
               return;
             }
             hppTrace('[HPP_TRACE_05_ROW_FOUND]', true);
@@ -1436,8 +1536,9 @@
           .withFailureHandler(function(error) {
             delete activeFetches[normalized];
             if (requestId === window.hppRenderRequestId) setSoftLoading(false);
-            if (requestId === window.hppRenderRequestId) renderHPPZeroState();
+            if (requestId === window.hppRenderRequestId) renderHPPZeroState(outlet);
             hppDebugError('[HPP_OUTLET_SWITCH_ERROR]', error);
+            crashPoint(outlet, error);
           })
           .getHPPRowByOutlet(outlet);
       }
@@ -1457,9 +1558,11 @@
         var config = options || {};
         var selected = String(outlet || '').trim();
         var normalizedSelected = normalizeOutletNameHPP(selected);
+        window.__HPP_RENDER_COUNTER__ = 0;
+        var requestId = ++latestHPPOutletRequestId;
+        beginAcaTrace(selected, requestId);
         hppTrace('[HPP_TRACE_01_OUTLET_SELECTED]', selected);
         hppTrace('[HPP_TRACE_02_NORMALIZED_OUTLET]', normalizedSelected);
-        var requestId = ++latestHPPOutletRequestId;
         window.latestHPPOutletRequestId = latestHPPOutletRequestId;
         hppDebugLog('[HPP_OUTLET_CHANGE]', selected);
         hppDebugLog('[HPP_OUTLET_REQUEST_ID]', requestId);
@@ -1490,6 +1593,7 @@
             fetchOutletRow(selected, requestId, false);
           }
         } else {
+          console.warn('[HPP_FORCE_ZERO_STATE_INVALID_ROW]', selected);
           setSoftLoading(true);
           fetchOutletRow(selected, requestId, true);
         }
@@ -1538,7 +1642,16 @@
 
       window.handleGlobalOutletChange = function(value) {
         var outlet = String(value || '').trim();
-        if (isSwitchingHPPOutlet) return;
+        if (isSwitchingHPPOutlet) {
+          console.warn('[HPP_DUPLICATE_OUTLET_CHANGE_BLOCKED]', outlet);
+          return;
+        }
+        if (window.__HPP_OUTLET_SWITCH_LOCK__) {
+          console.warn('[HPP_DUPLICATE_OUTLET_CHANGE_BLOCKED]', outlet);
+          return;
+        }
+        window.__HPP_OUTLET_SWITCH_LOCK__ = true;
+        var currentStep = 'start';
         try {
           var activeEvent = window.event;
           if (activeEvent && activeEvent.target && activeEvent.target.id === 'inputNamaHPP') {
@@ -1550,11 +1663,19 @@
         window.__HPP_SAFE_SWITCH_ACTIVE = true;
         window.__HPP_SAFE_SWITCH_LAST = { outlet: outlet, at: Date.now() };
         try {
+          currentStep = 'before switchOutlet';
           if (outlet) showBranchLoader();
           window.__HPP_FORCE_ZERO_DASHBOARD = false;
           window.__HPP_GSHEET_SYNC_LOCKED = false;
           switchOutlet(outlet);
-          try { if (typeof window.zettLoadBEPFixedCost === 'function') window.zettLoadBEPFixedCost(outlet); } catch (error) {}
+          if (typeof window.zettLoadBEPFixedCost === 'function') {
+            if (isOnHPPPage() && !isOnBEPPage()) {
+              console.warn('[HPP_ISOLATION_SKIP_BEP_LOAD]', outlet);
+            } else if (isOnBEPPage()) {
+              window.zettLoadBEPFixedCost(outlet);
+            }
+          }
+          currentStep = 'after switchOutlet';
           try { if (typeof window.updateHeaderKategoriLaundryInfo === 'function') window.updateHeaderKategoriLaundryInfo(); } catch (error) {}
           setTimeout(function() {
             try { if (typeof window.updateHeaderKategoriLaundryInfo === 'function') window.updateHeaderKategoriLaundryInfo(); } catch (error) {}
@@ -1563,9 +1684,20 @@
           try { if (typeof toggleActionButtons === 'function') toggleActionButtons(); } catch (error) {}
           try { if (typeof checkHPPLock === 'function') checkHPPLock(); } catch (error) {}
         } catch (error) {
-          hppDebugError('[HPP_OUTLET_SWITCH_ERROR]', error);
-          renderHPPZeroState();
+          hppDebugError('[HPP_OUTLET_SWITCH_FATAL_SAFE_ZERO_STATE]', {
+            selectedOutlet: outlet,
+            currentStep: currentStep,
+            error: error,
+            stack: error && error.stack
+          });
+          crashPoint(outlet, error);
+          try {
+            renderHPPZeroState(outlet);
+          } catch (zeroError) {
+            console.error('[HPP_ZERO_STATE_FAILED]', zeroError);
+          }
         } finally {
+          window.__HPP_OUTLET_SWITCH_LOCK__ = false;
           isSwitchingHPPOutlet = false;
           window.setTimeout(function() { window.__HPP_SAFE_SWITCH_ACTIVE = false; }, 900);
         }
