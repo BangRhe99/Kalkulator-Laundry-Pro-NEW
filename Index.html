@@ -1056,7 +1056,7 @@
       var isSwitchingHPPOutlet = false;
       var latestHPPOutletRequestId = window.latestHPPOutletRequestId || 0;
       window.ZETT_DEBUG_HPP_OUTLET = window.ZETT_DEBUG_HPP_OUTLET ?? true;
-      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_5_OOM_BYPASS');
+      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_6_LOADER_CLEAR');
       window.__HPP_PROGRAMMATIC_UPDATE__ = window.__HPP_PROGRAMMATIC_UPDATE__ || false;
       if (!window.__HPP_STAGE2_GLOBAL_ERROR_BOUND) {
         window.__HPP_STAGE2_GLOBAL_ERROR_BOUND = true;
@@ -1147,6 +1147,38 @@
 
       window.zettShowBranchLoader = showBranchLoader;
       window.zettHideBranchLoader = hideBranchLoader;
+
+      function clearHPPOutletLoaders() {
+        console.warn('[HPP_STAGE_6_HIDING_LOADER]');
+        try { hideBranchLoader(); } catch (error) {}
+        try { hideBranchLoaderAfterPaint(); } catch (error) {}
+        try { setSoftLoading(false); } catch (error) {}
+        try { if (typeof clearOutletSoftLoading === 'function') clearOutletSoftLoading(); } catch (error) {}
+        try { if (typeof hideLoading === 'function') hideLoading(true); } catch (error) {}
+        try { if (typeof zettHideLoading === 'function') zettHideLoading(true); } catch (error) {}
+        try { if (typeof Swal !== 'undefined' && Swal && typeof Swal.close === 'function') Swal.close(); } catch (error) {}
+        var selectors = [
+          '#zett-branch-premium-loader',
+          '#globalLoadingOverlay',
+          '.global-loading-overlay',
+          '.loader',
+          '#loader',
+          '.spinner-overlay',
+          '#loading-screen'
+        ];
+        selectors.forEach(function(selector) {
+          var el = document.querySelector(selector);
+          if (!el) return;
+          el.classList.remove('is-active');
+          if (selector !== '#zett-branch-premium-loader' && selector !== '#globalLoadingOverlay' && selector !== '.global-loading-overlay') {
+            el.classList.add('hidden');
+            el.style.display = 'none';
+          }
+          el.setAttribute('aria-hidden', 'true');
+        });
+        if (document.body) document.body.classList.remove('global-loading-active');
+      }
+      window.clearHPPOutletLoaders = clearHPPOutletLoaders;
 
       function byId(id) { return document.getElementById(id); }
       function norm(value) { return String(value || '').replace(/\u00A0/g, ' ').trim().toLowerCase().replace(/\s+/g, ' '); }
@@ -1572,15 +1604,18 @@
         hppDebugLog('[HPP_OUTLET_CHANGE]', selected);
         hppDebugLog('[HPP_OUTLET_REQUEST_ID]', requestId);
         if (normalizedSelected === 'aca laundry' || normalizedSelected === 'juragan laundry') {
-          console.warn('[HPP_STAGE_5_HARD_BYPASS_AKTIF]', selected);
+          console.warn('[HPP_STAGE_6_HARD_BYPASS_AKTIF]', selected);
           try {
             window.__HPP_PROGRAMMATIC_UPDATE__ = true;
             renderHPPZeroState(selected);
-            console.warn('[HPP_STAGE_5_HARD_BYPASS_SELESAI]', selected);
+            clearHPPOutletLoaders();
+            console.warn('[HPP_STAGE_6_HARD_BYPASS_SELESAI]', selected);
           } catch (err) {
-            console.error('[HPP_STAGE_5_HARD_BYPASS_GAGAL]', err);
+            console.error('[HPP_STAGE_6_HARD_BYPASS_GAGAL]', err);
           } finally {
             window.__HPP_PROGRAMMATIC_UPDATE__ = false;
+            window.__HPP_OUTLET_LOCK__ = false;
+            window.__HPP_OUTLET_SWITCH_LOCK__ = false;
           }
           return;
         }
@@ -1650,15 +1685,18 @@
         if (!outlet) return;
         var normalizedRefreshOutlet = normalizeOutletNameHPP(outlet);
         if (normalizedRefreshOutlet === 'aca laundry' || normalizedRefreshOutlet === 'juragan laundry') {
-          console.warn('[HPP_STAGE_5_HARD_BYPASS_AKTIF]', outlet);
+          console.warn('[HPP_STAGE_6_HARD_BYPASS_AKTIF]', outlet);
           try {
             window.__HPP_PROGRAMMATIC_UPDATE__ = true;
             renderHPPZeroState(outlet);
-            console.warn('[HPP_STAGE_5_HARD_BYPASS_SELESAI]', outlet);
+            clearHPPOutletLoaders();
+            console.warn('[HPP_STAGE_6_HARD_BYPASS_SELESAI]', outlet);
           } catch (err) {
-            console.error('[HPP_STAGE_5_HARD_BYPASS_GAGAL]', err);
+            console.error('[HPP_STAGE_6_HARD_BYPASS_GAGAL]', err);
           } finally {
             window.__HPP_PROGRAMMATIC_UPDATE__ = false;
+            window.__HPP_OUTLET_LOCK__ = false;
+            window.__HPP_OUTLET_SWITCH_LOCK__ = false;
           }
           return;
         }
@@ -1711,18 +1749,21 @@
           window.__HPP_GSHEET_SYNC_LOCKED = false;
           var normOutlet = normalizeOutletNameHPP(outlet);
           if (normOutlet === 'aca laundry' || normOutlet === 'juragan laundry') {
-            console.warn('[HPP_STAGE_5_HARD_BYPASS_AKTIF]', outlet);
+            console.warn('[HPP_STAGE_6_HARD_BYPASS_AKTIF]', outlet);
             try {
               if (typeof renderHPPZeroState === 'function') {
                 window.__HPP_PROGRAMMATIC_UPDATE__ = true;
                 renderHPPZeroState(outlet);
                 window.__HPP_PROGRAMMATIC_UPDATE__ = false;
               }
-              console.warn('[HPP_STAGE_5_HARD_BYPASS_SELESAI]', outlet);
+              clearHPPOutletLoaders();
+              console.warn('[HPP_STAGE_6_HARD_BYPASS_SELESAI]', outlet);
             } catch (err) {
-              console.error('[HPP_STAGE_5_HARD_BYPASS_GAGAL]', err);
+              console.error('[HPP_STAGE_6_HARD_BYPASS_GAGAL]', err);
             } finally {
               window.__HPP_PROGRAMMATIC_UPDATE__ = false;
+              window.__HPP_OUTLET_LOCK__ = false;
+              window.__HPP_OUTLET_SWITCH_LOCK__ = false;
             }
             return;
           }
