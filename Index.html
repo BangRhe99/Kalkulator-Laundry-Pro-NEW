@@ -564,7 +564,6 @@
         <select
           id="inputNamaHPP"
           class="bg-transparent pl-9 pr-8 py-2 w-full max-w-[200px] appearance-none outline-none cursor-pointer text-blue-700 font-extrabold"
-          onchange="handleGlobalOutletChange(this.value)"
         >
           <option value="">Pilih Cabang...</option>
         </select>
@@ -1056,7 +1055,7 @@
       var isSwitchingHPPOutlet = false;
       var latestHPPOutletRequestId = window.latestHPPOutletRequestId || 0;
       window.ZETT_DEBUG_HPP_OUTLET = window.ZETT_DEBUG_HPP_OUTLET ?? true;
-      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_6_1_NUKE_LOADER');
+      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_7_ZERO_EXECUTION');
       window.__HPP_PROGRAMMATIC_UPDATE__ = window.__HPP_PROGRAMMATIC_UPDATE__ || false;
       if (!window.__HPP_STAGE2_GLOBAL_ERROR_BOUND) {
         window.__HPP_STAGE2_GLOBAL_ERROR_BOUND = true;
@@ -1658,19 +1657,10 @@
         hppDebugLog('[HPP_OUTLET_CHANGE]', selected);
         hppDebugLog('[HPP_OUTLET_REQUEST_ID]', requestId);
         if (normalizedSelected === 'aca laundry' || normalizedSelected === 'juragan laundry') {
-          console.warn('[HPP_STAGE_6_HARD_BYPASS_AKTIF]', selected);
-          try {
-            window.__HPP_PROGRAMMATIC_UPDATE__ = true;
-            renderHPPZeroState(selected);
-            window.clearHPPOutletLoadersBrutal();
-            console.warn('[HPP_STAGE_6_HARD_BYPASS_SELESAI]', selected);
-          } catch (err) {
-            console.error('[HPP_STAGE_6_HARD_BYPASS_GAGAL]', err);
-          } finally {
-            window.__HPP_PROGRAMMATIC_UPDATE__ = false;
-            window.__HPP_OUTLET_LOCK__ = false;
-            window.__HPP_OUTLET_SWITCH_LOCK__ = false;
-          }
+          console.error('[STAGE_7_KARANTINA_AKTIF] Eksekusi dihentikan total untuk: ' + selected);
+          window.__HPP_OUTLET_LOCK__ = false;
+          window.__HPP_OUTLET_SWITCH_LOCK__ = false;
+          isSwitchingHPPOutlet = false;
           return;
         }
         removeAntiLoaderStyle();
@@ -1740,19 +1730,10 @@
         if (!outlet) return;
         var normalizedRefreshOutlet = normalizeOutletNameHPP(outlet);
         if (normalizedRefreshOutlet === 'aca laundry' || normalizedRefreshOutlet === 'juragan laundry') {
-          console.warn('[HPP_STAGE_6_HARD_BYPASS_AKTIF]', outlet);
-          try {
-            window.__HPP_PROGRAMMATIC_UPDATE__ = true;
-            renderHPPZeroState(outlet);
-            window.clearHPPOutletLoadersBrutal();
-            console.warn('[HPP_STAGE_6_HARD_BYPASS_SELESAI]', outlet);
-          } catch (err) {
-            console.error('[HPP_STAGE_6_HARD_BYPASS_GAGAL]', err);
-          } finally {
-            window.__HPP_PROGRAMMATIC_UPDATE__ = false;
-            window.__HPP_OUTLET_LOCK__ = false;
-            window.__HPP_OUTLET_SWITCH_LOCK__ = false;
-          }
+          console.error('[STAGE_7_KARANTINA_AKTIF] Eksekusi dihentikan total untuk: ' + outlet);
+          window.__HPP_OUTLET_LOCK__ = false;
+          window.__HPP_OUTLET_SWITCH_LOCK__ = false;
+          isSwitchingHPPOutlet = false;
           return;
         }
         var config = options || {};
@@ -1799,29 +1780,17 @@
         window.__HPP_SAFE_SWITCH_LAST = { outlet: outlet, at: Date.now() };
         try {
           currentStep = 'before switchOutlet';
+          var normOutlet = normalizeOutletNameHPP(outlet);
+          if (normOutlet === 'aca laundry' || normOutlet === 'juragan laundry') {
+            console.error('[STAGE_7_KARANTINA_AKTIF] Eksekusi dihentikan total untuk: ' + outlet);
+            window.__HPP_OUTLET_LOCK__ = false;
+            window.__HPP_OUTLET_SWITCH_LOCK__ = false;
+            isSwitchingHPPOutlet = false;
+            return;
+          }
           if (outlet) showBranchLoader();
           window.__HPP_FORCE_ZERO_DASHBOARD = false;
           window.__HPP_GSHEET_SYNC_LOCKED = false;
-          var normOutlet = normalizeOutletNameHPP(outlet);
-          if (normOutlet === 'aca laundry' || normOutlet === 'juragan laundry') {
-            console.warn('[HPP_STAGE_6_HARD_BYPASS_AKTIF]', outlet);
-            try {
-              if (typeof renderHPPZeroState === 'function') {
-                window.__HPP_PROGRAMMATIC_UPDATE__ = true;
-                renderHPPZeroState(outlet);
-                window.__HPP_PROGRAMMATIC_UPDATE__ = false;
-              }
-              window.clearHPPOutletLoadersBrutal();
-              console.warn('[HPP_STAGE_6_HARD_BYPASS_SELESAI]', outlet);
-            } catch (err) {
-              console.error('[HPP_STAGE_6_HARD_BYPASS_GAGAL]', err);
-            } finally {
-              window.__HPP_PROGRAMMATIC_UPDATE__ = false;
-              window.__HPP_OUTLET_LOCK__ = false;
-              window.__HPP_OUTLET_SWITCH_LOCK__ = false;
-            }
-            return;
-          }
           removeAntiLoaderStyle();
           switchOutlet(outlet);
           if (typeof window.zettLoadBEPFixedCost === 'function') {
@@ -1859,6 +1828,20 @@
           window.setTimeout(function() { window.__HPP_SAFE_SWITCH_ACTIVE = false; }, 900);
         }
       };
+
+      if (!window.__HPP_STAGE_7_SELECT_LISTENER_BOUND) {
+        window.__HPP_STAGE_7_SELECT_LISTENER_BOUND = true;
+        document.addEventListener('change', function(event) {
+          if (!event.target || event.target.id !== 'inputNamaHPP') return;
+          if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+            console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+            event.stopImmediatePropagation();
+            return;
+          }
+          event.stopImmediatePropagation();
+          window.handleGlobalOutletChange(event.target.value);
+        }, true);
+      }
 
       window.switchMainTab = function(tabName) {
         var hppOutletBeforeSwitch = tabName === 'hpp' ? currentOutlet() : '';
