@@ -1056,7 +1056,7 @@
       var isSwitchingHPPOutlet = false;
       var latestHPPOutletRequestId = window.latestHPPOutletRequestId || 0;
       window.ZETT_DEBUG_HPP_OUTLET = window.ZETT_DEBUG_HPP_OUTLET ?? true;
-      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_6_LOADER_CLEAR');
+      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_6_1_NUKE_LOADER');
       window.__HPP_PROGRAMMATIC_UPDATE__ = window.__HPP_PROGRAMMATIC_UPDATE__ || false;
       if (!window.__HPP_STAGE2_GLOBAL_ERROR_BOUND) {
         window.__HPP_STAGE2_GLOBAL_ERROR_BOUND = true;
@@ -1179,6 +1179,60 @@
         if (document.body) document.body.classList.remove('global-loading-active');
       }
       window.clearHPPOutletLoaders = clearHPPOutletLoaders;
+
+      function installAntiLoaderStyle() {
+        var existing = document.getElementById('hpp-stage-6-1-anti-loader-style');
+        if (existing) return;
+        var antiLoaderStyle = document.createElement('style');
+        antiLoaderStyle.id = 'hpp-stage-6-1-anti-loader-style';
+        antiLoaderStyle.innerHTML = [
+          '#globalLoadingOverlay.is-active,',
+          '#zett-branch-premium-loader.is-active {',
+          '  display: none !important;',
+          '  opacity: 0 !important;',
+          '  visibility: hidden !important;',
+          '  z-index: -9999 !important;',
+          '}'
+        ].join('\n');
+        document.head.appendChild(antiLoaderStyle);
+      }
+
+      function removeAntiLoaderStyle() {
+        var style = document.getElementById('hpp-stage-6-1-anti-loader-style');
+        if (style) style.remove();
+      }
+
+      window.clearHPPOutletLoadersBrutal = function() {
+        console.warn('[STAGE_6_1_BRUTAL_LOADER_KILL_START]');
+        installAntiLoaderStyle();
+        window.clearInterval(window.__HPP_STAGE_6_1_LOADER_KILL_INTERVAL__);
+        var attempts = 0;
+        window.__HPP_STAGE_6_1_LOADER_KILL_INTERVAL__ = window.setInterval(function() {
+          attempts += 1;
+          try { if (typeof hideLoading === 'function') hideLoading(true); } catch (error) {}
+          try { if (typeof zettHideLoading === 'function') zettHideLoading(true); } catch (error) {}
+          try { if (typeof Swal !== 'undefined' && Swal && typeof Swal.close === 'function') Swal.close(); } catch (error) {}
+          try { clearHPPOutletLoaders(); } catch (error) {}
+          var loaders = document.querySelectorAll('#globalLoadingOverlay, #zett-branch-premium-loader, .spinner-overlay, .loader-wrapper');
+          loaders.forEach(function(el) {
+            if (!el) return;
+            el.classList.remove('is-active');
+            el.classList.add('d-none');
+            el.style.display = 'none';
+            el.style.opacity = '0';
+            el.style.visibility = 'hidden';
+          });
+          if (document.body) document.body.classList.remove('global-loading-active');
+          var dashboard = document.getElementById('hpp-dashboard-view');
+          if (dashboard) dashboard.classList.remove('hpp-loading-soft');
+          if (attempts >= 15) {
+            window.clearInterval(window.__HPP_STAGE_6_1_LOADER_KILL_INTERVAL__);
+            window.__HPP_STAGE_6_1_LOADER_KILL_INTERVAL__ = null;
+            console.warn('[STAGE_6_1_BRUTAL_LOADER_KILL_STOPPED]');
+          }
+        }, 100);
+      };
+      window.removeHPPAntiLoaderStyle = removeAntiLoaderStyle;
 
       function byId(id) { return document.getElementById(id); }
       function norm(value) { return String(value || '').replace(/\u00A0/g, ' ').trim().toLowerCase().replace(/\s+/g, ' '); }
@@ -1608,7 +1662,7 @@
           try {
             window.__HPP_PROGRAMMATIC_UPDATE__ = true;
             renderHPPZeroState(selected);
-            clearHPPOutletLoaders();
+            window.clearHPPOutletLoadersBrutal();
             console.warn('[HPP_STAGE_6_HARD_BYPASS_SELESAI]', selected);
           } catch (err) {
             console.error('[HPP_STAGE_6_HARD_BYPASS_GAGAL]', err);
@@ -1619,6 +1673,7 @@
           }
           return;
         }
+        removeAntiLoaderStyle();
         if (!selected) {
           renderInitialZero();
           if (typeof window.updateHeaderKategoriLaundryInfo === 'function') window.updateHeaderKategoriLaundryInfo();
@@ -1689,7 +1744,7 @@
           try {
             window.__HPP_PROGRAMMATIC_UPDATE__ = true;
             renderHPPZeroState(outlet);
-            clearHPPOutletLoaders();
+            window.clearHPPOutletLoadersBrutal();
             console.warn('[HPP_STAGE_6_HARD_BYPASS_SELESAI]', outlet);
           } catch (err) {
             console.error('[HPP_STAGE_6_HARD_BYPASS_GAGAL]', err);
@@ -1756,7 +1811,7 @@
                 renderHPPZeroState(outlet);
                 window.__HPP_PROGRAMMATIC_UPDATE__ = false;
               }
-              clearHPPOutletLoaders();
+              window.clearHPPOutletLoadersBrutal();
               console.warn('[HPP_STAGE_6_HARD_BYPASS_SELESAI]', outlet);
             } catch (err) {
               console.error('[HPP_STAGE_6_HARD_BYPASS_GAGAL]', err);
@@ -1767,6 +1822,7 @@
             }
             return;
           }
+          removeAntiLoaderStyle();
           switchOutlet(outlet);
           if (typeof window.zettLoadBEPFixedCost === 'function') {
             if (isOnHPPPage() && !isOnBEPPage()) {
