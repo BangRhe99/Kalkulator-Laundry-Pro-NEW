@@ -609,14 +609,36 @@ const StateMachine = {
   },
   
   calculateTotal: function() {
-    const { gas, listrik, air, packing, bahan, nota } = APP_STATE.data.hpp;
+    const clean = value => {
+      if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+      const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''));
+      return Number.isFinite(number) ? number : 0;
+    };
+    const gas = Math.max(0, clean(APP_STATE.data.hpp.gas));
+    const listrik = Math.max(0, clean(APP_STATE.data.hpp.listrik));
+    const air = Math.max(0, clean(APP_STATE.data.hpp.air));
+    const packing = Math.max(0, clean(APP_STATE.data.hpp.packing));
+    const bahan = Math.max(0, clean(APP_STATE.data.hpp.bahan));
+    const nota = Math.max(0, clean(APP_STATE.data.hpp.nota));
+    Object.assign(APP_STATE.data.hpp, { gas, listrik, air, packing, bahan, nota });
     APP_STATE.data.hpp.total = gas + listrik + air + packing + bahan + nota;
     window.requestAnimationFrame(() => { this.renderDashboard(); });
   },
   
   renderDashboard: function() {
-    const t = APP_STATE.data.hpp.total;
-    const { gas, listrik, air, packing, bahan, nota } = APP_STATE.data.hpp;
+    const clean = value => {
+      if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+      const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''));
+      return Number.isFinite(number) ? number : 0;
+    };
+    const gas = Math.max(0, clean(APP_STATE.data.hpp.gas));
+    const listrik = Math.max(0, clean(APP_STATE.data.hpp.listrik));
+    const air = Math.max(0, clean(APP_STATE.data.hpp.air));
+    const packing = Math.max(0, clean(APP_STATE.data.hpp.packing));
+    const bahan = Math.max(0, clean(APP_STATE.data.hpp.bahan));
+    const nota = Math.max(0, clean(APP_STATE.data.hpp.nota));
+    const t = gas + listrik + air + packing + bahan + nota;
+    Object.assign(APP_STATE.data.hpp, { gas, listrik, air, packing, bahan, nota, total: t });
     
     const totalEl = document.getElementById('dash-hpp-total');
     if(totalEl && typeof formatRupiah === 'function') {
@@ -631,7 +653,8 @@ const StateMachine = {
       // Update percentages for balok
       const updatePct = (id, value) => {
         const el = document.getElementById(id);
-        if(el) el.innerText = t > 0 ? Math.round((value / t) * 100) + '%' : '0%';
+        const pct = t > 0 ? (value / t) * 100 : 0;
+        if(el) el.innerText = Number.isFinite(pct) ? Math.round(pct) + '%' : '0%';
       };
       updatePct('dash-card-gas-pct', gas);
       updatePct('dash-card-listrik-pct', listrik);
@@ -649,6 +672,13 @@ const StateMachine = {
       let pctPacking = (packing / t) * 100; let pctBahan = (bahan / t) * 100; let pctNota = (nota / t) * 100;
       let cGas = pctGas; let cListrik = cGas + pctListrik; let cAir = cListrik + pctAir;
       let cPacking = cAir + pctPacking; let cBahan = cPacking + pctBahan;
+
+      if (![pctGas, pctListrik, pctAir, pctPacking, pctBahan, pctNota, cGas, cListrik, cAir, cPacking, cBahan].every(Number.isFinite)) {
+        donut.style.setProperty('--p-gas', `0%`); donut.style.setProperty('--p-listrik', `0%`);
+        donut.style.setProperty('--p-air', `0%`); donut.style.setProperty('--p-packing', `0%`); donut.style.setProperty('--p-bahan', `0%`);
+        if (labelsContainer) labelsContainer.innerHTML = '';
+        return;
+      }
 
       donut.style.setProperty('--p-gas', `${cGas}%`); donut.style.setProperty('--p-listrik', `${cListrik}%`);
       donut.style.setProperty('--p-air', `${cAir}%`); donut.style.setProperty('--p-packing', `${cPacking}%`);
@@ -1571,6 +1601,16 @@ if (!window.__zettHPPSelectListenerBound) {
     document.addEventListener('change', function(e) {
         if (!e.target || e.target.id !== 'inputNamaHPP') return;
         const outletName = String(e.target.value || '').trim();
+        const handledSwitch = window.__HPP_SAFE_SWITCH_LAST || {};
+        if (
+            window.__HPP_SAFE_SWITCH_ACTIVE === true ||
+            (
+                String(handledSwitch.outlet || '').trim() === outletName &&
+                Date.now() - Number(handledSwitch.at || 0) < 1000
+            )
+        ) {
+            return;
+        }
         const switchToken = Date.now() + ':' + outletName;
         window.__zettBranchSwitchToken = switchToken;
         const cabang = masterDataCabang.find(c => String(c.namaOutlet || '').trim() === outletName);

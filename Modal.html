@@ -1951,7 +1951,18 @@
     },
     
     calculateTotal: function() {
-      const { gas, listrik, air, packing, bahan, nota } = APP_STATE.data.hpp;
+      const clean = value => {
+        if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+        const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''));
+        return Number.isFinite(number) ? number : 0;
+      };
+      const gas = clean(APP_STATE.data.hpp.gas);
+      const listrik = clean(APP_STATE.data.hpp.listrik);
+      const air = clean(APP_STATE.data.hpp.air);
+      const packing = clean(APP_STATE.data.hpp.packing);
+      const bahan = clean(APP_STATE.data.hpp.bahan);
+      const nota = clean(APP_STATE.data.hpp.nota);
+      Object.assign(APP_STATE.data.hpp, { gas, listrik, air, packing, bahan, nota });
       APP_STATE.data.hpp.total = gas + listrik + air + packing + bahan + nota;
       
       // Hardware accelerated UI rendering untuk 60fps frame rate
@@ -1961,8 +1972,17 @@
     },
     
     renderDashboard: function() {
-      const t = APP_STATE.data.hpp.total;
-      let { gas, listrik, air, packing, bahan, nota } = APP_STATE.data.hpp;
+      const clean = value => {
+        if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+        const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''));
+        return Number.isFinite(number) ? number : 0;
+      };
+      let gas = Math.max(0, clean(APP_STATE.data.hpp.gas));
+      let listrik = Math.max(0, clean(APP_STATE.data.hpp.listrik));
+      let air = Math.max(0, clean(APP_STATE.data.hpp.air));
+      let packing = Math.max(0, clean(APP_STATE.data.hpp.packing));
+      let bahan = Math.max(0, clean(APP_STATE.data.hpp.bahan));
+      let nota = Math.max(0, clean(APP_STATE.data.hpp.nota));
       if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
         listrik = 0;
         air = 0;
@@ -1970,7 +1990,8 @@
         APP_STATE.data.hpp.air = 0;
         APP_STATE.data.hpp.total = gas + packing + bahan + nota;
       }
-      const displayTotal = APP_STATE.data.hpp.total;
+      const displayTotal = gas + listrik + air + packing + bahan + nota;
+      Object.assign(APP_STATE.data.hpp, { gas, listrik, air, packing, bahan, nota, total: displayTotal });
       
       const totalEl = document.getElementById('dash-hpp-total');
       if(totalEl && typeof formatRupiah === 'function') {
@@ -2000,6 +2021,16 @@
         let cAir = cListrik + pctAir;
         let cPacking = cAir + pctPacking;
         let cBahan = cPacking + pctBahan;
+
+        if (![pctGas, pctListrik, pctAir, pctPacking, pctBahan, pctNota, cGas, cListrik, cAir, cPacking, cBahan].every(Number.isFinite)) {
+          donut.style.setProperty('--p-gas', `0%`);
+          donut.style.setProperty('--p-listrik', `0%`);
+          donut.style.setProperty('--p-air', `0%`);
+          donut.style.setProperty('--p-packing', `0%`);
+          donut.style.setProperty('--p-bahan', `0%`);
+          if (labelsContainer) labelsContainer.innerHTML = '';
+          return;
+        }
 
         donut.style.setProperty('--p-gas', `${cGas}%`);
         donut.style.setProperty('--p-listrik', `${cListrik}%`);
@@ -5235,15 +5266,37 @@
       return document.getElementById(id);
     }
 
+    function safeNumberHPP(value) {
+      if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+      let raw = String(value ?? '').trim();
+      if (!raw) return 0;
+      raw = raw.replace(/[^\d.,-]/g, '');
+      const hasComma = raw.includes(',');
+      const hasDot = raw.includes('.');
+      if (hasComma && hasDot) {
+        raw = raw.lastIndexOf(',') > raw.lastIndexOf('.')
+          ? raw.replace(/\./g, '').replace(',', '.')
+          : raw.replace(/,/g, '');
+      } else if (hasDot) {
+        const parts = raw.split('.');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw;
+      } else if (hasComma) {
+        const parts = raw.split(',');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw.replace(',', '.');
+      }
+      const number = Number(raw);
+      return Number.isFinite(number) ? number : 0;
+    }
+
     function parseNumber(value) {
-      return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
+      return safeNumberHPP(value);
     }
 
     function formatRupiahCompat(value) {
       if (typeof formatRupiah === 'function') {
-        try { return formatRupiah(Number(value) || 0); } catch (error) {}
+        try { return formatRupiah(safeNumberHPP(value)); } catch (error) {}
       }
-      return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
+      return 'Rp ' + safeNumberHPP(value).toLocaleString('id-ID');
     }
 
     function getState() {
@@ -5262,18 +5315,19 @@
 
     function syncToKnownStores() {
       const state = getState();
-      const total = HPP_TYPES.reduce((sum, type) => sum + (Number(state[type]) || 0), 0);
+      HPP_TYPES.forEach(type => { state[type] = Math.max(0, safeNumberHPP(state[type])); });
+      const total = HPP_TYPES.reduce((sum, type) => sum + state[type], 0);
 
       try {
         if (typeof APP_STATE !== 'undefined' && APP_STATE.data && APP_STATE.data.hpp) {
-          HPP_TYPES.forEach(type => { APP_STATE.data.hpp[type] = Number(state[type]) || 0; });
+          HPP_TYPES.forEach(type => { APP_STATE.data.hpp[type] = state[type]; });
           APP_STATE.data.hpp.total = total;
         }
       } catch (error) {}
 
       try {
         if (window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.hpp) {
-          HPP_TYPES.forEach(type => { window.APP_STATE.data.hpp[type] = Number(state[type]) || 0; });
+          HPP_TYPES.forEach(type => { window.APP_STATE.data.hpp[type] = state[type]; });
           window.APP_STATE.data.hpp.total = total;
         }
       } catch (error) {}
@@ -5287,7 +5341,7 @@
       const shouldZeroUtility = typeof window.zettIsHPPOutletNotSelected_ === 'function' &&
         window.zettIsHPPOutletNotSelected_() &&
         (type === 'listrik' || type === 'air');
-      state[type] = shouldZeroUtility ? 0 : (Number(value) || 0);
+      state[type] = shouldZeroUtility ? 0 : Math.max(0, safeNumberHPP(value));
       syncToKnownStores();
     }
 
@@ -5312,8 +5366,16 @@
     function updateDonut(total, values) {
       const donut = byId('hpp-donut-chart');
       if (!donut) return;
+      total = safeNumberHPP(total);
+      values = values || {};
+      HPP_TYPES.forEach(type => { values[type] = Math.max(0, safeNumberHPP(values[type])); });
 
-      if (!total) {
+      if (window.hppCostChart && typeof window.hppCostChart.destroy === 'function') {
+        try { window.hppCostChart.destroy(); } catch (error) {}
+        window.hppCostChart = null;
+      }
+
+      if (total <= 0) {
         donut.style.setProperty('--p-gas', '0%');
         donut.style.setProperty('--p-listrik', '0%');
         donut.style.setProperty('--p-air', '0%');
@@ -5336,6 +5398,11 @@
       const cPacking = cAir + pctPacking;
       const cBahan = cPacking + pctBahan;
 
+      if (![pctGas, pctListrik, pctAir, pctPacking, pctBahan, cGas, cListrik, cAir, cPacking, cBahan].every(Number.isFinite)) {
+        updateDonut(0, {});
+        return;
+      }
+
       donut.style.setProperty('--p-gas', cGas + '%');
       donut.style.setProperty('--p-listrik', cListrik + '%');
       donut.style.setProperty('--p-air', cAir + '%');
@@ -5352,12 +5419,12 @@
 
       const state = getState();
       const values = {
-        gas: Number(state.gas) || 0,
-        listrik: Number(state.listrik) || 0,
-        air: Number(state.air) || 0,
-        packing: Number(state.packing) || 0,
-        bahan: Number(state.bahan) || 0,
-        nota: Number(state.nota) || 0
+        gas: Math.max(0, safeNumberHPP(state.gas)),
+        listrik: Math.max(0, safeNumberHPP(state.listrik)),
+        air: Math.max(0, safeNumberHPP(state.air)),
+        packing: Math.max(0, safeNumberHPP(state.packing)),
+        bahan: Math.max(0, safeNumberHPP(state.bahan)),
+        nota: Math.max(0, safeNumberHPP(state.nota))
       };
 
       if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
@@ -5378,7 +5445,8 @@
 
         const pctEl = ensurePercentNode(type);
         if (pctEl) {
-          const pct = total > 0 ? ((values[type] / total) * 100).toFixed(1) : '0.0';
+          const pctValue = total > 0 ? (values[type] / total) * 100 : 0;
+          const pct = Number.isFinite(pctValue) ? pctValue.toFixed(1) : '0.0';
           pctEl.textContent = pct + '%';
         }
       });
