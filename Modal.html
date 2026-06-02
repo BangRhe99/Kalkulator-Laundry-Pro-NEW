@@ -9962,7 +9962,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     function isHppRefreshAllowed() {
       const view = byId('view-hpp');
-      return !!(view && !view.classList.contains('hidden'));
+      if (typeof window.zettIsActiveViewHPP_ === 'function') return window.zettIsActiveViewHPP_();
+      return !!(view && !view.classList.contains('hidden') && view.offsetParent !== null);
     }
 
     function scheduleRefresh() {
@@ -11574,7 +11575,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     function isHppProcessRefreshAllowed() {
       const view = byId('view-hpp');
-      return !!(view && !view.classList.contains('hidden'));
+      if (typeof window.zettIsActiveViewHPP_ === 'function') return window.zettIsActiveViewHPP_();
+      return !!(view && !view.classList.contains('hidden') && view.offsetParent !== null);
     }
 
     function scheduleRefresh() {

@@ -1248,15 +1248,26 @@
       function currentOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
       function isOnHPPPage() {
         var hppView = byId('view-hpp');
+        var bepView = byId('view-bep');
+        var bepActive = !!(
+          (document.body && document.body.classList && document.body.classList.contains('bep-active')) ||
+          (bepView && !bepView.classList.contains('hidden') && bepView.offsetParent !== null)
+        );
         return !!(
-          (document.body && document.body.classList && document.body.classList.contains('hpp-page')) ||
-          (hppView && !hppView.classList.contains('hidden')) ||
-          document.querySelector('[data-page="hpp"]') ||
-          document.querySelector('.hpp-container')
+          !bepActive &&
+          (
+            (document.body && document.body.classList && document.body.classList.contains('hpp-page')) ||
+            (hppView && !hppView.classList.contains('hidden') && hppView.offsetParent !== null) ||
+            document.querySelector('[data-page="hpp"].is-active')
+          )
         );
       }
       function isOnBEPPage() {
-        return !!(document.body && document.body.classList && document.body.classList.contains('bep-active'));
+        var bepView = byId('view-bep');
+        return !!(
+          (document.body && document.body.classList && document.body.classList.contains('bep-active')) ||
+          (bepView && !bepView.classList.contains('hidden') && bepView.offsetParent !== null)
+        );
       }
       function beginAcaTrace(selectedOutlet, requestId) {
         var normalizedOutlet = normalizeOutletNameHPP(selectedOutlet);

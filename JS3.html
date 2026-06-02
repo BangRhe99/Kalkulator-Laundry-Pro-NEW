@@ -796,6 +796,21 @@
     let bepProfitRenderTimer;
     let bepBaseMetricsCache = null;
     function calculateAll() {
+      var hppView = document.getElementById('view-hpp');
+      var hppActive = typeof window.zettIsActiveViewHPP_ === 'function'
+        ? window.zettIsActiveViewHPP_()
+        : !!(hppView && !hppView.classList.contains('hidden') && hppView.offsetParent !== null);
+      var bepActive = typeof window.zettIsActiveViewBEP_ === 'function'
+        ? window.zettIsActiveViewBEP_()
+        : !!(document.getElementById('view-bep') && !document.getElementById('view-bep').classList.contains('hidden') && document.getElementById('view-bep').offsetParent !== null);
+      var roiView = document.getElementById('view-roi');
+      var roiActive = !!(roiView && !roiView.classList.contains('hidden') && roiView.offsetParent !== null);
+      if (hppActive || (!bepActive && !roiActive)) {
+        if (window.ZETT_DEBUG_BEP_SAFE || window.ZETT_DEBUG_VIEW_ROUTING) {
+          try { console.log('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'calculateAll', activeView: hppActive ? 'hpp' : 'non-bep', t: Math.round(performance.now()) }); } catch (error) {}
+        }
+        return;
+      }
       clearTimeout(calcAllTimeout);
       calcAllTimeout = setTimeout(() => {
           _coreCalculateAll();
@@ -1458,6 +1473,33 @@
   function byId(id) { return document.getElementById(id); }
   function norm(value) { return String(value || '').trim().toLowerCase().replace(/\s+/g, ' '); }
   function selectedOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+  window.ZETT_DEBUG_VIEW_ROUTING = window.ZETT_DEBUG_VIEW_ROUTING ?? true;
+  window.ZETT_DEBUG_BEP_SAFE = window.ZETT_DEBUG_BEP_SAFE ?? true;
+  function viewVisible(view) {
+    return !!(view && !view.classList.contains('hidden') && view.offsetParent !== null);
+  }
+  function zettIsActiveViewHPP_() {
+    return viewVisible(byId('view-hpp'));
+  }
+  function zettIsActiveViewBEP_() {
+    return viewVisible(byId('view-bep')) || !!(document.body && document.body.classList && document.body.classList.contains('bep-active') && byId('view-bep') && !byId('view-bep').classList.contains('hidden'));
+  }
+  window.zettIsActiveViewHPP_ = window.zettIsActiveViewHPP_ || zettIsActiveViewHPP_;
+  window.zettIsActiveViewBEP_ = window.zettIsActiveViewBEP_ || zettIsActiveViewBEP_;
+  function activeViewName() {
+    if (zettIsActiveViewHPP_()) return 'hpp';
+    if (zettIsActiveViewBEP_()) return 'bep';
+    var active = document.querySelector('.main-view:not(.hidden)');
+    return active ? String(active.id || '').replace(/^view-/, '') : '';
+  }
+  function bepSafeLog(label, payload) {
+    if (!window.ZETT_DEBUG_BEP_SAFE && !window.ZETT_DEBUG_VIEW_ROUTING) return;
+    try { console.log(label, Object.assign({ outlet: selectedOutlet(), activeView: activeViewName(), token: bepActiveRequestId, t: Math.round(performance.now()) }, payload || {})); } catch (error) {}
+  }
+  function bepSafeError(label, payload) {
+    if (!window.ZETT_DEBUG_BEP_SAFE && !window.ZETT_DEBUG_VIEW_ROUTING) return;
+    try { console.error(label, Object.assign({ outlet: selectedOutlet(), activeView: activeViewName(), token: bepActiveRequestId, t: Math.round(performance.now()) }, payload || {})); } catch (error) {}
+  }
   function finite(n) { n = Number(n); return Number.isFinite(n) ? n : 0; }
   function parseSafe(value) {
     if (value === null || value === undefined || value === '') return 0;
@@ -1979,6 +2021,10 @@
   }
 
   function updateDisplays() {
+    if (!zettIsActiveViewBEP_()) {
+      bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'updateDisplays' });
+      return;
+    }
     var totals = calculateTotals();
     syncLegacyInputs();
     var selected = selectedOutlet();
@@ -2033,6 +2079,10 @@
   }
 
   function scheduleCalc() {
+    if (!zettIsActiveViewBEP_()) {
+      bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'scheduleCalc' });
+      return;
+    }
     updateDisplays();
     if (typeof window.renderBEPTopKPIOnly === 'function') {
       try { window.renderBEPTopKPIOnly(); } catch (error) {}
@@ -2098,27 +2148,53 @@
   };
 
   function applyServerData(data, outlet) {
-    emptyState(outlet);
-    if (data) {
-      state.outletName = data.namaOutlet || data['Nama Outlet'] || outlet || '';
-      state.category = data.category || data.kategoriLaundry || data['Kategori Laundry'] || '';
-      state.rentStatus = data.statusSewa || data['Status Sewa'] || 'Sewa';
-      state.annualRent = parseSafe(data.biayaSewaTahunan || data['Biaya Sewa Tahunan']);
-      state.monthlyRent = parseSafe(data.biayaSewaBulanan || data['Biaya Sewa Bulanan']) || (state.annualRent / 12);
-      state.rentNote = data.catatanSewa || data.catatan || data['Catatan'] || '';
-      state.salaries = Array.isArray(data.detailGaji) && data.detailGaji.length ? data.detailGaji : state.salaries;
-      state.machines = Array.isArray(data.detailMesin) ? data.detailMesin : state.machines;
-      state.internetProvider = data.providerInternet || data['Provider Internet'] || '';
-      state.internetMonthly = parseSafe(data.biayaInternetBulanan || data['Biaya Internet Bulanan']);
-      state.internetNote = data.catatanInternet || '';
-      state.others = Array.isArray(data.detailLainLain) && data.detailLainLain.length ? data.detailLainLain : state.others;
+    if (!zettIsActiveViewBEP_()) {
+      bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'applyServerData', targetOutlet: outlet });
+      return;
     }
-    renderAll();
-    setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : '', outlet ? 'ready' : 'idle');
-    scheduleCalc();
+    if (window.__BEP_RENDER_LOCK__) {
+      bepSafeLog('[BEP_RENDER_REENTRY_BLOCKED]', { fn: 'applyServerData', targetOutlet: outlet });
+      return;
+    }
+    window.__BEP_RENDER_LOCK__ = true;
+    bepSafeLog('[BEP_RENDER_START]', { fn: 'applyServerData', targetOutlet: outlet });
+    try {
+      emptyState(outlet);
+      if (data) {
+        state.outletName = data.namaOutlet || data['Nama Outlet'] || outlet || '';
+        state.category = data.category || data.kategoriLaundry || data['Kategori Laundry'] || '';
+        state.rentStatus = data.statusSewa || data['Status Sewa'] || 'Sewa';
+        state.annualRent = parseSafe(data.biayaSewaTahunan || data['Biaya Sewa Tahunan']);
+        state.monthlyRent = parseSafe(data.biayaSewaBulanan || data['Biaya Sewa Bulanan']) || (state.annualRent / 12);
+        state.rentNote = data.catatanSewa || data.catatan || data['Catatan'] || '';
+        state.salaries = Array.isArray(data.detailGaji) && data.detailGaji.length ? data.detailGaji : state.salaries;
+        state.machines = Array.isArray(data.detailMesin) ? data.detailMesin : state.machines;
+        state.internetProvider = data.providerInternet || data['Provider Internet'] || '';
+        state.internetMonthly = parseSafe(data.biayaInternetBulanan || data['Biaya Internet Bulanan']);
+        state.internetNote = data.catatanInternet || '';
+        state.others = Array.isArray(data.detailLainLain) && data.detailLainLain.length ? data.detailLainLain : state.others;
+      }
+      renderAll();
+      setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : '', outlet ? 'ready' : 'idle');
+      scheduleCalc();
+      bepSafeLog('[BEP_RENDER_DONE]', { fn: 'applyServerData', targetOutlet: outlet });
+    } catch (error) {
+      bepSafeError('[BEP_ERROR_CAUGHT]', { fn: 'applyServerData', targetOutlet: outlet, error: error, stack: error && error.stack });
+      try {
+        emptyState(outlet);
+        renderAll();
+        setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : '', outlet ? 'ready' : 'idle');
+      } catch (zeroError) {}
+    } finally {
+      window.__BEP_RENDER_LOCK__ = false;
+    }
   }
 
   function renderBEPDashboardFast(data, outlet) {
+    if (!zettIsActiveViewBEP_()) {
+      bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'renderBEPDashboardFast', targetOutlet: outlet });
+      return;
+    }
     applyServerData(data, outlet);
     setBEPLoadingState(false, false);
     pulseBEPDataSwap();
@@ -2128,6 +2204,11 @@
     var outlet = String(outletName || selectedOutlet()).trim();
     var key = bepCacheKey(outlet);
     var config = options || {};
+    if (!zettIsActiveViewBEP_()) {
+      bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'loadBEPDashboardByOutlet', targetOutlet: outlet });
+      return;
+    }
+    bepSafeLog('[BEP_LOAD_START]', { fn: 'loadBEPDashboardByOutlet', targetOutlet: outlet });
 
     if (!outlet) {
       ++bepActiveRequestId;
@@ -2138,6 +2219,7 @@
       setOutletState('', 'idle');
       scheduleCalc();
       setBEPLoadingState(false, false);
+      bepSafeLog('[BEP_LOAD_DONE]', { fn: 'loadBEPDashboardByOutlet', targetOutlet: outlet, zeroState: true });
       return;
     }
 
@@ -2175,17 +2257,35 @@
     google.script.run
       .withSuccessHandler(function(res) {
         delete bepActiveFetches[key];
-        if (requestId !== bepActiveRequestId || bepActiveOutletKey !== key || norm(selectedOutlet()) !== key) return;
+        if (!zettIsActiveViewBEP_()) {
+          bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'successHandler', targetOutlet: outlet, requestId: requestId });
+          return;
+        }
+        if (requestId !== bepActiveRequestId || bepActiveOutletKey !== key || norm(selectedOutlet()) !== key) {
+          bepSafeLog('[BEP_SKIP_STALE_RESPONSE]', { fn: 'successHandler', targetOutlet: outlet, requestId: requestId, activeRequestId: bepActiveRequestId });
+          return;
+        }
         var data = res && res.data ? res.data : null;
         var responseKey = data ? bepCacheKey(data.namaOutlet || data['Nama Outlet'] || outlet) : key;
-        if (responseKey && responseKey !== key) return;
+        if (responseKey && responseKey !== key) {
+          bepSafeLog('[BEP_SKIP_STALE_RESPONSE]', { fn: 'successHandler', targetOutlet: outlet, responseKey: responseKey, expectedKey: key });
+          return;
+        }
         if (data) cacheBEPOutletData(outlet, data);
         renderBEPDashboardFast(data, outlet);
+        bepSafeLog('[BEP_LOAD_DONE]', { fn: 'successHandler', targetOutlet: outlet, hasData: !!data });
       })
       .withFailureHandler(function(error) {
         delete bepActiveFetches[key];
-        console.error('Gagal load BEP Fixed:', error);
-        if (requestId !== bepActiveRequestId || bepActiveOutletKey !== key || norm(selectedOutlet()) !== key) return;
+        bepSafeError('[BEP_ERROR_CAUGHT]', { fn: 'failureHandler', targetOutlet: outlet, error: error });
+        if (!zettIsActiveViewBEP_()) {
+          bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'failureHandler', targetOutlet: outlet, requestId: requestId });
+          return;
+        }
+        if (requestId !== bepActiveRequestId || bepActiveOutletKey !== key || norm(selectedOutlet()) !== key) {
+          bepSafeLog('[BEP_SKIP_STALE_RESPONSE]', { fn: 'failureHandler', targetOutlet: outlet, requestId: requestId, activeRequestId: bepActiveRequestId });
+          return;
+        }
         setBEPLoadingState(false, false);
         if (!cached) renderBEPDashboardFast(null, outlet);
         showBEPFixedToast('Gagal memuat data cabang', 'error');
@@ -2194,15 +2294,14 @@
   }
 
   window.zettLoadBEPFixedCost = function(outletName, options) {
-    if (document.querySelector('#view-hpp:not(.hidden)') || document.querySelector('.hpp-container') || document.body?.classList?.contains('hpp-page')) {
-      console.warn('[STAGE_5_BEP_BLOCKED_WHILE_HPP_ACTIVE]');
-      return;
-    }
     var outlet = String(outletName || selectedOutlet()).trim();
     var config = options || {};
-    var isBepPage = !!(document.body && document.body.classList && document.body.classList.contains('bep-active'));
-    if (!isBepPage) {
-      console.warn('[BEP_LOAD_SKIPPED_NOT_ON_BEP_PAGE]', outlet);
+    if (zettIsActiveViewHPP_()) {
+      bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'zettLoadBEPFixedCost', reason: 'hpp-active', targetOutlet: outlet });
+      return;
+    }
+    if (!zettIsActiveViewBEP_()) {
+      bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'zettLoadBEPFixedCost', targetOutlet: outlet });
       return;
     }
     window.clearTimeout(bepLoadTimer);
@@ -2216,6 +2315,10 @@
     }
     var delay = typeof config.delay === 'number' ? config.delay : 0;
     bepLoadTimer = window.setTimeout(function() {
+      if (!zettIsActiveViewBEP_()) {
+        bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'zettLoadBEPFixedCost.timer', targetOutlet: outlet });
+        return;
+      }
       loadBEPDashboardByOutlet(outlet, config);
     }, delay);
   };
@@ -2286,13 +2389,18 @@
 
   var originalHandleOutlet = window.handleGlobalOutletChange;
   window.handleGlobalOutletChange = function(value) {
+    bepSafeLog('[GLOBAL_OUTLET_HANDLER_START]', { value: value });
     if (window.__HPP_PROGRAMMATIC_UPDATE__) {
       console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
       return;
     }
-    var isBepPage = !!(document.body && document.body.classList && document.body.classList.contains('bep-active'));
-    var hppView = document.getElementById('view-hpp');
-    var isHppPage = !!(hppView && !hppView.classList.contains('hidden'));
+    var isBepPage = zettIsActiveViewBEP_();
+    var isHppPage = zettIsActiveViewHPP_();
+    if (isBepPage) {
+      bepSafeLog('[GLOBAL_OUTLET_HANDLER_SKIP]', { value: value, skipped: 'hpp-handler', reason: 'bep-active' });
+      window.zettLoadBEPFixedCost(value, { force: true });
+      return;
+    }
     if (typeof originalHandleOutlet === 'function') {
       var result = originalHandleOutlet.apply(this, arguments);
       if (isHppPage && !isBepPage) console.warn('[HPP_ISOLATION_SKIP_BEP_LOAD]', value);
@@ -2310,6 +2418,9 @@
   var originalSwitch = window.switchMainTab;
   window.switchMainTab = function(tabName) {
     document.body.classList.toggle('bep-active', tabName === 'bep');
+    if (window.ZETT_DEBUG_VIEW_ROUTING) {
+      try { console.log('[VIEW_CHANGE]', { view: tabName, outlet: selectedOutlet(), t: Math.round(performance.now()) }); } catch (error) {}
+    }
     var result = typeof originalSwitch === 'function' ? originalSwitch.apply(this, arguments) : undefined;
     if (tabName === 'bep') window.zettLoadBEPFixedCost(selectedOutlet(), { immediate: true });
     return result;
@@ -2317,8 +2428,8 @@
 
   function init() {
     emptyState(selectedOutlet());
-    renderAll();
-    if (document.body && document.body.classList.contains('bep-active') && selectedOutlet()) {
+    if (zettIsActiveViewBEP_()) renderAll();
+    if (zettIsActiveViewBEP_() && selectedOutlet()) {
       window.zettLoadBEPFixedCost(selectedOutlet(), { immediate: true });
     }
   }

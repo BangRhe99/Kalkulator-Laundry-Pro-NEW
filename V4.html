@@ -2680,6 +2680,14 @@
       !(document.body && document.body.classList && document.body.classList.contains('bep-active'))
     );
   }
+  function isBepPageActive() {
+    var bepView = byId('view-bep');
+    return !!(
+      bepView &&
+      !bepView.classList.contains('hidden') &&
+      (bepView.offsetParent !== null || (document.body && document.body.classList && document.body.classList.contains('bep-active')))
+    );
+  }
   function hppDebug(label, payload) {
     if (!window.ZETT_DEBUG_HPP_OUTLET) return;
     try {
@@ -3082,6 +3090,10 @@
       hppDebug('[HPP_SKIP_NON_HPP_PAGE]', 'skip BEP HPP service render while HPP page is active');
       return;
     }
+    if (!isBepPageActive()) {
+      hppDebug('[BEP_SKIP_NON_ACTIVE_VIEW]', 'skip BEP HPP service render while BEP page is not active');
+      return;
+    }
     window.clearTimeout(renderTimer);
     if (loading) renderCards({ loading: true });
     renderTimer = window.setTimeout(function() {
@@ -3278,6 +3290,11 @@
         hppDebug('[HPP_SKIP_NON_HPP_PAGE]', 'skip BEP MutationObserver while HPP page is active');
         return;
       }
+      if (!isBepPageActive()) {
+        liveCostSyncing = false;
+        hppDebug('[BEP_SKIP_NON_ACTIVE_VIEW]', 'skip BEP MutationObserver while BEP page is not active');
+        return;
+      }
       if (liveCostSyncing) return;
       liveCostSyncing = true;
       lastSignature = '';
@@ -3295,7 +3312,7 @@
     });
   }
   function init() {
-    renderCards();
+    if (isBepPageActive()) renderCards();
     observeLiveCostNodes();
     patchExternalHooks(0);
   }
