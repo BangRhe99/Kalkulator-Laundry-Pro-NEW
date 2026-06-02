@@ -1055,6 +1055,7 @@
       var isSwitchingHPPOutlet = false;
       var latestHPPOutletRequestId = window.latestHPPOutletRequestId || 0;
       window.ZETT_DEBUG_HPP_OUTLET = window.ZETT_DEBUG_HPP_OUTLET ?? true;
+      window.ZETT_DEBUG_HPP_SAFE = window.ZETT_DEBUG_HPP_SAFE ?? true;
       console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_8_SAFE_ACA_RENDER');
       window.__HPP_PROGRAMMATIC_UPDATE__ = window.__HPP_PROGRAMMATIC_UPDATE__ || false;
       if (!window.__HPP_STAGE2_GLOBAL_ERROR_BOUND) {
@@ -1085,7 +1086,7 @@
       window.hppIsLoading = false;
 
       function hppDebugLog() {
-        if (!window.ZETT_DEBUG_HPP_OUTLET) return;
+        if (!window.ZETT_DEBUG_HPP_OUTLET && !window.ZETT_DEBUG_HPP_SAFE) return;
         try {
           var args = Array.prototype.slice.call(arguments);
           args.push({ t: Math.round(performance.now()) });
@@ -1093,7 +1094,7 @@
         } catch (error) {}
       }
       function hppDebugError() {
-        if (!window.ZETT_DEBUG_HPP_OUTLET) return;
+        if (!window.ZETT_DEBUG_HPP_OUTLET && !window.ZETT_DEBUG_HPP_SAFE) return;
         try {
           var args = Array.prototype.slice.call(arguments);
           args.push({ t: Math.round(performance.now()) });

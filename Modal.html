@@ -5283,6 +5283,21 @@
       return document.getElementById(id);
     }
 
+    window.ZETT_DEBUG_HPP_SAFE = window.ZETT_DEBUG_HPP_SAFE ?? true;
+    function hppSafeDebug(label, payload) {
+      if (!window.ZETT_DEBUG_HPP_SAFE) return;
+      try {
+        if (arguments.length > 1) console.log(label, payload, { t: Math.round(performance.now()) });
+        else console.log(label, { t: Math.round(performance.now()) });
+      } catch (error) {}
+    }
+    function hppSafeError(label, payload) {
+      if (!window.ZETT_DEBUG_HPP_SAFE) return;
+      try { console.error(label, payload, { t: Math.round(performance.now()) }); } catch (error) {}
+    }
+    window.zettHPPSafeDebug = window.zettHPPSafeDebug || hppSafeDebug;
+    window.zettHPPSafeError = window.zettHPPSafeError || hppSafeError;
+
     function safeNumberHPP(value) {
       if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
       let raw = String(value ?? '').trim();
@@ -5311,9 +5326,9 @@
 
     function formatRupiahCompat(value) {
       if (typeof formatRupiah === 'function') {
-        try { return formatRupiah(safeNumberHPP(value)); } catch (error) {}
+        try { return formatRupiah(Math.max(0, safeNumberHPP(value))); } catch (error) {}
       }
-      return 'Rp ' + safeNumberHPP(value).toLocaleString('id-ID');
+      return 'Rp ' + Math.max(0, safeNumberHPP(value)).toLocaleString('id-ID');
     }
 
     function getState() {
@@ -5381,6 +5396,7 @@
     }
 
     function updateDonut(total, values) {
+      try {
       const donut = byId('hpp-donut-chart');
       if (!donut) return;
       console.log('[HPP_TRACE_11_BEFORE_UPDATE_DONUT]');
@@ -5427,9 +5443,13 @@
       donut.style.setProperty('--p-air', cAir + '%');
       donut.style.setProperty('--p-packing', cPacking + '%');
       donut.style.setProperty('--p-bahan', cBahan + '%');
+      } catch (error) {
+        hppSafeError('[HPP_SAFE_DONUT_ERROR]', error);
+      }
     }
 
     function updateDashboardFromState(source) {
+      try {
       console.log('[HPP_TRACE_10_BEFORE_RENDER_DASHBOARD]');
       if (!window.__HPP_RENDER_LOOP_ZEROING__) {
         window.__HPP_RENDER_COUNTER__ = window.__HPP_RENDER_COUNTER__ || 0;
@@ -5490,6 +5510,12 @@
       });
 
       updateDonut(total, values);
+      } catch (error) {
+        hppSafeError('[HPP_SAFE_RENDER_ERROR]', { source: source, error: error, stack: error && error.stack });
+        if (typeof window.renderHPPZeroState === 'function') {
+          try { window.renderHPPZeroState(byId('inputNamaHPP')?.value || '', { skipRenderLoopCounter: true }); } catch (zeroError) {}
+        }
+      }
     }
 
     function seedInputIfExists(id, value) {
@@ -9884,12 +9910,15 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     function updateComposition() {
       const values = getValues();
-      const total = Number(values.total) || 0;
+      const rawTotal = Number(values.total);
+      const total = Number.isFinite(rawTotal) ? Math.max(0, rawTotal) : 0;
       const list = document.querySelector('#view-hpp .hpp-composition-list');
       if (list) {
         const nextListHtml = TYPES.map(item => {
-          const value = Number(values[item.key]) || 0;
-          const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+          const rawValue = Number(values[item.key]);
+          const value = Number.isFinite(rawValue) ? Math.max(0, rawValue) : 0;
+          const rawPct = total > 0 ? Math.round((value / total) * 100) : 0;
+          const pct = Number.isFinite(rawPct) ? Math.max(0, rawPct) : 0;
           return [
             '<div class="hpp-composition-row" data-hpp-type="' + item.key + '">',
             '<span class="hpp-composition-dot"></span>',
@@ -9903,8 +9932,10 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       }
 
       TYPES.forEach(item => {
-        const value = Number(values[item.key]) || 0;
-        const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+        const rawValue = Number(values[item.key]);
+        const value = Number.isFinite(rawValue) ? Math.max(0, rawValue) : 0;
+        const rawPct = total > 0 ? Math.round((value / total) * 100) : 0;
+        const pct = Number.isFinite(rawPct) ? Math.max(0, rawPct) : 0;
         const pctEl = byId('dash-card-' + item.key + '-pct');
         if (pctEl && pctEl.textContent !== pct + '%') pctEl.textContent = pct + '%';
 
@@ -9919,15 +9950,37 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
 
     function refreshPremiumUi() {
-      ensureScaffold();
-      setDesktopOnlyState();
-      updateComposition();
+      if (!isHppRefreshAllowed()) return;
+      try {
+        ensureScaffold();
+        setDesktopOnlyState();
+        updateComposition();
+      } catch (error) {
+        if (typeof window.zettHPPSafeError === 'function') window.zettHPPSafeError('[HPP_SAFE_REFRESH_ERROR]', error);
+      }
+    }
+
+    function isHppRefreshAllowed() {
+      const view = byId('view-hpp');
+      return !!(view && !view.classList.contains('hidden'));
     }
 
     function scheduleRefresh() {
+      if (!isHppRefreshAllowed()) {
+        if (typeof window.zettHPPSafeDebug === 'function') window.zettHPPSafeDebug('[HPP_SAFE_SKIP_REFRESH_OUTSIDE_HPP]');
+        return;
+      }
       if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
+      const token = (window.__HPP_SAFE_REFRESH_TOKEN__ || 0) + 1;
+      window.__HPP_SAFE_REFRESH_TOKEN__ = token;
       window.clearTimeout(updateTimer);
-      updateTimer = window.setTimeout(refreshPremiumUi, 60);
+      updateTimer = window.setTimeout(function() {
+        if (token !== window.__HPP_SAFE_REFRESH_TOKEN__) return;
+        if (window.__HPP_SAFE_REFRESH_LOCK__) return;
+        window.__HPP_SAFE_REFRESH_LOCK__ = true;
+        try { refreshPremiumUi(); }
+        finally { window.__HPP_SAFE_REFRESH_LOCK__ = false; }
+      }, 60);
     }
 
     function wrapDashboardUpdate() {
@@ -9937,9 +9990,13 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       const originalZettUpdate = window.zettHPPUpdateDashboardFromState;
       if (typeof originalZettUpdate === 'function') {
         window.zettHPPUpdateDashboardFromState = function() {
-          const result = originalZettUpdate.apply(this, arguments);
-          scheduleRefresh();
-          return result;
+          try {
+            return originalZettUpdate.apply(this, arguments);
+          } catch (error) {
+            if (typeof window.zettHPPSafeError === 'function') window.zettHPPSafeError('[HPP_SAFE_CALCULATE_ERROR]', error);
+          } finally {
+            scheduleRefresh();
+          }
         };
       }
 
@@ -9947,9 +10004,13 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         if (typeof StateMachine !== 'undefined' && StateMachine.renderDashboard && !StateMachine.renderDashboard.__hppDesktopPremiumWrapped) {
           const originalRender = StateMachine.renderDashboard.bind(StateMachine);
           const wrappedRender = function() {
-            const result = originalRender.apply(this, arguments);
-            scheduleRefresh();
-            return result;
+            try {
+              return originalRender.apply(this, arguments);
+            } catch (error) {
+              if (typeof window.zettHPPSafeError === 'function') window.zettHPPSafeError('[HPP_SAFE_RENDER_DASHBOARD_ERROR]', error);
+            } finally {
+              scheduleRefresh();
+            }
           };
           wrappedRender.__hppDesktopPremiumWrapped = true;
           StateMachine.renderDashboard = wrappedRender;
@@ -9958,6 +10019,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
 
     function boot() {
+      if (window.__HPP_SAFE_DESKTOP_REFRESH_BOOTED__) return;
+      window.__HPP_SAFE_DESKTOP_REFRESH_BOOTED__ = true;
       refreshPremiumUi();
       wrapDashboardUpdate();
       scheduleRefresh();
@@ -11455,9 +11518,15 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         }
       });
 
-      const grand = PROCESS.reduce((sum, item) => sum + (processValues[item.key] || 0), 0);
+      const grand = PROCESS.reduce((sum, item) => {
+        const rawValue = Number(processValues[item.key]);
+        return sum + (Number.isFinite(rawValue) ? Math.max(0, rawValue) : 0);
+      }, 0);
       PROCESS.forEach(item => {
-        const pct = grand > 0 ? Math.round(((processValues[item.key] || 0) / grand) * 100) : 0;
+        const rawValue = Number(processValues[item.key]);
+        const value = Number.isFinite(rawValue) ? Math.max(0, rawValue) : 0;
+        const rawPct = grand > 0 ? Math.round((value / grand) * 100) : 0;
+        const pct = Number.isFinite(rawPct) ? Math.max(0, rawPct) : 0;
         const pctEl = document.querySelector('#view-hpp [data-process-pct="' + item.key + '"]');
         const barEl = document.querySelector('#view-hpp [data-process-bar="' + item.key + '"]');
         const nextPct = pct + '%';
@@ -11476,9 +11545,14 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
 
     function refresh() {
-      ensureProcessCards();
-      resetAdminNotaCardIfNoOutlet();
-      updateProcessCards();
+      if (!isHppProcessRefreshAllowed()) return;
+      try {
+        ensureProcessCards();
+        resetAdminNotaCardIfNoOutlet();
+        updateProcessCards();
+      } catch (error) {
+        if (typeof window.zettHPPSafeError === 'function') window.zettHPPSafeError('[HPP_SAFE_PROCESS_REFRESH_ERROR]', error);
+      }
     }
 
     window.zettRefreshHPPProcessCards = refresh;
@@ -11498,25 +11572,48 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       });
     };
 
+    function isHppProcessRefreshAllowed() {
+      const view = byId('view-hpp');
+      return !!(view && !view.classList.contains('hidden'));
+    }
+
     function scheduleRefresh() {
+      if (!isHppProcessRefreshAllowed()) {
+        if (typeof window.zettHPPSafeDebug === 'function') window.zettHPPSafeDebug('[HPP_SAFE_SKIP_PROCESS_REFRESH_OUTSIDE_HPP]');
+        return;
+      }
       if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
+      const token = (window.__HPP_SAFE_PROCESS_REFRESH_TOKEN__ || 0) + 1;
+      window.__HPP_SAFE_PROCESS_REFRESH_TOKEN__ = token;
       window.clearTimeout(timer);
-      timer = window.setTimeout(refresh, 90);
+      timer = window.setTimeout(function() {
+        if (token !== window.__HPP_SAFE_PROCESS_REFRESH_TOKEN__) return;
+        if (window.__HPP_SAFE_PROCESS_REFRESH_LOCK__) return;
+        window.__HPP_SAFE_PROCESS_REFRESH_LOCK__ = true;
+        try { refresh(); }
+        finally { window.__HPP_SAFE_PROCESS_REFRESH_LOCK__ = false; }
+      }, 90);
     }
 
     function wrap(name) {
       const fn = window[name];
       if (typeof fn !== 'function' || fn.__hppPremiumUiWrapped) return;
       const wrapped = function() {
-        const result = fn.apply(this, arguments);
-        scheduleRefresh();
-        return result;
+        try {
+          return fn.apply(this, arguments);
+        } catch (error) {
+          if (typeof window.zettHPPSafeError === 'function') window.zettHPPSafeError('[HPP_SAFE_CALCULATE_ERROR:' + name + ']', error);
+        } finally {
+          scheduleRefresh();
+        }
       };
       wrapped.__hppPremiumUiWrapped = true;
       window[name] = wrapped;
     }
 
     function boot() {
+      if (window.__HPP_SAFE_PROCESS_REFRESH_BOOTED__) return;
+      window.__HPP_SAFE_PROCESS_REFRESH_BOOTED__ = true;
       ['calculateGas', 'calculateListrik', 'calculateAir', 'calculatePacking', 'calculateBahanBaku', 'calculateNota', 'zettHPPUpdateDashboardFromState'].forEach(wrap);
       refresh();
       window.setTimeout(refresh, 350);
