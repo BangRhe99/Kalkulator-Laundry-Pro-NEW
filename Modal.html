@@ -11533,6 +11533,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
           console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
           return;
         }
+        // Guard HPP: batasi scheduleRefresh ke halaman HPP agar tidak memicu freeze/render loop dari luar.
         if (event.target && (event.target.id === 'inputNamaHPP' || event.target.closest('#view-hpp'))) scheduleRefresh();
       });
       document.addEventListener('input', event => {
