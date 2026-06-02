@@ -1055,7 +1055,7 @@
       var isSwitchingHPPOutlet = false;
       var latestHPPOutletRequestId = window.latestHPPOutletRequestId || 0;
       window.ZETT_DEBUG_HPP_OUTLET = window.ZETT_DEBUG_HPP_OUTLET ?? true;
-      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_7_ZERO_EXECUTION');
+      console.log('[HPP_PATCH_VERSION]', 'HPP_OUTLET_FIX_STAGE_8_SAFE_ACA_RENDER');
       window.__HPP_PROGRAMMATIC_UPDATE__ = window.__HPP_PROGRAMMATIC_UPDATE__ || false;
       if (!window.__HPP_STAGE2_GLOBAL_ERROR_BOUND) {
         window.__HPP_STAGE2_GLOBAL_ERROR_BOUND = true;
@@ -1086,11 +1086,19 @@
 
       function hppDebugLog() {
         if (!window.ZETT_DEBUG_HPP_OUTLET) return;
-        try { console.log.apply(console, arguments); } catch (error) {}
+        try {
+          var args = Array.prototype.slice.call(arguments);
+          args.push({ t: Math.round(performance.now()) });
+          console.log.apply(console, args);
+        } catch (error) {}
       }
       function hppDebugError() {
         if (!window.ZETT_DEBUG_HPP_OUTLET) return;
-        try { console.error.apply(console, arguments); } catch (error) {}
+        try {
+          var args = Array.prototype.slice.call(arguments);
+          args.push({ t: Math.round(performance.now()) });
+          console.error.apply(console, args);
+        } catch (error) {}
       }
       function hppTrace(label, payload) {
         try {
@@ -1551,7 +1559,14 @@
         try { if (window.HPPStateMachine && typeof window.HPPStateMachine.calculateTotal === 'function') window.HPPStateMachine.calculateTotal(); } catch (error) {}
       }
       function applyRowAtomic(outlet, row, requestId, source) {
-        if (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== norm(outlet)) return;
+        if (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== norm(outlet)) {
+          hppDebugLog('[HPP_SKIP_STALE_RESPONSE]', { outlet: outlet, requestId: requestId, activeRequestId: window.hppRenderRequestId, currentOutlet: currentOutlet() });
+          return;
+        }
+        if (window.__HPP_ATOMIC_RENDER_LOCK) {
+          hppDebugLog('[HPP_RENDER_REENTRY_BLOCKED]', { outlet: outlet, requestId: requestId, source: source });
+          return;
+        }
         if (!row || typeof row !== 'object' || Array.isArray(row)) {
           console.warn('[HPP_FORCE_ZERO_STATE_INVALID_ROW]', outlet);
           renderHPPZeroState(outlet);
@@ -1563,6 +1578,7 @@
           hppDebugLog('[HPP_RENDER_START]', outlet);
           hppDebugLog('[HPP_OUTLET_DATA_RAW]', row || {});
           hppDebugLog('[HPP_OUTLET_DATA_NORMALIZED]', sanitizeHPPValues(fallbackValuesFromRow(row || {})));
+          hppDebugLog('[HPP_POPULATE_START]', outlet);
           hppTrace('[HPP_TRACE_06_ROW_KEYS]', Object.keys(row || {}));
           hppTrace('[HPP_TRACE_07_BEFORE_APPLY_ROW]', row);
           window.currentHPPOutlet = outlet;
@@ -1575,27 +1591,39 @@
           } else {
             runLegacyCalculators();
           }
+          hppDebugLog('[HPP_POPULATE_DONE]', outlet);
+          hppTrace('[HPP_TRACE_08_AFTER_APPLY_ROW]', {
+            hppDataState: window.hppDataState || null,
+            appStateHpp: window.APP_STATE?.data?.hpp || null
+          });
+          acaStep('after apply row', '[11 afterApplyRowState]', {
+            hppDataState: window.hppDataState || null,
+            appStateHpp: window.APP_STATE?.data?.hpp || null
+          });
+          captureAndCache(outlet, row, source);
+          hppDebugLog('[HPP_RENDER_DONE]', outlet);
+          hppTrace('[HPP_TRACE_DONE]', outlet);
+          endAcaTrace();
+        } catch (error) {
+          hppDebugError('[HPP_ERROR]', {
+            outlet: outlet,
+            requestId: requestId,
+            source: source,
+            error: error,
+            stack: error && error.stack
+          });
+          crashPoint(outlet, error);
+          renderHPPZeroState(outlet, { skipRenderLoopCounter: true });
         } finally {
           allowPopulate = false;
           window.__HPP_ATOMIC_RENDER_LOCK = false;
         }
-        hppTrace('[HPP_TRACE_08_AFTER_APPLY_ROW]', {
-          hppDataState: window.hppDataState || null,
-          appStateHpp: window.APP_STATE?.data?.hpp || null
-        });
-        acaStep('after apply row', '[11 afterApplyRowState]', {
-          hppDataState: window.hppDataState || null,
-          appStateHpp: window.APP_STATE?.data?.hpp || null
-        });
-        captureAndCache(outlet, row, source);
-        hppDebugLog('[HPP_RENDER_DONE]', outlet);
-        hppTrace('[HPP_TRACE_DONE]', outlet);
-        endAcaTrace();
       }
       function fetchOutletRow(outlet, requestId, force) {
         var normalized = normalizeOutletNameHPP(outlet);
         acaStep('before fetchOutletRow', '[05 beforeFetch]');
         hppTrace('[HPP_TRACE_03_FETCH_START]', normalized);
+        hppDebugLog('[HPP_LOAD_START]', { outlet: outlet, requestId: requestId, force: !!force });
         if (!outlet || typeof google === 'undefined' || !google.script || !google.script.run) {
           setSoftLoading(false);
           renderHPPZeroState(outlet);
@@ -1610,8 +1638,12 @@
         google.script.run
           .withSuccessHandler(function(response) {
             delete activeFetches[normalized];
-            if (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== normalized) return;
+            if (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== normalized) {
+              hppDebugLog('[HPP_SKIP_STALE_RESPONSE]', { outlet: outlet, requestId: requestId, activeRequestId: window.hppRenderRequestId, currentOutlet: currentOutlet() });
+              return;
+            }
             setSoftLoading(false);
+            hppDebugLog('[HPP_LOAD_SUCCESS]', { outlet: outlet, requestId: requestId, hasData: !!(response && response.data) });
             hppDebugLog('[HPP_OUTLET_DATA_RAW]', response);
             hppTrace('[HPP_TRACE_04_FETCH_RESULT_RAW]', response);
             if (!response || response.status !== 'success' || !response.data) {
@@ -1654,15 +1686,8 @@
         hppTrace('[HPP_TRACE_01_OUTLET_SELECTED]', selected);
         hppTrace('[HPP_TRACE_02_NORMALIZED_OUTLET]', normalizedSelected);
         window.latestHPPOutletRequestId = latestHPPOutletRequestId;
-        hppDebugLog('[HPP_OUTLET_CHANGE]', selected);
+        hppDebugLog('[HPP_OUTLET_CHANGE_START]', selected);
         hppDebugLog('[HPP_OUTLET_REQUEST_ID]', requestId);
-        if (normalizedSelected === 'aca laundry' || normalizedSelected === 'juragan laundry') {
-          console.error('[STAGE_7_KARANTINA_AKTIF] Eksekusi dihentikan total untuk: ' + selected);
-          window.__HPP_OUTLET_LOCK__ = false;
-          window.__HPP_OUTLET_SWITCH_LOCK__ = false;
-          isSwitchingHPPOutlet = false;
-          return;
-        }
         removeAntiLoaderStyle();
         if (!selected) {
           renderInitialZero();
@@ -1729,13 +1754,6 @@
         var outlet = String(outletName || currentOutlet() || '').trim();
         if (!outlet) return;
         var normalizedRefreshOutlet = normalizeOutletNameHPP(outlet);
-        if (normalizedRefreshOutlet === 'aca laundry' || normalizedRefreshOutlet === 'juragan laundry') {
-          console.error('[STAGE_7_KARANTINA_AKTIF] Eksekusi dihentikan total untuk: ' + outlet);
-          window.__HPP_OUTLET_LOCK__ = false;
-          window.__HPP_OUTLET_SWITCH_LOCK__ = false;
-          isSwitchingHPPOutlet = false;
-          return;
-        }
         var config = options || {};
         var requestId = window.hppRenderRequestId || ++window.hppRenderRequestId;
         var cached = window.hppDashboardCache[norm(outlet)];
@@ -1781,13 +1799,6 @@
         try {
           currentStep = 'before switchOutlet';
           var normOutlet = normalizeOutletNameHPP(outlet);
-          if (normOutlet === 'aca laundry' || normOutlet === 'juragan laundry') {
-            console.error('[STAGE_7_KARANTINA_AKTIF] Eksekusi dihentikan total untuk: ' + outlet);
-            window.__HPP_OUTLET_LOCK__ = false;
-            window.__HPP_OUTLET_SWITCH_LOCK__ = false;
-            isSwitchingHPPOutlet = false;
-            return;
-          }
           if (outlet) showBranchLoader();
           window.__HPP_FORCE_ZERO_DASHBOARD = false;
           window.__HPP_GSHEET_SYNC_LOCKED = false;

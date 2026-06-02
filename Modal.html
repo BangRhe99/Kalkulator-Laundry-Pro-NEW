@@ -5475,6 +5475,9 @@
       if (totalEl) totalEl.textContent = formatRupiahCompat(total);
 
       HPP_TYPES.forEach(type => {
+        if (window.ZETT_DEBUG_HPP_OUTLET) {
+          try { console.log('[HPP_RENDER_CARD: ' + type + ']', { value: values[type], total: total, t: Math.round(performance.now()) }); } catch (error) {}
+        }
         const valueEl = byId('dash-card-' + type);
         if (valueEl) valueEl.textContent = formatRupiahCompat(values[type]);
 

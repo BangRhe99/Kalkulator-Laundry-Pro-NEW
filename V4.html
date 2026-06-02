@@ -2670,6 +2670,23 @@
     return 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
   }
   function selectedOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+  function isHppPageActive() {
+    var hppView = byId('view-hpp');
+    var bepView = byId('view-bep');
+    return !!(
+      hppView &&
+      !hppView.classList.contains('hidden') &&
+      (!bepView || bepView.classList.contains('hidden')) &&
+      !(document.body && document.body.classList && document.body.classList.contains('bep-active'))
+    );
+  }
+  function hppDebug(label, payload) {
+    if (!window.ZETT_DEBUG_HPP_OUTLET) return;
+    try {
+      if (arguments.length > 1) console.log(label, payload, { t: Math.round(performance.now()) });
+      else console.log(label, { t: Math.round(performance.now()) });
+    } catch (error) {}
+  }
   function dryOnlyStorageKey(outlet) { return 'zett:bep:self-service:kering-saja:' + normalize(outlet || selectedOutlet() || 'default'); }
   function isDryOnlyEnabled(outlet) {
     try {
@@ -3061,6 +3078,10 @@
     return value;
   }
   function scheduleRender(delay, loading) {
+    if (isHppPageActive()) {
+      hppDebug('[HPP_SKIP_NON_HPP_PAGE]', 'skip BEP HPP service render while HPP page is active');
+      return;
+    }
     window.clearTimeout(renderTimer);
     if (loading) renderCards({ loading: true });
     renderTimer = window.setTimeout(function() {
@@ -3095,6 +3116,11 @@
       scheduleRender(0, false);
     }
     if (event.target.id === 'inputNamaHPP') {
+      if (isHppPageActive()) {
+        lastSignature = '';
+        hppDebug('[HPP_SKIP_NON_HPP_PAGE]', 'skip BEP outlet-change handler while HPP page is active');
+        return;
+      }
       lastSignature = '';
       scheduleRender(0, true);
       window.clearTimeout(loadingTimer);
@@ -3210,7 +3236,10 @@
       window.zettStoreFreshHPPRow = function(row) {
         var result = oldStore.apply(this, arguments);
         var rowName = normalize(row?.namaOutlet || row?.['Nama Outlet'] || row?.['Nama_Outlet']);
-        if (rowName && rowName === normalize(selectedOutlet())) scheduleRender(0, false);
+        if (rowName && rowName === normalize(selectedOutlet())) {
+          if (isHppPageActive()) hppDebug('[HPP_SKIP_NON_HPP_PAGE]', 'skip BEP store hook while HPP page is active');
+          else scheduleRender(0, false);
+        }
         return result;
       };
       window.zettStoreFreshHPPRow.__bepHppSummaryPatched = true;
@@ -3219,7 +3248,8 @@
       var oldUpdate = window.zettHPPUpdateDashboardFromState;
       window.zettHPPUpdateDashboardFromState = function() {
         var result = oldUpdate.apply(this, arguments);
-        scheduleRender(0, false);
+        if (isHppPageActive()) hppDebug('[HPP_SKIP_NON_HPP_PAGE]', 'skip BEP dashboard hook while HPP page is active');
+        else scheduleRender(0, false);
         return result;
       };
       window.zettHPPUpdateDashboardFromState.__bepHppSummaryPatched = true;
@@ -3243,6 +3273,11 @@
     observeLiveCostNodes.done = true;
     var ids = ['dispListrikPompaLoad', 'dispListrikCuciLoad', 'dispAirCuciLoad', 'dispNotaAppLoad', 'dispNotaCostTrx', 'dispListrikPengeringLoad', 'displayEstimasiBiayaGas'];
     var observer = new MutationObserver(function() {
+      if (isHppPageActive()) {
+        liveCostSyncing = false;
+        hppDebug('[HPP_SKIP_NON_HPP_PAGE]', 'skip BEP MutationObserver while HPP page is active');
+        return;
+      }
       if (liveCostSyncing) return;
       liveCostSyncing = true;
       lastSignature = '';
