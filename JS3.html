@@ -238,94 +238,375 @@
     });
   }
 
-  function renderEmptyDashboard(message) {
-    setText('v1-val-margin', 'Rp 0');
-    setText('v1-sub-margin', message || 'Data belum tersedia');
-    setText('v1-val-vol', '0%');
-    setText('v1-sub-vol', 'Pencapaian target belum tersedia');
-    setText('v1-val-profit', 'Rp 0');
-    setText('v1-sub-profit', 'Estimasi belum tersedia');
-    setText('v1-gauge-pct', '0%');
-    setText('v1-donut-total', 'Rp 0');
+  window.ZETT_DEBUG_EXEC_DASHBOARD = window.ZETT_DEBUG_EXEC_DASHBOARD ?? true;
+  var execDashboardToken = 0;
 
-    var gauge = $('v1-gauge-path');
-    if (gauge) gauge.style.strokeDashoffset = '141.37';
+  function dashLog(label, payload) {
+    if (!window.ZETT_DEBUG_EXEC_DASHBOARD) return;
+    try {
+      console.log(label, Object.assign({
+        outlet: getSelectedOutletName(),
+        token: execDashboardToken,
+        t: Math.round(performance.now())
+      }, payload || {}));
+    } catch (error) {}
+  }
 
-    var donut = $('v1-donut-el');
-    if (donut) donut.style.setProperty('--val-var', '0%');
+  function isExecDashboardActive() {
+    var view = $('view-dashboard');
+    return !!(view && !view.classList.contains('hidden'));
+  }
 
-    var tbody = $('v1-table-body');
-    if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="4" style="padding:1rem; text-align:center; color:#64748b; font-weight:700;">' + (message || 'Data belum tersedia') + '</td></tr>';
+  function safeNumberDashboard(value) {
+    var n = cleanNumber(value);
+    if (!isFinite(n)) {
+      dashLog('[DASH_INVALID_DATA_FALLBACK]', { value: value });
+      return 0;
     }
+    return Math.max(0, n);
+  }
+
+  function safeSignedNumberDashboard(value) {
+    var n = cleanNumber(value);
+    if (!isFinite(n)) {
+      dashLog('[DASH_INVALID_DATA_FALLBACK]', { value: value });
+      return 0;
+    }
+    return n;
+  }
+
+  function safeRupiahDashboard(value) {
+    return money(safeNumberDashboard(value));
+  }
+
+  function safePercentDashboard(value) {
+    var n = safeNumberDashboard(value);
+    return Math.round(n) + '%';
+  }
+
+  function safeTextDashboard(value, fallback) {
+    var text = String(value || '').trim();
+    return text || fallback || 'Belum ada data';
+  }
+
+  function rowName(row) {
+    return row && (row.namaOutlet || row.nama || row.outlet || row.cabang || row.Nama_Outlet || row['Nama Outlet'] || row['Nama_Outlet']);
+  }
+
+  function findDashboardRow(rows, outlet) {
+    var key = String(outlet || '').trim().toLowerCase();
+    if (!key || !Array.isArray(rows)) return null;
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rowName(rows[i]) || '').trim().toLowerCase() === key) return rows[i];
+    }
+    return null;
+  }
+
+  function getHppRows() {
+    var rows = [];
+    var payload = getPayloadFromMemory();
+    if (payload && Array.isArray(payload.hpp)) rows = rows.concat(payload.hpp);
+    try { if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) rows = rows.concat(masterDataHPP); } catch (error) {}
+    if (Array.isArray(window.masterDataHPP)) rows = rows.concat(window.masterDataHPP);
+    try { if (window.APP_STATE?.data?.master?.hpp) rows = rows.concat(window.APP_STATE.data.master.hpp); } catch (error) {}
+    return rows;
+  }
+
+  function getOutletRows() {
+    var rows = [];
+    var payload = getPayloadFromMemory();
+    if (payload && Array.isArray(payload.kapasitas)) rows = rows.concat(payload.kapasitas);
+    try { if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) rows = rows.concat(masterDataCabang); } catch (error) {}
+    if (Array.isArray(window.masterDataCabang)) rows = rows.concat(window.masterDataCabang);
+    try { if (window.APP_STATE?.data?.master?.cabang) rows = rows.concat(window.APP_STATE.data.master.cabang); } catch (error) {}
+    return rows;
+  }
+
+  function pickDashboardNumber(row, keys) {
+    row = row || {};
+    for (var i = 0; i < keys.length; i++) {
+      if (row[keys[i]] !== undefined && row[keys[i]] !== null && row[keys[i]] !== '') return safeNumberDashboard(row[keys[i]]);
+    }
+    return 0;
+  }
+
+  function getDashboardSummary(outlet) {
+    var hppRow = findDashboardRow(getHppRows(), outlet) || {};
+    var trxRow = findDashboardRow(getTransactions(), outlet) || {};
+    var outletRow = findDashboardRow(getOutletRows(), outlet) || {};
+    var liveHpp = (window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.hpp) || {};
+
+    var gas = pickDashboardNumber(hppRow, ['gas', 'Gas Per Kg', 'Gas_Per_Kg', 'Estimasi Biaya Gas', 'Gas Per Load']) || safeNumberDashboard(liveHpp.gas);
+    var listrik = pickDashboardNumber(hppRow, ['listrik', 'Listrik Per Kg', 'Cuci Per Kg', 'Kering Per Kg']) || safeNumberDashboard(liveHpp.listrik);
+    var air = pickDashboardNumber(hppRow, ['air', 'Air Per Kg', 'Air Cuci /Kg']) || safeNumberDashboard(liveHpp.air);
+    var packing = pickDashboardNumber(hppRow, ['packing', 'Total Biaya Packing', 'Packing Per Kg', 'Packing_PP_PerKg']) || safeNumberDashboard(liveHpp.packing);
+    var bahan = pickDashboardNumber(hppRow, ['bahan', 'chemical_cost', 'Chemical Cuci Per Kg', 'Total Biaya Chemical']) || safeNumberDashboard(liveHpp.bahan);
+    var nota = pickDashboardNumber(hppRow, ['nota', 'Total Biaya Nota', 'Nota Per Kg', 'Admin Nota Per Kg']) || safeNumberDashboard(liveHpp.nota);
+    var variableTotal = safeNumberDashboard(liveHpp.total) || pickDashboardNumber(trxRow, ['hpp', 'HPP_Per_Kg', 'hppPerKg']) || (gas + listrik + air + packing + bahan + nota);
+
+    var fixedMonthly = pickDashboardNumber(trxRow, ['biayaTetap', 'Biaya_Tetap', 'totalFixedCostBulanan', 'Total Fixed Cost Bulanan']);
+    try { fixedMonthly = fixedMonthly || safeNumberDashboard(document.getElementById('hiddenTotalBiayaTetap')?.value); } catch (error) {}
+    var bepMonthlyVolume = pickDashboardNumber(trxRow, ['bepKg', 'BEP_Kg']);
+    var fixedPerUnit = bepMonthlyVolume > 0 ? fixedMonthly / bepMonthlyVolume : 0;
+    var totalCost = variableTotal + fixedPerUnit;
+
+    var price = pickDashboardNumber(trxRow, ['hargaAcuan', 'Harga_Acuan_BEP', 'hargaJualAcuan', 'Harga Jual']);
+    price = price || pickDashboardNumber(hppRow, ['Harga Jual', 'Harga Acuan', 'Harga_Acuan_BEP']);
+    var margin = Math.max(0, price - variableTotal);
+    var marginPct = price > 0 ? (margin / price) * 100 : 0;
+    var dailyBep = bepMonthlyVolume > 0 ? bepMonthlyVolume / 30 : 0;
+    var bepRevenueMonthly = pickDashboardNumber(trxRow, ['bepRupiah', 'BEP_Rupiah']);
+    var bepRevenueDaily = bepRevenueMonthly > 0 ? bepRevenueMonthly / 30 : 0;
+    var monthlyVolume = pickDashboardNumber(trxRow, ['kapasitas', 'Kapasitas_Per_Bulan', 'targetBulanan']);
+    var netProfit = safeSignedNumberDashboard((price * monthlyVolume) - (variableTotal * monthlyVolume) - fixedMonthly);
+    if (!price || !monthlyVolume) netProfit = 0;
+
+    var investment = pickDashboardNumber(trxRow, ['investasiAwal', 'Total Investasi Awal', 'modalAwal']);
+    var payback = netProfit > 0 && investment > 0 ? investment / netProfit : 0;
+    var category = safeTextDashboard(outletRow.kategori || outletRow.kategoriLaundry || outletRow['Kategori Laundry'] || hppRow.kategoriLaundry || hppRow['Kategori Laundry'], 'Belum ada data');
+
+    return {
+      outlet: outlet,
+      category: category,
+      hppRow: hppRow,
+      trxRow: trxRow,
+      hasData: !!(rowName(hppRow) || rowName(trxRow)),
+      variableTotal: variableTotal,
+      fixedMonthly: fixedMonthly,
+      fixedPerUnit: fixedPerUnit,
+      totalCost: totalCost,
+      price: price,
+      margin: margin,
+      marginPct: marginPct,
+      dailyBep: dailyBep,
+      bepRevenueDaily: bepRevenueDaily,
+      bepRevenueMonthly: bepRevenueMonthly,
+      netProfit: netProfit,
+      investment: investment,
+      payback: payback,
+      costs: [
+        { key: 'listrik', label: 'Listrik', value: listrik },
+        { key: 'gas', label: 'Gas LPG', value: gas },
+        { key: 'bahan', label: 'Chemical', value: bahan },
+        { key: 'packing', label: 'Packing', value: packing },
+        { key: 'air', label: 'Air', value: air },
+        { key: 'nota', label: 'Admin/Nota', value: nota }
+      ]
+    };
+  }
+
+  function getDashboardHealthStatus(data) {
+    if (!data.hasData || data.price <= 0 || data.variableTotal <= 0) return { text: 'Belum ada data', tone: 'neutral', caption: 'Lengkapi data struktur biaya untuk menampilkan analisis.' };
+    if (data.marginPct >= 45 && data.dailyBep <= 25 && data.netProfit >= 0) return { text: 'Sehat', tone: 'good', caption: 'Operasional normal & stabil' };
+    if (data.marginPct >= 25) return { text: 'Perlu Perhatian', tone: 'warn', caption: 'Margin masih ada, namun perlu dipantau' };
+    return { text: 'Risiko', tone: 'risk', caption: 'Margin tipis atau target terlalu berat' };
+  }
+
+  function topCostComponents(data) {
+    return data.costs.slice().sort(function(a, b) { return b.value - a.value; }).filter(function(item) { return item.value > 0; }).slice(0, 3);
+  }
+
+  function serviceRows(data) {
+    var row = data.hppRow || {};
+    var services = [
+      { key: 'cuci', label: 'HPP Cuci Saja', value: pickDashboardNumber(row, ['HPP Cuci Saja', 'HPP Cuci Saja Final', 'HPP Cuci Per Kg']) },
+      { key: 'kering', label: 'HPP Kering Saja', value: pickDashboardNumber(row, ['HPP Kering Saja', 'HPP Kering Saja Final', 'HPP Kering Per Kg']) },
+      { key: 'cuciKering', label: 'HPP Cuci + Kering', value: pickDashboardNumber(row, ['HPP Cuci + Kering', 'HPP Cuci Kering', 'HPP Cuci + Kering Final']) },
+      { key: 'cuciSetrika', label: 'HPP Cuci + Setrika', value: pickDashboardNumber(row, ['HPP Cuci + Setrika', 'HPP Cuci Setrika', 'HPP Cuci + Setrika Final']) },
+      { key: 'setrika', label: 'HPP Setrika Saja', value: pickDashboardNumber(row, ['HPP Setrika Saja', 'HPP Setrika Saja Final', 'HPP Setrika Per Kg', 'Setrika Per Kg']) }
+    ];
+    if (services.every(function(item) { return item.value <= 0; }) && data.variableTotal > 0) services[0].value = data.variableTotal;
+    var category = String(data.category || '').toLowerCase();
+    if (category.indexOf('self') >= 0) return services.filter(function(item) { return ['cuci', 'kering', 'cuciKering'].indexOf(item.key) >= 0; });
+    if (category.indexOf('drop') >= 0 || category.indexOf('kilo') >= 0) return services.filter(function(item) { return ['cuci', 'cuciKering', 'cuciSetrika', 'setrika'].indexOf(item.key) >= 0; });
+    var available = services.filter(function(item) { return item.value > 0; }).slice(0, 5);
+    return available.length ? available : services.slice(0, 3);
+  }
+
+  function ensureExecutiveDashboardScaffold() {
+    var root = $('v1-vanilla-dashboard');
+    if (!root || root.getAttribute('data-exec-dashboard-ready') === '1') return;
+    dashLog('[DASH_INIT]');
+    root.setAttribute('data-exec-dashboard-ready', '1');
+    root.innerHTML = [
+      '<select id="v1-global-outlet" class="hidden" onchange="safeRenderSingleOutletDashboard()"><option value="">Pilih Cabang...</option></select>',
+      '<section class="exec-dashboard-shell">',
+        '<div class="exec-kpi-grid" id="execKpiGrid"></div>',
+        '<div class="exec-main-grid">',
+          '<article class="exec-card exec-health-card" id="execHealthCard"></article>',
+          '<article class="exec-card" id="execCostCard"></article>',
+          '<article class="exec-card" id="execHppServiceCard"></article>',
+        '</div>',
+        '<div class="exec-bottom-grid">',
+          '<article class="exec-card" id="execBepCard"></article>',
+          '<article class="exec-card" id="execMarginCard"></article>',
+          '<article class="exec-card" id="execRoiCard"></article>',
+          '<article class="exec-card" id="execInsightCard"></article>',
+        '</div>',
+        '<footer class="exec-footer"><span><i class="ph ph-arrow-clockwise"></i> <span id="execUpdatedAt">Terakhir diperbarui hari ini</span></span><span>Kalkulator Laundry &copy; 2024 &bull; Semua hak dilindungi</span></footer>',
+      '</section>'
+    ].join('');
+  }
+
+  function ensureExecutiveDashboardStyle() {
+    if ($('exec-dashboard-style-20260602')) return;
+    var style = document.createElement('style');
+    style.id = 'exec-dashboard-style-20260602';
+    style.textContent = [
+      ':root{--dash-bg:#f6f8fc;--dash-card:#fff;--dash-text:#0f172a;--dash-muted:#64748b;--dash-border:rgba(15,23,42,.08);--dash-shadow:0 16px 40px rgba(15,23,42,.06);--dash-radius-lg:24px;--dash-radius-md:18px;}',
+      '#view-dashboard{background:var(--dash-bg)!important;color:var(--dash-text)!important;}',
+      '#view-dashboard .fin-dashboard{display:block;max-width:1480px;margin:0 auto;padding:clamp(16px,2vw,28px);}',
+      '.exec-dashboard-shell{display:grid;gap:18px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}',
+      '.exec-card,.exec-kpi{background:var(--dash-card);border:1px solid var(--dash-border);border-radius:var(--dash-radius-lg);box-shadow:var(--dash-shadow);padding:clamp(18px,1.6vw,24px);color:var(--dash-text);}',
+      '.exec-kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;}',
+      '.exec-kpi{min-height:154px;display:flex;flex-direction:column;gap:10px;justify-content:space-between;}',
+      '.exec-kpi.is-north{background:linear-gradient(135deg,#ecfdf5,#eff6ff);border-color:rgba(16,185,129,.26);box-shadow:0 20px 48px rgba(16,185,129,.12);}',
+      '.exec-kpi-head{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--dash-muted);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;}',
+      '.exec-icon{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;background:#eff6ff;color:#2563eb;font-size:18px;}',
+      '.exec-kpi-value{font-size:clamp(24px,2vw,34px);font-weight:900;line-height:1.05;color:#0f172a;}',
+      '.exec-caption{font-size:13px;color:var(--dash-muted);line-height:1.35;font-weight:650;}',
+      '.exec-main-grid{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:18px;}',
+      '.exec-bottom-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;}',
+      '.exec-card-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}',
+      '.exec-card-title h3{margin:0;font-size:16px;font-weight:900;color:#0f172a;}',
+      '.exec-card-title span{font-size:12px;color:var(--dash-muted);font-weight:800;text-transform:uppercase;letter-spacing:.08em;}',
+      '.exec-health-body{display:grid;grid-template-columns:180px 1fr;gap:22px;align-items:center;}',
+      '.exec-gauge,.exec-donut{width:168px;height:168px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--tone,#10b981) 0 var(--pct,0%),#e5e7eb var(--pct,0%) 100%);position:relative;}',
+      '.exec-gauge:after,.exec-donut:after{content:"";position:absolute;inset:18px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 1px rgba(15,23,42,.05);}',
+      '.exec-gauge-center,.exec-donut-center{position:relative;z-index:1;text-align:center;}',
+      '.exec-mini-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px;}',
+      '.exec-mini{padding:12px;border-radius:16px;background:#f8fafc;border:1px solid rgba(15,23,42,.06);}',
+      '.exec-mini strong{display:block;font-size:18px;font-weight:900;color:#0f172a;}.exec-mini span{font-size:12px;color:var(--dash-muted);font-weight:700;}',
+      '.exec-insight-box{padding:14px 16px;border-radius:18px;background:#f8fafc;border:1px solid rgba(15,23,42,.06);color:#334155;font-weight:650;line-height:1.45;}',
+      '.exec-cost-layout{display:grid;grid-template-columns:160px 1fr;gap:18px;align-items:center;}',
+      '.exec-legend,.exec-list,.exec-service-list,.exec-info-list,.exec-insights{display:grid;gap:10px;}',
+      '.exec-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(15,23,42,.06);font-size:14px;}',
+      '.exec-row:last-child{border-bottom:0}.exec-row strong{font-weight:900;color:#0f172a}.exec-muted{color:var(--dash-muted);font-weight:700;}',
+      '.exec-badge{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:900;background:#f1f5f9;color:#475569;}',
+      '.exec-badge.good{background:#dcfce7;color:#15803d}.exec-badge.warn{background:#fef3c7;color:#b45309}.exec-badge.risk{background:#fee2e2;color:#b91c1c}',
+      '.exec-roi-highlight{margin-top:12px;padding:14px;border-radius:18px;background:#eff6ff;border:1px solid #bfdbfe;}.exec-roi-highlight strong{font-size:28px;font-weight:950;color:#1d4ed8;}',
+      '.exec-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#64748b;font-size:12px;font-weight:700;padding:4px 2px 0;}',
+      '@media(max-width:1280px){.exec-kpi-grid{grid-template-columns:repeat(3,1fr)}.exec-main-grid{grid-template-columns:1fr 1fr}.exec-health-card{grid-column:1/-1}.exec-bottom-grid{grid-template-columns:repeat(2,1fr)}}',
+      '@media(max-width:760px){#view-dashboard .fin-dashboard{padding:14px}.exec-kpi-grid,.exec-main-grid,.exec-bottom-grid{grid-template-columns:1fr}.exec-health-body,.exec-cost-layout{grid-template-columns:1fr}.exec-gauge,.exec-donut{margin:0 auto}.exec-mini-grid{grid-template-columns:1fr}.exec-footer{align-items:flex-start;flex-direction:column}}'
+    ].join('');
+    document.head.appendChild(style);
+  }
+
+  function renderExecutiveDashboard(data) {
+    ensureExecutiveDashboardStyle();
+    ensureExecutiveDashboardScaffold();
+    var health = getDashboardHealthStatus(data);
+    var toneColor = health.tone === 'risk' ? '#ef4444' : (health.tone === 'warn' ? '#f59e0b' : '#10b981');
+    var marginPct = Math.max(0, Math.min(100, data.marginPct || 0));
+    var fixedPct = data.totalCost > 0 ? Math.min(100, Math.max(0, (data.fixedPerUnit / data.totalCost) * 100)) : 0;
+    var variablePct = data.totalCost > 0 ? 100 - fixedPct : 0;
+    var topCosts = topCostComponents(data);
+    var rows = serviceRows(data);
+    var bepStatus = !data.hasData ? 'Belum ada data' : (data.dailyBep <= 25 ? 'Masih Realistis' : (data.dailyBep <= 45 ? 'Perlu Didorong' : 'Berat'));
+    var bepTone = bepStatus === 'Masih Realistis' ? 'good' : (bepStatus === 'Perlu Didorong' ? 'warn' : (bepStatus === 'Berat' ? 'risk' : 'neutral'));
+    var updated = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+    $('execKpiGrid').innerHTML = [
+      kpiHtml('ph-heartbeat', 'Status Outlet', health.text, health.caption, health.tone),
+      kpiHtml('ph-stack', 'Total HPP Variabel', safeRupiahDashboard(data.variableTotal) + ' / Load', 'Biaya variabel per load', 'info'),
+      kpiHtml('ph-trend-up', 'Margin Kontribusi', safeRupiahDashboard(data.margin) + ' / Transaksi', 'Kontribusi setelah variabel', data.marginPct >= 35 ? 'good' : 'warn'),
+      kpiHtml('ph-target', 'Target BEP Harian', Math.round(data.dailyBep) + ' Load / Hari', 'Target minimal agar tidak rugi', bepTone),
+      kpiHtml('ph-sparkle', 'Estimasi Laba Bersih', safeRupiahDashboard(data.netProfit) + ' / Bulan', 'Estimasi laba bersih bulanan', 'good', true)
+    ].join('');
+
+    $('execHealthCard').innerHTML =
+      '<div class="exec-card-title"><h3>Status Kesehatan Outlet</h3><span>OUTLET</span></div>' +
+      '<div class="exec-health-body"><div class="exec-gauge" style="--pct:' + marginPct.toFixed(1) + '%;--tone:' + toneColor + '"><div class="exec-gauge-center"><div class="exec-muted">OUTLET</div><strong>' + escapeHtml(health.text) + '</strong><div class="exec-muted">GOOD</div></div></div>' +
+      '<div><div class="exec-insight-box"><strong>' + escapeHtml(health.text === 'Belum ada data' ? 'Lengkapi data struktur biaya.' : 'Outlet Anda dalam kondisi ' + health.text.toLowerCase() + '.') + '</strong><br>' + escapeHtml(health.caption) + '</div>' +
+      '<div class="exec-mini-grid"><div class="exec-mini"><strong>' + safePercentDashboard(marginPct) + '</strong><span>Margin aman</span></div><div class="exec-mini"><strong>' + Math.round(data.dailyBep) + ' Load</strong><span>Target BEP</span></div><div class="exec-mini"><strong>' + compactMoney(data.netProfit) + '</strong><span>Per bulan</span></div></div></div></div>';
+
+    $('execCostCard').innerHTML =
+      '<div class="exec-card-title"><h3>Komposisi Biaya</h3><span>/ Load</span></div>' +
+      '<div class="exec-cost-layout"><div class="exec-donut" style="--pct:' + variablePct.toFixed(1) + '%;--tone:#2563eb"><div class="exec-donut-center"><div class="exec-muted">TOTAL BIAYA</div><strong>' + safeRupiahDashboard(data.totalCost) + '</strong><div class="exec-muted">/ Load</div></div></div>' +
+      '<div class="exec-legend"><div class="exec-row"><span>Biaya Variabel</span><strong>' + safeRupiahDashboard(data.variableTotal) + ' <span class="exec-muted">(' + safePercentDashboard(variablePct) + ')</span></strong></div><div class="exec-row"><span>Biaya Tetap</span><strong>' + safeRupiahDashboard(data.fixedPerUnit) + ' <span class="exec-muted">(' + safePercentDashboard(fixedPct) + ')</span></strong></div></div></div>' +
+      '<div class="exec-card-title" style="margin-top:16px"><h3>3 Komponen Terbesar</h3><span>Variabel</span></div><div class="exec-list">' + (topCosts.length ? topCosts.map(function(item) { var pct = data.variableTotal > 0 ? (item.value / data.variableTotal) * 100 : 0; return '<div class="exec-row"><span>' + escapeHtml(item.label) + '</span><strong>' + safeRupiahDashboard(item.value) + ' <span class="exec-muted">' + safePercentDashboard(pct) + '</span></strong></div>'; }).join('') : '<div class="exec-muted">Belum ada data biaya</div>') + '</div>';
+
+    $('execHppServiceCard').innerHTML =
+      '<div class="exec-card-title"><h3>Ringkasan HPP Layanan</h3><span>' + escapeHtml(data.category) + '</span></div><div class="exec-service-list">' +
+      rows.map(function(item) { return '<div class="exec-row"><span><i class="ph ph-circle"></i> ' + escapeHtml(item.label) + '</span><strong>' + safeRupiahDashboard(item.value) + '</strong></div>'; }).join('') +
+      '</div>';
+
+    $('execBepCard').innerHTML =
+      '<div class="exec-card-title"><h3>Target Minimal Agar Tidak Rugi</h3><span class="exec-badge ' + bepTone + '">' + escapeHtml(bepStatus) + '</span></div><div class="exec-info-list">' +
+      '<div class="exec-row"><span>Load minimal per hari</span><strong>' + Math.round(data.dailyBep) + ' Load</strong></div><div class="exec-row"><span>Omzet minimal per hari</span><strong>' + safeRupiahDashboard(data.bepRevenueDaily) + '</strong></div><div class="exec-row"><span>Omzet minimal per bulan</span><strong>' + safeRupiahDashboard(data.bepRevenueMonthly) + '</strong></div></div>';
+
+    $('execMarginCard').innerHTML =
+      '<div class="exec-card-title"><h3>Harga & Margin Layanan</h3><span>3-5 layanan</span></div><div class="exec-info-list">' +
+      rows.slice(0, 5).map(function(item) { var servicePrice = data.price || 0; var margin = servicePrice > 0 ? Math.max(0, servicePrice - item.value) : 0; var pct = servicePrice > 0 ? (margin / servicePrice) * 100 : 0; var tone = pct >= 40 ? 'good' : (pct >= 25 ? 'warn' : 'risk'); return '<div class="exec-row"><span>' + escapeHtml(item.label.replace('HPP ', '')) + '</span><strong>' + safeRupiahDashboard(servicePrice) + ' <span class="exec-badge ' + tone + '">' + safePercentDashboard(pct) + '</span></strong></div>'; }).join('') +
+      '</div>';
+
+    $('execRoiCard').innerHTML =
+      '<div class="exec-card-title"><h3>Estimasi Balik Modal</h3><span>ROI</span></div><div class="exec-info-list"><div class="exec-row"><span>Total Investasi Awal</span><strong>' + safeRupiahDashboard(data.investment) + '</strong></div><div class="exec-row"><span>Laba Bersih/Bulan</span><strong>' + safeRupiahDashboard(data.netProfit) + '</strong></div></div><div class="exec-roi-highlight"><span class="exec-muted">Balik Modal</span><br><strong>' + (data.payback > 0 ? Math.ceil(data.payback) + ' Bulan' : 'Belum bisa dihitung') + '</strong></div>';
+
+    $('execInsightCard').innerHTML =
+      '<div class="exec-card-title"><h3>Insight Otomatis</h3><span>Rekomendasi</span></div><div class="exec-insights">' + insightHtml(data, health, topCosts, bepStatus) + '</div>';
+
+    setText('execUpdatedAt', 'Terakhir diperbarui hari ini - ' + updated + ' WIB');
+  }
+
+  function kpiHtml(icon, label, value, caption, tone, north) {
+    return '<article class="exec-kpi ' + (north ? 'is-north' : '') + '"><div class="exec-kpi-head"><span>' + escapeHtml(label) + '</span><span class="exec-icon"><i class="ph ' + icon + '"></i></span></div><div class="exec-kpi-value">' + escapeHtml(value) + '</div><div class="exec-caption">' + escapeHtml(caption) + '</div></article>';
+  }
+
+  function compactMoney(value) {
+    var n = safeNumberDashboard(value);
+    if (n >= 1000000) return 'Rp ' + (n / 1000000).toFixed(1).replace('.', ',') + ' jt';
+    return safeRupiahDashboard(n);
+  }
+
+  function insightHtml(data, health, topCosts, bepStatus) {
+    var list = [];
+    list.push({ title: data.marginPct >= 35 ? 'Margin kontribusi berada di level sehat.' : 'Margin layanan utama mulai tipis.', caption: data.marginPct >= 35 ? 'Pertahankan efisiensi biaya variabel.' : 'Pertimbangkan evaluasi harga jual atau efisiensi biaya.' });
+    list.push({ title: topCosts[0] ? topCosts[0].label + ' adalah komponen terbesar.' : 'Belum ada data komponen biaya.', caption: topCosts[0] ? 'Optimalkan komponen ini untuk menaikkan margin.' : 'Lengkapi data struktur biaya untuk menampilkan analisis.' });
+    list.push({ title: 'Status BEP: ' + bepStatus + '.', caption: data.dailyBep > 0 ? 'Pertahankan minimal ' + Math.round(data.dailyBep) + ' load per hari.' : 'Lengkapi data BEP untuk menghitung target.' });
+    list.push({ title: data.netProfit > 0 ? 'Proyeksi laba bulan ini positif.' : 'Proyeksi laba belum bisa dihitung.', caption: data.netProfit > 0 ? 'Fokus pada peningkatan volume transaksi.' : 'Lengkapi harga, HPP, dan biaya tetap.' });
+    return list.map(function(item) { return '<div class="exec-row" style="align-items:flex-start"><span><strong>' + escapeHtml(item.title) + '</strong><br><span class="exec-muted">' + escapeHtml(item.caption) + '</span></span></div>'; }).join('');
+  }
+
+  function renderEmptyDashboard(message) {
+    renderExecutiveDashboard(getDashboardSummary(getSelectedOutletName()));
+    dashLog('[DASH_RENDER_DONE]', { empty: true, message: message || 'Data belum tersedia' });
   }
 
   window.renderSingleOutletDashboard = function () {
     try {
+      if (!isExecDashboardActive()) {
+        dashLog('[DASH_SKIP_NON_ACTIVE_VIEW]');
+        return;
+      }
+      var token = ++execDashboardToken;
+      dashLog('[DASH_RENDER_START]');
+      dashLog('[DASH_VIEW_ACTIVE]', { active: true });
       var selected = getSelectedOutletName();
       syncSelectors(selected);
+      if (token !== execDashboardToken) {
+        dashLog('[DASH_SKIP_STALE_RESPONSE]', { token: token });
+        return;
+      }
 
       if (!selected) {
         renderEmptyDashboard('Silakan pilih outlet.');
         return;
       }
 
-      var transactions = getTransactions();
-      var row = null;
-      for (var i = 0; i < transactions.length; i++) {
-        var itemName = transactions[i].nama || transactions[i].namaOutlet || transactions[i].Nama_Outlet || transactions[i]['Nama Outlet'];
-        if (String(itemName || '').trim().toLowerCase() === String(selected).trim().toLowerCase()) {
-          row = transactions[i];
-          break;
-        }
-      }
-
-      if (!row) {
-        renderEmptyDashboard('Data BEP/HPP untuk outlet ini belum tersimpan.');
-        return;
-      }
-
-      var hpp = cleanNumber(row.hpp || row.HPP_Per_Kg || row.hppPerKg);
-      var bepKg = cleanNumber(row.bepKg || row.BEP_Kg);
-      var bepRupiah = cleanNumber(row.bepRupiah || row.BEP_Rupiah);
-      var biayaTetap = cleanNumber(row.biayaTetap || row.Biaya_Tetap);
-      var biayaVariabel = cleanNumber(row.biayaVariabel || row.Biaya_Variabel_Per_Kg || hpp);
-      var kapasitas = cleanNumber(row.kapasitas || row.Kapasitas_Per_Bulan);
-      var hargaAcuan = cleanNumber(row.hargaAcuan || row.Harga_Acuan_BEP);
-
-      var margin = hargaAcuan - hpp;
-      var achievement = bepKg > 0 ? Math.min((kapasitas / bepKg) * 100, 999) : 0;
-      var profit = (hargaAcuan * kapasitas) - (biayaVariabel * kapasitas) - biayaTetap;
-      var varPct = (biayaTetap + (biayaVariabel * Math.max(kapasitas, 1))) > 0 ? ((biayaVariabel * Math.max(kapasitas, 1)) / (biayaTetap + (biayaVariabel * Math.max(kapasitas, 1)))) * 100 : 0;
-
-      setText('v1-val-margin', money(margin));
-      setText('v1-sub-margin', margin >= 0 ? 'Margin positif / kg' : 'Margin negatif / kg');
-      setText('v1-val-vol', achievement.toFixed(0) + '%');
-      setText('v1-sub-vol', 'Kapasitas vs target BEP');
-      setText('v1-val-profit', money(profit));
-      setText('v1-sub-profit', profit >= 0 ? 'Estimasi laba bersih' : 'Estimasi defisit');
-      setText('v1-gauge-pct', achievement.toFixed(0) + '%');
-      setText('v1-donut-total', money(hpp));
-
-      var gauge = $('v1-gauge-path');
-      if (gauge) {
-        var offset = 141.37 - (141.37 * Math.min(achievement, 100) / 100);
-        gauge.style.strokeDashoffset = String(offset);
-        gauge.style.stroke = achievement >= 100 ? '#10b981' : '#6366f1';
-      }
-
-      var donut = $('v1-donut-el');
-      if (donut) donut.style.setProperty('--val-var', Math.max(0, Math.min(varPct, 100)).toFixed(1) + '%');
-
-      var tbody = $('v1-table-body');
-      if (tbody) {
-        tbody.innerHTML = '' +
-          '<tr><td>HPP / Kg</td><td class="td-right">' + money(hpp) + '</td><td class="td-right">-</td><td class="td-right">-</td></tr>' +
-          '<tr><td>Target BEP</td><td class="td-right">' + money(bepRupiah) + '</td><td class="td-right">' + bepKg.toLocaleString('id-ID') + ' Load</td><td class="td-right">100%</td></tr>' +
-          '<tr><td>Kapasitas Bulanan</td><td class="td-right">-</td><td class="td-right">' + kapasitas.toLocaleString('id-ID') + ' Kg</td><td class="td-right">' + achievement.toFixed(1) + '%</td></tr>' +
-          '<tr><td>Estimasi Laba</td><td class="td-right">' + money(profit) + '</td><td class="td-right">-</td><td class="td-right">-</td></tr>';
-      }
+      dashLog('[DASH_LOAD_START]', { source: 'frontend-state' });
+      var summary = getDashboardSummary(selected);
+      dashLog('[DASH_LOAD_SUCCESS]', { hasData: summary.hasData });
+      dashLog('[DASH_RENDER_KPI]', { hasData: summary.hasData });
+      renderExecutiveDashboard(summary);
+      dashLog('[DASH_RENDER_COST_COMPOSITION]', { totalCost: summary.totalCost });
+      dashLog('[DASH_RENDER_HPP_SUMMARY]', { variableTotal: summary.variableTotal });
+      dashLog('[DASH_RENDER_BEP_SUMMARY]', { dailyBep: summary.dailyBep });
+      dashLog('[DASH_RENDER_ROI]', { payback: summary.payback });
+      dashLog('[DASH_RENDER_INSIGHT]');
+      dashLog('[DASH_RENDER_DONE]');
     } catch (error) {
+      dashLog('[DASH_ERROR_CAUGHT]', { error: error && error.message });
       console.error('[ZETTBOT PATCH] renderSingleOutletDashboard error:', error);
       renderEmptyDashboard('Dashboard gagal dirender.');
     }
