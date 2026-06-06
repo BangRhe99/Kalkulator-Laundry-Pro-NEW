@@ -1067,6 +1067,42 @@
         console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
         return;
       }
+      const outlet = String(value || '').trim();
+      const onBepPage = typeof isOnBEPPage === 'function' && isOnBEPPage();
+      const onHppPage = typeof isOnHPPPage === 'function' && isOnHPPPage();
+      if (onBepPage && !onHppPage) {
+        console.warn('[BEP_OUTLET_CHANGE_ONLY_SKIP_HPP]', outlet);
+        if (window.__BEP_OUTLET_CHANGE_LOCK__) {
+          console.warn('[BEP_DUPLICATE_OUTLET_CHANGE_BLOCKED]', outlet);
+          return;
+        }
+        window.__BEP_OUTLET_CHANGE_LOCK__ = true;
+        try {
+          try {
+            if (typeof window.clearHPPOutletLoaders === 'function') {
+              window.clearHPPOutletLoaders();
+            }
+          } catch (error) {}
+          try {
+            if (typeof window.clearHPPOutletLoadersBrutal === 'function') {
+              window.clearHPPOutletLoadersBrutal();
+            }
+          } catch (error) {}
+          try {
+            if (typeof window.updateHeaderKategoriLaundryInfo === 'function') {
+              window.updateHeaderKategoriLaundryInfo();
+            }
+          } catch (error) {}
+          if (typeof window.zettLoadBEPFixedCost === 'function') {
+            window.zettLoadBEPFixedCost(outlet, { force: true, delay: 0 });
+          }
+        } finally {
+          window.setTimeout(function() {
+            window.__BEP_OUTLET_CHANGE_LOCK__ = false;
+          }, 300);
+        }
+        return;
+      }
 
       console.log('Outlet changed:', value);
       window.__HPP_FORCE_ZERO_DASHBOARD = false;
@@ -1898,6 +1934,41 @@
           console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
           return;
         }
+        var onBepPage = typeof isOnBEPPage === 'function' && isOnBEPPage();
+        var onHppPage = typeof isOnHPPPage === 'function' && isOnHPPPage();
+        if (onBepPage && !onHppPage) {
+          console.warn('[BEP_OUTLET_CHANGE_ONLY_SKIP_HPP]', outlet);
+          if (window.__BEP_OUTLET_CHANGE_LOCK__) {
+            console.warn('[BEP_DUPLICATE_OUTLET_CHANGE_BLOCKED]', outlet);
+            return;
+          }
+          window.__BEP_OUTLET_CHANGE_LOCK__ = true;
+          try {
+            try {
+              if (typeof window.clearHPPOutletLoaders === 'function') {
+                window.clearHPPOutletLoaders();
+              }
+            } catch (error) {}
+            try {
+              if (typeof window.clearHPPOutletLoadersBrutal === 'function') {
+                window.clearHPPOutletLoadersBrutal();
+              }
+            } catch (error) {}
+            try {
+              if (typeof window.updateHeaderKategoriLaundryInfo === 'function') {
+                window.updateHeaderKategoriLaundryInfo();
+              }
+            } catch (error) {}
+            if (typeof window.zettLoadBEPFixedCost === 'function') {
+              window.zettLoadBEPFixedCost(outlet, { force: true, delay: 0 });
+            }
+          } finally {
+            window.setTimeout(function() {
+              window.__BEP_OUTLET_CHANGE_LOCK__ = false;
+            }, 300);
+          }
+          return;
+        }
         window.__HPP_OUTLET_LOCK__ = window.__HPP_OUTLET_LOCK__ || false;
         if (window.__HPP_OUTLET_LOCK__) {
           console.warn('[HPP_STAGE_5_DUPLICATE_HANDLER_BLOCKED]', outlet);
@@ -1975,6 +2046,43 @@
           if (window.__HPP_PROGRAMMATIC_UPDATE__) {
             console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
             event.stopImmediatePropagation();
+            return;
+          }
+          var onBepPage = typeof isOnBEPPage === 'function' && isOnBEPPage();
+          var onHppPage = typeof isOnHPPPage === 'function' && isOnHPPPage();
+          if (onBepPage && !onHppPage) {
+            event.stopImmediatePropagation();
+            var outlet = String(event.target.value || '').trim();
+            console.warn('[BEP_OUTLET_CHANGE_ONLY_SKIP_HPP]', outlet);
+            if (window.__BEP_OUTLET_CHANGE_LOCK__) {
+              console.warn('[BEP_DUPLICATE_OUTLET_CHANGE_BLOCKED]', outlet);
+              return;
+            }
+            window.__BEP_OUTLET_CHANGE_LOCK__ = true;
+            try {
+              try {
+                if (typeof window.clearHPPOutletLoaders === 'function') {
+                  window.clearHPPOutletLoaders();
+                }
+              } catch (error) {}
+              try {
+                if (typeof window.clearHPPOutletLoadersBrutal === 'function') {
+                  window.clearHPPOutletLoadersBrutal();
+                }
+              } catch (error) {}
+              try {
+                if (typeof window.updateHeaderKategoriLaundryInfo === 'function') {
+                  window.updateHeaderKategoriLaundryInfo();
+                }
+              } catch (error) {}
+              if (typeof window.zettLoadBEPFixedCost === 'function') {
+                window.zettLoadBEPFixedCost(outlet, { force: true, delay: 0 });
+              }
+            } finally {
+              window.setTimeout(function() {
+                window.__BEP_OUTLET_CHANGE_LOCK__ = false;
+              }, 300);
+            }
             return;
           }
           event.stopImmediatePropagation();

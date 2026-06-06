@@ -1790,6 +1790,8 @@
   var bepLoadTimer = 0;
   var bepActiveOutletKey = '';
   var bepActiveFetches = {};
+  var bepLastLoadSignature = '';
+  var bepLastLoadAt = 0;
   window.bepOutletCache = window.bepOutletCache || {};
 
   function byId(id) { return document.getElementById(id); }
@@ -2498,7 +2500,12 @@
       }
       renderAll();
       setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : '', outlet ? 'ready' : 'idle');
-      scheduleCalc();
+      window.clearTimeout(window.__BEP_AFTER_RENDER_CALC_TIMER__);
+      window.__BEP_AFTER_RENDER_CALC_TIMER__ = window.setTimeout(function() {
+        if (!zettIsActiveViewBEP_()) return;
+        if (bepActiveOutletKey !== bepCacheKey(outlet)) return;
+        scheduleCalc();
+      }, 120);
       bepSafeLog('[BEP_RENDER_DONE]', { fn: 'applyServerData', targetOutlet: outlet });
     } catch (error) {
       bepSafeError('[BEP_ERROR_CAUGHT]', { fn: 'applyServerData', targetOutlet: outlet, error: error, stack: error && error.stack });
@@ -2626,6 +2633,14 @@
       bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'zettLoadBEPFixedCost', targetOutlet: outlet });
       return;
     }
+    var now = Date.now();
+    var signature = bepCacheKey(outlet) + '|bep';
+    if (signature === bepLastLoadSignature && now - bepLastLoadAt < 300) {
+      bepSafeLog('[BEP_DUPLICATE_LOAD_BLOCKED]', { targetOutlet: outlet });
+      return;
+    }
+    bepLastLoadSignature = signature;
+    bepLastLoadAt = now;
     window.clearTimeout(bepLoadTimer);
     if (!outlet) {
       loadBEPDashboardByOutlet('', { force: true });
@@ -2711,19 +2726,33 @@
 
   var originalHandleOutlet = window.handleGlobalOutletChange;
   window.handleGlobalOutletChange = function(value) {
-    bepSafeLog('[GLOBAL_OUTLET_HANDLER_START]', { value: value });
     if (window.__HPP_PROGRAMMATIC_UPDATE__) {
       console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
       return;
     }
     var isBepPage = zettIsActiveViewBEP_();
     var isHppPage = zettIsActiveViewHPP_();
-    if (isBepPage) {
-      bepSafeLog('[GLOBAL_OUTLET_HANDLER_SKIP]', { value: value, skipped: 'hpp-handler', reason: 'bep-active' });
-      window.zettLoadBEPFixedCost(value, { force: true });
+    if (isBepPage && !isHppPage) {
+      console.warn('[BEP_OUTLET_CHANGE_ONLY_SKIP_HPP]', String(value || '').trim());
+      if (window.__BEP_OUTLET_CHANGE_LOCK__) {
+        console.warn('[BEP_DUPLICATE_OUTLET_CHANGE_BLOCKED]', String(value || '').trim());
+        return;
+      }
+      window.__BEP_OUTLET_CHANGE_LOCK__ = true;
+      try {
+        try { if (typeof window.clearHPPOutletLoaders === 'function') window.clearHPPOutletLoaders(); } catch (error) {}
+        try { if (typeof window.clearHPPOutletLoadersBrutal === 'function') window.clearHPPOutletLoadersBrutal(); } catch (error) {}
+        try { if (typeof window.updateHeaderKategoriLaundryInfo === 'function') window.updateHeaderKategoriLaundryInfo(); } catch (error) {}
+        window.zettLoadBEPFixedCost(value, { force: true, delay: 0 });
+      } finally {
+        window.setTimeout(function() {
+          window.__BEP_OUTLET_CHANGE_LOCK__ = false;
+        }, 300);
+      }
       return;
     }
     if (typeof originalHandleOutlet === 'function') {
+      bepSafeLog('[GLOBAL_OUTLET_HANDLER_START]', { value: value });
       var result = originalHandleOutlet.apply(this, arguments);
       if (isHppPage && !isBepPage) console.warn('[HPP_ISOLATION_SKIP_BEP_LOAD]', value);
       return result;
