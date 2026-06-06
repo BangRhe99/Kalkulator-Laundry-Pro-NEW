@@ -1612,7 +1612,7 @@
         });
         return null;
       }
-      function renderValues(values, source) {
+      function renderValues(values, source, outletName, requestId) {
         acaStep('before renderValues', '[12 beforeRenderValues]');
         hppTrace('[HPP_TRACE_09_BEFORE_RENDER_VALUES]');
         window.__HPP_RENDER_COUNTER__ = window.__HPP_RENDER_COUNTER__ || 0;
@@ -1634,8 +1634,16 @@
           return;
         }
         values = sanitizeHPPValues(values);
-        var total = syncState(values);
         requestAnimationFrame(function() {
+          if (requestId && requestId !== window.hppRenderRequestId) {
+            hppDebugLog('[HPP_SKIP_STALE_RENDER_FRAME]', { outlet: outletName, requestId: requestId, activeRequestId: window.hppRenderRequestId, currentOutlet: currentOutlet(), source: source });
+            return;
+          }
+          if (outletName && norm(currentOutlet()) !== norm(outletName)) {
+            hppDebugLog('[HPP_SKIP_STALE_RENDER_FRAME]', { outlet: outletName, requestId: requestId, activeRequestId: window.hppRenderRequestId, currentOutlet: currentOutlet(), source: source });
+            return;
+          }
+          var total = syncState(values);
           var domWrites = [];
           if (typeof window.zettHPPUpdateDashboardFromState === 'function') {
             acaStep('before renderDashboard', '[13 beforeRenderDashboard]');
@@ -1682,7 +1690,7 @@
             window.__HPP_RENDER_LOOP_ZEROING__ = false;
           }
         } else {
-          renderValues({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 }, 'hpp-zero-state');
+          renderValues({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 }, 'hpp-zero-state', outletName || currentOutlet(), window.hppRenderRequestId);
         }
         if (typeof window.zettResetHPPProcessCardsToZero === 'function') {
           try { window.zettResetHPPProcessCardsToZero(); } catch (error) {}
@@ -1692,7 +1700,11 @@
         endAcaTrace();
       }
       window.renderHPPZeroState = renderHPPZeroState;
-      function captureAndCache(outlet, row, source) {
+      function captureAndCache(outlet, row, source, requestId) {
+        if (requestId && (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== norm(outlet))) {
+          hppDebugLog('[HPP_SKIP_STALE_CAPTURE]', { outlet: outlet, requestId: requestId, activeRequestId: window.hppRenderRequestId, currentOutlet: currentOutlet(), source: source });
+          return;
+        }
         var values = sanitizeHPPValues(readState());
         var total = HPP_TYPES.reduce(function(sum, type) { return sum + values[type]; }, 0);
         if (!total && row) values = fallbackValuesFromRow(row);
@@ -1702,9 +1714,12 @@
           values: values,
           updatedAt: Date.now()
         };
-        renderValues(values, source || 'hpp-fast-switch');
-        hideBranchLoaderAfterPaint();
+        renderValues(values, source || 'hpp-fast-switch', outlet, requestId);
+        if (!requestId || (requestId === window.hppRenderRequestId && norm(currentOutlet()) === norm(outlet))) {
+          hideBranchLoaderAfterPaint();
+        }
         setTimeout(function() {
+          if (requestId && (requestId !== window.hppRenderRequestId || norm(currentOutlet()) !== norm(outlet))) return;
           if (typeof window.zettRefreshHPPProcessCards === 'function') window.zettRefreshHPPProcessCards();
         }, 120);
       }
@@ -1764,7 +1779,7 @@
             hppDataState: window.hppDataState || null,
             appStateHpp: window.APP_STATE?.data?.hpp || null
           });
-          captureAndCache(outlet, row, source);
+          captureAndCache(outlet, row, source, requestId);
           hppDebugLog('[HPP_RENDER_DONE]', outlet);
           hppTrace('[HPP_TRACE_DONE]', outlet);
           endAcaTrace();
@@ -1789,12 +1804,16 @@
         hppTrace('[HPP_TRACE_03_FETCH_START]', normalized);
         hppDebugLog('[HPP_LOAD_START]', { outlet: outlet, requestId: requestId, force: !!force });
         if (!outlet || typeof google === 'undefined' || !google.script || !google.script.run) {
-          setSoftLoading(false);
-          renderHPPZeroState(outlet);
+          if (requestId === window.hppRenderRequestId && norm(currentOutlet()) === normalized) {
+            setSoftLoading(false);
+            renderHPPZeroState(outlet);
+          }
           return;
         }
         if (activeFetches[normalized] && !force) {
-          window.setTimeout(hideBranchLoaderAfterPaint, 900);
+          window.setTimeout(function() {
+            if (requestId === window.hppRenderRequestId && norm(currentOutlet()) === normalized) hideBranchLoaderAfterPaint();
+          }, 900);
           return;
         }
         activeFetches[normalized] = Date.now();
@@ -1821,8 +1840,10 @@
           })
           .withFailureHandler(function(error) {
             delete activeFetches[normalized];
-            if (requestId === window.hppRenderRequestId) setSoftLoading(false);
-            if (requestId === window.hppRenderRequestId) renderHPPZeroState(outlet);
+            if (requestId === window.hppRenderRequestId && norm(currentOutlet()) === normalized) {
+              setSoftLoading(false);
+              renderHPPZeroState(outlet);
+            }
             hppDebugError('[HPP_OUTLET_SWITCH_ERROR]', error);
             crashPoint(outlet, error);
           })
@@ -1836,7 +1857,7 @@
         if (typeof originalResetDashboardToZero === 'function') {
           originalResetDashboardToZero();
         } else {
-          renderValues({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 }, 'hpp-initial-zero');
+          renderValues({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 }, 'hpp-initial-zero', '', window.hppRenderRequestId);
         }
         hideBranchLoaderAfterPaint();
       }
@@ -1870,7 +1891,7 @@
         hppTrace('[HPP_TRACE_05_ROW_FOUND]', !!row);
 
         if (cached && cached.values) {
-          renderValues(cached.values, 'hpp-cache');
+          renderValues(cached.values, 'hpp-cache', selected, requestId);
         }
 
         if (row) {
@@ -1897,6 +1918,14 @@
         window.requestAnimationFrame(function() {
           hppTransitionRenderTimer = window.setTimeout(function() {
             window.requestAnimationFrame(function() {
+              if (selected && norm(currentOutlet()) !== norm(selected)) {
+                hppDebugLog('[HPP_SKIP_STALE_SCHEDULED_RENDER]', { selected: selected, currentOutlet: currentOutlet() });
+                return;
+              }
+              if (!selected && currentOutlet()) {
+                hppDebugLog('[HPP_SKIP_STALE_SCHEDULED_RENDER]', { selected: selected, currentOutlet: currentOutlet() });
+                return;
+              }
               if (!selected) renderInitialZero();
               else switchOutlet(selected, { noBackgroundRefresh: true });
             });
@@ -1919,6 +1948,10 @@
         if (!outlet) return;
         var normalizedRefreshOutlet = normalizeOutletNameHPP(outlet);
         var config = options || {};
+        if (norm(currentOutlet()) !== normalizedRefreshOutlet) {
+          hppDebugLog('[HPP_SKIP_STALE_REFRESH_REQUEST]', { outlet: outlet, currentOutlet: currentOutlet() });
+          return;
+        }
         var requestId = window.hppRenderRequestId || ++window.hppRenderRequestId;
         var cached = window.hppDashboardCache[norm(outlet)];
         if (cached && cached.row && !config.force) {
