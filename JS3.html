@@ -1784,11 +1784,13 @@
     monthlyRent: 0,
     rentNote: '',
     salaries: [],
+    serverSalaryTotal: 0,
     machines: [],
     internetProvider: '',
     internetMonthly: 0,
     internetNote: '',
     others: [],
+    serverOtherTotal: 0,
     serverMachineTotal: 0,
     serverDepreciationTotal: 0,
     serverMaintenanceTotal: 0,
@@ -1917,8 +1919,78 @@
   function machineKey(outletName, jenisMesin, tipeMesin) {
     return [outletName, jenisMesin, tipeMesin].map(function(value) { return norm(value); }).join('|');
   }
+  function isAcaLaundryOutlet(outlet) {
+    return norm(outlet).indexOf('aca laundry') !== -1;
+  }
   function bepCacheKey(outlet) { return norm(outlet); }
   function bepStorageKey(outlet) { return 'zett:bep:fixed-cache:' + bepCacheKey(outlet); }
+  function sanitizeBEPServerData(data, outlet) {
+    data = data || {};
+    function limitArray(arr, max) {
+      return Array.isArray(arr) ? arr.slice(0, max) : [];
+    }
+    function compactMachine(row) {
+      row = row || {};
+      return {
+        machineKey: row.machineKey || '',
+        jenisMesin: row.jenisMesin || row.name || '',
+        tipeMesin: row.tipeMesin || '',
+        jumlahUnit: row.jumlahUnit || row.units || 0,
+        units: row.units || row.jumlahUnit || 0,
+        hargaPerUnit: row.hargaPerUnit || row.purchasePrice || 0,
+        residuPerUnit: row.residuPerUnit || row.residualValue || 0,
+        umurEkonomisTahun: row.umurEkonomisTahun || row.lifeYears || 0,
+        rawatPerTahunPerUnit: row.rawatPerTahunPerUnit || row.maintenancePerYear || 0,
+        depreciationMonthly: row.depreciationMonthly || 0,
+        maintenanceMonthly: row.maintenanceMonthly || 0,
+        totalMonthly: row.totalMonthly || 0,
+        source: row.source || 'Profil Operasional',
+        active: row.active !== false
+      };
+    }
+    function compactSalary(row) {
+      row = row || {};
+      return {
+        name: row.name || row.jabatan || '',
+        count: row.count || row.jumlah || 0,
+        salaryPerPerson: row.salaryPerPerson || row.gajiPerOrang || 0,
+        total: row.total || 0
+      };
+    }
+    function compactOther(row) {
+      row = row || {};
+      return {
+        name: row.name || '',
+        monthlyAmount: row.monthlyAmount || 0,
+        note: row.note || ''
+      };
+    }
+    var clean = Object.assign({}, data);
+    clean.namaOutlet = data.namaOutlet || data['Nama Outlet'] || outlet || '';
+    clean.detailGaji = limitArray(data.detailGaji, 20).map(compactSalary);
+    clean.detailMesin = limitArray(data.detailMesin, 20).map(compactMachine);
+    clean.detailLainLain = limitArray(data.detailLainLain, 20).map(compactOther);
+    clean.__originalSizes = {
+      detailGaji: Array.isArray(data.detailGaji) ? data.detailGaji.length : 0,
+      detailMesin: Array.isArray(data.detailMesin) ? data.detailMesin.length : 0,
+      detailLainLain: Array.isArray(data.detailLainLain) ? data.detailLainLain.length : 0
+    };
+    return clean;
+  }
+  function clearLegacyBEPCacheIfNeeded(outlet) {
+    if (!window.localStorage) return;
+    try {
+      var raw = window.localStorage.getItem(bepStorageKey(outlet));
+      if (!raw) return;
+      if (raw.length > 120000) {
+        window.localStorage.removeItem(bepStorageKey(outlet));
+        bepSafeLog('[BEP_LEGACY_CACHE_REMOVED_TOO_LARGE]', {
+          targetOutlet: outlet,
+          bytes: raw.length
+        });
+      }
+    } catch (error) {}
+  }
   function getCachedBEPOutlet(outlet) {
     var key = bepCacheKey(outlet);
     var cached = key ? window.bepOutletCache[key] : null;
@@ -1933,9 +2005,49 @@
   function cacheBEPOutletData(outlet, data) {
     var key = bepCacheKey(outlet || (data && (data.namaOutlet || data['Nama Outlet'])));
     if (!key || !data) return;
-    window.bepOutletCache[key] = { data: data, updatedAt: Date.now() };
+    var safeData = sanitizeBEPServerData(data, outlet);
+    var updatedAt = Date.now();
+    window.bepOutletCache[key] = { data: safeData, updatedAt: updatedAt };
     if (window.localStorage) {
-      try { window.localStorage.setItem(bepStorageKey(outlet || key), JSON.stringify(window.bepOutletCache[key])); } catch (error) {}
+      try {
+        var compactCache = {
+          updatedAt: updatedAt,
+          data: {
+            namaOutlet: safeData.namaOutlet || outlet,
+            category: safeData.category || safeData.kategoriLaundry || safeData['Kategori Laundry'] || '',
+            kategoriLaundry: safeData.kategoriLaundry || safeData['Kategori Laundry'] || '',
+            statusSewa: safeData.statusSewa || safeData['Status Sewa'] || '',
+            biayaSewaTahunan: safeData.biayaSewaTahunan || safeData['Biaya Sewa Tahunan'] || 0,
+            biayaSewaBulanan: safeData.biayaSewaBulanan || safeData['Biaya Sewa Bulanan'] || 0,
+            totalGajiBulanan: safeData.totalGajiBulanan || safeData['Total Gaji Bulanan'] || 0,
+            totalBiayaMesinBulanan: safeData.totalBiayaMesinBulanan || safeData['Total Biaya Mesin Bulanan'] || 0,
+            totalDepresiasiMesinBulanan: safeData.totalDepresiasiMesinBulanan || safeData['Total Depresiasi Mesin Bulanan'] || 0,
+            totalCadanganPerawatanMesinBulanan: safeData.totalCadanganPerawatanMesinBulanan || safeData['Total Cadangan Perawatan Mesin Bulanan'] || 0,
+            providerInternet: safeData.providerInternet || safeData['Provider Internet'] || '',
+            biayaInternetBulanan: safeData.biayaInternetBulanan || safeData['Biaya Internet Bulanan'] || 0,
+            totalLainLainBulanan: safeData.totalLainLainBulanan || safeData['Total Lain Lain Bulanan'] || 0,
+            totalFixedCostBulanan: safeData.totalFixedCostBulanan || safeData['Total Fixed Cost Bulanan'] || 0,
+            detailGaji: safeData.detailGaji,
+            detailMesin: safeData.detailMesin,
+            detailLainLain: safeData.detailLainLain
+          }
+        };
+        var serialized = JSON.stringify(compactCache);
+        if (serialized.length < 120000) {
+          window.localStorage.setItem(bepStorageKey(outlet || key), serialized);
+        } else {
+          bepSafeLog('[BEP_LOCALSTORAGE_CACHE_SKIPPED_TOO_LARGE]', {
+            outlet: outlet,
+            bytes: serialized.length
+          });
+        }
+      } catch (error) {
+        bepSafeError('[BEP_LOCALSTORAGE_CACHE_ERROR]', {
+          outlet: outlet,
+          error: error,
+          stack: error && error.stack
+        });
+      }
     }
   }
   function invalidateBEPCache(outlet) {
@@ -2118,11 +2230,13 @@
       monthlyRent: 0,
       rentNote: '',
       salaries: [{ name: '', count: 1, salaryPerPerson: 0 }],
+      serverSalaryTotal: 0,
       machines: [],
       internetProvider: '',
       internetMonthly: 0,
       internetNote: '',
       others: [{ name: '', monthlyAmount: 0, note: '' }],
+      serverOtherTotal: 0,
       serverMachineTotal: 0,
       serverDepreciationTotal: 0,
       serverMaintenanceTotal: 0,
@@ -2281,14 +2395,16 @@
     state.machines = (state.machines || []).map(cleanMachine);
     state.others = (state.others || []).map(cleanOther);
 
-    var salaryTotal = state.salaries.reduce(function(sum, row) { return sum + finite(row.total); }, 0);
+    var salaryFromRows = state.salaries.reduce(function(sum, row) { return sum + finite(row.total); }, 0);
     var depreciationFromRows = state.machines.reduce(function(sum, row) { return sum + finite(row.depreciationMonthly); }, 0);
     var maintenanceFromRows = state.machines.reduce(function(sum, row) { return sum + finite(row.maintenanceMonthly); }, 0);
     var machineFromRows = state.machines.reduce(function(sum, row) { return sum + finite(row.totalMonthly); }, 0);
     var depreciationTotal = finite(state.serverDepreciationTotal) > 0 ? finite(state.serverDepreciationTotal) : depreciationFromRows;
     var maintenanceTotal = finite(state.serverMaintenanceTotal) > 0 ? finite(state.serverMaintenanceTotal) : maintenanceFromRows;
     var machineTotal = finite(state.serverMachineTotal) > 0 ? finite(state.serverMachineTotal) : machineFromRows;
-    var otherTotal = state.others.reduce(function(sum, row) { return sum + finite(row.monthlyAmount); }, 0);
+    var salaryTotal = finite(state.serverSalaryTotal) > 0 ? finite(state.serverSalaryTotal) : salaryFromRows;
+    var otherFromRows = state.others.reduce(function(sum, row) { return sum + finite(row.monthlyAmount); }, 0);
+    var otherTotal = finite(state.serverOtherTotal) > 0 ? finite(state.serverOtherTotal) : otherFromRows;
     var internetTotal = finite(state.internetMonthly);
     var fixedTotal = finite(state.monthlyRent) + salaryTotal + machineTotal + internetTotal + otherTotal;
 
@@ -2699,10 +2815,11 @@
     window.__BEP_SERVER_RENDER_PHASE__ = true;
     var renderStart = performance.now();
     var skipIdleRender = false;
+    var acaSafeMode = isAcaLaundryOutlet(outlet);
     try {
       emptyState(outlet);
       if (data) {
-        if (norm(outlet).indexOf('aca laundry') !== -1) {
+        if (acaSafeMode) {
           bepSafeLog('[BEP_ACA_DATA_SIZE]', {
             salaries: Array.isArray(data.detailGaji) ? data.detailGaji.length : 0,
             machines: Array.isArray(data.detailMesin) ? data.detailMesin.length : 0,
@@ -2717,6 +2834,7 @@
         state.monthlyRent = parseSafe(data.biayaSewaBulanan || data['Biaya Sewa Bulanan']) || (state.annualRent / 12);
         state.rentNote = data.catatanSewa || data.catatan || data['Catatan'] || '';
         state.salaries = Array.isArray(data.detailGaji) && data.detailGaji.length ? data.detailGaji : [];
+        state.serverSalaryTotal = parseSafe(data.totalGajiBulanan || data['Total Gaji Bulanan']);
         state.serverMachineTotal = parseSafe(data.totalBiayaMesinBulanan || data['Total Biaya Mesin Bulanan']);
         state.serverDepreciationTotal = parseSafe(data.totalDepresiasiMesinBulanan || data['Total Depresiasi Mesin Bulanan']);
         state.serverMaintenanceTotal = parseSafe(data.totalCadanganPerawatanMesinBulanan || data['Total Cadangan Perawatan Mesin Bulanan']);
@@ -2725,12 +2843,21 @@
         state.internetMonthly = parseSafe(data.biayaInternetBulanan || data['Biaya Internet Bulanan']);
         state.internetNote = data.catatanInternet || '';
         state.others = Array.isArray(data.detailLainLain) ? data.detailLainLain : [];
+        state.serverOtherTotal = parseSafe(data.totalLainLainBulanan || data['Total Lain Lain Bulanan']);
       }
       calculateTotals();
       renderAll({ skipTopKPI: true });
       updateDisplays({ skipTopKPI: true });
       setBEPLoadingState(false, false);
       setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : '', outlet ? 'ready' : 'idle');
+      if (acaSafeMode) {
+        updateDisplays({ skipTopKPI: false });
+        bepSafeLog('[BEP_ACA_SAFE_MODE_RENDER_DONE]', {
+          targetOutlet: outlet,
+          totals: state.totals
+        });
+        return;
+      }
       var renderCost = performance.now() - renderStart;
       bepSafeLog('[BEP_RENDER_COST]', {
         targetOutlet: outlet,
@@ -2789,7 +2916,11 @@
     }
     applyServerData(data, outlet);
     setBEPLoadingState(false, false);
-    pulseBEPDataSwap();
+    if (!isAcaLaundryOutlet(outlet)) {
+      pulseBEPDataSwap();
+    } else {
+      bepSafeLog('[BEP_ACA_PULSE_SKIPPED]', { targetOutlet: outlet });
+    }
   }
 
   function startBEPLoadWatchdog(outlet, key) {
@@ -2815,6 +2946,7 @@
     var outlet = String(outletName || selectedOutlet()).trim();
     var key = bepCacheKey(outlet);
     var config = options || {};
+    clearLegacyBEPCacheIfNeeded(outlet);
     if (!zettIsActiveViewBEP_()) {
       bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'loadBEPDashboardByOutlet', targetOutlet: outlet });
       return;
@@ -2853,6 +2985,14 @@
     var cacheFresh = cached && (Date.now() - cached.updatedAt < BEP_CACHE_TTL_MS);
     if (cached && !config.force) {
       renderBEPDashboardFast(cached.data, outlet);
+      if (isAcaLaundryOutlet(outlet)) {
+        bepSafeLog('[BEP_ACA_BACKGROUND_REFRESH_DISABLED]', {
+          targetOutlet: outlet
+        });
+        setBEPLoadingState(false, false);
+        setOutletState('Data BEP aktif: ' + outlet, 'ready');
+        return;
+      }
       if (cacheFresh) return;
       setBEPLoadingState(false, true);
       setOutletState('Data BEP aktif: ' + outlet, 'ready');
@@ -2884,13 +3024,25 @@
         window.clearTimeout(window.__BEP_LOAD_WATCHDOG__);
         try {
           bepSafeLog('[BEP_SERVER_RESPONSE]', { fn: 'successHandler', targetOutlet: outlet, hasData: !!(res && res.data) });
-          var data = res && res.data ? res.data : null;
+          var rawData = res && res.data ? res.data : null;
+          var data = rawData ? sanitizeBEPServerData(rawData, outlet) : null;
           var responseKey = data ? bepCacheKey(data.namaOutlet || data['Nama Outlet'] || outlet) : key;
           if (responseKey && responseKey !== key) {
             bepSafeLog('[BEP_SKIP_STALE_RESPONSE]', { fn: 'successHandler', targetOutlet: outlet, responseKey: responseKey, expectedKey: key });
             return;
           }
-          if (data) cacheBEPOutletData(outlet, data);
+          if (data) {
+            bepSafeLog('[BEP_RESPONSE_SANITIZED]', {
+              targetOutlet: outlet,
+              gajiOriginal: data.__originalSizes ? data.__originalSizes.detailGaji : 0,
+              mesinOriginal: data.__originalSizes ? data.__originalSizes.detailMesin : 0,
+              lainOriginal: data.__originalSizes ? data.__originalSizes.detailLainLain : 0,
+              gajiUsed: Array.isArray(data.detailGaji) ? data.detailGaji.length : 0,
+              mesinUsed: Array.isArray(data.detailMesin) ? data.detailMesin.length : 0,
+              lainUsed: Array.isArray(data.detailLainLain) ? data.detailLainLain.length : 0
+            });
+            cacheBEPOutletData(outlet, data);
+          }
           renderBEPDashboardFast(data, outlet);
           bepSafeLog('[BEP_LOAD_DONE]', { fn: 'successHandler', targetOutlet: outlet, hasData: !!data });
         } catch (error) {
