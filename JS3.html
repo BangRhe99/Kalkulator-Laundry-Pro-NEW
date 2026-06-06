@@ -1805,19 +1805,62 @@
   function viewVisible(view) {
     return !!(view && !view.classList.contains('hidden') && view.offsetParent !== null);
   }
+  function zettBodyHasClass_(className) {
+    return !!(document.body && document.body.classList && document.body.classList.contains(className));
+  }
+  function zettViewExistsAndNotHidden_(id) {
+    var el = byId(id);
+    return !!(el && !el.classList.contains('hidden'));
+  }
+  function zettIsBEPRouteActive_() {
+    var activeMainView = document.querySelector('.main-view:not(.hidden)');
+    var activeId = activeMainView ? String(activeMainView.id || '') : '';
+    return zettBodyHasClass_('bep-active') || activeId === 'view-bep' || zettViewExistsAndNotHidden_('view-bep');
+  }
+  function zettIsHPPRouteActive_() {
+    var activeMainView = document.querySelector('.main-view:not(.hidden)');
+    var activeId = activeMainView ? String(activeMainView.id || '') : '';
+    if (zettIsBEPRouteActive_()) return false;
+    return zettBodyHasClass_('hpp-active') || activeId === 'view-hpp' || zettViewExistsAndNotHidden_('view-hpp');
+  }
   function zettIsActiveViewHPP_() {
-    return viewVisible(byId('view-hpp'));
+    return zettIsHPPRouteActive_();
   }
   function zettIsActiveViewBEP_() {
-    return viewVisible(byId('view-bep')) || !!(document.body && document.body.classList && document.body.classList.contains('bep-active') && byId('view-bep') && !byId('view-bep').classList.contains('hidden'));
+    return zettIsBEPRouteActive_();
   }
-  window.zettIsActiveViewHPP_ = window.zettIsActiveViewHPP_ || zettIsActiveViewHPP_;
-  window.zettIsActiveViewBEP_ = window.zettIsActiveViewBEP_ || zettIsActiveViewBEP_;
+  window.zettIsActiveViewHPP_ = zettIsActiveViewHPP_;
+  window.zettIsActiveViewBEP_ = zettIsActiveViewBEP_;
   function activeViewName() {
-    if (zettIsActiveViewHPP_()) return 'hpp';
     if (zettIsActiveViewBEP_()) return 'bep';
+    if (zettIsActiveViewHPP_()) return 'hpp';
     var active = document.querySelector('.main-view:not(.hidden)');
     return active ? String(active.id || '').replace(/^view-/, '') : '';
+  }
+  function logBEPRouteDetection_(extra) {
+    if (!window.ZETT_DEBUG_BEP_SAFE && !window.ZETT_DEBUG_VIEW_ROUTING) return;
+    try {
+      console.warn('[BEP_ROUTE_DETECTION]', Object.assign({
+        viewBepHidden: byId('view-bep')?.classList.contains('hidden'),
+        viewHppHidden: byId('view-hpp')?.classList.contains('hidden'),
+        activeView: activeViewName(),
+        bodyClass: document.body?.className || ''
+      }, extra || {}));
+    } catch (error) {}
+  }
+  function logBEPAcaDebug_(outlet) {
+    if (norm(outlet).indexOf('aca laundry') === -1) return;
+    try {
+      console.warn('[BEP_ACA_DEBUG]', {
+        outlet: outlet,
+        activeView: activeViewName(),
+        bepActive: zettIsActiveViewBEP_(),
+        hppActive: zettIsActiveViewHPP_(),
+        bodyClass: document.body?.className || '',
+        viewBepHidden: byId('view-bep')?.classList.contains('hidden'),
+        viewHppHidden: byId('view-hpp')?.classList.contains('hidden')
+      });
+    } catch (error) {}
   }
   function bepSafeLog(label, payload) {
     if (!window.ZETT_DEBUG_BEP_SAFE && !window.ZETT_DEBUG_VIEW_ROUTING) return;
@@ -1894,6 +1937,23 @@
     view.classList.toggle('bep-is-loading', !!isLoading);
     view.classList.toggle('bep-soft-refresh', !!isLoading && !!soft);
   }
+  window.zettReleaseBEPLocks = function(reason) {
+    try {
+      window.clearTimeout(bepLoadTimer);
+      window.clearTimeout(window.__BEP_LOAD_WATCHDOG__);
+      window.clearTimeout(window.__BEP_SCHEDULE_CALC_TIMER__);
+      window.clearTimeout(window.__BEP_AFTER_RENDER_CALC_TIMER__);
+    } catch (error) {}
+    try {
+      window.__BEP_RENDER_LOCK__ = false;
+      window.__BEP_OUTLET_CHANGE_LOCK__ = false;
+      bepActiveFetches = {};
+    } catch (error) {}
+    try {
+      setBEPLoadingState(false, false);
+    } catch (error) {}
+    bepSafeLog('[BEP_LOCKS_RELEASED]', { reason: reason || '' });
+  };
   function pulseBEPDataSwap() {
     var view = byId('view-bep');
     if (!view) return;
@@ -2624,6 +2684,25 @@
     pulseBEPDataSwap();
   }
 
+  function startBEPLoadWatchdog(outlet, key) {
+    window.clearTimeout(window.__BEP_LOAD_WATCHDOG__);
+    window.__BEP_LOAD_WATCHDOG__ = window.setTimeout(function() {
+      if (!zettIsActiveViewBEP_()) return;
+      if (bepActiveOutletKey !== key) return;
+      bepSafeError('[BEP_LOAD_WATCHDOG_TIMEOUT]', {
+        targetOutlet: outlet,
+        key: key
+      });
+      delete bepActiveFetches[key];
+      setBEPLoadingState(false, false);
+      window.__BEP_RENDER_LOCK__ = false;
+      window.__BEP_OUTLET_CHANGE_LOCK__ = false;
+      try {
+        showBEPFixedToast('Data BEP terlalu lama dimuat. Silakan pilih outlet kembali atau refresh halaman.', 'error');
+      } catch (error) {}
+    }, 7000);
+  }
+
   function loadBEPDashboardByOutlet(outletName, options) {
     var outlet = String(outletName || selectedOutlet()).trim();
     var key = bepCacheKey(outlet);
@@ -2632,14 +2711,17 @@
       bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'loadBEPDashboardByOutlet', targetOutlet: outlet });
       return;
     }
+    logBEPRouteDetection_({ fn: 'loadBEPDashboardByOutlet', targetOutlet: outlet });
+    logBEPAcaDebug_(outlet);
     bepSafeLog('[BEP_LOAD_START]', { fn: 'loadBEPDashboardByOutlet', targetOutlet: outlet });
 
     if (!outlet) {
       ++bepActiveRequestId;
       bepActiveOutletKey = key;
+      window.clearTimeout(window.__BEP_LOAD_WATCHDOG__);
       if (isBEPFixedFormOpen()) window.zettCloseBEPFixedDetail();
       emptyState('');
-      renderAll();
+      renderAll({ skipTopKPI: true });
       setOutletState('', 'idle');
       scheduleCalc();
       setBEPLoadingState(false, false);
@@ -2668,16 +2750,18 @@
       setOutletState('Data BEP aktif: ' + outlet, 'ready');
     } else {
       emptyState(outlet);
-      renderAll();
+      renderAll({ skipTopKPI: true });
       setBEPLoadingState(true, false);
       setOutletState('Memuat data BEP: ' + outlet, 'loading');
     }
 
     if (!window.google || !google.script || !google.script.run) {
+      window.clearTimeout(window.__BEP_LOAD_WATCHDOG__);
       setBEPLoadingState(false, false);
       return;
     }
     bepActiveFetches[key] = Date.now();
+    startBEPLoadWatchdog(outlet, key);
     google.script.run
       .withSuccessHandler(function(res) {
         delete bepActiveFetches[key];
@@ -2689,15 +2773,28 @@
           bepSafeLog('[BEP_SKIP_STALE_RESPONSE]', { fn: 'successHandler', targetOutlet: outlet, requestId: requestId, activeRequestId: bepActiveRequestId });
           return;
         }
-        var data = res && res.data ? res.data : null;
-        var responseKey = data ? bepCacheKey(data.namaOutlet || data['Nama Outlet'] || outlet) : key;
-        if (responseKey && responseKey !== key) {
-          bepSafeLog('[BEP_SKIP_STALE_RESPONSE]', { fn: 'successHandler', targetOutlet: outlet, responseKey: responseKey, expectedKey: key });
-          return;
+        window.clearTimeout(window.__BEP_LOAD_WATCHDOG__);
+        try {
+          bepSafeLog('[BEP_SERVER_RESPONSE]', { fn: 'successHandler', targetOutlet: outlet, hasData: !!(res && res.data) });
+          var data = res && res.data ? res.data : null;
+          var responseKey = data ? bepCacheKey(data.namaOutlet || data['Nama Outlet'] || outlet) : key;
+          if (responseKey && responseKey !== key) {
+            bepSafeLog('[BEP_SKIP_STALE_RESPONSE]', { fn: 'successHandler', targetOutlet: outlet, responseKey: responseKey, expectedKey: key });
+            return;
+          }
+          if (data) cacheBEPOutletData(outlet, data);
+          renderBEPDashboardFast(data, outlet);
+          bepSafeLog('[BEP_LOAD_DONE]', { fn: 'successHandler', targetOutlet: outlet, hasData: !!data });
+        } catch (error) {
+          bepSafeError('[BEP_SUCCESS_RENDER_FATAL]', {
+            targetOutlet: outlet,
+            error: error,
+            stack: error && error.stack
+          });
+          window.__BEP_RENDER_LOCK__ = false;
+        } finally {
+          setBEPLoadingState(false, false);
         }
-        if (data) cacheBEPOutletData(outlet, data);
-        renderBEPDashboardFast(data, outlet);
-        bepSafeLog('[BEP_LOAD_DONE]', { fn: 'successHandler', targetOutlet: outlet, hasData: !!data });
       })
       .withFailureHandler(function(error) {
         delete bepActiveFetches[key];
@@ -2710,7 +2807,9 @@
           bepSafeLog('[BEP_SKIP_STALE_RESPONSE]', { fn: 'failureHandler', targetOutlet: outlet, requestId: requestId, activeRequestId: bepActiveRequestId });
           return;
         }
+        window.clearTimeout(window.__BEP_LOAD_WATCHDOG__);
         setBEPLoadingState(false, false);
+        window.__BEP_RENDER_LOCK__ = false;
         if (!cached) renderBEPDashboardFast(null, outlet);
         showBEPFixedToast('Gagal memuat data cabang', 'error');
       })
@@ -2720,13 +2819,16 @@
   window.zettLoadBEPFixedCost = function(outletName, options) {
     var outlet = String(outletName || selectedOutlet()).trim();
     var config = options || {};
-    if (zettIsActiveViewHPP_()) {
-      bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'zettLoadBEPFixedCost', reason: 'hpp-active', targetOutlet: outlet });
+    var bepActive = zettIsActiveViewBEP_();
+    var hppActive = zettIsActiveViewHPP_();
+    logBEPRouteDetection_({ fn: 'zettLoadBEPFixedCost', targetOutlet: outlet, hppActive: hppActive, bepActive: bepActive });
+    logBEPAcaDebug_(outlet);
+    if (!bepActive) {
+      bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'zettLoadBEPFixedCost', reason: 'bep-not-active', targetOutlet: outlet, hppActive: hppActive });
       return;
     }
-    if (!zettIsActiveViewBEP_()) {
-      bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'zettLoadBEPFixedCost', targetOutlet: outlet });
-      return;
+    if (bepActive && hppActive) {
+      bepSafeLog('[BEP_WINS_OVER_HPP_FALSE_POSITIVE]', { targetOutlet: outlet });
     }
     var now = Date.now();
     var signature = bepCacheKey(outlet) + '|bep';
@@ -2827,14 +2929,24 @@
     }
     var isBepPage = zettIsActiveViewBEP_();
     var isHppPage = zettIsActiveViewHPP_();
-    if (isBepPage && !isHppPage) {
-      console.warn('[BEP_OUTLET_CHANGE_ONLY_SKIP_HPP]', String(value || '').trim());
+    if (isBepPage) {
+      console.warn('[BEP_OUTLET_CHANGE_FORCE_ROUTE]', {
+        outlet: String(value || '').trim(),
+        onBepPage: isBepPage,
+        onHppPage: isHppPage
+      });
       if (window.__BEP_OUTLET_CHANGE_LOCK__) {
         console.warn('[BEP_DUPLICATE_OUTLET_CHANGE_BLOCKED]', String(value || '').trim());
         return;
       }
       window.__BEP_OUTLET_CHANGE_LOCK__ = true;
       try {
+        try {
+          window.__HPP_OUTLET_SWITCH_LOCK__ = false;
+          window.__HPP_OUTLET_LOCK__ = false;
+          window.__HPP_SAFE_SWITCH_ACTIVE = false;
+          window.__HPP_ATOMIC_RENDER_LOCK = false;
+        } catch (error) {}
         try { if (typeof window.clearHPPOutletLoaders === 'function') window.clearHPPOutletLoaders(); } catch (error) {}
         try { if (typeof window.clearHPPOutletLoadersBrutal === 'function') window.clearHPPOutletLoadersBrutal(); } catch (error) {}
         try { if (typeof window.updateHeaderKategoriLaundryInfo === 'function') window.updateHeaderKategoriLaundryInfo(); } catch (error) {}
@@ -2868,7 +2980,21 @@
       try { console.log('[VIEW_CHANGE]', { view: tabName, outlet: selectedOutlet(), t: Math.round(performance.now()) }); } catch (error) {}
     }
     var result = typeof originalSwitch === 'function' ? originalSwitch.apply(this, arguments) : undefined;
-    if (tabName === 'bep') window.zettLoadBEPFixedCost(selectedOutlet(), { immediate: true });
+    if (tabName === 'bep') {
+      try {
+        window.__HPP_OUTLET_SWITCH_LOCK__ = false;
+        window.__HPP_OUTLET_LOCK__ = false;
+        window.__HPP_SAFE_SWITCH_ACTIVE = false;
+        window.__HPP_ATOMIC_RENDER_LOCK = false;
+        if (typeof window.clearHPPOutletLoaders === 'function') window.clearHPPOutletLoaders();
+        if (typeof window.clearHPPOutletLoadersBrutal === 'function') window.clearHPPOutletLoadersBrutal();
+      } catch (error) {}
+      window.requestAnimationFrame(function() {
+        window.zettLoadBEPFixedCost(selectedOutlet(), { force: true, delay: 0 });
+      });
+    } else if (typeof window.zettReleaseBEPLocks === 'function') {
+      window.zettReleaseBEPLocks('leave-bep-to-' + tabName);
+    }
     return result;
   };
 
