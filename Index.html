@@ -221,8 +221,124 @@
       line-height: 1.25;
     }
 
+    #sidebar {
+      border-right: 1px solid rgba(148, 163, 184, 0.14);
+      box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
+    }
+
+    #sidebar .nav-btn {
+      min-height: 46px;
+      border-radius: 14px;
+      letter-spacing: 0;
+      font-size: 0.92rem;
+      line-height: 1.2;
+    }
+
+    #sidebar .nav-btn i {
+      width: 1.25rem;
+      text-align: center;
+      opacity: 0.94;
+    }
+
+    #sidebar .nav-btn span {
+      min-width: 0;
+    }
+
+    #sidebar .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.07);
+      transform: translateX(2px);
+    }
+
+    #sidebar .nav-btn.bg-gradient-to-r {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 54%, #0f766e 125%) !important;
+      box-shadow: 0 14px 32px rgba(37, 99, 235, 0.22), inset 0 1px 0 rgba(255,255,255,0.14) !important;
+    }
+
+    #sidebar .nav-btn.bg-gradient-to-r:hover {
+      transform: translateX(0);
+    }
+
+    #sidebar > div:first-of-type {
+      min-height: 80px;
+    }
+
+    #sidebar > div:last-child {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.48), rgba(2, 6, 23, 0.42));
+      border-top-color: rgba(148, 163, 184, 0.12);
+    }
+
     header {
       border-color: #e2e8f0;
+    }
+
+    body > .flex-1 > header {
+      min-height: 78px;
+      height: auto;
+      background: rgba(248, 250, 252, 0.86);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+    }
+
+    #headerTitle {
+      color: #0f172a;
+      font-size: clamp(1.2rem, 2.3vw, 1.55rem) !important;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    #inputNamaHPP {
+      min-height: 42px;
+    }
+
+    #inputNamaHPP:focus-visible {
+      outline: none;
+    }
+
+    body > .flex-1 > header .relative:has(#inputNamaHPP) {
+      min-height: 42px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.82);
+      border-color: rgba(37, 99, 235, 0.18);
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08), inset 0 1px 0 rgba(255,255,255,0.75);
+    }
+
+    #headerKategoriLaundryInfo {
+      min-height: 42px;
+      align-items: center;
+      border-radius: 14px;
+      border-color: rgba(148, 163, 184, 0.22);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    #headerKategoriLaundryInfo:not(.hidden) {
+      display: inline-flex;
+    }
+
+    @media (max-width: 767px) {
+      body > .flex-1 > header {
+        padding: 0.8rem 1rem;
+        align-items: flex-start;
+        gap: 0.75rem;
+        flex-direction: column;
+      }
+
+      body > .flex-1 > header > div {
+        width: 100%;
+      }
+
+      body > .flex-1 > header > div:last-child {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      body > .flex-1 > header .relative:has(#inputNamaHPP),
+      #headerKategoriLaundryInfo {
+        width: 100%;
+      }
+
+      #inputNamaHPP {
+        max-width: none;
+      }
     }
 
     #mainViewScroller {
@@ -2110,8 +2226,8 @@
     }
 
     #sidebar .nav-btn.bg-gradient-to-r {
-      background: linear-gradient(135deg, #2563eb 0%, #4f46e5 52%, #7c3aed 100%) !important;
-      box-shadow: 0 18px 32px -22px rgba(96, 165, 250, 0.9) !important;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 58%, #0f766e 118%) !important;
+      box-shadow: 0 18px 34px -22px rgba(37, 99, 235, 0.86), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
       border-color: rgba(255, 255, 255, 0.16);
     }
 
@@ -2358,25 +2474,49 @@
       }
 
       header.glass-effect {
-        height: 68px;
+        height: auto;
+        min-height: 68px;
         padding-left: 1rem !important;
         padding-right: 1rem !important;
+        padding-top: 0.85rem !important;
+        padding-bottom: 0.85rem !important;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.72rem;
+      }
+
+      header.glass-effect > div {
+        width: 100%;
+      }
+
+      header.glass-effect > div:last-child {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.55rem;
       }
 
       #headerTitle {
-        max-width: 44vw;
+        max-width: calc(100vw - 5.25rem);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       header .relative:has(#inputNamaHPP) {
-        max-width: 44vw;
+        width: 100%;
+        max-width: none;
       }
 
       #inputNamaHPP {
-        max-width: 42vw !important;
+        width: 100%;
+        max-width: none !important;
         font-size: 0.72rem;
+      }
+
+      #headerKategoriLaundryInfo {
+        width: 100%;
+        justify-content: center;
+        white-space: normal;
       }
 
       #mainViewScroller {
