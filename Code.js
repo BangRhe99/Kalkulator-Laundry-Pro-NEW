@@ -2885,6 +2885,14 @@ function zettAddPackingAliases20260518_(obj) {
   obj['Packing_Jinjing_Lembar'] = zettFirst_(obj, ['Jinjing Biaya/Lembar (Rp)', 'Packing_Jinjing_Lembar'], '');
   obj['Packing_Jinjing_PerKg'] = zettFirst_(obj, ['Jinjing Biaya/Kg (Rp)', 'Packing_Jinjing_PerKg'], '');
 
+  obj['Packing_Solasi_Active'] = zettFirst_(obj, ['Solasi Aktif', 'Packing_Solasi_Active'], '');
+  obj['Packing_Solasi_Harga'] = zettFirst_(obj, ['Solasi Harga/Roll (Rp)', 'Packing_Solasi_Harga'], '');
+  obj['Packing_Solasi_Isi'] = zettFirst_(obj, ['Solasi Panjang/Roll (Meter)', 'Packing_Solasi_Isi', 'Packing_Solasi_Order'], '');
+  obj['Packing_Solasi_Kg'] = zettFirst_(obj, ['Solasi Pemakaian/Kg (Meter)', 'Packing_Solasi_Kg', 'Packing_Solasi_Kapasitas'], '');
+  obj['Packing_Solasi_Order'] = obj['Packing_Solasi_Isi'];
+  obj['Packing_Solasi_PerOrder'] = zettFirst_(obj, ['Solasi Biaya/Meter (Rp)', 'Packing_Solasi_PerOrder'], '');
+  obj['Packing_Solasi_PerKg'] = zettFirst_(obj, ['Solasi Biaya/Kg (Rp)', 'Packing_Solasi_PerKg'], '');
+
   obj['Total Biaya Packing'] = zettFirst_(obj, ['Total Biaya Packing/Kg (Rp)'], '');
   return obj;
 }
@@ -3277,8 +3285,9 @@ function saveStrukturBiaya(payload) {
     const solasiPanjang = zettToNumber_(payload.packSolasiPanjang);
     const solasiPemakaian = zettToNumber_(payload.packSolasiPemakaian);
     const solasiBiayaMeter = solasiPanjang > 0 ? solasiHarga / solasiPanjang : 0;
-    const solasiBiayaKg = solasiActive ? solasiBiayaMeter * solasiPemakaian : 0;
-    const totalPacking = kategoriLaundry.toLowerCase().includes('self service') ? 0 : (ppKg + hdKg + jKg);
+    const solasiBiayaKg = solasiActive && solasiPemakaian > 0 ? solasiBiayaMeter / solasiPemakaian : 0;
+    const frontendTotalPacking = zettToNumber_(payload['Total Biaya Packing/Kg (Rp)']);
+    const totalPacking = kategoriLaundry.toLowerCase().includes('self service') ? 0 : (frontendTotalPacking || (ppKg + hdKg + jKg + solasiBiayaKg));
     const sumberAir = String(payload.airSumber || '').trim().toLowerCase() || 'pdam';
     const sumberSetrika = String(payload.airBoilerSumber || '').trim().toLowerCase() || 'sama';
     const hargaAir = sumberAir === 'pdam' ? payload.airHargaM3 : '';

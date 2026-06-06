@@ -2308,6 +2308,18 @@ function backgroundSyncHPP(payload) {
     runServer('saveStrukturBiaya', payload)
         .then(response => {
             localStorage.removeItem('zett_hpp_pending_sync');
+            if (typeof zettUpsertLocalHPPRowAfterSave === 'function') {
+                zettUpsertLocalHPPRowAfterSave(payload);
+            }
+            const outletName = String(payload?.namaOutlet || payload?.['Nama Outlet'] || document.getElementById('inputNamaHPP')?.value || '').trim();
+            if (outletName && typeof window.zettRefreshActiveHPPRowFromServer === 'function') {
+                window.__HPP_AFTER_SAVE_REFRESH__ = true;
+                try {
+                    window.zettRefreshActiveHPPRowFromServer(outletName, { force: true });
+                } finally {
+                    setTimeout(() => { window.__HPP_AFTER_SAVE_REFRESH__ = false; }, 500);
+                }
+            }
             StateMachine.invalidateClientCache();
             console.log("Background Sync HPP Sukses: " + response.message);
         })
@@ -2332,6 +2344,127 @@ function autoRetryPendingSync() {
         }
     }
 }
+
+function zettReadPackingPayloadFromDOM() {
+    if (typeof calculatePacking === 'function') calculatePacking();
+    const clean = (value) => {
+        if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+        const n = Number(String(value || '').replace(/Rp/gi, '').replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
+        return Number.isFinite(n) ? n : 0;
+    };
+    const val = (id) => document.getElementById(id)?.value || '';
+    const textNum = (id) => clean(document.getElementById(id)?.textContent || document.getElementById(id)?.innerText || '');
+    const ppInputs = document.querySelectorAll('#wrapPackingPP .zett-packing-size-row input');
+    const hdInputs = document.querySelectorAll('#wrapPackingHD .zett-packing-size-row input');
+    const jInputs = document.querySelectorAll('#wrapPackingJinjing .zett-packing-size-row input');
+    const solasiOrder = textNum('dispPackingSolasiPakai');
+    const totalPacking = textNum('displayBiayaPackingTotalKg') || clean(window.APP_STATE?.data?.hpp?.packing);
+    const ppSizeJoined = [ppInputs[0]?.value || val('inputPackingPPUkuran'), ppInputs[1]?.value || ''].filter(Boolean).join('x');
+    const hdSizeJoined = [hdInputs[0]?.value || '', hdInputs[1]?.value || ''].filter(Boolean).join('x');
+    const jSizeJoined = [jInputs[0]?.value || val('inputPackingJinjingUkuran'), jInputs[1]?.value || ''].filter(Boolean).join('x');
+    return {
+        packPPActive: document.getElementById('togglePackingPP')?.checked || false,
+        packPPUkuran: ppSizeJoined,
+        packPPHarga: clean(val('inputPackingPPHarga')),
+        packPPIsi: clean(val('inputPackingPPIsi')),
+        packPPKg: clean(val('inputPackingPPKg')),
+        'PP Aktif': document.getElementById('togglePackingPP')?.checked ? 'true' : 'false',
+        'PP Lebar (cm)': ppInputs[0]?.value || val('inputPackingPPUkuran'),
+        'PP Panjang (cm)': ppInputs[1]?.value || '',
+        'PP Harga/Pack (Rp)': clean(val('inputPackingPPHarga')),
+        'PP Isi/Pack (Lembar)': clean(val('inputPackingPPIsi')),
+        'PP Kapasitas (Kg/Lembar)': clean(val('inputPackingPPKg')),
+        'PP Biaya/Lembar (Rp)': textNum('dispPackingPPLembar'),
+        'PP Biaya/Kg (Rp)': textNum('dispPackingPPKg'),
+        packHDActive: document.getElementById('togglePackingHD')?.checked || false,
+        packHDUkuran: hdSizeJoined,
+        packHDHarga: clean(val('inputPackingHDHarga')),
+        packHDIsi: clean(val('inputPackingHDIsi')),
+        packHDKg: clean(val('inputPackingHDKg')),
+        'HD Aktif': document.getElementById('togglePackingHD')?.checked ? 'true' : 'false',
+        'HD Lebar (cm)': hdInputs[0]?.value || '',
+        'HD Panjang (cm)': hdInputs[1]?.value || '',
+        'HD Harga/Pack (Rp)': clean(val('inputPackingHDHarga')),
+        'HD Isi/Pack (Lembar)': clean(val('inputPackingHDIsi')),
+        'HD Kapasitas (Kg/Lembar)': clean(val('inputPackingHDKg')),
+        'HD Biaya/Lembar (Rp)': textNum('dispPackingHDLembar'),
+        'HD Biaya/Kg (Rp)': textNum('dispPackingHDKg'),
+        packJinjingActive: document.getElementById('togglePackingJinjing')?.checked || false,
+        packJinjingUkuran: jSizeJoined,
+        packJinjingHarga: clean(val('inputPackingJinjingHarga')),
+        packJinjingIsi: clean(val('inputPackingJinjingIsi')),
+        packJinjingKg: clean(val('inputPackingJinjingKg')),
+        'Jinjing Aktif': document.getElementById('togglePackingJinjing')?.checked ? 'true' : 'false',
+        'Jinjing Lebar (cm)': jInputs[0]?.value || val('inputPackingJinjingUkuran'),
+        'Jinjing Panjang (cm)': jInputs[1]?.value || '',
+        'Jinjing Harga/Pack (Rp)': clean(val('inputPackingJinjingHarga')),
+        'Jinjing Isi/Pack (Lembar)': clean(val('inputPackingJinjingIsi')),
+        'Jinjing Kapasitas (Kg/Lembar)': clean(val('inputPackingJinjingKg')),
+        'Jinjing Biaya/Lembar (Rp)': textNum('dispPackingJinjingLembar'),
+        'Jinjing Biaya/Kg (Rp)': textNum('dispPackingJinjingKg'),
+        packSolasiActive: document.getElementById('togglePackingSolasi')?.checked || false,
+        packSolasiHarga: clean(val('inputPackingSolasiHarga')),
+        packSolasiPanjang: clean(val('inputPackingSolasiPakai')),
+        packSolasiPemakaian: clean(val('inputPackingSolasiKg')),
+        'Solasi Aktif': document.getElementById('togglePackingSolasi')?.checked ? 'true' : 'false',
+        'Solasi Harga/Roll (Rp)': clean(val('inputPackingSolasiHarga')),
+        'Solasi Panjang/Roll (Meter)': clean(val('inputPackingSolasiPakai')),
+        'Solasi Pemakaian/Kg (Meter)': clean(val('inputPackingSolasiKg')),
+        'Solasi Biaya/Meter (Rp)': solasiOrder,
+        'Solasi Biaya/Kg (Rp)': textNum('dispPackingSolasiKg'),
+        'Total Biaya Packing/Kg (Rp)': totalPacking
+    };
+}
+window.zettReadPackingPayloadFromDOM = zettReadPackingPayloadFromDOM;
+
+function zettUpsertLocalHPPRowAfterSave(payload) {
+    if (!payload) return;
+    const outlet = String(payload.namaOutlet || payload['Nama Outlet'] || document.getElementById('inputNamaHPP')?.value || '').trim();
+    if (!outlet) return;
+    const norm = (s) => String(s || '').trim().toLowerCase();
+    window.masterDataHPP = Array.isArray(window.masterDataHPP) ? window.masterDataHPP : [];
+    try {
+        if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) window.masterDataHPP = masterDataHPP;
+    } catch (error) {}
+    const target = norm(outlet);
+    let index = window.masterDataHPP.findIndex(row => norm(row.namaOutlet || row['Nama Outlet']) === target);
+    const merged = Object.assign({}, index >= 0 ? window.masterDataHPP[index] : {}, payload, {
+        namaOutlet: outlet,
+        'Nama Outlet': outlet
+    });
+    if (index >= 0) window.masterDataHPP[index] = merged;
+    else window.masterDataHPP.push(merged);
+    try { if (typeof masterDataHPP !== 'undefined') masterDataHPP = window.masterDataHPP; } catch (error) {}
+    try {
+        if (window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.master) {
+            window.APP_STATE.data.master.hpp = window.masterDataHPP;
+        }
+    } catch (error) {}
+    try {
+        const cacheKey = window.APP_STATE?.cache?.key || 'ZETT_MASTER_CACHE_V5';
+        const cachedStr = localStorage.getItem(cacheKey);
+        const cached = cachedStr ? JSON.parse(cachedStr) : {};
+        if (cached && cached.data) {
+            cached.data.hpp = window.masterDataHPP;
+            cached.expiry = Date.now() + 300000;
+            localStorage.setItem(cacheKey, JSON.stringify(cached));
+        }
+    } catch (error) {}
+    const packingTotal = Number(payload['Total Biaya Packing/Kg (Rp)'] || 0);
+    if (window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.hpp) window.APP_STATE.data.hpp.packing = packingTotal;
+    if (window.hppDataState) window.hppDataState.packing = packingTotal;
+    if (window.hppDashboardCache) {
+        window.hppDashboardCache[target] = Object.assign({}, window.hppDashboardCache[target] || {}, {
+            outlet: outlet,
+            row: merged,
+            updatedAt: Date.now()
+        });
+    }
+    if (window.StateMachine && typeof window.StateMachine.calculateTotal === 'function') {
+        window.StateMachine.calculateTotal();
+    }
+}
+window.zettUpsertLocalHPPRowAfterSave = zettUpsertLocalHPPRowAfterSave;
 
 function simpanDataHPP(e) {
     if(e) e.preventDefault(); 
@@ -2508,6 +2641,12 @@ function simpanDataHPP(e) {
         notaRataKg: document.getElementById('notaRataKg') ? document.getElementById('notaRataKg').value : ''
     };
 
+    const packingPayload = typeof zettReadPackingPayloadFromDOM === 'function'
+        ? zettReadPackingPayloadFromDOM()
+        : {};
+    Object.assign(payload, packingPayload);
+    zettUpsertLocalHPPRowAfterSave(payload);
+
     backgroundSyncHPP(payload);
 
     localStorage.removeItem('zett_hpp_draft_state');
@@ -2671,6 +2810,64 @@ async function prosesSimpanBEP() {
     el.checked = (value === true || s === 'true' || s === 'ya' || s === 'aktif' || s === '1');
   }
 
+  function zettRestorePackingFormFromRow(row) {
+    if (!row) return;
+    var pick = function() {
+      for (var i = 0; i < arguments.length; i++) {
+        var key = arguments[i];
+        if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
+      }
+      return '';
+    };
+    var setVal = function(id, value) {
+      var el = document.getElementById(id);
+      if (el && value !== '') el.value = value;
+    };
+    var setCheck = function(id, value, fallback) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var raw = value === '' || value === undefined || value === null ? fallback : value;
+      var text = String(raw).toLowerCase();
+      el.checked = !(text === 'false' || text === '0' || text === 'tidak' || text === 'off');
+    };
+    var splitSize = function(joined) {
+      var text = String(joined || '').trim();
+      var match = text.match(/([0-9.,]+)\s*[xX]\s*([0-9.,]+)/);
+      return match ? [match[1], match[2]] : [text, ''];
+    };
+    var setSize = function(wrapSelector, firstId, widthValue, lengthValue, joinedValue) {
+      var parts = splitSize(joinedValue);
+      var width = widthValue || parts[0] || '';
+      var length = lengthValue || parts[1] || '';
+      setVal(firstId, width);
+      var inputs = document.querySelectorAll(wrapSelector + ' .zett-packing-size-row input');
+      if (!firstId && inputs[0] && width !== '') inputs[0].value = width;
+      if (inputs[1] && length !== '') inputs[1].value = length;
+    };
+    setCheck('togglePackingPP', pick('PP Aktif', 'Packing_PP_Active'), true);
+    setSize('#wrapPackingPP', 'inputPackingPPUkuran', pick('PP Lebar (cm)'), pick('PP Panjang (cm)'), pick('Packing_PP_Ukuran'));
+    setVal('inputPackingPPHarga', pick('PP Harga/Pack (Rp)', 'Packing_PP_Harga'));
+    setVal('inputPackingPPIsi', pick('PP Isi/Pack (Lembar)', 'Packing_PP_Isi'));
+    setVal('inputPackingPPKg', pick('PP Kapasitas (Kg/Lembar)', 'Packing_PP_Kg'));
+    setCheck('togglePackingHD', pick('HD Aktif', 'Packing_HD_Active'), true);
+    setSize('#wrapPackingHD', '', pick('HD Lebar (cm)'), pick('HD Panjang (cm)'), pick('Packing_HD_Ukuran'));
+    setVal('inputPackingHDHarga', pick('HD Harga/Pack (Rp)', 'Packing_HD_Harga'));
+    setVal('inputPackingHDIsi', pick('HD Isi/Pack (Lembar)', 'Packing_HD_Isi'));
+    setVal('inputPackingHDKg', pick('HD Kapasitas (Kg/Lembar)', 'Packing_HD_Kg'));
+    setCheck('togglePackingJinjing', pick('Jinjing Aktif', 'Packing_Jinjing_Active'), false);
+    setSize('#wrapPackingJinjing', 'inputPackingJinjingUkuran', pick('Jinjing Lebar (cm)'), pick('Jinjing Panjang (cm)'), pick('Packing_Jinjing_Ukuran'));
+    setVal('inputPackingJinjingHarga', pick('Jinjing Harga/Pack (Rp)', 'Packing_Jinjing_Harga'));
+    setVal('inputPackingJinjingIsi', pick('Jinjing Isi/Pack (Lembar)', 'Packing_Jinjing_Isi'));
+    setVal('inputPackingJinjingKg', pick('Jinjing Kapasitas (Kg/Lembar)', 'Packing_Jinjing_Kg'));
+    setCheck('togglePackingSolasi', pick('Solasi Aktif', 'Packing_Solasi_Active'), false);
+    setVal('inputPackingSolasiHarga', pick('Solasi Harga/Roll (Rp)', 'Packing_Solasi_Harga'));
+    setVal('inputPackingSolasiPakai', pick('Solasi Panjang/Roll (Meter)', 'Packing_Solasi_Isi', 'Packing_Solasi_Order'));
+    setVal('inputPackingSolasiKg', pick('Solasi Pemakaian/Kg (Meter)', 'Packing_Solasi_Kg', 'Packing_Solasi_Kapasitas'));
+    if (typeof window.zettTogglePackingSolasi === 'function') window.zettTogglePackingSolasi();
+    if (typeof calculatePacking === 'function') calculatePacking();
+  }
+  window.zettRestorePackingFormFromRow = zettRestorePackingFormFromRow;
+
   window.populateFormHPP = function(namaCabang) {
     var normalizedCabang = String(namaCabang || '').trim().toLowerCase().replace(/\s+/g, ' ');
     var freshRows = Array.isArray(window.__ZETT_FRESH_HPP_ROWS) ? window.__ZETT_FRESH_HPP_ROWS : [];
@@ -2743,10 +2940,7 @@ async function prosesSimpanBEP() {
     zettSetVal('inputPackingJinjingHarga', zettPick(hppData, ['Packing_Jinjing_Harga', 'Jinjing Harga/Pack (Rp)', 'Harga Jinjing'], '35.000'));
     zettSetVal('inputPackingJinjingIsi', zettPick(hppData, ['Packing_Jinjing_Isi', 'Jinjing Isi/Pack (Lembar)', 'Isi Jinjing'], '100'));
     zettSetVal('inputPackingJinjingKg', zettPick(hppData, ['Packing_Jinjing_Kg', 'Jinjing Kapasitas (Kg/Lembar)', 'Kap Jinjing', 'Isi Jinjing Per Lbr'], '4'));
-    zettSetCheck('togglePackingSolasi', zettPick(hppData, ['Solasi Aktif'], false));
-    zettSetVal('inputPackingSolasiHarga', zettPick(hppData, ['Solasi Harga/Roll (Rp)'], ''));
-    zettSetVal('inputPackingSolasiUkuran', zettPick(hppData, ['Solasi Panjang/Roll (Meter)'], ''));
-    zettSetVal('inputPackingSolasiPakai', zettPick(hppData, ['Solasi Pemakaian/Kg (Meter)'], ''));
+    zettRestorePackingFormFromRow(hppData);
 
     zettSetCheck('toggleBahanDet', zettPick(hppData, ['Deterjen Aktif', 'Chem_Det_Active'], true));
     if (typeof safeSetSelect === 'function') safeSetSelect('bahanDetType', zettPick(hppData, ['Tipe Deterjen', 'Chem_Det_Type'], 'cair'));
@@ -2838,8 +3032,8 @@ async function prosesSimpanBEP() {
     window.backgroundSyncHPP = function(payload) {
       var ppSize = document.getElementById('inputPackingPPUkuran');
       var jSize = document.getElementById('inputPackingJinjingUkuran');
-      if (ppSize) payload.packPPUkuran = ppSize.value;
-      if (jSize) payload.packJinjingUkuran = jSize.value;
+      if (ppSize && !payload.packPPUkuran) payload.packPPUkuran = ppSize.value;
+      if (jSize && !payload.packJinjingUkuran) payload.packJinjingUkuran = jSize.value;
       return oldBackgroundSyncHPP(payload);
     };
   }
