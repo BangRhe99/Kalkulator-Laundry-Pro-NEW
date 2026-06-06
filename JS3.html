@@ -1783,6 +1783,9 @@
     internetMonthly: 0,
     internetNote: '',
     others: [],
+    serverMachineTotal: 0,
+    serverDepreciationTotal: 0,
+    serverMaintenanceTotal: 0,
     totals: {}
   };
   var BEP_CACHE_TTL_MS = 90000;
@@ -1932,6 +1935,19 @@
     return !!(panel && panel.classList.contains('is-open'));
   }
 
+  function isBEPDetailPanelOpen() {
+    var panel = byId('bepFixedDetailPanel');
+    return !!(panel && panel.classList.contains('is-open'));
+  }
+
+  function isBEPMachineDetailActive() {
+    return !!document.querySelector('#bepFixedDetailPanel .bep-detail-section.is-active[data-bep-detail="machine"]');
+  }
+
+  function shouldRenderBEPDetailRows() {
+    return isBEPDetailPanelOpen();
+  }
+
   function setBEPFixedSaveLoading(isLoading) {
     var btn = document.querySelector('#bepFixedDetailPanel .bep-save-btn');
     if (!btn) return function() {};
@@ -1969,7 +1985,7 @@
     var outlet = selectedOutlet();
     if (!outlet) {
       emptyState('');
-      renderAll();
+      renderAll({ skipTopKPI: true });
       setOutletState('', 'idle');
       showBEPFixedToast('Pilih cabang terlebih dahulu di pojok kanan atas.', 'error');
       return;
@@ -1982,6 +1998,7 @@
     if (view) view.classList.add('bep-fixed-form-mode');
     window.requestAnimationFrame(function() {
       panel.classList.add('is-open');
+      renderAll({ forceDetailRows: true });
       panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   };
@@ -2031,6 +2048,9 @@
       internetMonthly: 0,
       internetNote: '',
       others: [{ name: '', monthlyAmount: 0, note: '' }],
+      serverMachineTotal: 0,
+      serverDepreciationTotal: 0,
+      serverMaintenanceTotal: 0,
       totals: {}
     };
   }
@@ -2101,6 +2121,30 @@
       source.indexOf('arsip') >= 0;
   }
 
+  function dedupeBEPMachines(rows) {
+    var seen = {};
+    var inputRows = Array.isArray(rows) ? rows : [];
+    var result = [];
+    inputRows.forEach(function(row) {
+      row = row || {};
+      var key = String(row.machineKey || [
+        row.jenisMesin || row.name || '',
+        row.tipeMesin || '',
+        row.jumlahUnit || row.units || ''
+      ].join('|')).toLowerCase();
+      if (!key || seen[key]) return;
+      seen[key] = true;
+      result.push(row);
+    });
+    if (result.length !== inputRows.length || result.length > 50) {
+      bepSafeLog('[BEP_MACHINE_ROWS_DEDUPED]', {
+        before: inputRows.length,
+        after: Math.min(result.length, 50)
+      });
+    }
+    return result.slice(0, 50);
+  }
+
   function collectFromDom() {
     state.outletName = selectedOutlet();
     state.rentStatus = byId('bepRentStatus')?.value || 'Sewa';
@@ -2111,35 +2155,49 @@
     state.internetMonthly = parseSafe(byId('bepInternetMonthly')?.value);
     state.internetNote = String(byId('bepInternetNote')?.value || '').trim();
 
-    state.salaries = Array.from(document.querySelectorAll('#bepSalaryRows .bep-row')).map(function(row) {
-      return cleanSalary({
+    var renderedSalaryRows = Array.from(document.querySelectorAll('#bepSalaryRows .bep-row'));
+    if (renderedSalaryRows.length) {
+      state.salaries = renderedSalaryRows.map(function(row) {
+        return cleanSalary({
         name: row.querySelector('[data-bep-field="salary-name"]')?.value,
         count: row.querySelector('[data-bep-field="salary-count"]')?.value,
         salaryPerPerson: row.querySelector('[data-bep-field="salary-amount"]')?.value
       });
-    });
-    state.machines = Array.from(document.querySelectorAll('#bepMachineRows .bep-machine-row')).map(function(row) {
-      return cleanMachine({
-        machineKey: row.getAttribute('data-machine-key') || '',
-        jenisMesin: row.getAttribute('data-machine-name') || row.querySelector('[data-bep-field="machine-name"]')?.value,
-        tipeMesin: row.getAttribute('data-machine-type') || '',
-        jumlahUnit: row.getAttribute('data-machine-units') || row.querySelector('[data-bep-field="machine-units"]')?.value,
-        status: row.getAttribute('data-machine-status') || '',
-        source: row.getAttribute('data-machine-source') || 'Profil Operasional',
-        active: row.getAttribute('data-machine-active') !== 'false',
-        hargaPerUnit: row.querySelector('[data-bep-field="machine-purchase"]')?.value,
-        residuPerUnit: row.querySelector('[data-bep-field="machine-residual"]')?.value,
-        umurEkonomisTahun: row.querySelector('[data-bep-field="machine-years"]')?.value,
-        rawatPerTahunPerUnit: row.querySelector('[data-bep-field="machine-maintenance"]')?.value
       });
-    });
-    state.others = Array.from(document.querySelectorAll('#bepOtherRows .bep-other-row')).map(function(row) {
-      return cleanOther({
+    }
+    var renderedMachineRows = Array.from(document.querySelectorAll('#bepMachineRows .bep-machine-row'));
+    if (renderedMachineRows.length) {
+      var mergedMachines = (state.machines || []).slice();
+      renderedMachineRows.forEach(function(row) {
+        var index = parseInt(row.getAttribute('data-index'), 10);
+        var cleaned = cleanMachine({
+          machineKey: row.getAttribute('data-machine-key') || '',
+          jenisMesin: row.getAttribute('data-machine-name') || row.querySelector('[data-bep-field="machine-name"]')?.value,
+          tipeMesin: row.getAttribute('data-machine-type') || '',
+          jumlahUnit: row.getAttribute('data-machine-units') || row.querySelector('[data-bep-field="machine-units"]')?.value,
+          status: row.getAttribute('data-machine-status') || '',
+          source: row.getAttribute('data-machine-source') || 'Profil Operasional',
+          active: row.getAttribute('data-machine-active') !== 'false',
+          hargaPerUnit: row.querySelector('[data-bep-field="machine-purchase"]')?.value,
+          residuPerUnit: row.querySelector('[data-bep-field="machine-residual"]')?.value,
+          umurEkonomisTahun: row.querySelector('[data-bep-field="machine-years"]')?.value,
+          rawatPerTahunPerUnit: row.querySelector('[data-bep-field="machine-maintenance"]')?.value
+        });
+        if (Number.isFinite(index) && index >= 0) mergedMachines[index] = cleaned;
+        else mergedMachines.push(cleaned);
+      });
+      state.machines = mergedMachines;
+    }
+    var renderedOtherRows = Array.from(document.querySelectorAll('#bepOtherRows .bep-other-row'));
+    if (renderedOtherRows.length) {
+      state.others = renderedOtherRows.map(function(row) {
+        return cleanOther({
         name: row.querySelector('[data-bep-field="other-name"]')?.value,
         monthlyAmount: row.querySelector('[data-bep-field="other-amount"]')?.value,
         note: row.querySelector('[data-bep-field="other-note"]')?.value
       });
-    });
+      });
+    }
   }
 
   function calculateTotals() {
@@ -2149,9 +2207,12 @@
     state.others = (state.others || []).map(cleanOther);
 
     var salaryTotal = state.salaries.reduce(function(sum, row) { return sum + finite(row.total); }, 0);
-    var depreciationTotal = state.machines.reduce(function(sum, row) { return sum + finite(row.depreciationMonthly); }, 0);
-    var maintenanceTotal = state.machines.reduce(function(sum, row) { return sum + finite(row.maintenanceMonthly); }, 0);
-    var machineTotal = state.machines.reduce(function(sum, row) { return sum + finite(row.totalMonthly); }, 0);
+    var depreciationFromRows = state.machines.reduce(function(sum, row) { return sum + finite(row.depreciationMonthly); }, 0);
+    var maintenanceFromRows = state.machines.reduce(function(sum, row) { return sum + finite(row.maintenanceMonthly); }, 0);
+    var machineFromRows = state.machines.reduce(function(sum, row) { return sum + finite(row.totalMonthly); }, 0);
+    var depreciationTotal = finite(state.serverDepreciationTotal) > 0 ? finite(state.serverDepreciationTotal) : depreciationFromRows;
+    var maintenanceTotal = finite(state.serverMaintenanceTotal) > 0 ? finite(state.serverMaintenanceTotal) : maintenanceFromRows;
+    var machineTotal = finite(state.serverMachineTotal) > 0 ? finite(state.serverMachineTotal) : machineFromRows;
     var otherTotal = state.others.reduce(function(sum, row) { return sum + finite(row.monthlyAmount); }, 0);
     var internetTotal = finite(state.internetMonthly);
     var fixedTotal = finite(state.monthlyRent) + salaryTotal + machineTotal + internetTotal + otherTotal;
@@ -2273,7 +2334,22 @@
       wrap.innerHTML = '';
       return;
     }
-    if (notice) notice.innerHTML = '<i class="ph ph-check-circle"></i><span>Data mesin otomatis diambil dari Profil Operasional' + (state.category ? ' (' + escapeHtml(state.category) + ')' : '') + '.</span>';
+    var visibleEntries = machineRows.map(function(row, idx) {
+      return { row: row, idx: idx };
+    }).filter(function(entry) {
+      return !isArchivedMachineRow(entry.row);
+    });
+    var rowsToRender = visibleEntries.slice(0, 20);
+    if (notice) {
+      var limitedNote = visibleEntries.length > 20 ? ' Data mesin terlalu banyak, hanya 20 baris pertama ditampilkan untuk menjaga performa.' : '';
+      notice.innerHTML = '<i class="ph ph-check-circle"></i><span>Data mesin otomatis diambil dari Profil Operasional' + (state.category ? ' (' + escapeHtml(state.category) + ')' : '') + '.' + limitedNote + '</span>';
+    }
+    if (visibleEntries.length > 20) {
+      bepSafeLog('[BEP_MACHINE_DOM_ROWS_LIMITED]', {
+        visibleRows: visibleEntries.length,
+        renderedRows: rowsToRender.length
+      });
+    }
     var headerHtml = [
       '<div class="bep-machine-column-header" aria-hidden="true" style="display:grid;gap:0.75rem;align-items:center;margin:0.35rem 0 0.25rem;color:#64748b;font-size:0.68rem;font-weight:900;text-transform:uppercase;letter-spacing:0;">',
         '<span></span>',
@@ -2286,16 +2362,16 @@
         '<span>Total Biaya</span>',
       '</div>'
     ].join('');
-    wrap.innerHTML = headerHtml + machineRows.map(function(row, idx) {
-      row = cleanMachine(row);
-      var archived = isArchivedMachineRow(row);
-      return '<div class="bep-machine-row bep-machine-smart-row" ' + (archived ? 'data-machine-archive-hidden="true" style="display:none;" ' : '') + 'data-index="' + idx + '" data-machine-key="' + escapeHtml(row.machineKey) + '" data-machine-name="' + escapeHtml(row.jenisMesin) + '" data-machine-type="' + escapeHtml(row.tipeMesin) + '" data-machine-units="' + escapeHtml(row.jumlahUnit) + '" data-machine-status="' + escapeHtml(row.status) + '" data-machine-source="' + escapeHtml(row.source) + '" data-machine-active="' + (row.active !== false ? 'true' : 'false') + '">' +
+    wrap.innerHTML = headerHtml + rowsToRender.map(function(entry) {
+      var row = cleanMachine(entry.row);
+      var idx = entry.idx;
+      return '<div class="bep-machine-row bep-machine-smart-row" data-index="' + idx + '" data-machine-key="' + escapeHtml(row.machineKey) + '" data-machine-name="' + escapeHtml(row.jenisMesin) + '" data-machine-type="' + escapeHtml(row.tipeMesin) + '" data-machine-units="' + escapeHtml(row.jumlahUnit) + '" data-machine-status="' + escapeHtml(row.status) + '" data-machine-source="' + escapeHtml(row.source) + '" data-machine-active="' + (row.active !== false ? 'true' : 'false') + '">' +
         '<div class="bep-machine-identity">' +
           '<div class="bep-machine-name">' + escapeHtml(row.jenisMesin || row.name || 'Mesin') + '</div>' +
           '<div class="bep-machine-badges">' +
             (row.tipeMesin ? '<span class="bep-machine-badge">' + escapeHtml(row.tipeMesin) + '</span>' : '') +
             '<span class="bep-machine-badge">' + escapeHtml(row.jumlahUnit || 0) + ' unit</span>' +
-            '<span class="bep-machine-badge ' + (archived ? 'is-archived' : 'is-source') + '">' + escapeHtml(row.source || 'Profil Operasional') + '</span>' +
+            '<span class="bep-machine-badge is-source">' + escapeHtml(row.source || 'Profil Operasional') + '</span>' +
           '</div>' +
         '</div>' +
         '<input class="bep-input" data-bep-field="machine-purchase" inputmode="numeric" placeholder="Harga/unit" value="' + escapeHtml(formatInputValue(row.hargaPerUnit)) + '" oninput="zettMoneyInput(this); zettBEPFixedChange()">' +
@@ -2330,7 +2406,8 @@
     }).join('');
   }
 
-  function renderAll() {
+  function renderAll(options) {
+    options = options || {};
     calculateTotals();
     if (byId('bepRentStatus')) byId('bepRentStatus').value = state.rentStatus || 'Sewa';
     setValue('bepRentNote', state.rentNote || '');
@@ -2338,13 +2415,22 @@
     setValue('bepInternetProvider', state.internetProvider || '');
     setValue('bepInternetMonthly', formatInputValue(state.internetMonthly));
     setValue('bepInternetNote', state.internetNote || '');
-    renderSalaryRows();
-    renderMachineRows();
-    renderOtherRows();
-    updateDisplays();
+    if (options.forceDetailRows || shouldRenderBEPDetailRows()) {
+      renderSalaryRows();
+      renderMachineRows();
+      renderOtherRows();
+    } else {
+      bepSafeLog('[BEP_RENDER_DETAIL_ROWS_SKIPPED]', {
+        salaryRows: (state.salaries || []).length,
+        machineRows: (state.machines || []).length,
+        otherRows: (state.others || []).length
+      });
+    }
+    updateDisplays({ skipTopKPI: options.skipTopKPI === true });
   }
 
-  function updateDisplays() {
+  function updateDisplays(options) {
+    options = options || {};
     if (!zettIsActiveViewBEP_()) {
       bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'updateDisplays' });
       return;
@@ -2396,7 +2482,7 @@
     setText('bepFixedMiniInternetNote', state.internetProvider ? ('Provider: ' + state.internetProvider) : 'Provider & biaya bulanan');
     setText('bepFixedMiniOtherAmount', money(totals.otherTotal) + ' / bulan');
     setText('bepFixedMiniOtherNote', otherActive.length ? compactCount(otherActive.length, 'item biaya') : 'Pengeluaran tetap tambahan');
-    if (typeof window.renderBEPTopKPIOnly === 'function') {
+    if (!options.skipTopKPI && typeof window.renderBEPTopKPIOnly === 'function') {
       try { window.renderBEPTopKPIOnly(); } catch (error) {}
     }
     if (!selected) setOutletState('', 'idle');
@@ -2407,16 +2493,21 @@
       bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'scheduleCalc' });
       return;
     }
-    updateDisplays();
-    if (typeof window.renderBEPTopKPIOnly === 'function') {
-      try { window.renderBEPTopKPIOnly(); } catch (error) {}
-    }
-    if (typeof window.calculateAll === 'function') {
-      window.clearTimeout(window.__bepFixedCalcTimer);
-      window.__bepFixedCalcTimer = window.setTimeout(function() {
+    window.clearTimeout(window.__BEP_SCHEDULE_CALC_TIMER__);
+    window.__BEP_SCHEDULE_CALC_TIMER__ = window.setTimeout(function() {
+      if (!zettIsActiveViewBEP_()) {
+        bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'scheduleCalc.timer' });
+        return;
+      }
+      bepSafeLog('[BEP_SCHEDULE_CALC_DEBOUNCED]', { targetOutlet: selectedOutlet() });
+      updateDisplays({ skipTopKPI: true });
+      if (typeof window.renderBEPTopKPIOnly === 'function') {
+        try { window.renderBEPTopKPIOnly(); } catch (error) {}
+      }
+      if (typeof window.calculateAll === 'function') {
         try { window.calculateAll(); } catch (error) {}
-      }, 40);
-    }
+      }
+    }, 120);
   }
 
   window.zettBEPFixedChange = function() {
@@ -2429,7 +2520,8 @@
       if (hidden) hidden.value = Math.round(total);
     });
     document.querySelectorAll('#bepMachineRows .bep-machine-row').forEach(function(row, index) {
-      var item = state.machines[index] || {};
+      var stateIndex = parseInt(row.getAttribute('data-index'), 10);
+      var item = state.machines[Number.isFinite(stateIndex) ? stateIndex : index] || {};
       var totals = row.querySelectorAll('.bep-mini-total');
       if (totals[0]) totals[0].textContent = money(item.depreciationMonthly || 0);
       if (totals[1]) totals[1].textContent = money(item.maintenanceMonthly || 0);
@@ -2492,13 +2584,16 @@
         state.monthlyRent = parseSafe(data.biayaSewaBulanan || data['Biaya Sewa Bulanan']) || (state.annualRent / 12);
         state.rentNote = data.catatanSewa || data.catatan || data['Catatan'] || '';
         state.salaries = Array.isArray(data.detailGaji) && data.detailGaji.length ? data.detailGaji : state.salaries;
-        state.machines = Array.isArray(data.detailMesin) ? data.detailMesin : state.machines;
+        state.serverMachineTotal = parseSafe(data.totalBiayaMesinBulanan || data['Total Biaya Mesin Bulanan']);
+        state.serverDepreciationTotal = parseSafe(data.totalDepresiasiMesinBulanan || data['Total Depresiasi Mesin Bulanan']);
+        state.serverMaintenanceTotal = parseSafe(data.totalCadanganPerawatanMesinBulanan || data['Total Cadangan Perawatan Mesin Bulanan']);
+        state.machines = Array.isArray(data.detailMesin) ? dedupeBEPMachines(data.detailMesin) : state.machines;
         state.internetProvider = data.providerInternet || data['Provider Internet'] || '';
         state.internetMonthly = parseSafe(data.biayaInternetBulanan || data['Biaya Internet Bulanan']);
         state.internetNote = data.catatanInternet || '';
         state.others = Array.isArray(data.detailLainLain) && data.detailLainLain.length ? data.detailLainLain : state.others;
       }
-      renderAll();
+      renderAll({ skipTopKPI: true });
       setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : '', outlet ? 'ready' : 'idle');
       window.clearTimeout(window.__BEP_AFTER_RENDER_CALC_TIMER__);
       window.__BEP_AFTER_RENDER_CALC_TIMER__ = window.setTimeout(function() {
