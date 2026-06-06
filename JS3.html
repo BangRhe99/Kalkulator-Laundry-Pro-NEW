@@ -738,7 +738,13 @@
       setText('headerTitle', titleMap[requestedTab] || 'Dashboard Eksekutif');
 
       if (requestedTab === 'dashboard') window.renderSingleOutletDashboard();
-      if ((requestedTab === 'bep' || requestedTab === 'roi') && typeof calculateAll === 'function') calculateAll();
+      if (requestedTab === 'roi' && typeof calculateAll === 'function') calculateAll();
+      if (requestedTab === 'bep' && typeof calculateAll === 'function') {
+        if (window.__BEP_ALLOW_GLOBAL_CALCULATE__ === true) calculateAll();
+        else if (window.ZETT_DEBUG_BEP_SAFE || window.ZETT_DEBUG_VIEW_ROUTING) {
+          try { console.log('[BEP_GLOBAL_CALCULATE_BLOCKED]', { fn: 'switchMainTab', allow: !!window.__BEP_ALLOW_GLOBAL_CALCULATE__, t: Math.round(performance.now()) }); } catch (error) {}
+        }
+      }
       if (requestedTab === 'hpp') {
         var selectHPP = $('inputNamaHPP');
         var selectedHPP = selectHPP ? String(selectHPP.value || '').trim() : '';
@@ -1802,6 +1808,8 @@
   function selectedOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
   window.ZETT_DEBUG_VIEW_ROUTING = window.ZETT_DEBUG_VIEW_ROUTING ?? true;
   window.ZETT_DEBUG_BEP_SAFE = window.ZETT_DEBUG_BEP_SAFE ?? true;
+  window.__BEP_SERVER_RENDER_PHASE__ = false;
+  window.__BEP_ALLOW_GLOBAL_CALCULATE__ = window.__BEP_ALLOW_GLOBAL_CALCULATE__ === true;
   function viewVisible(view) {
     return !!(view && !view.classList.contains('hidden') && view.offsetParent !== null);
   }
@@ -1861,6 +1869,13 @@
         viewHppHidden: byId('view-hpp')?.classList.contains('hidden')
       });
     } catch (error) {}
+  }
+  function bepRunWhenIdle(fn, timeout) {
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(fn, { timeout: timeout || 600 });
+    } else {
+      window.setTimeout(fn, timeout || 300);
+    }
   }
   function bepSafeLog(label, payload) {
     if (!window.ZETT_DEBUG_BEP_SAFE && !window.ZETT_DEBUG_VIEW_ROUTING) return;
@@ -2489,6 +2504,18 @@
     updateDisplays({ skipTopKPI: options.skipTopKPI === true });
   }
 
+  function getBEPChartSignature(totals) {
+    totals = totals || {};
+    return [
+      Math.round(totals.salaryTotal || 0),
+      Math.round(totals.monthlyRent || state.monthlyRent || 0),
+      Math.round(totals.machineTotal || 0),
+      Math.round(totals.internetTotal || 0),
+      Math.round(totals.otherTotal || 0),
+      Math.round(totals.fixedTotal || 0)
+    ].join('|');
+  }
+
   function updateDisplays(options) {
     options = options || {};
     if (!zettIsActiveViewBEP_()) {
@@ -2531,7 +2558,15 @@
     setText('bepSummaryMachine', money(totals.machineTotal));
     setText('bepSummaryInternet', money(totals.internetTotal));
     setText('bepSummaryOther', money(totals.otherTotal));
-    renderBEPFixedCostCharts(totals);
+    var chartSignature = getBEPChartSignature(totals);
+    if (window.__BEP_LAST_CHART_SIGNATURE__ !== chartSignature) {
+      window.__BEP_LAST_CHART_SIGNATURE__ = chartSignature;
+      renderBEPFixedCostCharts(totals);
+    } else {
+      bepSafeLog('[BEP_CHART_RENDER_SKIPPED_SAME_SIGNATURE]', {
+        signature: chartSignature
+      });
+    }
     setText('bepFixedMiniRentAmount', money(state.monthlyRent) + ' / bulan');
     setText('bepFixedMiniRentNote', state.annualRent > 0 ? ('Dari sewa tahunan ' + money(state.annualRent)) : 'Opsional jika outlet milik sendiri');
     setText('bepFixedMiniSalaryAmount', money(totals.salaryTotal) + ' / bulan');
@@ -2560,17 +2595,44 @@
         return;
       }
       bepSafeLog('[BEP_SCHEDULE_CALC_DEBOUNCED]', { targetOutlet: selectedOutlet() });
+      if (window.__BEP_SERVER_RENDER_PHASE__) {
+        bepSafeLog('[BEP_GLOBAL_CALCULATE_SKIPPED_DURING_SERVER_RENDER]', {
+          targetOutlet: selectedOutlet()
+        });
+        updateDisplays({ skipTopKPI: false });
+        return;
+      }
       updateDisplays({ skipTopKPI: true });
       if (typeof window.renderBEPTopKPIOnly === 'function') {
         try { window.renderBEPTopKPIOnly(); } catch (error) {}
       }
-      if (typeof window.calculateAll === 'function') {
-        try { window.calculateAll(); } catch (error) {}
+      var allowGlobalCalculate =
+        !window.__BEP_SERVER_RENDER_PHASE__ &&
+        !window.__BEP_RENDER_LOCK__ &&
+        window.__BEP_ALLOW_GLOBAL_CALCULATE__ === true;
+      if (allowGlobalCalculate && typeof window.calculateAll === 'function') {
+        try {
+          window.calculateAll();
+        } catch (error) {
+          bepSafeError('[BEP_GLOBAL_CALCULATE_ERROR]', { error: error, stack: error && error.stack });
+        }
+      } else {
+        bepSafeLog('[BEP_GLOBAL_CALCULATE_BLOCKED]', {
+          serverRenderPhase: !!window.__BEP_SERVER_RENDER_PHASE__,
+          renderLock: !!window.__BEP_RENDER_LOCK__,
+          allow: !!window.__BEP_ALLOW_GLOBAL_CALCULATE__
+        });
       }
     }, 120);
   }
 
   window.zettBEPFixedChange = function() {
+    if (window.__BEP_SERVER_RENDER_PHASE__) {
+      bepSafeLog('[BEP_INPUT_CHANGE_IGNORED_DURING_SERVER_RENDER]', {
+        targetOutlet: selectedOutlet()
+      });
+      return;
+    }
     collectFromDom();
     document.querySelectorAll('#bepSalaryRows .bep-row').forEach(function(row, index) {
       var total = state.salaries[index] ? state.salaries[index].total : 0;
@@ -2634,43 +2696,89 @@
     }
     window.__BEP_RENDER_LOCK__ = true;
     bepSafeLog('[BEP_RENDER_START]', { fn: 'applyServerData', targetOutlet: outlet });
+    window.__BEP_SERVER_RENDER_PHASE__ = true;
+    var renderStart = performance.now();
+    var skipIdleRender = false;
     try {
       emptyState(outlet);
       if (data) {
+        if (norm(outlet).indexOf('aca laundry') !== -1) {
+          bepSafeLog('[BEP_ACA_DATA_SIZE]', {
+            salaries: Array.isArray(data.detailGaji) ? data.detailGaji.length : 0,
+            machines: Array.isArray(data.detailMesin) ? data.detailMesin.length : 0,
+            others: Array.isArray(data.detailLainLain) ? data.detailLainLain.length : 0,
+            fixedTotal: data.totalFixedCostBulanan || data['Total Fixed Cost Bulanan']
+          });
+        }
         state.outletName = data.namaOutlet || data['Nama Outlet'] || outlet || '';
         state.category = data.category || data.kategoriLaundry || data['Kategori Laundry'] || '';
         state.rentStatus = data.statusSewa || data['Status Sewa'] || 'Sewa';
         state.annualRent = parseSafe(data.biayaSewaTahunan || data['Biaya Sewa Tahunan']);
         state.monthlyRent = parseSafe(data.biayaSewaBulanan || data['Biaya Sewa Bulanan']) || (state.annualRent / 12);
         state.rentNote = data.catatanSewa || data.catatan || data['Catatan'] || '';
-        state.salaries = Array.isArray(data.detailGaji) && data.detailGaji.length ? data.detailGaji : state.salaries;
+        state.salaries = Array.isArray(data.detailGaji) && data.detailGaji.length ? data.detailGaji : [];
         state.serverMachineTotal = parseSafe(data.totalBiayaMesinBulanan || data['Total Biaya Mesin Bulanan']);
         state.serverDepreciationTotal = parseSafe(data.totalDepresiasiMesinBulanan || data['Total Depresiasi Mesin Bulanan']);
         state.serverMaintenanceTotal = parseSafe(data.totalCadanganPerawatanMesinBulanan || data['Total Cadangan Perawatan Mesin Bulanan']);
-        state.machines = Array.isArray(data.detailMesin) ? dedupeBEPMachines(data.detailMesin) : state.machines;
+        state.machines = Array.isArray(data.detailMesin) ? dedupeBEPMachines(data.detailMesin) : [];
         state.internetProvider = data.providerInternet || data['Provider Internet'] || '';
         state.internetMonthly = parseSafe(data.biayaInternetBulanan || data['Biaya Internet Bulanan']);
         state.internetNote = data.catatanInternet || '';
-        state.others = Array.isArray(data.detailLainLain) && data.detailLainLain.length ? data.detailLainLain : state.others;
+        state.others = Array.isArray(data.detailLainLain) ? data.detailLainLain : [];
       }
+      calculateTotals();
       renderAll({ skipTopKPI: true });
+      updateDisplays({ skipTopKPI: true });
+      setBEPLoadingState(false, false);
       setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : '', outlet ? 'ready' : 'idle');
+      var renderCost = performance.now() - renderStart;
+      bepSafeLog('[BEP_RENDER_COST]', {
+        targetOutlet: outlet,
+        ms: Math.round(renderCost)
+      });
+      if (renderCost > 800) {
+        skipIdleRender = true;
+        bepSafeError('[BEP_RENDER_TOO_HEAVY_SAFE_MODE]', {
+          targetOutlet: outlet,
+          ms: Math.round(renderCost)
+        });
+        setBEPLoadingState(false, false);
+        window.__BEP_RENDER_LOCK__ = false;
+        return;
+      }
       window.clearTimeout(window.__BEP_AFTER_RENDER_CALC_TIMER__);
       window.__BEP_AFTER_RENDER_CALC_TIMER__ = window.setTimeout(function() {
         if (!zettIsActiveViewBEP_()) return;
         if (bepActiveOutletKey !== bepCacheKey(outlet)) return;
-        scheduleCalc();
-      }, 120);
+        updateDisplays({ skipTopKPI: false });
+        bepSafeLog('[BEP_AFTER_SERVER_RENDER_LIGHT_DONE]', {
+          targetOutlet: outlet
+        });
+      }, 250);
+      bepRunWhenIdle(function() {
+        if (skipIdleRender) return;
+        if (!zettIsActiveViewBEP_()) return;
+        if (bepActiveOutletKey !== bepCacheKey(outlet)) return;
+        try {
+          updateDisplays({ skipTopKPI: false });
+          bepSafeLog('[BEP_IDLE_RENDER_DONE]', { targetOutlet: outlet });
+        } catch (error) {
+          bepSafeError('[BEP_IDLE_RENDER_ERROR]', { error: error, stack: error && error.stack });
+        }
+      }, 350);
       bepSafeLog('[BEP_RENDER_DONE]', { fn: 'applyServerData', targetOutlet: outlet });
     } catch (error) {
       bepSafeError('[BEP_ERROR_CAUGHT]', { fn: 'applyServerData', targetOutlet: outlet, error: error, stack: error && error.stack });
       try {
         emptyState(outlet);
-        renderAll();
+        renderAll({ skipTopKPI: true });
         setOutletState(outlet ? ('Data BEP aktif: ' + outlet) : '', outlet ? 'ready' : 'idle');
       } catch (zeroError) {}
     } finally {
       window.__BEP_RENDER_LOCK__ = false;
+      window.setTimeout(function() {
+        window.__BEP_SERVER_RENDER_PHASE__ = false;
+      }, 800);
     }
   }
 
