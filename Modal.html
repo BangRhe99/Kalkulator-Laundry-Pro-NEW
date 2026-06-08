@@ -5660,6 +5660,11 @@
       });
 
       updateDonut(total, values);
+      if (typeof window.zettRenderElectricCard === 'function') {
+        window.requestAnimationFrame(function() {
+          if (!window.__zettElectricRendering) window.zettRenderElectricCard();
+        });
+      }
       } catch (error) {
         hppSafeError('[HPP_SAFE_RENDER_ERROR]', { source: source, error: error, stack: error && error.stack });
         if (typeof window.renderHPPZeroState === 'function') {
@@ -5813,7 +5818,7 @@
           console.error('GAGAL LOAD HPP:', error);
           updateDashboardFromState('load-dashboard');
         })
-        .getHPPDashboardData();
+        .getHPPDashboardData(outlet);
     };
 
     window.zettEnsureHPPDashboardLoaded = function(options) {
@@ -7671,6 +7676,26 @@ window.saveGasHPPData = function(event) {
     if (typeof window.toggleSetrikaInputs === 'function') window.toggleSetrikaInputs();
   }
 
+  function ensureElectricCardDetailContainer() {
+    const valueEl = byId('dash-card-listrik');
+    if (!valueEl) return null;
+
+    let detail = byId('dash-card-listrik-details');
+    if (detail) return detail;
+
+    detail = document.createElement('div');
+    detail.id = 'dash-card-listrik-details';
+    detail.className = 'zett-electric-card-details';
+
+    const pctEl = byId('dash-card-listrik-pct');
+    if (pctEl && pctEl.parentElement) {
+      pctEl.insertAdjacentElement('afterend', detail);
+    } else {
+      valueEl.insertAdjacentElement('afterend', detail);
+    }
+    return detail;
+  }
+
   function zettRenderElectricCard() {
     if (window.__zettElectricRendering) return;
     window.__zettElectricRendering = true;
@@ -7699,7 +7724,7 @@ window.saveGasHPPData = function(event) {
         value
       });
       const valueEl = byId('dash-card-listrik');
-      const detail = byId('dash-card-listrik-details');
+      const detail = ensureElectricCardDetailContainer();
       if (valueEl) valueEl.textContent = rupiah(value);
       if (detail) {
         detail.innerHTML = metrics
@@ -7707,6 +7732,13 @@ window.saveGasHPPData = function(event) {
           .map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`)
           .join('');
       }
+      console.log('[HPP LISTRIK FINAL RENDER]', {
+        outlet: outletName(),
+        value,
+        detailFound: !!detail,
+        detailHtml: detail ? detail.innerHTML : '',
+        metrics
+      });
       if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('listrik', value);
       listrikConsole('[HPP LISTRIK CARD VALUES]', {
         total: value,
@@ -7721,6 +7753,10 @@ window.saveGasHPPData = function(event) {
   function setText(id, value) {
     const el = byId(id);
     if (el) el.textContent = rupiah(value);
+  }
+
+  function setElectricText(ids, value) {
+    (Array.isArray(ids) ? ids : [ids]).forEach(id => setText(id, value));
   }
 
   function electricRowPatch(values) {
@@ -7873,16 +7909,22 @@ window.saveGasHPPData = function(event) {
     };
     listrikConsole('[HPP LISTRIK DISPLAY TARGETS]', displayTargets);
     listrikConsole('[HPP LISTRIK DISPLAY TARGET]', displayTargets);
-    setText('dispListrikCuciLoad', v.cuciLoad || 0);
-    setText('dispListrikCuciKg', v.cuciKg || 0);
-    setText('dispListrikPengeringLoad', v.keringLoad || 0);
-    setText('dispListrikPengeringKg', v.keringKg || 0);
-    setText('dispListrikPompaLoad', v.pompaLoad || 0);
-    setText('dispListrikPompaKg', v.pompaKg || 0);
-    setText('dispListrikSetrikaJam', v.setrikaJam || 0);
-    setText('dispListrikSetrikaKg', v.setrikaKg || 0);
+    console.log('[HPP LISTRIK FINAL DISPLAY TARGETS]', {
+      cuciLoad: !!byId('dispListrikCuciLoad'),
+      pengeringLoad: !!byId('dispListrikPengeringLoad'),
+      pompaLoad: !!byId('dispListrikPompaLoad'),
+      total: !!byId('displayBiayaListrikTotalKg')
+    });
+    setElectricText(['dispListrikCuciLoad', 'displayListrikCuciLoad'], v.cuciLoad || 0);
+    setElectricText(['dispListrikCuciKg', 'displayListrikCuciKg'], v.cuciKg || 0);
+    setElectricText(['dispListrikPengeringLoad', 'displayListrikPengeringLoad'], v.keringLoad || 0);
+    setElectricText(['dispListrikPengeringKg', 'displayListrikPengeringKg'], v.keringKg || 0);
+    setElectricText(['dispListrikPompaLoad', 'displayListrikPompaLoad'], v.pompaLoad || 0);
+    setElectricText(['dispListrikPompaKg', 'displayListrikPompaKg'], v.pompaKg || 0);
+    setElectricText(['dispListrikSetrikaJam', 'displayListrikSetrikaJam'], v.setrikaJam || 0);
+    setElectricText(['dispListrikSetrikaKg', 'displayListrikSetrikaKg'], v.setrikaKg || 0);
     const total = zettGetElectricDashboardValue();
-    setText('displayBiayaListrikTotalKg', total);
+    setElectricText(['displayBiayaListrikTotalKg', 'displayListrikTotalKg'], total);
     updateLocalElectricState(v);
     zettRenderElectricCard();
     if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('gsheet');

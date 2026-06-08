@@ -3565,15 +3565,49 @@ function saveStrukturBiaya(payload) {
     throw new Error('Gagal menyimpan Struktur Biaya Single-Sheet: ' + error.toString());
   }
 }
-function getHPPDashboardData() {
-
-  return {
-    gas: 150000,
-    listrik: 250000,
-    air: 100000,
-    packing: 50000,
-    bahan: 175000,
-    nota: 25000
+function getHPPDashboardData(namaOutlet) {
+  const zero = {
+    gas: 0,
+    listrik: 0,
+    air: 0,
+    packing: 0,
+    bahan: 0,
+    nota: 0
   };
 
+  if (!namaOutlet) return zero;
+
+  const response = getHPPRowByOutlet(namaOutlet);
+  if (!response || response.status !== 'success' || !response.data) return zero;
+
+  const row = response.data;
+  const pick = function(keys) {
+    for (let i = 0; i < keys.length; i++) {
+      const value = zettToNumber_(row[keys[i]]);
+      if (value > 0) return value;
+    }
+    return 0;
+  };
+  const category = String(row['Kategori Laundry'] || '').toLowerCase();
+  const isSelfService = category.indexOf('self') !== -1;
+  const kapCuci = zettToNumber_(row['Kap Cuci']) || 1;
+  const kapKering = zettToNumber_(row['Kap Kering']) || 1;
+  const pompaLoad = pick(['Listrik Pompa Per Load', 'Listrik Pompa /Load', 'listrikPompaPerLoad']);
+  const cuciLoad = pick(['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load', 'listrikCuciPerLoad']);
+  const keringLoad = pick(['Kering Per Load', 'Listrik Kering Per Load', 'Listrik Kering /Load', 'listrikKeringPerLoad', 'listrikKeringLoad', 'keringElectricPerLoad']);
+  const setrikaKg = pick(['Listrik Setrika Kg', 'Listrik Setrika /Kg', 'listrikSetrikaKg']);
+  const listrikKg = pick(['Listrik /Kg', 'Total Listrik /Kg']) ||
+    ((pompaLoad / Math.max(kapCuci, 1)) +
+      (pick(['Cuci Per Kg', 'Listrik Cuci /Kg', 'Listrik Cuci Per Kg', 'listrikCuciPerKg']) || (cuciLoad / Math.max(kapCuci, 1))) +
+      (pick(['Kering Per Kg', 'Listrik Kering /Kg', 'Listrik Kering Per Kg', 'listrikKeringPerKg']) || (keringLoad / Math.max(kapKering, 1))) +
+      setrikaKg);
+
+  return {
+    gas: pick(['Gas Per Kg', 'Estimasi Biaya Gas', 'Gas Per Load']),
+    listrik: isSelfService ? (pompaLoad + cuciLoad + keringLoad) : listrikKg,
+    air: pick(['Air Per Kg', 'Air Per Load']),
+    packing: isSelfService ? 0 : pick(['Total Biaya Packing/Kg (Rp)', 'Total Biaya Packing', 'Packing Per Kg']),
+    bahan: pick(['Chemical Cuci Per Kg', 'chemical_cost', 'Bahan Per Kg']),
+    nota: pick(['Admin/Nota Per Load', 'Admin Nota Kasir Per Load', 'Admin Nota Kasir Per Order'])
+  };
 }
