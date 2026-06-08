@@ -2645,6 +2645,15 @@ function simpanDataHPP(e) {
         ? zettReadPackingPayloadFromDOM()
         : {};
     Object.assign(payload, packingPayload);
+    if (activeHPPType === 'listrik' && typeof window.zettListrikDebugLog === 'function') {
+        window.zettListrikDebugLog('payload before save', {
+            listrikTDL: payload.listrikTDL,
+            listrikCuci: payload.listrikCuci,
+            listrikPengering: payload.listrikPengering,
+            listrikPompa: payload.listrikPompa,
+            listrikSetrika: payload.listrikSetrika
+        });
+    }
     zettUpsertLocalHPPRowAfterSave(payload);
 
     backgroundSyncHPP(payload);
@@ -2800,7 +2809,13 @@ async function prosesSimpanBEP() {
 
   function zettSetVal(id, value) {
     var el = document.getElementById(id);
-    if (el) el.value = value;
+    if (!el) return;
+    if (id === 'inputListrikPengeringWatt' &&
+        typeof window.zettShouldPreserveDryerWattInput === 'function' &&
+        window.zettShouldPreserveDryerWattInput(value)) {
+      return;
+    }
+    el.value = value;
   }
 
   function zettSetCheck(id, value) {
