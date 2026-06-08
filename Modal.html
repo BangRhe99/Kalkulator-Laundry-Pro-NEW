@@ -7534,15 +7534,9 @@ window.saveGasHPPData = function(event) {
   }
 
   function electricValues() {
-    if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
-      return typeof window.zettGetZeroElectricMetrics_ === 'function'
-        ? window.zettGetZeroElectricMetrics_()
-        : { pompaLoad: 0, pompaKg: 0, cuciLoad: 0, cuciKg: 0, keringLoad: 0, keringKg: 0, setrikaJam: 0, setrikaKg: 0 };
-    }
-
     const row = getRow();
     const cap = capacities();
-    const tdl = zettToNumberSafe(byId('inputTDL')?.value);
+    const tdl = zettToNumberSafe(byId('inputTDL')?.value) || 1700;
     const hasCuciInput = String(byId('inputListrikCuciWatt')?.value || '').trim() !== '' && tdl > 0;
     const hasKeringInput = String(byId('inputListrikPengeringWatt')?.value || '').trim() !== '' && tdl > 0;
     const hasPompaInput = String(byId('inputListrikPompaWatt')?.value || '').trim() !== '' && tdl > 0;
@@ -7677,15 +7671,21 @@ window.saveGasHPPData = function(event) {
       'Cuci Per Kg': v.cuciKg || 0,
       'Listrik Cuci Per Load': v.cuciLoad || 0,
       'Listrik Cuci /Load': v.cuciLoad || 0,
+      'Estimasi Biaya Mesin Cuci / Load': v.cuciLoad || 0,
       'Listrik Cuci /Kg': v.cuciKg || 0,
       'Kering Per Load': v.keringLoad || 0,
       'Kering Per Kg': v.keringKg || 0,
       'Listrik Kering Per Load': v.keringLoad || 0,
       'Listrik Kering /Load': v.keringLoad || 0,
+      'Estimasi Biaya Mesin Pengering / Load': v.keringLoad || 0,
       'Listrik Kering /Kg': v.keringKg || 0,
       'Listrik Pompa Per Load': v.pompaLoad || 0,
       'Listrik Pompa /Load': v.pompaLoad || 0,
+      'Estimasi Biaya Pompa Air / Load': v.pompaLoad || 0,
       'Listrik Pompa /Kg': v.pompaKg || 0,
+      'Daya Mesin Cuci': byId('inputListrikCuciWatt')?.value || '',
+      'Daya Mesin Pengering': byId('inputListrikPengeringWatt')?.value || '',
+      'Daya Pompa Air': byId('inputListrikPompaWatt')?.value || '',
       'Listrik Setrika Jam': v.setrikaJam || 0,
       'Listrik Setrika /Jam': v.setrikaJam || 0,
       'Listrik Setrika Kg': v.setrikaKg || 0,
@@ -7731,7 +7731,7 @@ window.saveGasHPPData = function(event) {
       displayPompa: 'dispListrikPompaLoad',
       cardListrik: 'dash-card-listrik'
     };
-    listrikConsole('[HPP LISTRIK DOM]', {
+    const domPayload = {
       inputTDL: !!byId(ids.inputTDL),
       inputCuci: !!byId(ids.inputCuci),
       inputPengering: !!byId(ids.inputPengering),
@@ -7740,6 +7740,16 @@ window.saveGasHPPData = function(event) {
       displayPengering: !!byId(ids.displayPengering),
       displayPompa: !!byId(ids.displayPompa),
       cardListrik: !!byId(ids.cardListrik)
+    };
+    listrikConsole('[HPP LISTRIK DOM]', domPayload);
+    listrikConsole('[HPP LISTRIK DOM CHECK]', {
+      tarif: domPayload.inputTDL,
+      cuci: domPayload.inputCuci,
+      pengering: domPayload.inputPengering,
+      pompa: domPayload.inputPompa,
+      displayCuci: domPayload.displayCuci,
+      displayPengering: domPayload.displayPengering,
+      displayPompa: domPayload.displayPompa
     });
     listrikConsole('[HPP LISTRIK DOM] input cuci found:', !!byId(ids.inputCuci));
     listrikConsole('[HPP LISTRIK DOM] input pengering found:', !!byId(ids.inputPengering));
@@ -7758,7 +7768,7 @@ window.saveGasHPPData = function(event) {
     const dryerBefore = rawDryerWatt();
     const cap = capacities();
     const raw = {
-      tarif: zettToNumberSafe(byId('inputTDL')?.value),
+      tarif: zettToNumberSafe(byId('inputTDL')?.value) || 1700,
       cuciWatt: zettToNumberSafe(byId('inputListrikCuciWatt')?.value),
       dryerWatt: dryerBefore,
       pengeringWatt: zettToNumberSafe(byId('inputListrikPengeringWatt')?.value),
@@ -7769,19 +7779,27 @@ window.saveGasHPPData = function(event) {
       kapasitasLoad: cap.cuciKg
     };
     listrikConsole('[HPP LISTRIK RAW]', raw);
+    listrikConsole('[HPP LISTRIK RAW VALUE]', raw);
     zettListrikDebugLog('dryer watt before calculate', { value: dryerBefore });
     const v = electricValues();
-    listrikConsole('[HPP LISTRIK CALC]', {
+    const calcPayload = {
       listrikCuciLoad: v.cuciLoad || 0,
       listrikKeringLoad: v.keringLoad || 0,
-      listrikPompaLoad: v.pompaLoad || 0
-    });
-    listrikConsole('[HPP LISTRIK DISPLAY TARGETS]', {
+      listrikPompaLoad: v.pompaLoad || 0,
+      estimasiCuciLoad: v.cuciLoad || 0,
+      estimasiPengeringLoad: v.keringLoad || 0,
+      estimasiPompaLoad: v.pompaLoad || 0
+    };
+    listrikConsole('[HPP LISTRIK CALC]', calcPayload);
+    listrikConsole('[HPP LISTRIK CALC RESULT]', calcPayload);
+    const displayTargets = {
       cuciLoad: !!byId('dispListrikCuciLoad'),
       keringLoad: !!byId('dispListrikPengeringLoad'),
       pompaLoad: !!byId('dispListrikPompaLoad'),
       total: !!byId('displayBiayaListrikTotalKg')
-    });
+    };
+    listrikConsole('[HPP LISTRIK DISPLAY TARGETS]', displayTargets);
+    listrikConsole('[HPP LISTRIK DISPLAY TARGET]', displayTargets);
     setText('dispListrikCuciLoad', v.cuciLoad || 0);
     setText('dispListrikCuciKg', v.cuciKg || 0);
     setText('dispListrikPengeringLoad', v.keringLoad || 0);
@@ -7922,6 +7940,7 @@ window.saveGasHPPData = function(event) {
       if (event.target && ELECTRIC_INPUT_IDS.includes(event.target.id)) {
         listrikConsole('[HPP LISTRIK EVENT]', { type: event.type, triggeredBy: event.target.id });
         listrikConsole('[HPP LISTRIK EVENT] triggered by:', event.target.id);
+        listrikConsole('[HPP LISTRIK EVENT TRIGGERED]', { id: event.target.id, value: event.target.value });
         scheduleElectricCalculation();
       }
     });
@@ -7929,6 +7948,7 @@ window.saveGasHPPData = function(event) {
       if (event.target && ELECTRIC_INPUT_IDS.includes(event.target.id)) {
         listrikConsole('[HPP LISTRIK EVENT]', { type: event.type, triggeredBy: event.target.id });
         listrikConsole('[HPP LISTRIK EVENT] triggered by:', event.target.id);
+        listrikConsole('[HPP LISTRIK EVENT TRIGGERED]', { id: event.target.id, value: event.target.value });
         scheduleElectricCalculation();
       }
     });
@@ -7936,6 +7956,7 @@ window.saveGasHPPData = function(event) {
       if (event.target && ELECTRIC_INPUT_IDS.includes(event.target.id)) {
         listrikConsole('[HPP LISTRIK EVENT]', { type: event.type, triggeredBy: event.target.id });
         listrikConsole('[HPP LISTRIK EVENT] triggered by:', event.target.id);
+        listrikConsole('[HPP LISTRIK EVENT TRIGGERED]', { id: event.target.id, value: event.target.value });
         scheduleElectricCalculation();
       }
     });
