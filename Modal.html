@@ -5507,10 +5507,9 @@
     function setStateValue(type, value) {
       if (!HPP_TYPES.includes(type)) return;
       const state = getState();
-      const shouldZeroUtility = typeof window.zettIsHPPOutletNotSelected_ === 'function' &&
-        window.zettIsHPPOutletNotSelected_() &&
-        (type === 'listrik' || type === 'air');
-      state[type] = shouldZeroUtility ? 0 : Math.max(0, safeNumberHPP(value));
+      const shouldZeroCost = typeof window.zettIsHPPOutletNotSelected_ === 'function' &&
+        window.zettIsHPPOutletNotSelected_();
+      state[type] = shouldZeroCost ? 0 : Math.max(0, safeNumberHPP(value));
       syncToKnownStores();
     }
 
@@ -5620,10 +5619,10 @@
       };
 
       if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
-        values.listrik = 0;
-        values.air = 0;
-        state.listrik = 0;
-        state.air = 0;
+        HPP_TYPES.forEach(type => {
+          values[type] = 0;
+          state[type] = 0;
+        });
       } else if (!values.listrik) {
         const listrikFromRow = getActiveElectricDashboardValueFromRow();
         if (listrikFromRow > 0) {
@@ -10436,9 +10435,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         if (item.key === 'bahan' && window.__zettChemicalDashboardActive === false) values[item.key] = 0;
       });
       if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
-        values.listrik = 0;
-        values.air = 0;
-        values.nota = 0;
+        TYPES.forEach(item => { values[item.key] = 0; });
       }
       values.total = Number(store.total);
       if (
@@ -10562,6 +10559,11 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       const values = getValues();
       const rawTotal = Number(values.total);
       const total = Number.isFinite(rawTotal) ? Math.max(0, rawTotal) : 0;
+      const centerValue = document.querySelector('#view-hpp .hpp-donut-center .hpp-donut-total-value');
+      if (centerValue) {
+        const nextCenterValue = total > 0 ? '100%' : '0%';
+        if (centerValue.textContent !== nextCenterValue) centerValue.textContent = nextCenterValue;
+      }
       const list = document.querySelector('#view-hpp .hpp-composition-list');
       if (list) {
         const nextListHtml = TYPES.map(item => {
