@@ -7354,6 +7354,14 @@ window.saveGasHPPData = function(event) {
     setrikaJam: { label: 'Listrik Setrika /Jam', source: 'inputListrikSetrikaWatt' },
     setrikaKg: { label: 'Listrik Setrika /Kg', source: 'inputListrikSetrikaWatt' }
   };
+  const ELECTRIC_INPUT_IDS = [
+    'inputTDL',
+    'inputListrikCuciWatt',
+    'inputListrikPengeringWatt',
+    'inputListrikPompaWatt',
+    'inputListrikSetrikaWatt',
+    'toggleSetrikaListrik'
+  ];
 
   function byId(id) { return document.getElementById(id); }
   function norm(value) { return String(value || '').trim().toLowerCase(); }
@@ -7536,7 +7544,7 @@ window.saveGasHPPData = function(event) {
       const shouldZero = typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_();
       const metrics = zettGetVisibleElectricMetrics();
       const value = shouldZero ? 0 : metrics.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
-      zettListrikDebugLog('render source', {
+      zettListrikDebugLog('card render source', {
         outlet: outletName(),
         row: getRow(),
         rawDryerWatt: rawDryerWatt(),
@@ -7553,6 +7561,10 @@ window.saveGasHPPData = function(event) {
           .join('');
       }
       if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('listrik', value);
+      zettListrikDebugLog('card values', {
+        total: value,
+        details: metrics
+      });
       zettRenderElectricAnalysisForm();
     } finally {
       window.__zettElectricRendering = false;
@@ -7562,6 +7574,61 @@ window.saveGasHPPData = function(event) {
   function setText(id, value) {
     const el = byId(id);
     if (el) el.textContent = rupiah(value);
+  }
+
+  function electricRowPatch(values) {
+    const v = values || {};
+    return {
+      'TDL': byId('inputTDL')?.value || '',
+      'Watt Cuci': byId('inputListrikCuciWatt')?.value || '',
+      'Watt Kering': byId('inputListrikPengeringWatt')?.value || '',
+      'Watt Pompa': byId('inputListrikPompaWatt')?.value || '',
+      'Watt Setrika': byId('inputListrikSetrikaWatt')?.value || '',
+      'Cuci Per Load': v.cuciLoad || 0,
+      'Cuci Per Kg': v.cuciKg || 0,
+      'Listrik Cuci Per Load': v.cuciLoad || 0,
+      'Listrik Cuci /Load': v.cuciLoad || 0,
+      'Listrik Cuci /Kg': v.cuciKg || 0,
+      'Kering Per Load': v.keringLoad || 0,
+      'Kering Per Kg': v.keringKg || 0,
+      'Listrik Kering Per Load': v.keringLoad || 0,
+      'Listrik Kering /Load': v.keringLoad || 0,
+      'Listrik Kering /Kg': v.keringKg || 0,
+      'Listrik Pompa Per Load': v.pompaLoad || 0,
+      'Listrik Pompa /Load': v.pompaLoad || 0,
+      'Listrik Pompa /Kg': v.pompaKg || 0,
+      'Listrik Setrika Jam': v.setrikaJam || 0,
+      'Listrik Setrika /Jam': v.setrikaJam || 0,
+      'Listrik Setrika Kg': v.setrikaKg || 0,
+      'Listrik Setrika /Kg': v.setrikaKg || 0,
+      listrikCuciPerLoad: v.cuciLoad || 0,
+      listrikCuciPerKg: v.cuciKg || 0,
+      listrikKeringPerLoad: v.keringLoad || 0,
+      listrikKeringPerKg: v.keringKg || 0,
+      listrikPompaPerLoad: v.pompaLoad || 0,
+      listrikPompaPerKg: v.pompaKg || 0,
+      listrikSetrikaJam: v.setrikaJam || 0,
+      listrikSetrikaKg: v.setrikaKg || 0
+    };
+  }
+
+  function updateLocalElectricState(values) {
+    if (!outletName()) return;
+    const patch = electricRowPatch(values);
+    if (typeof window.zettPatchActiveHPPRow === 'function') window.zettPatchActiveHPPRow(patch);
+    zettListrikDebugLog('local state updated', {
+      outlet: outletName(),
+      cuciLoad: patch['Cuci Per Load'],
+      keringLoad: patch['Kering Per Load'],
+      pompaLoad: patch['Listrik Pompa Per Load']
+    });
+  }
+
+  function scheduleElectricCalculation() {
+    window.clearTimeout(window.__zettListrikInputCalcTimer);
+    window.__zettListrikInputCalcTimer = window.setTimeout(function() {
+      if (typeof window.calculateListrik === 'function') window.calculateListrik();
+    }, 0);
   }
 
   window.calculateListrik = function() {
@@ -7580,6 +7647,12 @@ window.saveGasHPPData = function(event) {
     zettListrikDebugLog('dryer watt before calculate', { value: dryerBefore });
     const v = electricValues();
     zettListrikDebugLog('calculated values', v);
+    zettListrikDebugLog('display targets found', {
+      cuciLoad: !!byId('dispListrikCuciLoad'),
+      keringLoad: !!byId('dispListrikPengeringLoad'),
+      pompaLoad: !!byId('dispListrikPompaLoad'),
+      total: !!byId('displayBiayaListrikTotalKg')
+    });
     setText('dispListrikCuciLoad', v.cuciLoad || 0);
     setText('dispListrikCuciKg', v.cuciKg || 0);
     setText('dispListrikPengeringLoad', v.keringLoad || 0);
@@ -7590,6 +7663,7 @@ window.saveGasHPPData = function(event) {
     setText('dispListrikSetrikaKg', v.setrikaKg || 0);
     const total = zettGetElectricDashboardValue();
     setText('displayBiayaListrikTotalKg', total);
+    updateLocalElectricState(v);
     zettRenderElectricCard();
     if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('gsheet');
     zettListrikDebugLog('display updated', {
@@ -7597,6 +7671,11 @@ window.saveGasHPPData = function(event) {
       keringLoad: byId('dispListrikPengeringLoad')?.textContent || '',
       pompaLoad: byId('dispListrikPompaLoad')?.textContent || '',
       total: byId('displayBiayaListrikTotalKg')?.textContent || ''
+    });
+    zettListrikDebugLog('hpp summary values', {
+      cuci: (v.pompaLoad || 0) + (v.cuciLoad || 0),
+      kering: v.keringLoad || 0,
+      dashboard: total
     });
     zettListrikDebugLog('dryer watt after calculate', { before: dryerBefore, after: rawDryerWatt() });
     return v;
@@ -7668,6 +7747,7 @@ window.saveGasHPPData = function(event) {
       if (tdl && tdl.value) formatRupiahInput(tdl);
     }
     zettRenderElectricAnalysisForm();
+    setTimeout(function() { if (typeof window.calculateListrik === 'function') window.calculateListrik(); }, 0);
   }
 
   window.zettGetElectricUsageContext = zettGetElectricUsageContext;
@@ -7699,6 +7779,19 @@ window.saveGasHPPData = function(event) {
     document.addEventListener('input', function(event) {
       if (event.target && event.target.id === 'inputListrikPengeringWatt') {
         rememberDryerWattInput();
+      }
+      if (event.target && ELECTRIC_INPUT_IDS.includes(event.target.id)) {
+        scheduleElectricCalculation();
+      }
+    });
+    document.addEventListener('change', function(event) {
+      if (event.target && ELECTRIC_INPUT_IDS.includes(event.target.id)) {
+        scheduleElectricCalculation();
+      }
+    });
+    document.addEventListener('keyup', function(event) {
+      if (event.target && ELECTRIC_INPUT_IDS.includes(event.target.id)) {
+        scheduleElectricCalculation();
       }
     });
   });

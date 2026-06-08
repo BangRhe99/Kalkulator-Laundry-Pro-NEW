@@ -1568,9 +1568,27 @@
       function fallbackValuesFromRow(row) {
         var gas = clean(pick(row, ['Gas Per Kg', 'Gas_Per_Kg'])) ||
           clean(pick(row, ['Estimasi Biaya Gas', 'Gas Per Load', 'Gas_Per_Load']));
-        var listrik = clean(pick(row, ['Cuci Per Kg', 'Listrik Cuci /Kg', 'Listrik Cuci Per Kg'])) +
-          clean(pick(row, ['Kering Per Kg', 'Listrik Kering /Kg', 'Listrik Kering Per Kg'])) +
-          clean(pick(row, ['Listrik Setrika Kg', 'Setrika Per Kg', 'Listrik Setrika /Kg']));
+        var kapCuci = clean(pick(row, ['Kap Cuci', 'cuciKg'])) || 1;
+        var kapKering = clean(pick(row, ['Kap Kering', 'pengeringKg'])) || 1;
+        var kapSetrika = clean(pick(row, ['Kap Setrika', 'Kg Setrika', 'setrikaKg'])) || 1;
+        var listrikPompaLoad = clean(pick(row, ['Listrik Pompa Per Load', 'Listrik Pompa /Load', 'listrikPompaPerLoad']));
+        var listrikCuciKg = clean(pick(row, ['Cuci Per Kg', 'Listrik Cuci /Kg', 'Listrik Cuci Per Kg', 'listrikCuciPerKg']));
+        var listrikKeringKg = clean(pick(row, ['Kering Per Kg', 'Listrik Kering /Kg', 'Listrik Kering Per Kg', 'listrikKeringPerKg']));
+        var listrikSetrikaKg = clean(pick(row, ['Listrik Setrika Kg', 'Setrika Per Kg', 'Listrik Setrika /Kg', 'listrikSetrikaKg']));
+        if (!listrikCuciKg) listrikCuciKg = clean(pick(row, ['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load', 'listrikCuciPerLoad'])) / Math.max(kapCuci, 1);
+        if (!listrikKeringKg) listrikKeringKg = clean(pick(row, ['Kering Per Load', 'Listrik Kering Per Load', 'Listrik Kering /Load', 'listrikKeringPerLoad'])) / Math.max(kapKering, 1);
+        if (!listrikSetrikaKg) listrikSetrikaKg = clean(pick(row, ['Listrik Setrika Jam', 'Listrik Setrika /Jam', 'listrikSetrikaJam'])) / Math.max(kapSetrika, 1);
+        var listrik = (listrikPompaLoad / Math.max(kapCuci, 1)) + listrikCuciKg + listrikKeringKg + listrikSetrikaKg;
+        if (window.ZETT_DEBUG_LISTRIK && window.console && typeof window.console.log === 'function') {
+          window.console.log('[HPP LISTRIK] card values', {
+            source: 'dashboard fallback row',
+            listrikPompaLoad: listrikPompaLoad,
+            listrikCuciKg: listrikCuciKg,
+            listrikKeringKg: listrikKeringKg,
+            listrikSetrikaKg: listrikSetrikaKg,
+            listrik: listrik
+          });
+        }
         var air = clean(pick(row, ['Air Per Kg', 'Air Cuci /Kg'])) +
           clean(pick(row, ['Air Setrika Kg', 'Air Setrika /Kg']));
         var packing = clean(pick(row, ['Total Biaya Packing', 'Packing Per Kg', 'Packing_PP_PerKg'])) ||

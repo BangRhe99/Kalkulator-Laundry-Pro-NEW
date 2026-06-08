@@ -2664,10 +2664,19 @@ function simpanDataHPP(e) {
             listrikSetrikaKg: listrikCalc.setrikaKg || 0,
             'Cuci Per Load': listrikCalc.cuciLoad || 0,
             'Cuci Per Kg': listrikCalc.cuciKg || 0,
+            'Listrik Cuci Per Load': listrikCalc.cuciLoad || 0,
+            'Listrik Cuci /Load': listrikCalc.cuciLoad || 0,
+            'Listrik Cuci /Kg': listrikCalc.cuciKg || 0,
             'Kering Per Load': listrikCalc.keringLoad || 0,
             'Kering Per Kg': listrikCalc.keringKg || 0,
+            'Listrik Kering Per Load': listrikCalc.keringLoad || 0,
+            'Listrik Kering /Load': listrikCalc.keringLoad || 0,
+            'Listrik Kering /Kg': listrikCalc.keringKg || 0,
             'Listrik Pompa Per Load': listrikCalc.pompaLoad || 0,
+            'Listrik Pompa /Load': listrikCalc.pompaLoad || 0,
+            'Listrik Pompa /Kg': listrikCalc.pompaKg || 0,
             'Listrik Setrika Jam': listrikCalc.setrikaJam || 0,
+            'Listrik Setrika /Jam': listrikCalc.setrikaJam || 0,
             'Listrik Setrika Kg': listrikCalc.setrikaKg || 0
         });
     }
@@ -2677,7 +2686,10 @@ function simpanDataHPP(e) {
             listrikCuci: payload.listrikCuci,
             listrikPengering: payload.listrikPengering,
             listrikPompa: payload.listrikPompa,
-            listrikSetrika: payload.listrikSetrika
+            listrikSetrika: payload.listrikSetrika,
+            listrikCuciPerLoad: payload.listrikCuciPerLoad,
+            listrikKeringPerLoad: payload.listrikKeringPerLoad,
+            listrikPompaPerLoad: payload.listrikPompaPerLoad
         });
     }
     zettUpsertLocalHPPRowAfterSave(payload);
