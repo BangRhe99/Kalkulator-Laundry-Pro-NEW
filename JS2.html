@@ -2654,6 +2654,9 @@ function simpanDataHPP(e) {
     Object.assign(payload, packingPayload);
     if (activeHPPType === 'listrik' && typeof window.calculateListrik === 'function') {
         const listrikCalc = window.calculateListrik() || {};
+        const listrikPatch = typeof window.zettBuildElectricPayloadPatch === 'function'
+            ? window.zettBuildElectricPayloadPatch()
+            : {};
         Object.assign(payload, {
             'TDL': payload.listrikTDL,
             'Watt Cuci': payload.listrikCuci,
@@ -2683,8 +2686,14 @@ function simpanDataHPP(e) {
             'Listrik Pompa /Kg': listrikCalc.pompaKg || 0,
             'Listrik Setrika Jam': listrikCalc.setrikaJam || 0,
             'Listrik Setrika /Jam': listrikCalc.setrikaJam || 0,
-            'Listrik Setrika Kg': listrikCalc.setrikaKg || 0
-        });
+            'Listrik Setrika Kg': listrikCalc.setrikaKg || 0,
+            'Listrik Setrika /Kg': listrikCalc.setrikaKg || 0,
+            'Listrik /Load': (listrikCalc.pompaLoad || 0) + (listrikCalc.cuciLoad || 0) + (listrikCalc.keringLoad || 0),
+            'Total Listrik /Load': (listrikCalc.pompaLoad || 0) + (listrikCalc.cuciLoad || 0) + (listrikCalc.keringLoad || 0),
+            'Listrik /Kg': listrikPatch['Listrik /Kg'] || 0,
+            listrikTotalPerLoad: (listrikCalc.pompaLoad || 0) + (listrikCalc.cuciLoad || 0) + (listrikCalc.keringLoad || 0),
+            listrikPerKg: listrikPatch.listrikPerKg || listrikPatch['Listrik /Kg'] || 0
+        }, listrikPatch);
     }
     if (activeHPPType === 'listrik' && typeof window.zettListrikDebugLog === 'function') {
         window.zettListrikDebugLog('payload before save', {
