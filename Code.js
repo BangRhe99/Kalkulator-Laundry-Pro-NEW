@@ -962,7 +962,20 @@ function saveGasHPPData(payload) {
   try {
     const ss = _getSpreadsheet();
     let sheet = ss.getSheetByName(SHEET_HPP_1);
-    if (!sheet) throw new Error('Sheet Struktur_Biaya_1 tidak ditemukan.');
+    if (!sheet) sheet = ss.insertSheet(SHEET_HPP_1);
+    if (sheet.getLastColumn() === 0) {
+      sheet.getRange(1, 1, 1, zettCombinedHPPHeaders_().length)
+        .setValues([zettCombinedHPPHeaders_()])
+        .setFontWeight('bold')
+        .setBackground('#0f172a')
+        .setFontColor('#ffffff')
+        .setHorizontalAlignment('center')
+        .setVerticalAlignment('middle')
+        .setWrap(true);
+      sheet.setFrozenRows(1);
+    } else {
+      zettEnsureHeaders_(sheet, zettCombinedHPPHeaders_());
+    }
 
     const headerMap = zettGetHeaderMap_(sheet);
     const nameCol = headerMap['Nama Outlet'];
@@ -983,10 +996,19 @@ function saveGasHPPData(payload) {
     }
 
     const col = (key) => (typeof headerMap[key] === 'number' ? headerMap[key] + 1 : 0);
-    const hargaGas = zettToNumber_(payload.hargaGas);
-    const jamGas = zettToNumber_(payload.jamGas);
-    const menitGas = zettToNumber_(payload.menitGas);
-    const estimasiBiayaGas = zettToNumber_(payload.estimasiBiayaGas);
+    const pickPayload = function(keys) {
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (payload[key] !== undefined && payload[key] !== null && payload[key] !== '') return payload[key];
+      }
+      return '';
+    };
+    const kapGas = pickPayload(['gasKapasitas', 'kapGas', 'Kapasitas Gas LPG', 'Kap Gas']);
+    const hargaGas = zettToNumber_(pickPayload(['gasHarga', 'hargaGas', 'Harga Per Tabung Gas', 'Harga Gas']));
+    const jamGas = zettToNumber_(pickPayload(['gasJam', 'jamGas', 'Estimasi Pemakaian Gas Jam', 'Jam Gas']));
+    const menitGas = zettToNumber_(pickPayload(['gasMenit', 'menitGas', 'Konversi Waktu Gas', 'Menit Gas']));
+    const estimasiLoadGas = zettToNumber_(pickPayload(['estimasiLoadGas', 'Estimasi Load Pemakaian Gas', 'Estimasi Load Gas']));
+    const estimasiBiayaGas = zettToNumber_(pickPayload(['estimasiBiayaGas', 'gasPerLoad', 'HPP Gas Per Load', 'Gas Per Load', 'Estimasi Biaya Gas']));
     let kategoriLaundry = '';
     let tipeSetrika = '';
     let kapSetrika = 0;
@@ -1000,25 +1022,25 @@ function saveGasHPPData(payload) {
       if (typeof headerMap['Kap Kering'] === 'number') kapKering = zettToNumber_(row[headerMap['Kap Kering']]);
       pakaiMesinPengering = zettDryerActiveFromRow_(row, headerMap);
     }
-    const gasPerJamValue = zettToNumber_(payload.gasPerJam) || (jamGas > 0 ? hargaGas / jamGas : 0);
+    const gasPerJamValue = zettToNumber_(pickPayload(['gasPerJam', 'HPP Gas Per Jam', 'Gas Per Jam'])) || (jamGas > 0 ? hargaGas / jamGas : 0);
     const steamIronRelevant = zettGasIronRelevant_(kategoriLaundry, tipeSetrika);
     const setrikaPerJamValue = steamIronRelevant ? gasPerJamValue : '';
     const setrikaPerKgValue = steamIronRelevant && kapSetrika > 0 ? setrikaPerJamValue / kapSetrika : '';
     const dryerGasRelevant = zettIsSelfServiceCategory_(kategoriLaundry) || zettIsHybridCategory_(kategoriLaundry) || (zettIsDropOffCategory_(kategoriLaundry) && pakaiMesinPengering);
     const gasPerKgValue = dryerGasRelevant
-      ? (zettToNumber_(payload.gasPerKg) || (kapKering > 0 ? (estimasiBiayaGas || zettToNumber_(payload.gasPerLoad)) / kapKering : ''))
+      ? (zettToNumber_(pickPayload(['gasPerKg', 'Gas Per Kg'])) || (kapKering > 0 ? estimasiBiayaGas / kapKering : ''))
       : '';
     const values = {
       'Nama Outlet': String(payload.namaOutlet || '').trim(),
-      'Kap Gas': payload.kapGas,
+      'Kap Gas': kapGas,
       'Harga Gas': hargaGas,
       'Jam Gas': jamGas,
       'Menit Gas': menitGas,
-      'Estimasi Load Gas': zettToNumber_(payload.estimasiLoadGas),
+      'Estimasi Load Gas': estimasiLoadGas,
       'Estimasi Biaya Gas': estimasiBiayaGas,
       'Gas Per Jam': gasPerJamValue,
-      'Gas Per Menit': zettToNumber_(payload.gasPerMenit) || (menitGas > 0 ? hargaGas / menitGas : 0),
-      'Gas Per Load': estimasiBiayaGas || zettToNumber_(payload.gasPerLoad),
+      'Gas Per Menit': zettToNumber_(pickPayload(['gasPerMenit', 'HPP Gas Per Menit', 'Gas Per Menit'])) || (menitGas > 0 ? hargaGas / menitGas : 0),
+      'Gas Per Load': estimasiBiayaGas,
       'Gas Per Kg': gasPerKgValue,
       'Setrika Per Jam': setrikaPerJamValue,
       'Setrika Per Kg': setrikaPerKgValue,

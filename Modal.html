@@ -6834,6 +6834,13 @@ window.updateGasDefault = function() {
   window.calculateGas();
 };
 
+window.ZETT_DEBUG_GAS = (window.ZETT_DEBUG_GAS === undefined) ? true : window.ZETT_DEBUG_GAS;
+function zettGasDebugLog(label, data) {
+  if (window.ZETT_DEBUG_GAS && window.console && typeof window.console.log === 'function') {
+    window.console.log('[HPP GAS] ' + label, data || {});
+  }
+}
+
 window.calculateGas = function() {
   const harga = zettCleanNumber(document.getElementById('inputGasHarga')?.value);
   const jam = parseFloat(document.getElementById('inputGasJam')?.value || 0) || 0;
@@ -6860,6 +6867,27 @@ window.calculateGas = function() {
   const gasPerKg = (estimasiBiayaGas > 0 && kapKering > 0) ? estimasiBiayaGas / kapKering : 0;
   const setrikaPerJam = shouldCalculateIron ? gasPerJam : '';
   const setrikaPerKg = shouldCalculateIron && gasPerJam > 0 && kapSetrika > 0 ? gasPerJam / kapSetrika : '';
+
+  zettGasDebugLog('form values', {
+    kapasitas: document.getElementById('inputGasKapasitas')?.value || '',
+    harga,
+    jam,
+    menit,
+    mesinKering,
+    durasiKering,
+    kapKering,
+    kapSetrika
+  });
+  zettGasDebugLog('calculated values', {
+    gasPerJam,
+    gasPerMenit,
+    estimasiLoadGas,
+    estimasiBiayaGas,
+    gasPerLoad: estimasiBiayaGas,
+    gasPerKg,
+    setrikaPerJam,
+    setrikaPerKg
+  });
 
   const loadEl = document.getElementById('inputGasPerLoadManual');
   if (loadEl) loadEl.value = estimasiLoadGas > 0 ? Number(estimasiLoadGas.toFixed(2)) : '';
@@ -6952,6 +6980,10 @@ window.saveGasHPPData = function(event) {
 
   const payload = {
     namaOutlet,
+    gasKapasitas: kapGas,
+    gasHarga: hargaGas,
+    gasJam: jamGas,
+    gasMenit: calc.menitGas,
     kapGas,
     hargaGas,
     jamGas,
@@ -6965,6 +6997,17 @@ window.saveGasHPPData = function(event) {
     setrikaPerJam: calc.setrikaPerJam,
     setrikaPerKg: calc.setrikaPerKg
   };
+  Object.assign(payload, {
+    'Kapasitas Gas LPG': kapGas,
+    'Harga Per Tabung Gas': hargaGas,
+    'Estimasi Pemakaian Gas Jam': jamGas,
+    'Konversi Waktu Gas': calc.menitGas,
+    'Estimasi Load Pemakaian Gas': calc.estimasiLoadGas,
+    'HPP Gas Per Jam': calc.gasPerJam,
+    'HPP Gas Per Menit': calc.gasPerMenit,
+    'HPP Gas Per Load': calc.gasPerLoad
+  });
+  zettGasDebugLog('payload before save', payload);
   zettPatchActiveHPPRow({
     'Kap Gas': kapGas,
     'Harga Gas': zettFormatNumberID(hargaGas),
@@ -6996,6 +7039,7 @@ window.saveGasHPPData = function(event) {
 
   google.script.run
     .withSuccessHandler(function(res) {
+      zettGasDebugLog('backend save response', res);
       showGasResult('success', 'Berhasil Disimpan', 'Data gas berhasil disimpan.', { toast: true });
       if (res && res.data) {
         zettPatchActiveHPPRow(res.data);
@@ -7159,6 +7203,13 @@ window.saveGasHPPData = function(event) {
       const detail = byId('dash-card-gas-details');
       const valueEl = byId('dash-card-gas');
       const dashboardValue = zettGetGasDashboardValue();
+      zettGasDebugLog('card render source', {
+        outlet: outletName(),
+        row: getRow(),
+        values: getGasValues(),
+        dashboardValue,
+        context: c
+      });
 
       if (toggle) {
         toggle.textContent = c.gasActive ? 'ON' : 'OFF';
@@ -8120,6 +8171,9 @@ function zettPatchActiveHPPRow(fields) {
 
 function zettApplyHPPRowToForm(row) {
   if (!row) return;
+  if (typeof zettGasDebugLog === 'function') {
+    zettGasDebugLog('row after populate', row);
+  }
 
   /* GAS */
   zettSetSelectValue('inputGasKapasitas', row['Kap Gas']);
