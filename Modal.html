@@ -6851,6 +6851,8 @@ function zettStepDebugLog(label, data) {
     window.console.log('[HPP STEP] ' + label, data || {});
   }
 }
+window.zettListrikDebugLog = zettListrikDebugLog;
+window.zettStepDebugLog = zettStepDebugLog;
 
 window.calculateGas = function() {
   const harga = zettCleanNumber(document.getElementById('inputGasHarga')?.value);
@@ -7416,7 +7418,7 @@ window.saveGasHPPData = function(event) {
       return c.pakaiSetrikaListrik ? base.concat(['setrikaJam', 'setrikaKg']) : base;
     }
     const base = ['cuciLoad', 'cuciKg', 'pompaLoad'];
-    if (c.pakaiMesinPengering) base.push('keringKg');
+    if (c.pakaiMesinPengering) base.push('keringLoad', 'keringKg');
     if (c.pakaiSetrikaListrik) base.push('setrikaJam', 'setrikaKg');
     return base;
   }
@@ -7424,12 +7426,13 @@ window.saveGasHPPData = function(event) {
   function capacities() {
     const outlet = getOutlet() || {};
     const row = getRow();
+    const durasiCuci = clean(outlet.cuciDurasi || outlet.durasiCuci || row['Durasi Cuci']) || 60;
     return {
       cuciKg: clean(outlet.cuciKg || row['Kap Cuci']) || 1,
       keringKg: clean(outlet.pengeringKg || row['Kap Kering']) || 1,
       setrikaKg: clean(outlet.setrikaKg || row['Kap Setrika']) || 1,
       mesinCuci: Math.max(clean(outlet.cuciUnit || outlet.mesinCuci || row['Mesin Cuci']) || 1, 1),
-      durasiCuci: clean(outlet.cuciDurasi || outlet.durasiCuci || row['Durasi Cuci'])
+      durasiCuci
     };
   }
 
@@ -7562,6 +7565,10 @@ window.saveGasHPPData = function(event) {
   }
 
   window.calculateListrik = function() {
+    zettListrikDebugLog('calculate triggered', {
+      outlet: outletName(),
+      activeForm: window.zettGetActiveHPPType ? window.zettGetActiveHPPType() : ''
+    });
     const dryerBefore = rawDryerWatt();
     zettListrikDebugLog('raw input values', {
       tdl: byId('inputTDL')?.value || '',
@@ -7585,6 +7592,12 @@ window.saveGasHPPData = function(event) {
     setText('displayBiayaListrikTotalKg', total);
     zettRenderElectricCard();
     if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('gsheet');
+    zettListrikDebugLog('display updated', {
+      cuciLoad: byId('dispListrikCuciLoad')?.textContent || '',
+      keringLoad: byId('dispListrikPengeringLoad')?.textContent || '',
+      pompaLoad: byId('dispListrikPompaLoad')?.textContent || '',
+      total: byId('displayBiayaListrikTotalKg')?.textContent || ''
+    });
     zettListrikDebugLog('dryer watt after calculate', { before: dryerBefore, after: rawDryerWatt() });
     return v;
   };

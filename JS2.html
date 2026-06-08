@@ -2305,7 +2305,7 @@ function backgroundSyncHPP(payload) {
     
     localStorage.setItem('zett_hpp_pending_sync', JSON.stringify(payload));
     
-    runServer('saveStrukturBiaya', payload)
+    return runServer('saveStrukturBiaya', payload)
         .then(response => {
             localStorage.removeItem('zett_hpp_pending_sync');
             if (typeof zettUpsertLocalHPPRowAfterSave === 'function') {
@@ -2322,6 +2322,7 @@ function backgroundSyncHPP(payload) {
             }
             StateMachine.invalidateClientCache();
             console.log("Background Sync HPP Sukses: " + response.message);
+            return response;
         })
         .catch(err => {
             showOmniToast('Koneksi terputus! Data tersimpan aman dan akan dikirim ulang otomatis.', 'error');
@@ -2645,6 +2646,31 @@ function simpanDataHPP(e) {
         ? zettReadPackingPayloadFromDOM()
         : {};
     Object.assign(payload, packingPayload);
+    if (activeHPPType === 'listrik' && typeof window.calculateListrik === 'function') {
+        const listrikCalc = window.calculateListrik() || {};
+        Object.assign(payload, {
+            'TDL': payload.listrikTDL,
+            'Watt Cuci': payload.listrikCuci,
+            'Watt Kering': payload.listrikPengering,
+            'Watt Pompa': payload.listrikPompa,
+            'Watt Setrika': payload.listrikSetrika,
+            listrikCuciPerLoad: listrikCalc.cuciLoad || 0,
+            listrikCuciPerKg: listrikCalc.cuciKg || 0,
+            listrikKeringPerLoad: listrikCalc.keringLoad || 0,
+            listrikKeringPerKg: listrikCalc.keringKg || 0,
+            listrikPompaPerLoad: listrikCalc.pompaLoad || 0,
+            listrikPompaPerKg: listrikCalc.pompaKg || 0,
+            listrikSetrikaJam: listrikCalc.setrikaJam || 0,
+            listrikSetrikaKg: listrikCalc.setrikaKg || 0,
+            'Cuci Per Load': listrikCalc.cuciLoad || 0,
+            'Cuci Per Kg': listrikCalc.cuciKg || 0,
+            'Kering Per Load': listrikCalc.keringLoad || 0,
+            'Kering Per Kg': listrikCalc.keringKg || 0,
+            'Listrik Pompa Per Load': listrikCalc.pompaLoad || 0,
+            'Listrik Setrika Jam': listrikCalc.setrikaJam || 0,
+            'Listrik Setrika Kg': listrikCalc.setrikaKg || 0
+        });
+    }
     if (activeHPPType === 'listrik' && typeof window.zettListrikDebugLog === 'function') {
         window.zettListrikDebugLog('payload before save', {
             listrikTDL: payload.listrikTDL,
@@ -2655,11 +2681,55 @@ function simpanDataHPP(e) {
         });
     }
     zettUpsertLocalHPPRowAfterSave(payload);
+    if (activeHPPType === 'listrik') {
+        if (typeof window.zettPatchActiveHPPRow === 'function') window.zettPatchActiveHPPRow(payload);
+        if (typeof window.zettHPPSetStateValue === 'function' && typeof window.zettGetElectricDashboardValue === 'function') {
+            window.zettHPPSetStateValue('listrik', window.zettGetElectricDashboardValue());
+        }
+        if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('listrik-save');
+    }
+    if (activeHPPType === 'listrik' && typeof window.zettListrikDebugLog === 'function') {
+        window.zettListrikDebugLog('local state updated', {
+            outlet: payload.namaOutlet,
+            listrikPengering: payload.listrikPengering,
+            listrikKeringPerLoad: payload.listrikKeringPerLoad
+        });
+    }
 
-    backgroundSyncHPP(payload);
+    if (activeHPPType === 'listrik' && typeof window.zettListrikDebugLog === 'function') {
+        window.zettListrikDebugLog('save start', {
+            outlet: payload.namaOutlet,
+            listrikTDL: payload.listrikTDL,
+            listrikPengering: payload.listrikPengering
+        });
+    }
+    const syncResult = backgroundSyncHPP(payload);
+    if (activeHPPType === 'listrik' && syncResult && typeof syncResult.then === 'function' && typeof window.zettListrikDebugLog === 'function') {
+        syncResult.then(function(response) {
+            window.zettListrikDebugLog('save response', response);
+        });
+    }
 
     localStorage.removeItem('zett_hpp_draft_state');
     if(typeof calculateAll === 'function') calculateAll();
+
+    if (activeHPPType === 'listrik') {
+        setBtnState(btnId, 'idle');
+        showOmniToast(isUpdate ? 'Data listrik berhasil diperbarui!' : 'Data listrik tersimpan.', 'success');
+        if (typeof window.zettListrikDebugLog === 'function') window.zettListrikDebugLog('next form after save', { from: 'listrik', next: 'air' });
+        if (typeof window.zettStepDebugLog === 'function') {
+            window.zettStepDebugLog('current form', { form: 'listrik', outlet: nama });
+            window.zettStepDebugLog('next form target', { next: 'air' });
+        }
+        if (typeof window.openHPPForm === 'function') {
+            setTimeout(function() {
+                window.openHPPForm('air', 'Analisa Biaya Air');
+                if (typeof window.zettStepDebugLog === 'function') window.zettStepDebugLog('transition complete', { form: 'air' });
+            }, 180);
+        }
+        StateMachine.releaseLock('simpanHPP');
+        return;
+    }
     
     setTimeout(() => {
         setBtnState(btnId, 'idle');
