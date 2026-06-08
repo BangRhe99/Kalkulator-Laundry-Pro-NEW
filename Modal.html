@@ -2037,7 +2037,10 @@
         return Number.isFinite(number) ? number : 0;
       };
       const gas = clean(APP_STATE.data.hpp.gas);
-      const listrik = clean(APP_STATE.data.hpp.listrik);
+      let listrik = clean(APP_STATE.data.hpp.listrik);
+      if (!listrik && typeof window.zettGetActiveElectricDashboardValueFromRow === 'function') {
+        listrik = window.zettGetActiveElectricDashboardValueFromRow();
+      }
       const air = clean(APP_STATE.data.hpp.air);
       const packing = clean(APP_STATE.data.hpp.packing);
       const bahan = clean(APP_STATE.data.hpp.bahan);
@@ -2085,6 +2088,9 @@
         APP_STATE.data.hpp.listrik = 0;
         APP_STATE.data.hpp.air = 0;
         APP_STATE.data.hpp.total = gas + packing + bahan + nota;
+      } else if (!listrik && typeof window.zettGetActiveElectricDashboardValueFromRow === 'function') {
+        listrik = window.zettGetActiveElectricDashboardValueFromRow();
+        if (listrik > 0) APP_STATE.data.hpp.listrik = listrik;
       }
       const displayTotal = gas + listrik + air + packing + bahan + nota;
       Object.assign(APP_STATE.data.hpp, { gas, listrik, air, packing, bahan, nota, total: displayTotal });
@@ -3143,8 +3149,12 @@
       }
       if (type === 'listrik' && typeof window.zettRenderElectricAnalysisForm === 'function') {
         setTimeout(function() {
-          window.zettRenderElectricAnalysisForm();
-          if (typeof window.calculateListrik === 'function') window.calculateListrik();
+          if (typeof window.zettRefreshElectricUiAfterRender === 'function') {
+            window.zettRefreshElectricUiAfterRender();
+          } else {
+            window.zettRenderElectricAnalysisForm();
+            if (typeof window.calculateListrik === 'function') window.calculateListrik();
+          }
         }, 30);
       }
       if (type === 'air') {
@@ -5411,6 +5421,53 @@
       return 'Rp ' + Math.max(0, safeNumberHPP(value)).toLocaleString('id-ID');
     }
 
+    function pickHPPNumber(row, keys) {
+      if (!row) return 0;
+      for (const key of keys) {
+        const value = safeNumberHPP(row[key]);
+        if (value > 0) return value;
+      }
+      return 0;
+    }
+
+    function getActiveElectricDashboardValueFromRow() {
+      const row = typeof window.zettFindActiveHPPRow === 'function' ? window.zettFindActiveHPPRow() : null;
+      if (!row) return 0;
+      const tdl = pickHPPNumber(row, ['TDL', 'Tarif Listrik / kWh', 'Tarif Listrik']);
+      const kapCuci = pickHPPNumber(row, ['Kap Cuci', 'cuciKg']) || 1;
+      const kapKering = pickHPPNumber(row, ['Kap Kering', 'pengeringKg']) || 1;
+      const kapSetrika = pickHPPNumber(row, ['Kap Setrika', 'Kg Setrika', 'setrikaKg']) || 1;
+      const durasiCuci = pickHPPNumber(row, ['Durasi Cuci']) || 60;
+      const mesinCuci = pickHPPNumber(row, ['Mesin Cuci', 'cuciUnit']) || 1;
+
+      const cuciLoad = pickHPPNumber(row, ['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load', 'listrikCuciPerLoad']) ||
+        (tdl > 0 ? (pickHPPNumber(row, ['Watt Cuci', 'Daya Mesin Cuci']) / 1000) * tdl : 0);
+      const keringLoad = pickHPPNumber(row, ['Kering Per Load', 'Listrik Kering Per Load', 'Listrik Kering /Load', 'listrikKeringPerLoad', 'listrikKeringLoad', 'keringElectricPerLoad']) ||
+        (tdl > 0 ? (pickHPPNumber(row, ['Watt Kering', 'Daya Mesin Pengering']) / 1000) * tdl : 0);
+      const pompaLoad = pickHPPNumber(row, ['Listrik Pompa Per Load', 'Listrik Pompa /Load', 'listrikPompaPerLoad']) ||
+        (tdl > 0 ? ((pickHPPNumber(row, ['Watt Pompa', 'Daya Pompa Air']) / 1000) * (durasiCuci / 60) * tdl) / Math.max(mesinCuci, 1) : 0);
+      const setrikaJam = pickHPPNumber(row, ['Listrik Setrika Jam', 'Listrik Setrika /Jam', 'listrikSetrikaJam']);
+
+      const value =
+        (pompaLoad / Math.max(kapCuci, 1)) +
+        (pickHPPNumber(row, ['Cuci Per Kg', 'Listrik Cuci /Kg', 'Listrik Cuci Per Kg', 'listrikCuciPerKg']) || (cuciLoad / Math.max(kapCuci, 1))) +
+        (pickHPPNumber(row, ['Kering Per Kg', 'Listrik Kering /Kg', 'Listrik Kering Per Kg', 'listrikKeringPerKg']) || (keringLoad / Math.max(kapKering, 1))) +
+        (pickHPPNumber(row, ['Listrik Setrika Kg', 'Setrika Per Kg', 'Listrik Setrika /Kg', 'listrikSetrikaKg']) || (setrikaJam / Math.max(kapSetrika, 1)));
+
+      if (window.ZETT_DEBUG_LISTRIK && window.console && typeof window.console.log === 'function') {
+        window.console.log('[HPP LISTRIK CARD SOURCE]', {
+          source: 'final-dashboard-row-fallback',
+          outlet: byId('inputNamaHPP')?.value || '',
+          cuciLoad,
+          keringLoad,
+          pompaLoad,
+          value
+        });
+      }
+      return Math.max(0, safeNumberHPP(value));
+    }
+    window.zettGetActiveElectricDashboardValueFromRow = getActiveElectricDashboardValueFromRow;
+
     function getState() {
       if (!window.hppDataState) {
         window.hppDataState = {
@@ -5567,6 +5624,12 @@
         values.air = 0;
         state.listrik = 0;
         state.air = 0;
+      } else if (!values.listrik) {
+        const listrikFromRow = getActiveElectricDashboardValueFromRow();
+        if (listrikFromRow > 0) {
+          values.listrik = listrikFromRow;
+          state.listrik = listrikFromRow;
+        }
       }
 
       const total = syncToKnownStores();
@@ -7082,7 +7145,33 @@ window.saveGasHPPData = function(event) {
 
   function byId(id) { return document.getElementById(id); }
   function norm(value) { return String(value || '').trim().toLowerCase(); }
-  function clean(value) { return typeof zettCleanNumber === 'function' ? zettCleanNumber(value) : (Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0); }
+  function clean(value) { return typeof zettCleanNumber === 'function' ? zettCleanNumber(value) : zettToNumberSafe(value); }
+  function zettToNumberSafe(value) {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+    let raw = String(value == null ? '' : value).trim();
+    if (!raw) return 0;
+    raw = raw.replace(/[^\d.,-]/g, '');
+    const hasComma = raw.includes(',');
+    const hasDot = raw.includes('.');
+    if (hasComma && hasDot) {
+      raw = raw.lastIndexOf(',') > raw.lastIndexOf('.')
+        ? raw.replace(/\./g, '').replace(',', '.')
+        : raw.replace(/,/g, '');
+    } else if (hasDot) {
+      const parts = raw.split('.');
+      raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw;
+    } else if (hasComma) {
+      const parts = raw.split(',');
+      raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw.replace(',', '.');
+    }
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  }
+  function listrikConsole(prefix, payload) {
+    if (window.ZETT_DEBUG_LISTRIK && window.console && typeof window.console.log === 'function') {
+      window.console.log(prefix, payload || {});
+    }
+  }
   function rupiah(value) {
     if (typeof formatRupiah === 'function') return formatRupiah(Math.round(Number(value) || 0));
     return 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
@@ -7453,7 +7542,7 @@ window.saveGasHPPData = function(event) {
 
     const row = getRow();
     const cap = capacities();
-    const tdl = clean(byId('inputTDL')?.value);
+    const tdl = zettToNumberSafe(byId('inputTDL')?.value);
     const hasCuciInput = String(byId('inputListrikCuciWatt')?.value || '').trim() !== '' && tdl > 0;
     const hasKeringInput = String(byId('inputListrikPengeringWatt')?.value || '').trim() !== '' && tdl > 0;
     const hasPompaInput = String(byId('inputListrikPompaWatt')?.value || '').trim() !== '' && tdl > 0;
@@ -7477,12 +7566,12 @@ window.saveGasHPPData = function(event) {
       }
       return 0;
     };
-    const cuciLoad = hasCuciInput ? (clean(byId('inputListrikCuciWatt')?.value) / 1000) * tdl : rowNum(['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']);
-    const keringLoad = hasKeringInput ? (clean(byId('inputListrikPengeringWatt')?.value) / 1000) * tdl : rowNum(['Listrik Kering Per Load', 'Listrik Kering /Load', 'Kering Per Load', 'listrikKeringPerLoad', 'listrikKeringLoad', 'keringElectricPerLoad']);
+    const cuciLoad = hasCuciInput ? (zettToNumberSafe(byId('inputListrikCuciWatt')?.value) / 1000) * tdl : rowNum(['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']);
+    const keringLoad = hasKeringInput ? (zettToNumberSafe(byId('inputListrikPengeringWatt')?.value) / 1000) * tdl : rowNum(['Listrik Kering Per Load', 'Listrik Kering /Load', 'Kering Per Load', 'listrikKeringPerLoad', 'listrikKeringLoad', 'keringElectricPerLoad']);
     const pompaLoad = hasPompaInput
-      ? ((clean(byId('inputListrikPompaWatt')?.value) / 1000) * (cap.durasiCuci / 60) * tdl) / cap.mesinCuci
+      ? ((zettToNumberSafe(byId('inputListrikPompaWatt')?.value) / 1000) * (cap.durasiCuci / 60) * tdl) / cap.mesinCuci
       : rowNum(['Listrik Pompa Per Load', 'Listrik Pompa /Load']);
-    const setrikaJam = hasSetrikaInput ? (clean(byId('inputListrikSetrikaWatt')?.value) / 1000) * tdl : rowNum(['Listrik Setrika Jam', 'Listrik Setrika Per Jam', 'Listrik Setrika /Jam']);
+    const setrikaJam = hasSetrikaInput ? (zettToNumberSafe(byId('inputListrikSetrikaWatt')?.value) / 1000) * tdl : rowNum(['Listrik Setrika Jam', 'Listrik Setrika Per Jam', 'Listrik Setrika /Jam']);
     return {
       pompaLoad,
       pompaKg: cap.cuciKg > 0 ? pompaLoad / cap.cuciKg : 0,
@@ -7544,7 +7633,7 @@ window.saveGasHPPData = function(event) {
       const shouldZero = typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_();
       const metrics = zettGetVisibleElectricMetrics();
       const value = shouldZero ? 0 : metrics.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
-      zettListrikDebugLog('card render source', {
+      listrikConsole('[HPP LISTRIK CARD SOURCE]', {
         outlet: outletName(),
         row: getRow(),
         rawDryerWatt: rawDryerWatt(),
@@ -7561,7 +7650,7 @@ window.saveGasHPPData = function(event) {
           .join('');
       }
       if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('listrik', value);
-      zettListrikDebugLog('card values', {
+      listrikConsole('[HPP LISTRIK CARD VALUES]', {
         total: value,
         details: metrics
       });
@@ -7616,7 +7705,7 @@ window.saveGasHPPData = function(event) {
     if (!outletName()) return;
     const patch = electricRowPatch(values);
     if (typeof window.zettPatchActiveHPPRow === 'function') window.zettPatchActiveHPPRow(patch);
-    zettListrikDebugLog('local state updated', {
+    listrikConsole('[HPP LISTRIK STATE UPDATED]', {
       outlet: outletName(),
       cuciLoad: patch['Cuci Per Load'],
       keringLoad: patch['Kering Per Load'],
@@ -7631,23 +7720,63 @@ window.saveGasHPPData = function(event) {
     }, 0);
   }
 
+  function auditElectricDom() {
+    const ids = {
+      inputTDL: 'inputTDL',
+      inputCuci: 'inputListrikCuciWatt',
+      inputPengering: 'inputListrikPengeringWatt',
+      inputPompa: 'inputListrikPompaWatt',
+      displayCuci: 'dispListrikCuciLoad',
+      displayPengering: 'dispListrikPengeringLoad',
+      displayPompa: 'dispListrikPompaLoad',
+      cardListrik: 'dash-card-listrik'
+    };
+    listrikConsole('[HPP LISTRIK DOM]', {
+      inputTDL: !!byId(ids.inputTDL),
+      inputCuci: !!byId(ids.inputCuci),
+      inputPengering: !!byId(ids.inputPengering),
+      inputPompa: !!byId(ids.inputPompa),
+      displayCuci: !!byId(ids.displayCuci),
+      displayPengering: !!byId(ids.displayPengering),
+      displayPompa: !!byId(ids.displayPompa),
+      cardListrik: !!byId(ids.cardListrik)
+    });
+    listrikConsole('[HPP LISTRIK DOM] input cuci found:', !!byId(ids.inputCuci));
+    listrikConsole('[HPP LISTRIK DOM] input pengering found:', !!byId(ids.inputPengering));
+    listrikConsole('[HPP LISTRIK DOM] input pompa found:', !!byId(ids.inputPompa));
+    listrikConsole('[HPP LISTRIK DOM] display cuci found:', !!byId(ids.displayCuci));
+    listrikConsole('[HPP LISTRIK DOM] display pengering found:', !!byId(ids.displayPengering));
+    listrikConsole('[HPP LISTRIK DOM] display pompa found:', !!byId(ids.displayPompa));
+  }
+
   window.calculateListrik = function() {
+    auditElectricDom();
     zettListrikDebugLog('calculate triggered', {
       outlet: outletName(),
       activeForm: window.zettGetActiveHPPType ? window.zettGetActiveHPPType() : ''
     });
     const dryerBefore = rawDryerWatt();
-    zettListrikDebugLog('raw input values', {
-      tdl: byId('inputTDL')?.value || '',
-      cuciWatt: byId('inputListrikCuciWatt')?.value || '',
+    const cap = capacities();
+    const raw = {
+      tarif: zettToNumberSafe(byId('inputTDL')?.value),
+      cuciWatt: zettToNumberSafe(byId('inputListrikCuciWatt')?.value),
       dryerWatt: dryerBefore,
-      pompaWatt: byId('inputListrikPompaWatt')?.value || '',
-      setrikaWatt: byId('inputListrikSetrikaWatt')?.value || ''
-    });
+      pengeringWatt: zettToNumberSafe(byId('inputListrikPengeringWatt')?.value),
+      pompaWatt: zettToNumberSafe(byId('inputListrikPompaWatt')?.value),
+      setrikaWatt: zettToNumberSafe(byId('inputListrikSetrikaWatt')?.value),
+      durasiCuci: cap.durasiCuci,
+      durasiPengering: clean(getRow()['Durasi Kering']) || 60,
+      kapasitasLoad: cap.cuciKg
+    };
+    listrikConsole('[HPP LISTRIK RAW]', raw);
     zettListrikDebugLog('dryer watt before calculate', { value: dryerBefore });
     const v = electricValues();
-    zettListrikDebugLog('calculated values', v);
-    zettListrikDebugLog('display targets found', {
+    listrikConsole('[HPP LISTRIK CALC]', {
+      listrikCuciLoad: v.cuciLoad || 0,
+      listrikKeringLoad: v.keringLoad || 0,
+      listrikPompaLoad: v.pompaLoad || 0
+    });
+    listrikConsole('[HPP LISTRIK DISPLAY TARGETS]', {
       cuciLoad: !!byId('dispListrikCuciLoad'),
       keringLoad: !!byId('dispListrikPengeringLoad'),
       pompaLoad: !!byId('dispListrikPompaLoad'),
@@ -7666,7 +7795,7 @@ window.saveGasHPPData = function(event) {
     updateLocalElectricState(v);
     zettRenderElectricCard();
     if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('gsheet');
-    zettListrikDebugLog('display updated', {
+    listrikConsole('[HPP LISTRIK DISPLAY UPDATED]', {
       cuciLoad: byId('dispListrikCuciLoad')?.textContent || '',
       keringLoad: byId('dispListrikPengeringLoad')?.textContent || '',
       pompaLoad: byId('dispListrikPompaLoad')?.textContent || '',
@@ -7763,9 +7892,19 @@ window.saveGasHPPData = function(event) {
   window.zettRememberDryerWattInput = rememberDryerWattInput;
   window.zettShouldPreserveDryerWattInput = shouldPreserveDryerWattInput;
 
-  document.addEventListener('DOMContentLoaded', function() {
+  function refreshElectricUiAfterRender() {
     zettRenderElectricAnalysisForm();
+    auditElectricDom();
     setTimeout(function() { if (typeof window.calculateListrik === 'function') window.calculateListrik(); }, 80);
+  }
+
+  function bootElectricBindings() {
+    if (window.__zettElectricBindingsBooted) {
+      refreshElectricUiAfterRender();
+      return;
+    }
+    window.__zettElectricBindingsBooted = true;
+    refreshElectricUiAfterRender();
     document.addEventListener('change', function(event) {
       if (window.__HPP_PROGRAMMATIC_UPDATE__) {
         console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
@@ -7773,7 +7912,7 @@ window.saveGasHPPData = function(event) {
       }
       if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
       if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori')) {
-        setTimeout(function() { zettRenderElectricAnalysisForm(); window.calculateListrik(); }, 60);
+        setTimeout(refreshElectricUiAfterRender, 60);
       }
     });
     document.addEventListener('input', function(event) {
@@ -7781,20 +7920,35 @@ window.saveGasHPPData = function(event) {
         rememberDryerWattInput();
       }
       if (event.target && ELECTRIC_INPUT_IDS.includes(event.target.id)) {
+        listrikConsole('[HPP LISTRIK EVENT]', { type: event.type, triggeredBy: event.target.id });
+        listrikConsole('[HPP LISTRIK EVENT] triggered by:', event.target.id);
         scheduleElectricCalculation();
       }
     });
     document.addEventListener('change', function(event) {
       if (event.target && ELECTRIC_INPUT_IDS.includes(event.target.id)) {
+        listrikConsole('[HPP LISTRIK EVENT]', { type: event.type, triggeredBy: event.target.id });
+        listrikConsole('[HPP LISTRIK EVENT] triggered by:', event.target.id);
         scheduleElectricCalculation();
       }
     });
     document.addEventListener('keyup', function(event) {
       if (event.target && ELECTRIC_INPUT_IDS.includes(event.target.id)) {
+        listrikConsole('[HPP LISTRIK EVENT]', { type: event.type, triggeredBy: event.target.id });
+        listrikConsole('[HPP LISTRIK EVENT] triggered by:', event.target.id);
         scheduleElectricCalculation();
       }
     });
-  });
+  }
+
+  window.zettRefreshElectricUiAfterRender = refreshElectricUiAfterRender;
+  window.zettBootElectricBindings = bootElectricBindings;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootElectricBindings, { once: true });
+  } else {
+    bootElectricBindings();
+  }
 })();
 
 /* Air operational UI: scoped to Struktur Biaya > Analisa Biaya Air. */

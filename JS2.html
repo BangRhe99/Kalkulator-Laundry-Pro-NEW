@@ -617,7 +617,10 @@ const StateMachine = {
       return Number.isFinite(number) ? number : 0;
     };
     const gas = Math.max(0, clean(APP_STATE.data.hpp.gas));
-    const listrik = Math.max(0, clean(APP_STATE.data.hpp.listrik));
+    let listrik = Math.max(0, clean(APP_STATE.data.hpp.listrik));
+    if (!listrik && typeof window.zettGetActiveElectricDashboardValueFromRow === 'function') {
+      listrik = window.zettGetActiveElectricDashboardValueFromRow();
+    }
     const air = Math.max(0, clean(APP_STATE.data.hpp.air));
     const packing = Math.max(0, clean(APP_STATE.data.hpp.packing));
     const bahan = Math.max(0, clean(APP_STATE.data.hpp.bahan));
@@ -650,11 +653,14 @@ const StateMachine = {
       return Number.isFinite(number) ? number : 0;
     };
     const gas = Math.max(0, clean(APP_STATE.data.hpp.gas));
-    const listrik = Math.max(0, clean(APP_STATE.data.hpp.listrik));
+    let listrik = Math.max(0, clean(APP_STATE.data.hpp.listrik));
     const air = Math.max(0, clean(APP_STATE.data.hpp.air));
     const packing = Math.max(0, clean(APP_STATE.data.hpp.packing));
     const bahan = Math.max(0, clean(APP_STATE.data.hpp.bahan));
     const nota = Math.max(0, clean(APP_STATE.data.hpp.nota));
+    if (!listrik && typeof window.zettGetActiveElectricDashboardValueFromRow === 'function') {
+      listrik = window.zettGetActiveElectricDashboardValueFromRow();
+    }
     const t = gas + listrik + air + packing + bahan + nota;
     Object.assign(APP_STATE.data.hpp, { gas, listrik, air, packing, bahan, nota, total: t });
     

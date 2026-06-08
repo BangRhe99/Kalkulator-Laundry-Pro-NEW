@@ -1747,7 +1747,24 @@
         }
         var values = sanitizeHPPValues(readState());
         var total = HPP_TYPES.reduce(function(sum, type) { return sum + values[type]; }, 0);
-        if (!total && row) values = fallbackValuesFromRow(row);
+        if (row) {
+          var rowValues = fallbackValuesFromRow(row);
+          if (!total) {
+            values = rowValues;
+          } else {
+            HPP_TYPES.forEach(function(type) {
+              if (!values[type] && rowValues[type]) values[type] = rowValues[type];
+            });
+          }
+          if (window.ZETT_DEBUG_LISTRIK && window.console && typeof window.console.log === 'function') {
+            window.console.log('[HPP LISTRIK CARD SOURCE]', {
+              source: source || 'hpp-fast-switch',
+              outlet: outlet,
+              stateListrik: values.listrik,
+              rowListrik: rowValues.listrik
+            });
+          }
+        }
         window.hppDashboardCache[norm(outlet)] = {
           outlet: outlet,
           row: row || null,
