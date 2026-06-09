@@ -481,6 +481,33 @@
     <?!= HtmlService.createHtmlOutputFromFile('V5.styles').getContent(); ?>
   </style>
 
+  <!-- =========================================================
+       [PATCH CSS] PERBAIKAN JARAK DESKRIPSI & NOMINAL CARD HPP
+       Menyeleseaikan kendala rentang jarak yang terlalu jauh 
+       di card Packing & Chemical tanpa mengubah V3.html
+  ========================================================= -->
+  <style id="hpp-card-spacing-patch">
+    /* Menimpa flex justify-between menjadi flex-start dengan jarak (gap) yang rapi */
+    #view-hpp .flex.justify-between.py-1,
+    #view-hpp .flex.justify-between.py-1\.5,
+    #view-hpp .text-xs.flex.justify-between,
+    #view-hpp .text-sm.flex.justify-between,
+    #view-hpp .bento-card div[class*="flex"][class*="justify-between"] {
+        justify-content: flex-start !important;
+        gap: 1.5rem !important; /* Jarak antara teks kiri dan kanan (1.5rem = 24px) */
+    }
+
+    /* Memberikan lebar minimum pada teks kiri (deskripsi) agar teks nominal kanan sejajar lurus */
+    #view-hpp .flex.justify-between.py-1 > span:first-child,
+    #view-hpp .flex.justify-between.py-1\.5 > span:first-child,
+    #view-hpp .text-xs.flex.justify-between > span:first-child,
+    #view-hpp .text-sm.flex.justify-between > span:first-child,
+    #view-hpp .bento-card div[class*="flex"][class*="justify-between"] > span:first-child {
+        min-width: 140px !important; 
+        display: inline-block;
+    }
+  </style>
+
   <?!= HtmlService.createHtmlOutputFromFile('JS4').getContent(); ?>
 
 </head>
