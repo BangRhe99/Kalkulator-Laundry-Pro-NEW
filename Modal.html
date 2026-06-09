@@ -56,7 +56,6 @@
   }
 </style>
 
-
 <style id="zett-hpp-spatial-minimalist-overrides">
   /* ======================================================================
    * ZETTBOT EXECUTION LAYER: SPATIAL MINIMALIST FINTECH POLISH
@@ -12693,6 +12692,49 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     body #view-hpp .zett-nota-card-details,
     body #view-hpp .hpp-premium-lite-details {
       margin-top: 14px !important;
+    }
+  }
+</style>
+
+<style id="zett-hpp-lower-card-detail-gap-hard-lock-20260609">
+  /* Final visual lock: override dynamic inline margin injected by zettSyncHPPDetailGapFromElectric(). */
+  body #view-hpp #dash-card-packing-details,
+  body #view-hpp #dash-card-bahan-details,
+  body #view-hpp #dash-card-nota-details,
+  body #view-hpp .zett-packing-card-details,
+  body #view-hpp .zett-bahan-card-details,
+  body #view-hpp .zett-nota-card-details {
+    margin-top: 16px !important;
+    margin-bottom: auto !important;
+    align-self: stretch !important;
+    flex: 0 0 auto !important;
+  }
+
+  body #view-hpp #dash-card-packing-details.hpp-card-breakdown,
+  body #view-hpp #dash-card-bahan-details.hpp-card-breakdown,
+  body #view-hpp #dash-card-nota-details.hpp-card-breakdown {
+    margin-top: 16px !important;
+    margin-bottom: auto !important;
+  }
+
+  body #view-hpp #dash-card-packing-details > .hpp-card-row:first-child,
+  body #view-hpp #dash-card-bahan-details > .hpp-card-row:first-child,
+  body #view-hpp #dash-card-nota-details > .hpp-card-row:first-child,
+  body #view-hpp .zett-packing-card-details > .hpp-card-row:first-child,
+  body #view-hpp .zett-bahan-card-details > .hpp-card-row:first-child,
+  body #view-hpp .zett-nota-card-details > .hpp-card-row:first-child {
+    margin-top: 0 !important;
+  }
+
+  @media (max-width: 767px) {
+    body #view-hpp #dash-card-packing-details,
+    body #view-hpp #dash-card-bahan-details,
+    body #view-hpp #dash-card-nota-details,
+    body #view-hpp .zett-packing-card-details,
+    body #view-hpp .zett-bahan-card-details,
+    body #view-hpp .zett-nota-card-details {
+      margin-top: 14px !important;
+      margin-bottom: auto !important;
     }
   }
 </style>
