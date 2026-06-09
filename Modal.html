@@ -12718,7 +12718,11 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     margin-bottom: auto !important;
     padding-top: 0 !important;
     flex: 0 0 auto !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
     align-self: stretch !important;
+    position: relative !important;
+    top: -42px !important;
     transform: none !important;
   }
 
@@ -12726,6 +12730,14 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   #view-hpp .hpp-card-dash[data-hpp-type="bahan"] #dash-card-bahan,
   #view-hpp .hpp-card-dash:has(#dash-card-packing) #dash-card-packing,
   #view-hpp .hpp-card-dash:has(#dash-card-bahan) #dash-card-bahan {
-    margin-bottom: 0.72rem !important;
+    margin-bottom: 0.38rem !important;
+  }
+
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] .hpp-show-detail,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] .hpp-show-detail,
+  #view-hpp .hpp-card-dash:has(#dash-card-packing) .hpp-show-detail,
+  #view-hpp .hpp-card-dash:has(#dash-card-bahan) .hpp-show-detail {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
   }
 </style>
