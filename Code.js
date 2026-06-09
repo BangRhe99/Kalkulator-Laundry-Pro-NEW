@@ -8,6 +8,10 @@
 
 const SHEET_ID = '1i_4Ik6hiFYRU0mi0gAB8nzgbE3G6TG3nCT1lkhcqBU0';
 
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
 const SHEET_NAME_BEP = 'Riwayat_BEP_V2';
 const SHEET_NAME_KAPASITAS = 'Master_Kapasitas_V2';
 

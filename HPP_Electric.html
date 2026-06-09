@@ -1,0 +1,652 @@
+<script id="hpp-electric-module">
+/* Electricity operational UI: scoped to Struktur Biaya > Analisa Biaya Listrik. */
+(function zettElectricOperationalUi20260515() {
+  const FIELD_CONFIG = {
+    pompaLoad: { label: 'Listrik Pompa /Load', source: 'inputListrikPompaWatt' },
+    pompaKg: { label: 'Listrik Pompa /Kg', source: 'inputListrikPompaWatt' },
+    cuciLoad: { label: 'Listrik Cuci /Load', source: 'inputListrikCuciWatt' },
+    cuciKg: { label: 'Listrik Cuci /Kg', source: 'inputListrikCuciWatt' },
+    keringLoad: { label: 'Listrik Kering /Load', source: 'inputListrikPengeringWatt' },
+    keringKg: { label: 'Listrik Kering /Kg', source: 'inputListrikPengeringWatt' },
+    setrikaJam: { label: 'Listrik Setrika /Jam', source: 'inputListrikSetrikaWatt' },
+    setrikaKg: { label: 'Listrik Setrika /Kg', source: 'inputListrikSetrikaWatt' }
+  };
+  const ELECTRIC_INPUT_IDS = [
+    'inputTDL',
+    'inputListrikCuciWatt',
+    'inputListrikPengeringWatt',
+    'inputListrikPompaWatt',
+    'inputListrikSetrikaWatt',
+    'toggleSetrikaListrik',
+    'inputNamaHPP',
+    'inputKategori',
+    'jenisMesinCuci',
+    'jenisMesinPengering',
+    'jenisSetrikaUtama'
+  ];
+
+  function byId(id) { return document.getElementById(id); }
+  function norm(value) { return String(value || '').trim().toLowerCase(); }
+  function clean(value) { return typeof zettCleanNumber === 'function' ? zettCleanNumber(value) : (Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0); }
+  function rupiah(value) {
+    if (typeof formatRupiah === 'function') return formatRupiah(Math.round(Number(value) || 0));
+    return 'Rp ' + Math.round(Number(value) || 0).toLocaleString('id-ID');
+  }
+  function outletName() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+  function listrikConsole(prefix, payload) {
+    if (window.ZETT_DEBUG_LISTRIK && window.console && typeof window.console.log === 'function') {
+      window.console.log(prefix, payload || {});
+    }
+  }
+  function rawDryerWatt() { return String(byId('inputListrikPengeringWatt')?.value || '').trim(); }
+  function rememberDryerWattInput() {
+    window.__ZETT_HPP_DRYER_WATT_RAW__ = {
+      outlet: outletName(),
+      value: rawDryerWatt(),
+      time: Date.now()
+    };
+  }
+  function shouldPreserveDryerWattInput(nextValue) {
+    const el = byId('inputListrikPengeringWatt');
+    if (!el) return false;
+    const current = rawDryerWatt();
+    if (!current) return false;
+    const remembered = window.__ZETT_HPP_DRYER_WATT_RAW__ || {};
+    const sameOutlet = !remembered.outlet || remembered.outlet === outletName();
+    const recent = remembered.time && (Date.now() - remembered.time < 5000);
+    const incoming = String(nextValue == null ? '' : nextValue).trim();
+    return sameOutlet && incoming !== current && (document.activeElement === el || recent);
+  }
+  function getOutlet() {
+    const name = norm(outletName());
+    const sources = [];
+    if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) sources.push(masterDataCabang);
+    if (window.APP_STATE?.data?.master?.cabang) sources.push(window.APP_STATE.data.master.cabang);
+    for (const rows of sources) {
+      const found = rows.find(item => norm(item?.namaOutlet || item?.['Nama Outlet']) === name);
+      if (found) return found;
+    }
+    return null;
+  }
+  function getRow() {
+    if (typeof zettFindActiveHPPRow === 'function') return zettFindActiveHPPRow() || {};
+    return {};
+  }
+
+  function zettGetElectricUsageContext() {
+    const outlet = getOutlet() || {};
+    const row = getRow();
+    const kategoriRaw = outlet.kategori || row['Kategori Laundry'] || 'Laundry Drop Off';
+    const kategori = norm(kategoriRaw);
+    const setrikaType = norm(outlet.tipeSetrikaUtama || outlet.tipeSetrika || row['Tipe Setrika'] || '');
+    const dryerUnit = clean(outlet.pengeringUnit || row['Mesin Kering'] || row['Mesin Pengering']);
+    const dryerKg = clean(outlet.pengeringKg || row['Kap Kering']);
+    const explicitDryerOff = outlet.pakaiPengering === false || String(outlet.pakaiPengering).toLowerCase() === 'false' || norm(outlet.metodePengeringan).includes('jemur');
+    const isSelfService = kategori.includes('self');
+    const isHybrid = kategori.includes('hybrid');
+    const pakaiMesinPengering = (isSelfService || isHybrid)
+      ? !explicitDryerOff
+      : (!explicitDryerOff && (dryerUnit > 0 || dryerKg > 0 || !Object.prototype.hasOwnProperty.call(outlet, 'pakaiPengering')));
+    const pakaiSetrikaListrik = setrikaType.includes('listrik');
+
+    return {
+      kategoriBisnis: kategoriRaw,
+      isSelfService,
+      isDropOff: kategori.includes('drop') || kategori.includes('kiloan'),
+      isHybrid,
+      pakaiMesinPengering,
+      pakaiSetrikaListrik,
+      pakaiSetrikaUap: !pakaiSetrikaListrik
+    };
+  }
+
+  function zettGetVisibleElectricInputFields(context) {
+    const c = context || zettGetElectricUsageContext();
+    if (c.isSelfService) {
+      const base = ['cuciLoad', 'pompaLoad'];
+      if (c.pakaiMesinPengering) base.push('keringLoad');
+      return base;
+    }
+    if (c.isHybrid) {
+      const base = ['cuciLoad', 'cuciKg', 'pompaLoad', 'keringLoad', 'keringKg'];
+      return c.pakaiSetrikaListrik ? base.concat(['setrikaJam', 'setrikaKg']) : base;
+    }
+    const base = ['cuciLoad', 'cuciKg', 'pompaLoad'];
+    if (c.pakaiMesinPengering) base.push('keringLoad', 'keringKg');
+    if (c.pakaiSetrikaListrik) base.push('setrikaJam', 'setrikaKg');
+    return base;
+  }
+
+  function capacities() {
+    const outlet = getOutlet() || {};
+    const row = getRow();
+    const machine = function(type) {
+      const selector = type === 'pengering'
+        ? '#containerMesinPengering .omni-asset-grid'
+        : (type === 'setrika' ? '#containerMesinSetrika .omni-asset-grid' : '#containerMesinCuci .omni-asset-grid');
+      const item = document.querySelector(selector);
+      if (!item) return {};
+      return {
+        unit: clean(item.querySelector('.m-unit')?.value),
+        durasi: clean(item.querySelector('.m-durasi')?.value),
+        kg: clean(item.querySelector('.m-kg')?.value)
+      };
+    };
+    const cuciMachine = machine('cuci');
+    const keringMachine = machine('pengering');
+    const setrikaMachine = machine('setrika');
+    const durasiCuci = clean(cuciMachine.durasi || outlet.cuciDurasi || outlet.durasiCuci || row['Durasi Cuci']) || 60;
+    return {
+      cuciKg: clean(cuciMachine.kg || outlet.cuciKg || row['Kap Cuci']) || 1,
+      keringKg: clean(keringMachine.kg || outlet.pengeringKg || row['Kap Kering']) || 1,
+      setrikaKg: clean(setrikaMachine.kg || outlet.setrikaKg || row['Kap Setrika']) || 1,
+      mesinCuci: Math.max(clean(cuciMachine.unit || outlet.cuciUnit || outlet.mesinCuci || row['Mesin Cuci']) || 1, 1),
+      durasiCuci
+    };
+  }
+
+  function electricBreakdown(values) {
+    const v = values || electricValues();
+    const cap = capacities();
+    const context = zettGetElectricUsageContext();
+    const cuciLoad = Number(v.cuciLoad) || 0;
+    const keringLoad = context.pakaiMesinPengering ? (Number(v.keringLoad) || 0) : 0;
+    const pompaLoad = Number(v.pompaLoad) || 0;
+    const setrikaJam = context.pakaiSetrikaListrik ? (Number(v.setrikaJam) || 0) : 0;
+    const totalLoad = pompaLoad + cuciLoad + keringLoad;
+    const perKg = context.isSelfService
+      ? 0
+      : (pompaLoad / Math.max(cap.cuciKg, 1)) +
+        (Number(v.cuciKg) || (cuciLoad / Math.max(cap.cuciKg, 1))) +
+        (context.pakaiMesinPengering ? (Number(v.keringKg) || (keringLoad / Math.max(cap.keringKg, 1))) : 0) +
+        (context.pakaiSetrikaListrik ? (Number(v.setrikaKg) || 0) : 0);
+    return {
+      context,
+      totalLoad,
+      setrikaJam,
+      perKg,
+      dashboardValue: context.isSelfService ? totalLoad : perKg
+    };
+  }
+
+  function electricValues() {
+    const row = getRow();
+    const cap = capacities();
+    const tdl = zettToNumberSafe(byId('inputTDL')?.value) || 1700;
+    const hasCuciInput = String(byId('inputListrikCuciWatt')?.value || '').trim() !== '' && tdl > 0;
+    const hasKeringInput = String(byId('inputListrikPengeringWatt')?.value || '').trim() !== '' && tdl > 0;
+    const hasPompaInput = String(byId('inputListrikPompaWatt')?.value || '').trim() !== '' && tdl > 0;
+    const hasSetrikaInput = String(byId('inputListrikSetrikaWatt')?.value || '').trim() !== '' && tdl > 0;
+    const rowNum = function(keys) {
+      const selected = norm(outletName());
+      const rows = [row];
+      const sources = [];
+      if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) sources.push(masterDataHPP);
+      if (Array.isArray(window.masterDataHPP)) sources.push(window.masterDataHPP);
+      if (window.APP_STATE?.data?.master?.hpp) sources.push(window.APP_STATE.data.master.hpp);
+      sources.forEach(source => {
+        const found = source.find(item => norm(item?.namaOutlet || item?.['Nama Outlet']) === selected);
+        if (found) rows.push(found);
+      });
+      for (const item of rows) {
+        for (const key of keys) {
+          const value = clean(item?.[key]);
+          if (value > 0) return value;
+        }
+      }
+      return 0;
+    };
+    const cuciLoad = hasCuciInput ? (zettToNumberSafe(byId('inputListrikCuciWatt')?.value) / 1000) * tdl : rowNum(['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']);
+    const keringLoad = hasKeringInput ? (zettToNumberSafe(byId('inputListrikPengeringWatt')?.value) / 1000) * tdl : rowNum(['Listrik Kering Per Load', 'Listrik Kering /Load', 'Kering Per Load', 'listrikKeringPerLoad', 'listrikKeringLoad', 'keringElectricPerLoad']);
+    const pompaLoad = hasPompaInput
+      ? ((zettToNumberSafe(byId('inputListrikPompaWatt')?.value) / 1000) * (cap.durasiCuci / 60) * tdl) / cap.mesinCuci
+      : rowNum(['Listrik Pompa Per Load', 'Listrik Pompa /Load']);
+    const setrikaJam = hasSetrikaInput ? (zettToNumberSafe(byId('inputListrikSetrikaWatt')?.value) / 1000) * tdl : rowNum(['Listrik Setrika Jam', 'Listrik Setrika Per Jam', 'Listrik Setrika /Jam']);
+    return {
+      pompaLoad,
+      pompaKg: cap.cuciKg > 0 ? pompaLoad / cap.cuciKg : 0,
+      cuciLoad,
+      cuciKg: hasCuciInput ? (cap.cuciKg > 0 ? cuciLoad / cap.cuciKg : 0) : clean(row['Cuci Per Kg']),
+      keringLoad,
+      keringKg: hasKeringInput ? (cap.keringKg > 0 ? keringLoad / cap.keringKg : 0) : clean(row['Kering Per Kg']),
+      setrikaJam,
+      setrikaKg: hasSetrikaInput ? (cap.setrikaKg > 0 ? setrikaJam / cap.setrikaKg : 0) : clean(row['Listrik Setrika Kg'])
+    };
+  }
+
+  function zettGetVisibleElectricMetrics(context) {
+    if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+      const zero = typeof window.zettGetZeroElectricMetrics_ === 'function'
+        ? window.zettGetZeroElectricMetrics_()
+        : {};
+      return zettGetVisibleElectricInputFields(context)
+        .map(key => ({ key, label: FIELD_CONFIG[key].label, value: zero[key] || 0 }));
+    }
+
+    const visible = zettGetVisibleElectricInputFields(context);
+    const values = electricValues();
+    return visible.map(key => ({ key, label: FIELD_CONFIG[key].label, value: values[key] || 0 }));
+  }
+
+  function zettGetElectricDashboardValue() {
+    if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+      return 0;
+    }
+
+    return electricBreakdown(electricValues()).dashboardValue;
+  }
+
+  function zettRenderElectricAnalysisForm() {
+    const visible = new Set(zettGetVisibleElectricInputFields());
+    document.querySelectorAll('#tab-listrik .zett-electric-metric-row').forEach(row => {
+      const active = visible.has(row.dataset.electricField);
+      row.classList.toggle('hidden', !active);
+      row.style.display = active ? 'flex' : 'none';
+    });
+    const panels = { cuci: ['cuciLoad', 'cuciKg'], kering: ['keringLoad', 'keringKg'], pompa: ['pompaLoad', 'pompaKg'], setrika: ['setrikaJam', 'setrikaKg'] };
+    Object.keys(panels).forEach(name => {
+      const panel = document.querySelector('#tab-listrik [data-electric-panel="' + name + '"]');
+      if (!panel) return;
+      const active = panels[name].some(key => visible.has(key));
+      panel.classList.toggle('hidden', !active);
+      panel.style.display = active ? '' : 'none';
+    });
+    const toggle = byId('toggleSetrikaListrik');
+    if (toggle) toggle.checked = visible.has('setrikaJam') || visible.has('setrikaKg');
+    if (typeof window.toggleSetrikaInputs === 'function') window.toggleSetrikaInputs();
+  }
+
+  function ensureElectricCardDetailContainer() {
+    if (typeof window.ensureHPPCardDetailContainer === 'function') {
+      return window.ensureHPPCardDetailContainer('listrik');
+    }
+    return byId('dash-card-listrik-details');
+  }
+
+  function zettRenderElectricCard() {
+    if (window.__zettElectricRendering) return;
+    window.__zettElectricRendering = true;
+    try {
+      const shouldZero = typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_();
+      const v = electricValues();
+      const breakdown = electricBreakdown(v);
+      const metrics = shouldZero ? [
+        { key: 'pompaLoad', label: 'Listrik Pompa /Load', value: 0 },
+        { key: 'cuciLoad', label: 'Listrik Cuci /Load', value: 0 },
+        { key: 'keringLoad', label: 'Listrik Kering /Load', value: 0 },
+        { key: 'totalLoad', label: 'Total Listrik /Load', value: 0 }
+      ] : [
+        { key: 'pompaLoad', label: 'Listrik Pompa /Load', value: v.pompaLoad || 0 },
+        { key: 'cuciLoad', label: 'Listrik Cuci /Load', value: v.cuciLoad || 0 },
+        { key: 'keringLoad', label: 'Listrik Kering /Load', value: breakdown.context.pakaiMesinPengering ? (v.keringLoad || 0) : 0 },
+        { key: 'setrikaJam', label: 'Listrik Setrika /Jam', value: breakdown.context.pakaiSetrikaListrik ? (v.setrikaJam || 0) : 0 },
+        { key: 'totalLoad', label: 'Total Listrik /Load', value: breakdown.totalLoad || 0 }
+      ].filter(item => item.key !== 'setrikaJam' || item.value > 0);
+      const value = shouldZero ? 0 : breakdown.dashboardValue;
+      listrikConsole('[HPP LISTRIK CARD SOURCE]', {
+        outlet: outletName(),
+        row: getRow(),
+        rawDryerWatt: rawDryerWatt(),
+        metrics,
+        value
+      });
+      const valueEl = byId('dash-card-listrik');
+      if (valueEl) valueEl.textContent = rupiah(value);
+      if (typeof window.renderHPPCardDetails === 'function') window.renderHPPCardDetails('listrik', metrics);
+      const detail = ensureElectricCardDetailContainer();
+      console.log('[HPP LISTRIK FINAL RENDER]', {
+        outlet: outletName(),
+        value,
+        detailFound: !!detail,
+        detailHtml: detail ? detail.innerHTML : '',
+        metrics
+      });
+      if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('listrik', value);
+      listrikConsole('[HPP LISTRIK CARD VALUES]', {
+        total: value,
+        details: metrics
+      });
+      zettRenderElectricAnalysisForm();
+    } finally {
+      window.__zettElectricRendering = false;
+    }
+  }
+
+  function setText(id, value) {
+    const el = byId(id);
+    if (el) el.textContent = rupiah(value);
+  }
+
+  function setElectricText(ids, value) {
+    (Array.isArray(ids) ? ids : [ids]).forEach(id => setText(id, value));
+  }
+
+  function electricRowPatch(values) {
+    const v = values || {};
+    return {
+      'TDL': byId('inputTDL')?.value || '',
+      'Watt Cuci': byId('inputListrikCuciWatt')?.value || '',
+      'Watt Kering': byId('inputListrikPengeringWatt')?.value || '',
+      'Watt Pompa': byId('inputListrikPompaWatt')?.value || '',
+      'Watt Setrika': byId('inputListrikSetrikaWatt')?.value || '',
+      'Cuci Per Load': v.cuciLoad || 0,
+      'Cuci Per Kg': v.cuciKg || 0,
+      'Listrik Cuci Per Load': v.cuciLoad || 0,
+      'Listrik Cuci /Load': v.cuciLoad || 0,
+      'Estimasi Biaya Mesin Cuci / Load': v.cuciLoad || 0,
+      'Listrik Cuci /Kg': v.cuciKg || 0,
+      'Kering Per Load': v.keringLoad || 0,
+      'Kering Per Kg': v.keringKg || 0,
+      'Listrik Kering Per Load': v.keringLoad || 0,
+      'Listrik Kering /Load': v.keringLoad || 0,
+      'Estimasi Biaya Mesin Pengering / Load': v.keringLoad || 0,
+      'Listrik Kering /Kg': v.keringKg || 0,
+      'Listrik Pompa Per Load': v.pompaLoad || 0,
+      'Listrik Pompa /Load': v.pompaLoad || 0,
+      'Estimasi Biaya Pompa Air / Load': v.pompaLoad || 0,
+      'Listrik Pompa /Kg': v.pompaKg || 0,
+      'Daya Mesin Cuci': byId('inputListrikCuciWatt')?.value || '',
+      'Daya Mesin Pengering': byId('inputListrikPengeringWatt')?.value || '',
+      'Daya Pompa Air': byId('inputListrikPompaWatt')?.value || '',
+      'Listrik Setrika Jam': v.setrikaJam || 0,
+      'Listrik Setrika /Jam': v.setrikaJam || 0,
+      'Listrik Setrika Kg': v.setrikaKg || 0,
+      'Listrik Setrika /Kg': v.setrikaKg || 0,
+      'Listrik /Load': (v.pompaLoad || 0) + (v.cuciLoad || 0) + (v.keringLoad || 0),
+      'Total Listrik /Load': (v.pompaLoad || 0) + (v.cuciLoad || 0) + (v.keringLoad || 0),
+      'Listrik /Kg': electricBreakdown(v).perKg || 0,
+      listrikCuciPerLoad: v.cuciLoad || 0,
+      listrikCuciPerKg: v.cuciKg || 0,
+      listrikKeringPerLoad: v.keringLoad || 0,
+      listrikKeringPerKg: v.keringKg || 0,
+      listrikPompaPerLoad: v.pompaLoad || 0,
+      listrikPompaPerKg: v.pompaKg || 0,
+      listrikSetrikaJam: v.setrikaJam || 0,
+      listrikSetrikaKg: v.setrikaKg || 0,
+      listrikTotalPerLoad: (v.pompaLoad || 0) + (v.cuciLoad || 0) + (v.keringLoad || 0),
+      listrikPerKg: electricBreakdown(v).perKg || 0
+    };
+  }
+
+  function buildElectricPayloadPatch() {
+    return electricRowPatch(electricValues());
+  }
+
+  function updateLocalElectricState(values) {
+    if (!outletName()) return;
+    const patch = electricRowPatch(values);
+    if (typeof window.zettPatchActiveHPPRow === 'function') window.zettPatchActiveHPPRow(patch);
+    listrikConsole('[HPP LISTRIK STATE UPDATED]', {
+      outlet: outletName(),
+      cuciLoad: patch['Cuci Per Load'],
+      keringLoad: patch['Kering Per Load'],
+      pompaLoad: patch['Listrik Pompa Per Load']
+    });
+  }
+
+  function scheduleElectricCalculation() {
+    window.clearTimeout(window.__zettListrikInputCalcTimer);
+    window.__zettListrikInputCalcTimer = window.setTimeout(function() {
+      if (typeof window.calculateListrik === 'function') window.calculateListrik();
+    }, 0);
+  }
+
+  function auditElectricDom() {
+    const ids = {
+      inputTDL: 'inputTDL',
+      inputCuci: 'inputListrikCuciWatt',
+      inputPengering: 'inputListrikPengeringWatt',
+      inputPompa: 'inputListrikPompaWatt',
+      displayCuci: 'dispListrikCuciLoad',
+      displayPengering: 'dispListrikPengeringLoad',
+      displayPompa: 'dispListrikPompaLoad',
+      cardListrik: 'dash-card-listrik'
+    };
+    const domPayload = {
+      inputTDL: !!byId(ids.inputTDL),
+      inputCuci: !!byId(ids.inputCuci),
+      inputPengering: !!byId(ids.inputPengering),
+      inputPompa: !!byId(ids.inputPompa),
+      displayCuci: !!byId(ids.displayCuci),
+      displayPengering: !!byId(ids.displayPengering),
+      displayPompa: !!byId(ids.displayPompa),
+      cardListrik: !!byId(ids.cardListrik)
+    };
+    listrikConsole('[HPP LISTRIK DOM]', domPayload);
+    listrikConsole('[HPP LISTRIK DOM CHECK]', {
+      tarif: domPayload.inputTDL,
+      cuci: domPayload.inputCuci,
+      pengering: domPayload.inputPengering,
+      pompa: domPayload.inputPompa,
+      displayCuci: domPayload.displayCuci,
+      displayPengering: domPayload.displayPengering,
+      displayPompa: domPayload.displayPompa
+    });
+    listrikConsole('[HPP LISTRIK DOM] input cuci found:', !!byId(ids.inputCuci));
+    listrikConsole('[HPP LISTRIK DOM] input pengering found:', !!byId(ids.inputPengering));
+    listrikConsole('[HPP LISTRIK DOM] input pompa found:', !!byId(ids.inputPompa));
+    listrikConsole('[HPP LISTRIK DOM] display cuci found:', !!byId(ids.displayCuci));
+    listrikConsole('[HPP LISTRIK DOM] display pengering found:', !!byId(ids.displayPengering));
+    listrikConsole('[HPP LISTRIK DOM] display pompa found:', !!byId(ids.displayPompa));
+  }
+
+  window.calculateListrik = function() {
+    auditElectricDom();
+    zettListrikDebugLog('calculate triggered', {
+      outlet: outletName(),
+      activeForm: window.zettGetActiveHPPType ? window.zettGetActiveHPPType() : ''
+    });
+    const dryerBefore = rawDryerWatt();
+    const cap = capacities();
+    const raw = {
+      tarif: zettToNumberSafe(byId('inputTDL')?.value) || 1700,
+      cuciWatt: zettToNumberSafe(byId('inputListrikCuciWatt')?.value),
+      dryerWatt: dryerBefore,
+      pengeringWatt: zettToNumberSafe(byId('inputListrikPengeringWatt')?.value),
+      pompaWatt: zettToNumberSafe(byId('inputListrikPompaWatt')?.value),
+      setrikaWatt: zettToNumberSafe(byId('inputListrikSetrikaWatt')?.value),
+      durasiCuci: cap.durasiCuci,
+      durasiPengering: clean(getRow()['Durasi Kering']) || 60,
+      kapasitasLoad: cap.cuciKg
+    };
+    listrikConsole('[HPP LISTRIK RAW]', raw);
+    listrikConsole('[HPP LISTRIK RAW VALUE]', raw);
+    zettListrikDebugLog('dryer watt before calculate', { value: dryerBefore });
+    const v = electricValues();
+    const calcPayload = {
+      listrikCuciLoad: v.cuciLoad || 0,
+      listrikKeringLoad: v.keringLoad || 0,
+      listrikPompaLoad: v.pompaLoad || 0,
+      estimasiCuciLoad: v.cuciLoad || 0,
+      estimasiPengeringLoad: v.keringLoad || 0,
+      estimasiPompaLoad: v.pompaLoad || 0
+    };
+    listrikConsole('[HPP LISTRIK CALC]', calcPayload);
+    listrikConsole('[HPP LISTRIK CALC RESULT]', calcPayload);
+    const displayTargets = {
+      cuciLoad: !!byId('dispListrikCuciLoad'),
+      keringLoad: !!byId('dispListrikPengeringLoad'),
+      pompaLoad: !!byId('dispListrikPompaLoad'),
+      total: !!byId('displayBiayaListrikTotalKg')
+    };
+    listrikConsole('[HPP LISTRIK DISPLAY TARGETS]', displayTargets);
+    listrikConsole('[HPP LISTRIK DISPLAY TARGET]', displayTargets);
+    console.log('[HPP LISTRIK FINAL DISPLAY TARGETS]', {
+      cuciLoad: !!byId('dispListrikCuciLoad'),
+      pengeringLoad: !!byId('dispListrikPengeringLoad'),
+      pompaLoad: !!byId('dispListrikPompaLoad'),
+      total: !!byId('displayBiayaListrikTotalKg')
+    });
+    setElectricText(['dispListrikCuciLoad', 'displayListrikCuciLoad'], v.cuciLoad || 0);
+    setElectricText(['dispListrikCuciKg', 'displayListrikCuciKg'], v.cuciKg || 0);
+    setElectricText(['dispListrikPengeringLoad', 'displayListrikPengeringLoad'], v.keringLoad || 0);
+    setElectricText(['dispListrikPengeringKg', 'displayListrikPengeringKg'], v.keringKg || 0);
+    setElectricText(['dispListrikPompaLoad', 'displayListrikPompaLoad'], v.pompaLoad || 0);
+    setElectricText(['dispListrikPompaKg', 'displayListrikPompaKg'], v.pompaKg || 0);
+    setElectricText(['dispListrikSetrikaJam', 'displayListrikSetrikaJam'], v.setrikaJam || 0);
+    setElectricText(['dispListrikSetrikaKg', 'displayListrikSetrikaKg'], v.setrikaKg || 0);
+    const total = zettGetElectricDashboardValue();
+    setElectricText(['displayBiayaListrikTotalKg', 'displayListrikTotalKg'], total);
+    updateLocalElectricState(v);
+    zettRenderElectricCard();
+    if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('gsheet');
+    listrikConsole('[HPP LISTRIK DISPLAY UPDATED]', {
+      cuciLoad: byId('dispListrikCuciLoad')?.textContent || '',
+      keringLoad: byId('dispListrikPengeringLoad')?.textContent || '',
+      pompaLoad: byId('dispListrikPompaLoad')?.textContent || '',
+      total: byId('displayBiayaListrikTotalKg')?.textContent || ''
+    });
+    zettListrikDebugLog('hpp summary values', {
+      cuci: (v.pompaLoad || 0) + (v.cuciLoad || 0),
+      kering: v.keringLoad || 0,
+      dashboard: total
+    });
+    zettListrikDebugLog('dryer watt after calculate', { before: dryerBefore, after: rawDryerWatt() });
+    return v;
+  };
+
+  function zettValidateElectricAnalysisForm() {
+    const missing = [];
+    if (!outletName()) missing.push('Outlet');
+    if (!String(byId('inputTDL')?.value || '').trim()) missing.push('Tarif Dasar Listrik');
+    const sourceIds = new Map();
+    zettGetVisibleElectricInputFields().forEach(key => sourceIds.set(FIELD_CONFIG[key].source, true));
+    sourceIds.forEach((_, id) => {
+      const el = byId(id);
+      if (!el || String(el.value || '').trim() === '') {
+        const labels = zettGetVisibleElectricInputFields()
+          .filter(key => FIELD_CONFIG[key].source === id)
+          .map(key => FIELD_CONFIG[key].label);
+        missing.push(labels[0] || id);
+      }
+    });
+    return { valid: missing.length === 0, missing };
+  }
+
+  function zettShowElectricValidation(missing) {
+    const text = 'Harap lengkapi: ' + missing.join(', ');
+    if (window.Swal && typeof window.Swal.fire === 'function') {
+      return window.Swal.fire({
+        icon: 'warning',
+        title: 'Data belum lengkap',
+        text,
+        confirmButtonText: 'OK',
+        buttonsStyling: false,
+        customClass: {
+          popup: 'rounded-[1.75rem] border border-slate-200/70 shadow-[0_28px_90px_rgba(15,23,42,0.22)]',
+          title: 'text-slate-900 font-black tracking-tight',
+          htmlContainer: 'text-slate-500 font-semibold',
+          confirmButton: 'bg-slate-950 hover:bg-slate-800 text-white px-7 py-3 rounded-full font-extrabold shadow-[0_14px_30px_rgba(15,23,42,0.22)] transition-all active:scale-[0.98]'
+        }
+      });
+    }
+    if (typeof showOmniToast === 'function') showOmniToast(text, 'warning');
+  }
+
+  function zettResetElectricFormForCreate() {
+    ['inputTDL', 'inputListrikCuciWatt', 'inputListrikPengeringWatt', 'inputListrikPompaWatt', 'inputListrikSetrikaWatt'].forEach(id => {
+      const el = byId(id);
+      if (el) el.value = '';
+    });
+    const toggle = byId('toggleSetrikaListrik');
+    if (toggle) toggle.checked = false;
+  }
+
+  function zettApplyElectricRowToForm(row) {
+    if (!row || !(row['TDL'] || row['Watt Cuci'] || row['Watt Kering'] || row['Watt Pompa'] || row['Watt Setrika'])) {
+      zettResetElectricFormForCreate();
+      zettRenderElectricAnalysisForm();
+      return;
+    }
+    const set = (id, value) => { const el = byId(id); if (el) el.value = value == null ? '' : value; };
+    set('inputTDL', row['TDL'] || '');
+    set('inputListrikCuciWatt', row['Watt Cuci'] || '');
+    if (!shouldPreserveDryerWattInput(row['Watt Kering'])) {
+      set('inputListrikPengeringWatt', row['Watt Kering'] || '');
+    }
+    set('inputListrikPompaWatt', row['Watt Pompa'] || '');
+    set('inputListrikSetrikaWatt', row['Watt Setrika'] || '');
+    if (typeof formatRupiahInput === 'function') {
+      const tdl = byId('inputTDL');
+      if (tdl && tdl.value) formatRupiahInput(tdl);
+    }
+    zettRenderElectricAnalysisForm();
+    setTimeout(function() { if (typeof window.calculateListrik === 'function') window.calculateListrik(); }, 0);
+  }
+
+  window.zettGetElectricUsageContext = zettGetElectricUsageContext;
+  window.zettGetVisibleElectricInputFields = zettGetVisibleElectricInputFields;
+  window.zettGetVisibleElectricMetrics = zettGetVisibleElectricMetrics;
+  window.zettGetElectricDashboardValue = zettGetElectricDashboardValue;
+  window.zettBuildElectricPayloadPatch = buildElectricPayloadPatch;
+  window.zettRenderElectricAnalysisForm = zettRenderElectricAnalysisForm;
+  window.zettRenderElectricCard = zettRenderElectricCard;
+  window.zettValidateElectricAnalysisForm = zettValidateElectricAnalysisForm;
+  window.zettShowElectricValidation = zettShowElectricValidation;
+  window.zettResetElectricFormForCreate = zettResetElectricFormForCreate;
+  window.zettApplyElectricRowToForm = zettApplyElectricRowToForm;
+  window.zettRememberDryerWattInput = rememberDryerWattInput;
+  window.zettShouldPreserveDryerWattInput = shouldPreserveDryerWattInput;
+
+  function refreshElectricUiAfterRender() {
+    zettRenderElectricAnalysisForm();
+    auditElectricDom();
+    setTimeout(function() { if (typeof window.calculateListrik === 'function') window.calculateListrik(); }, 80);
+  }
+
+  function bootElectricBindings() {
+    if (window.__zettElectricBindingsBooted) {
+      refreshElectricUiAfterRender();
+      return;
+    }
+    window.__zettElectricBindingsBooted = true;
+    refreshElectricUiAfterRender();
+    document.addEventListener('change', function(event) {
+      if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+        console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+        return;
+      }
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
+      if (event.target && (event.target.id === 'inputNamaHPP' || event.target.id === 'inputKategori' || event.target.closest('.omni-asset-grid'))) {
+        setTimeout(refreshElectricUiAfterRender, 60);
+      }
+    });
+    document.addEventListener('input', function(event) {
+      if (event.target && event.target.id === 'inputListrikPengeringWatt') {
+        rememberDryerWattInput();
+      }
+      if (event.target && (ELECTRIC_INPUT_IDS.includes(event.target.id) || event.target.closest('.omni-asset-grid'))) {
+        listrikConsole('[HPP LISTRIK EVENT]', { type: event.type, triggeredBy: event.target.id });
+        listrikConsole('[HPP LISTRIK EVENT] triggered by:', event.target.id);
+        listrikConsole('[HPP LISTRIK EVENT TRIGGERED]', { id: event.target.id, value: event.target.value });
+        scheduleElectricCalculation();
+      }
+    });
+    document.addEventListener('change', function(event) {
+      if (event.target && (ELECTRIC_INPUT_IDS.includes(event.target.id) || event.target.closest('.omni-asset-grid'))) {
+        listrikConsole('[HPP LISTRIK EVENT]', { type: event.type, triggeredBy: event.target.id });
+        listrikConsole('[HPP LISTRIK EVENT] triggered by:', event.target.id);
+        listrikConsole('[HPP LISTRIK EVENT TRIGGERED]', { id: event.target.id, value: event.target.value });
+        scheduleElectricCalculation();
+      }
+    });
+    document.addEventListener('keyup', function(event) {
+      if (event.target && (ELECTRIC_INPUT_IDS.includes(event.target.id) || event.target.closest('.omni-asset-grid'))) {
+        listrikConsole('[HPP LISTRIK EVENT]', { type: event.type, triggeredBy: event.target.id });
+        listrikConsole('[HPP LISTRIK EVENT] triggered by:', event.target.id);
+        listrikConsole('[HPP LISTRIK EVENT TRIGGERED]', { id: event.target.id, value: event.target.value });
+        scheduleElectricCalculation();
+      }
+    });
+  }
+
+  window.zettRefreshElectricUiAfterRender = refreshElectricUiAfterRender;
+  window.zettBootElectricBindings = bootElectricBindings;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootElectricBindings, { once: true });
+  } else {
+    bootElectricBindings();
+  }
+})();
+</script>
