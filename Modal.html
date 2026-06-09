@@ -4848,13 +4848,16 @@
 </script>
 
 <style id="zett-hpp-final-detail-position-align-20260609">
+  /* 1. Wadah utama: Mengatur jarak agar seragam dengan card atas & menyembunyikan teks statis "Rp 0" yang nyasar */
   #view-hpp #dash-card-packing-details,
-  #view-hpp #dash-card-bahan-details,
-  #view-hpp #dash-card-nota-details {
+  #view-hpp #dash-card-bahan-details, 
+  #view-hpp #dash-card-chemical-details,
+  #view-hpp #dash-card-nota-details, 
+  #view-hpp #dash-card-admin-details {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
-    margin-top: 10px !important;
+    margin-top: 8px !important; 
     padding: 0 !important;
     gap: 4px !important;
     position: static !important;
@@ -4862,11 +4865,16 @@
     background: transparent !important;
     border: 0 !important;
     box-shadow: none !important;
+    font-size: 0 !important; 
+    color: transparent !important;
   }
 
+  /* 2. Sub-wadah: Mengembalikan ukuran font agar baris rincian data dinamis tetap terbaca */
   #view-hpp #dash-card-packing-details > div,
-  #view-hpp #dash-card-bahan-details > div,
-  #view-hpp #dash-card-nota-details > div {
+  #view-hpp #dash-card-bahan-details > div, 
+  #view-hpp #dash-card-chemical-details > div,
+  #view-hpp #dash-card-nota-details > div, 
+  #view-hpp #dash-card-admin-details > div {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -4878,11 +4886,16 @@
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    font-size: 10.5px !important; 
+    color: initial !important; 
   }
 
+  /* 3. Desain teks deskripsi (Kiri) */
   #view-hpp #dash-card-packing-details span,
-  #view-hpp #dash-card-bahan-details span,
-  #view-hpp #dash-card-nota-details span {
+  #view-hpp #dash-card-bahan-details span, 
+  #view-hpp #dash-card-chemical-details span,
+  #view-hpp #dash-card-nota-details span, 
+  #view-hpp #dash-card-admin-details span {
     flex: 1 1 auto !important;
     min-width: 0 !important;
     color: #475569 !important;
@@ -4894,14 +4907,17 @@
     text-overflow: ellipsis !important;
   }
 
+  /* 4. Desain teks nominal (Kanan) */
   #view-hpp #dash-card-packing-details strong,
-  #view-hpp #dash-card-bahan-details strong,
-  #view-hpp #dash-card-nota-details strong {
+  #view-hpp #dash-card-bahan-details strong, 
+  #view-hpp #dash-card-chemical-details strong,
+  #view-hpp #dash-card-nota-details strong, 
+  #view-hpp #dash-card-admin-details strong {
     flex: 0 0 auto !important;
     color: #0F172A !important;
     font-size: 10.5px !important;
     line-height: 1.15 !important;
-    font-weight: 850 !important;
+    font-weight: 800 !important; /* Diubah dari 850 ke 800 agar sesuai dengan standar ketebalan browser */
     white-space: nowrap !important;
     text-align: right !important;
   }
