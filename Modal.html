@@ -509,26 +509,29 @@
       </div>
 
       <!-- Card: Packing -->
-      <div onclick="openHPPForm('packing', 'Analisa Biaya Packing')" class="hpp-card-dash animate-fade-in bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
-        <div class="w-10 h-10 md:w-11 md:h-11 bg-indigo-50 rounded-[0.9rem] flex items-center justify-center text-indigo-500 transition-transform duration-200 group-hover:scale-105">
-          <i class="ph ph-package text-2xl drop-shadow-sm"></i>
-        </div>
-        <div>
-          <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Packing</h3>
-          <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-indigo-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] " id="dash-card-packing">Rp 0</p>
-        </div>
-      </div>
+     
+<div data-hpp-type="packing" onclick="openHPPForm('packing', 'Analisa Biaya Packing')" class="hpp-card-dash animate-fade-in bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+  <div class="w-10 h-10 md:w-11 md:h-11 bg-indigo-50 rounded-[0.9rem] flex items-center justify-center text-indigo-500 transition-transform duration-200 group-hover:scale-105">
+    <i class="ph ph-package text-2xl drop-shadow-sm"></i>
+  </div>
+  <div class="w-full">
+    <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Packing</h3>
+    <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-indigo-500 tracking-tight tabular-nums [font-feature-settings:'tnum']" id="dash-card-packing">Rp 0</p>
+    <div id="dash-card-packing-details" class="hpp-card-breakdown zett-hpp-card-details zett-packing-card-details"></div>
+  </div>
+</div>
 
-      <!-- Card: Bahan -->
-      <div onclick="openHPPForm('bahan', 'Analisa Biaya Chemical')" class="hpp-card-dash animate-fade-in bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
-        <div class="w-10 h-10 md:w-11 md:h-11 bg-emerald-50 rounded-[0.9rem] flex items-center justify-center text-emerald-500 transition-transform duration-200 group-hover:scale-105">
-          <i class="ph ph-flask text-2xl drop-shadow-sm"></i>
-        </div>
-        <div>
-          <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Chemical</h3>
-          <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-emerald-500 tracking-tight tabular-nums [font-feature-settings:'tnum'] " id="dash-card-bahan">Rp 0</p>
-        </div>
-      </div>
+<!-- Card: Bahan -->
+<div data-hpp-type="bahan" onclick="openHPPForm('bahan', 'Analisa Biaya Chemical')" class="hpp-card-dash animate-fade-in bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+  <div class="w-10 h-10 md:w-11 md:h-11 bg-emerald-50 rounded-[0.9rem] flex items-center justify-center text-emerald-500 transition-transform duration-200 group-hover:scale-105">
+    <i class="ph ph-flask text-2xl drop-shadow-sm"></i>
+  </div>
+  <div class="w-full">
+    <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Chemical</h3>
+    <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-emerald-500 tracking-tight tabular-nums [font-feature-settings:'tnum']" id="dash-card-bahan">Rp 0</p>
+    <div id="dash-card-bahan-details" class="hpp-card-breakdown zett-hpp-card-details zett-bahan-card-details"></div>
+  </div>
+</div>
 
       <!-- Card: Nota -->
       <div onclick="openHPPForm('nota', 'Analisa Biaya Nota & Kasir')" class="hpp-card-dash animate-fade-in bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
@@ -7295,7 +7298,16 @@ function zettSyncHPPDetailGapFromElectric() {
   ['packing', 'bahan', 'nota'].forEach(function(type) {
     const detail = document.getElementById('dash-card-' + type + '-details');
     if (!detail) return;
+
     detail.style.transform = 'none';
+
+    // Packing & Chemical dikunci compact agar detail tidak turun terlalu jauh.
+    if (type === 'packing' || type === 'bahan') {
+      detail.style.marginTop = '10px';
+      return;
+    }
+
+    // Nota tetap mengikuti behavior lama.
     detail.style.marginTop = targetGap + 'px';
   });
 }
@@ -12697,7 +12709,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 </style>
 
 <style id="zett-hpp-lower-card-detail-gap-hard-lock-20260609-final">
-  /* Final lock: Packing & Chemical detail harus menempel ke nominal, sisa ruang turun ke bawah card. */
+  /* Final lock khusus Packing & Chemical: nominal dan detail harus menjadi satu vertical stack. */
+
   #view-hpp .hpp-card-dash[data-hpp-type="packing"],
   #view-hpp .hpp-card-dash[data-hpp-type="bahan"],
   #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"],
@@ -12705,73 +12718,125 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     position: relative !important;
     display: flex !important;
     flex-direction: column !important;
+    align-items: center !important;
     justify-content: flex-start !important;
     overflow: hidden !important;
   }
 
-  #view-hpp .hpp-card-dash[data-hpp-type="packing"] > div:not([class*="w-10"]):not([class*="w-12"]),
-  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] > div:not([class*="w-10"]):not([class*="w-12"]),
-  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] > div:not([class*="w-10"]):not([class*="w-12"]),
-  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] > div:not([class*="w-10"]):not([class*="w-12"]) {
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] > div.w-full,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] > div.w-full,
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] > div.w-full,
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] > div.w-full {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    gap: 0 !important;
-    flex: 0 0 auto !important;
-    height: auto !important;
-    min-height: 0 !important;
     width: 100% !important;
-    margin-bottom: auto !important;
-    position: relative !important;
-    z-index: 3 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] h3,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] h3,
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] h3,
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] h3 {
+    margin-bottom: 8px !important;
+  }
+
+  #view-hpp #dash-card-packing,
+  #view-hpp #dash-card-bahan {
+    display: block !important;
+    margin: 0 0 10px 0 !important;
+    padding: 0 !important;
+    line-height: 1.04 !important;
+    text-align: center !important;
   }
 
   #view-hpp #dash-card-packing-details,
   #view-hpp #dash-card-bahan-details,
   #view-hpp .zett-packing-card-details,
   #view-hpp .zett-bahan-card-details {
-    position: static !important;
-    z-index: 3 !important;
     display: flex !important;
     flex-direction: column !important;
+    align-self: stretch !important;
     width: 100% !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    padding-top: 0 !important;
+    max-width: 100% !important;
+    gap: 3px !important;
+    margin: 10px 0 0 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    transform: none !important;
     flex: 0 0 auto !important;
     flex-grow: 0 !important;
     flex-shrink: 0 !important;
-    align-self: stretch !important;
-    transform: none !important;
-    gap: 2px !important;
+    text-align: left !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
   }
 
-  #view-hpp .hpp-card-dash[data-hpp-type="packing"] #dash-card-packing,
-  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] #dash-card-bahan,
-  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] #dash-card-packing,
-  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] #dash-card-bahan {
-    margin-bottom: 6px !important;
-  }
-
+  #view-hpp #dash-card-packing-details > div,
+  #view-hpp #dash-card-bahan-details > div,
+  #view-hpp .zett-packing-card-details > div,
+  #view-hpp .zett-bahan-card-details > div,
   #view-hpp #dash-card-packing-details > .hpp-card-row,
   #view-hpp #dash-card-bahan-details > .hpp-card-row,
   #view-hpp .zett-packing-card-details > .hpp-card-row,
   #view-hpp .zett-bahan-card-details > .hpp-card-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
     min-height: 13px !important;
     line-height: 1.12 !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
   }
 
+  #view-hpp #dash-card-packing-details span,
+  #view-hpp #dash-card-bahan-details span,
+  #view-hpp .zett-packing-card-details span,
+  #view-hpp .zett-bahan-card-details span,
   #view-hpp #dash-card-packing-details .hpp-card-label,
-  #view-hpp #dash-card-packing-details .hpp-card-amount,
   #view-hpp #dash-card-bahan-details .hpp-card-label,
-  #view-hpp #dash-card-bahan-details .hpp-card-amount,
   #view-hpp .zett-packing-card-details .hpp-card-label,
-  #view-hpp .zett-packing-card-details .hpp-card-amount,
-  #view-hpp .zett-bahan-card-details .hpp-card-label,
-  #view-hpp .zett-bahan-card-details .hpp-card-amount {
+  #view-hpp .zett-bahan-card-details .hpp-card-label {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    color: #475569 !important;
     font-size: 9.5px !important;
     line-height: 1.12 !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-align: left !important;
+  }
+
+  #view-hpp #dash-card-packing-details strong,
+  #view-hpp #dash-card-bahan-details strong,
+  #view-hpp .zett-packing-card-details strong,
+  #view-hpp .zett-bahan-card-details strong,
+  #view-hpp #dash-card-packing-details .hpp-card-amount,
+  #view-hpp #dash-card-bahan-details .hpp-card-amount,
+  #view-hpp .zett-packing-card-details .hpp-card-amount,
+  #view-hpp .zett-bahan-card-details .hpp-card-amount {
+    flex: 0 0 auto !important;
+    color: #0F172A !important;
+    font-size: 9.5px !important;
+    line-height: 1.12 !important;
+    font-weight: 850 !important;
+    text-align: right !important;
+    white-space: nowrap !important;
   }
 
   #view-hpp .hpp-card-dash[data-hpp-type="packing"] .hpp-show-detail,
@@ -12787,7 +12852,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     #view-hpp #dash-card-bahan-details,
     #view-hpp .zett-packing-card-details,
     #view-hpp .zett-bahan-card-details {
-      margin-top: 0 !important;
+      margin-top: 8px !important;
+      gap: 2px !important;
     }
   }
 </style>
