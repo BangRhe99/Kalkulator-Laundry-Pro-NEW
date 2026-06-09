@@ -12857,3 +12857,136 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     }
   }
 </style>
+<style id="zett-hpp-fix-ghost-detail-packing-bahan-20260609">
+  /* Patch final khusus Packing & Chemical — mematikan ghost spacer .hpp-premium-lite-details */
+
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] .hpp-premium-lite-details[hidden],
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] .hpp-premium-lite-details[hidden],
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] .hpp-premium-lite-details[hidden],
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] .hpp-premium-lite-details[hidden] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    flex: 0 0 0 !important;
+  }
+
+  #view-hpp #dash-card-packing,
+  #view-hpp #dash-card-bahan {
+    margin-bottom: 8px !important;
+  }
+
+  #view-hpp #dash-card-packing-details,
+  #view-hpp #dash-card-bahan-details {
+    display: flex !important;
+    flex-direction: column !important;
+    margin-top: 8px !important;
+    padding-top: 0 !important;
+    gap: 3px !important;
+    width: 100% !important;
+    align-self: stretch !important;
+    position: static !important;
+    transform: none !important;
+    flex: 0 0 auto !important;
+  }
+</style>
+
+<script id="zett-hpp-fix-ghost-detail-packing-bahan-script-20260609">
+  (function () {
+    function zettFixPackingChemicalGapFinal() {
+      ['packing', 'bahan'].forEach(function (type) {
+        var valueEl = document.getElementById('dash-card-' + type);
+        var detailEl = document.getElementById('dash-card-' + type + '-details');
+
+        if (!valueEl || !detailEl) return;
+
+        var card = valueEl.closest('.hpp-card-dash');
+        if (!card) return;
+
+        card.setAttribute('data-hpp-type', type);
+
+        /*
+          Penyebab dari Inspect:
+          Ada elemen .hpp-premium-lite-details hidden yang tetap dipaksa display:flex oleh CSS lama.
+          Ini membuat jarak nominal ke detail tetap jauh.
+          Maka elemen ghost ini kita hapus khusus di card Packing & Chemical.
+        */
+        card.querySelectorAll('.hpp-premium-lite-details').forEach(function (node) {
+          if (node !== detailEl) {
+            node.remove();
+          }
+        });
+
+        /* Pastikan detail list benar-benar langsung di bawah nominal */
+        if (detailEl.previousElementSibling !== valueEl) {
+          valueEl.insertAdjacentElement('afterend', detailEl);
+        }
+
+        valueEl.style.setProperty('margin-bottom', '8px', 'important');
+
+        detailEl.classList.add(
+          'hpp-card-breakdown',
+          'zett-hpp-card-details',
+          type === 'packing' ? 'zett-packing-card-details' : 'zett-bahan-card-details'
+        );
+
+        detailEl.style.setProperty('display', 'flex', 'important');
+        detailEl.style.setProperty('flex-direction', 'column', 'important');
+        detailEl.style.setProperty('margin-top', '8px', 'important');
+        detailEl.style.setProperty('padding-top', '0', 'important');
+        detailEl.style.setProperty('gap', '3px', 'important');
+        detailEl.style.setProperty('width', '100%', 'important');
+        detailEl.style.setProperty('align-self', 'stretch', 'important');
+        detailEl.style.setProperty('position', 'static', 'important');
+        detailEl.style.setProperty('transform', 'none', 'important');
+        detailEl.style.setProperty('flex', '0 0 auto', 'important');
+
+        var showDetail = card.querySelector('.hpp-show-detail');
+        if (showDetail) {
+          showDetail.remove();
+        }
+      });
+    }
+
+    window.zettFixPackingChemicalGapFinal = zettFixPackingChemicalGapFinal;
+
+    function scheduleFix() {
+      clearTimeout(window.__zettFixPackingChemicalGapTimer);
+      window.__zettFixPackingChemicalGapTimer = setTimeout(zettFixPackingChemicalGapFinal, 80);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      zettFixPackingChemicalGapFinal();
+      setTimeout(zettFixPackingChemicalGapFinal, 200);
+      setTimeout(zettFixPackingChemicalGapFinal, 600);
+      setTimeout(zettFixPackingChemicalGapFinal, 1200);
+
+      var view = document.getElementById('view-hpp');
+      if (view) {
+        var observer = new MutationObserver(scheduleFix);
+        observer.observe(view, {
+          childList: true,
+          subtree: true
+        });
+      }
+    });
+
+    document.addEventListener('change', function (event) {
+      if (event.target && event.target.id === 'inputNamaHPP') {
+        setTimeout(zettFixPackingChemicalGapFinal, 100);
+        setTimeout(zettFixPackingChemicalGapFinal, 400);
+        setTimeout(zettFixPackingChemicalGapFinal, 900);
+      }
+    });
+
+    document.addEventListener('click', function (event) {
+      if (event.target && event.target.closest && event.target.closest('#view-hpp')) {
+        setTimeout(zettFixPackingChemicalGapFinal, 120);
+      }
+    });
+  })();
+</script>
