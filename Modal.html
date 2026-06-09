@@ -2187,6 +2187,109 @@
   };
 </script>
 
+<script id="zett-hpp-component-card-display-unit-20260609">
+  (function zettHPPComponentCardDisplayUnit20260609() {
+    const loadUnitCards = ['gas', 'listrik', 'air', 'nota'];
+
+    function byId(id) { return document.getElementById(id); }
+
+    function textOf(value) {
+      return String(value || '').trim();
+    }
+
+    function isSelfService() {
+      const selected = textOf(byId('inputNamaHPP')?.value).toLowerCase();
+      const row = typeof window.zettFindActiveHPPRow === 'function' ? (window.zettFindActiveHPPRow() || {}) : {};
+      const outlet = typeof window.zettFindActiveOutletRow === 'function' ? (window.zettFindActiveOutletRow() || {}) : {};
+      const sources = [
+        outlet.kategori,
+        outlet.kategoriLaundry,
+        outlet['Kategori Laundry'],
+        row.kategori,
+        row.kategoriLaundry,
+        row['Kategori Laundry'],
+        byId('inputKategori')?.value
+      ];
+
+      if (selected && Array.isArray(window.masterDataHPP)) {
+        const match = window.masterDataHPP.find(function(item) {
+          return textOf(item?.namaOutlet || item?.['Nama Outlet']).toLowerCase() === selected;
+        });
+        if (match) sources.push(match.kategoriLaundry, match.kategori, match['Kategori Laundry']);
+      }
+
+      return sources.some(function(value) {
+        return textOf(value).toLowerCase().includes('self');
+      });
+    }
+
+    function normalizeMoneyText(raw) {
+      return textOf(raw).replace(/\s*\/\s*(kg|load)\s*$/i, '');
+    }
+
+    function applyUnit() {
+      const page = byId('view-hpp');
+      const noOutlet = typeof window.zettIsHPPOutletNotSelected_ === 'function'
+        ? window.zettIsHPPOutletNotSelected_()
+        : !textOf(byId('inputNamaHPP')?.value);
+      const self = !noOutlet && isSelfService();
+      if (page) {
+        page.classList.toggle('hpp-no-outlet-components', !!noOutlet);
+        page.classList.toggle('hpp-self-service-components', !!self);
+      }
+
+      if (noOutlet) {
+        loadUnitCards.forEach(function(type) {
+          const el = byId('dash-card-' + type);
+          if (el) el.textContent = normalizeMoneyText(el.textContent);
+        });
+        return;
+      }
+
+      if (!self) return;
+
+      loadUnitCards.forEach(function(type) {
+        const el = byId('dash-card-' + type);
+        if (!el) return;
+        const money = normalizeMoneyText(el.textContent);
+        if (money) el.textContent = money;
+      });
+    }
+
+    function scheduleUnit() {
+      requestAnimationFrame(applyUnit);
+      setTimeout(applyUnit, 80);
+    }
+
+    function wrap(name) {
+      const original = window[name];
+      if (typeof original !== 'function' || original.__hppComponentUnitWrapped) return;
+      const wrapped = function() {
+        const result = original.apply(this, arguments);
+        scheduleUnit();
+        return result;
+      };
+      wrapped.__hppComponentUnitWrapped = true;
+      window[name] = wrapped;
+    }
+
+    function boot() {
+      ['zettHPPUpdateDashboardFromState', 'calculateGas', 'calculateListrik', 'calculateAir', 'calculateNota'].forEach(wrap);
+      scheduleUnit();
+      setTimeout(scheduleUnit, 450);
+      const outlet = byId('inputNamaHPP');
+      if (outlet && !outlet.__hppComponentUnitBound) {
+        outlet.__hppComponentUnitBound = true;
+        outlet.addEventListener('change', scheduleUnit);
+        outlet.addEventListener('input', scheduleUnit);
+      }
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+    else boot();
+  })();
+</script>
+
 
 
 <style id="zett-hpp-final-spacing-and-contrast-fix">
@@ -7162,7 +7265,7 @@ function ensureHPPCardDetailContainer(type) {
     detail.id = id;
   }
   zettRemoveOldHPPDetailContainers_(type, valueEl.closest('.hpp-card-dash'), detail);
-  detail.classList.add('zett-hpp-card-details', 'zett-' + type + '-card-details');
+  detail.classList.add('hpp-card-breakdown', 'zett-hpp-card-details', 'zett-' + type + '-card-details');
   if (shouldAttachAfterValue && detail.previousElementSibling !== valueEl) {
     valueEl.insertAdjacentElement('afterend', detail);
   }
@@ -7217,15 +7320,10 @@ function renderHPPCardDetails(type, metrics) {
     : (metrics || []);
   const rows = cleanMetrics
     .filter(item => String(item.label || '').trim())
-    .map(item => '<div><span>' + item.label + '</span><strong>' + money(item.value) + '</strong></div>')
+    .map(item => '<div class="hpp-card-row"><span class="hpp-card-label">' + item.label + '</span><strong class="hpp-card-amount">' + money(item.value) + '</strong></div>')
     .join('');
   detail.innerHTML = '';
-  detail.innerHTML = rows || '<div><span>Belum ada detail</span><strong>Rp 0</strong></div>';
-  if (['packing', 'bahan', 'nota'].includes(type)) {
-    requestAnimationFrame(function() {
-      zettSyncHPPDetailGapFromElectric();
-    });
-  }
+  detail.innerHTML = rows || '<div class="hpp-card-row"><span class="hpp-card-label">Belum ada detail</span><strong class="hpp-card-amount">Rp 0</strong></div>';
 }
 
 function zettHPPDetailNumber_(value) {
@@ -9962,7 +10060,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         const card = valueEl ? valueEl.closest('.hpp-card-dash') : null;
         const detail = card ? card.querySelector('.hpp-premium-lite-details') : null;
         if (detail && item.key !== 'nota' && item.key !== 'listrik' && item.key !== 'packing' && item.key !== 'bahan') {
-          const nextDetailHtml = '<div><span>Biaya /Kg</span><strong>' + formatMoney(value) + '</strong></div>';
+          const nextDetailHtml = '<div class="hpp-card-row"><span class="hpp-card-label">Biaya /Kg</span><strong class="hpp-card-amount">' + formatMoney(value) + '</strong></div>';
           if (detail.innerHTML !== nextDetailHtml) detail.innerHTML = nextDetailHtml;
         }
       });
@@ -11366,7 +11464,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         window.renderHPPCardDetails('nota', metrics);
       } else if (detail) {
         const nextDetail = metrics
-          .map(item => '<div><span>' + item.label + '</span><strong>' + money(item.value) + '</strong></div>')
+          .map(item => '<div class="hpp-card-row"><span class="hpp-card-label">' + item.label + '</span><strong class="hpp-card-amount">' + money(item.value) + '</strong></div>')
           .join('');
         if (detail.innerHTML !== nextDetail) detail.innerHTML = nextDetail;
       }
@@ -12425,3 +12523,160 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     setTimeout(bindHppCardFormModeFallback, 300);
   })();
 </script>
+
+<style id="zett-hpp-component-card-polish-final-lock-20260609">
+  #mainViewScroller:has(#view-hpp:not(.hidden)),
+  body #mainViewScroller:has(#view-hpp:not(.hidden)),
+  body #view-hpp #hpp-dashboard-view,
+  #view-hpp #hpp-dashboard-view {
+    padding-bottom: 132px !important;
+  }
+
+  body #view-hpp .hpp-card-dash {
+    height: 190px !important;
+    min-height: 190px !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  body #view-hpp .hpp-card-dash > div:not([class*="w-10"]):not([class*="w-12"]) {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  body #view-hpp .hpp-card-dash h3 {
+    color: #1E293B !important;
+  }
+
+  body #view-hpp [id^="dash-card-"]:not([id$="-pct"]):not([id$="-details"]) {
+    color: #0F172A !important;
+    line-height: 1.02 !important;
+    margin: 0 !important;
+  }
+
+  body #view-hpp.hpp-no-outlet-components #dash-card-gas::after,
+  body #view-hpp.hpp-no-outlet-components #dash-card-listrik::after,
+  body #view-hpp.hpp-no-outlet-components #dash-card-air::after,
+  body #view-hpp.hpp-no-outlet-components #dash-card-packing::after,
+  body #view-hpp.hpp-no-outlet-components #dash-card-bahan::after,
+  body #view-hpp.hpp-no-outlet-components #dash-card-nota::after {
+    content: "" !important;
+  }
+
+  body #view-hpp.hpp-self-service-components #dash-card-gas::after,
+  body #view-hpp.hpp-self-service-components #dash-card-listrik::after,
+  body #view-hpp.hpp-self-service-components #dash-card-air::after,
+  body #view-hpp.hpp-self-service-components #dash-card-nota::after {
+    content: " /Load" !important;
+    color: #64748B !important;
+    font-size: 0.72em !important;
+    font-weight: 850 !important;
+    letter-spacing: 0 !important;
+    opacity: 1 !important;
+  }
+
+  body #view-hpp .hpp-card-breakdown,
+  body #view-hpp .zett-hpp-card-details,
+  body #view-hpp .zett-gas-card-details,
+  body #view-hpp .zett-electric-card-details,
+  body #view-hpp .zett-water-card-details,
+  body #view-hpp .zett-packing-card-details,
+  body #view-hpp .zett-bahan-card-details,
+  body #view-hpp .zett-nota-card-details,
+  body #view-hpp .hpp-premium-lite-details,
+  body #view-hpp #dash-card-packing-details,
+  body #view-hpp #dash-card-bahan-details,
+  body #view-hpp #dash-card-nota-details {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 3px !important;
+    margin-top: 8px !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    transform: none !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    text-align: left !important;
+  }
+
+  body #view-hpp .hpp-card-row,
+  body #view-hpp .zett-hpp-card-details > div,
+  body #view-hpp .zett-gas-card-details > div,
+  body #view-hpp .zett-electric-card-details > div,
+  body #view-hpp .zett-water-card-details > div,
+  body #view-hpp .zett-packing-card-details > div,
+  body #view-hpp .zett-bahan-card-details > div,
+  body #view-hpp .zett-nota-card-details > div,
+  body #view-hpp .hpp-premium-lite-details > div,
+  body #view-hpp #dash-card-packing-details > div,
+  body #view-hpp #dash-card-bahan-details > div,
+  body #view-hpp #dash-card-nota-details > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-height: 15px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+  }
+
+  body #view-hpp .hpp-card-label,
+  body #view-hpp .zett-hpp-card-details span,
+  body #view-hpp .zett-gas-card-details span,
+  body #view-hpp .zett-electric-card-details span,
+  body #view-hpp .zett-water-card-details span,
+  body #view-hpp .zett-packing-card-details span,
+  body #view-hpp .zett-bahan-card-details span,
+  body #view-hpp .zett-nota-card-details span,
+  body #view-hpp .hpp-premium-lite-details span {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    color: #475569 !important;
+    font-size: 10px !important;
+    line-height: 1.12 !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  body #view-hpp .hpp-card-amount,
+  body #view-hpp .zett-hpp-card-details strong,
+  body #view-hpp .zett-gas-card-details strong,
+  body #view-hpp .zett-electric-card-details strong,
+  body #view-hpp .zett-water-card-details strong,
+  body #view-hpp .zett-packing-card-details strong,
+  body #view-hpp .zett-bahan-card-details strong,
+  body #view-hpp .zett-nota-card-details strong,
+  body #view-hpp .hpp-premium-lite-details strong {
+    flex: 0 0 auto !important;
+    margin-left: 0 !important;
+    color: #0F172A !important;
+    font-size: 10px !important;
+    line-height: 1.12 !important;
+    font-weight: 850 !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
+  @media (max-width: 767px) {
+    body #view-hpp .hpp-card-dash {
+      height: 184px !important;
+      min-height: 184px !important;
+      padding: 14px !important;
+      gap: 7px !important;
+    }
+  }
+</style>
