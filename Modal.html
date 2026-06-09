@@ -12697,25 +12697,35 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 </style>
 
 <style id="zett-hpp-lower-card-detail-gap-hard-lock-20260609-final">
-  /* 1. MENGUNCI WRAPPER KONTEN: Mengaktifkan flex agar sisa ruang kosong bisa dibuang ke dasar card */
-  #view-hpp .hpp-card-dash > div:last-child {
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: flex-start !important;
-      height: 100% !important;
+  /* 1. MENGUNCI WRAPPER KONTEN: hanya Packing & Chemical agar sisa ruang kosong dibuang ke dasar card */
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] > div:last-child,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] > div:last-child,
+  #view-hpp .hpp-card-dash:has(#dash-card-packing) > div:last-child,
+  #view-hpp .hpp-card-dash:has(#dash-card-bahan) > div:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    height: 100% !important;
+    min-height: 0 !important;
   }
 
-  /* 2. KOMPENSASI MARGIN: Memeluk teks nominal dengan presisi hyper-premium */
+  /* 2. KOMPENSASI MARGIN: Memeluk teks nominal Packing & Chemical dengan presisi hyper-premium */
   #view-hpp #dash-card-packing-details,
   #view-hpp #dash-card-bahan-details,
-  #view-hpp #dash-card-nota-details,
   #view-hpp .zett-packing-card-details,
-  #view-hpp .zett-bahan-card-details,
-  #view-hpp .zett-nota-card-details {
-      /* Dikunci ke 0px (bukan 16px) karena teks Rp 0 sudah memiliki margin bawah 0.72rem */
-      margin-top: 0px !important;
-      margin-bottom: auto !important;
-      flex: 0 0 auto !important;
-      align-self: stretch !important;
+  #view-hpp .zett-bahan-card-details {
+    margin-top: 0 !important;
+    margin-bottom: auto !important;
+    padding-top: 0 !important;
+    flex: 0 0 auto !important;
+    align-self: stretch !important;
+    transform: none !important;
+  }
+
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] #dash-card-packing,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] #dash-card-bahan,
+  #view-hpp .hpp-card-dash:has(#dash-card-packing) #dash-card-packing,
+  #view-hpp .hpp-card-dash:has(#dash-card-bahan) #dash-card-bahan {
+    margin-bottom: 0.72rem !important;
   }
 </style>
