@@ -11329,6 +11329,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         detail.className = 'hpp-premium-lite-details';
         valueEl.insertAdjacentElement('afterend', detail);
       }
+      if (detail) detail.innerHTML = '';
       const data = adminNotaBreakdown();
       const nextValue = money(data.total);
       const previousSignature = card ? card.__zettAdminNotaSignature : '';
