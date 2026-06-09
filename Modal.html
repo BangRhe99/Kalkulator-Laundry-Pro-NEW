@@ -12696,45 +12696,26 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   }
 </style>
 
-<style id="zett-hpp-lower-card-detail-gap-hard-lock-20260609">
-  /* Final visual lock: override dynamic inline margin injected by zettSyncHPPDetailGapFromElectric(). */
-  body #view-hpp #dash-card-packing-details,
-  body #view-hpp #dash-card-bahan-details,
-  body #view-hpp #dash-card-nota-details,
-  body #view-hpp .zett-packing-card-details,
-  body #view-hpp .zett-bahan-card-details,
-  body #view-hpp .zett-nota-card-details {
-    margin-top: 16px !important;
-    margin-bottom: auto !important;
-    align-self: stretch !important;
-    flex: 0 0 auto !important;
+<style id="zett-hpp-lower-card-detail-gap-hard-lock-20260609-final">
+  /* 1. MENGUNCI WRAPPER KONTEN: Mengaktifkan flex agar sisa ruang kosong bisa dibuang ke dasar card */
+  #view-hpp .hpp-card-dash > div:last-child {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: flex-start !important;
+      height: 100% !important;
   }
 
-  body #view-hpp #dash-card-packing-details.hpp-card-breakdown,
-  body #view-hpp #dash-card-bahan-details.hpp-card-breakdown,
-  body #view-hpp #dash-card-nota-details.hpp-card-breakdown {
-    margin-top: 16px !important;
-    margin-bottom: auto !important;
-  }
-
-  body #view-hpp #dash-card-packing-details > .hpp-card-row:first-child,
-  body #view-hpp #dash-card-bahan-details > .hpp-card-row:first-child,
-  body #view-hpp #dash-card-nota-details > .hpp-card-row:first-child,
-  body #view-hpp .zett-packing-card-details > .hpp-card-row:first-child,
-  body #view-hpp .zett-bahan-card-details > .hpp-card-row:first-child,
-  body #view-hpp .zett-nota-card-details > .hpp-card-row:first-child {
-    margin-top: 0 !important;
-  }
-
-  @media (max-width: 767px) {
-    body #view-hpp #dash-card-packing-details,
-    body #view-hpp #dash-card-bahan-details,
-    body #view-hpp #dash-card-nota-details,
-    body #view-hpp .zett-packing-card-details,
-    body #view-hpp .zett-bahan-card-details,
-    body #view-hpp .zett-nota-card-details {
-      margin-top: 14px !important;
+  /* 2. KOMPENSASI MARGIN: Memeluk teks nominal dengan presisi hyper-premium */
+  #view-hpp #dash-card-packing-details,
+  #view-hpp #dash-card-bahan-details,
+  #view-hpp #dash-card-nota-details,
+  #view-hpp .zett-packing-card-details,
+  #view-hpp .zett-bahan-card-details,
+  #view-hpp .zett-nota-card-details {
+      /* Dikunci ke 0px (bukan 16px) karena teks Rp 0 sudah memiliki margin bawah 0.72rem */
+      margin-top: 0px !important;
       margin-bottom: auto !important;
-    }
+      flex: 0 0 auto !important;
+      align-self: stretch !important;
   }
 </style>
