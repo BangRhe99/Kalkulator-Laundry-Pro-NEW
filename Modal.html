@@ -3294,6 +3294,55 @@
   })();
 </script>
 
+<style id="zett-hpp-universal-card-details-style">
+  #view-hpp .zett-hpp-card-details {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    width: 100% !important;
+    margin-top: 6px !important;
+    text-align: left !important;
+  }
+
+  #view-hpp .zett-hpp-card-details > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-height: 22px !important;
+    padding: 0 8px !important;
+    border-radius: 999px !important;
+    background: rgba(248, 250, 252, 0.82) !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp .zett-hpp-card-details span {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    color: #64748B !important;
+    font-size: 10.5px !important;
+    line-height: 1 !important;
+    font-weight: 650 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #view-hpp .zett-hpp-card-details strong {
+    flex: 0 0 auto !important;
+    margin-left: 8px !important;
+    color: #111827 !important;
+    font-size: 10.5px !important;
+    line-height: 1 !important;
+    font-weight: 850 !important;
+    white-space: nowrap !important;
+  }
+</style>
+
 <style id="zett-hpp-mobile-premium-final-20260515">
   @media (max-width: 767px) {
     html,
@@ -5660,9 +5709,9 @@
       });
 
       updateDonut(total, values);
-      if (typeof window.zettRenderElectricCard === 'function') {
+      if (typeof window.zettRenderAllHPPCardDetails === 'function') {
         window.requestAnimationFrame(function() {
-          if (!window.__zettElectricRendering) window.zettRenderElectricCard();
+          window.zettRenderAllHPPCardDetails();
         });
       }
       } catch (error) {
@@ -6119,6 +6168,9 @@
       totalPacking += solasiPerKg;
 
       syncPackingTotal(totalPacking);
+      if (typeof window.zettRenderAllHPPCardDetails === 'function') {
+        requestAnimationFrame(function() { window.zettRenderAllHPPCardDetails(); });
+      }
       if (!window.__HPP_PACKING_CALC_LOCK__) {
         window.__HPP_PACKING_CALC_LOCK__ = true;
         try {
@@ -6790,6 +6842,9 @@
         window.__zettChemicalDashboardLoad = 0;
         window.__zettChemicalDashboardKg = 0;
         if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('bahan', 0);
+        if (typeof window.zettRenderAllHPPCardDetails === 'function') {
+          requestAnimationFrame(function() { window.zettRenderAllHPPCardDetails(); });
+        }
         return { totalLoad: 0, totalKg: 0, active: false };
       }
       const cap = kapCuci();
@@ -6819,6 +6874,9 @@
       window.__zettChemicalDashboardLoad = totalLoad;
       window.__zettChemicalDashboardKg = totalKg;
       if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('bahan', totalKg);
+      if (typeof window.zettRenderAllHPPCardDetails === 'function') {
+        requestAnimationFrame(function() { window.zettRenderAllHPPCardDetails(); });
+      }
       return { totalLoad, totalKg, active: hasActiveChemical };
     };
     document.addEventListener('DOMContentLoaded', function() {
@@ -6921,6 +6979,141 @@ function zettListrikDebugLog(label, data) {
     window.console.log('[HPP LISTRIK] ' + label, data || {});
   }
 }
+function ensureHPPCardDetailContainer(type) {
+  const valueEl = document.getElementById('dash-card-' + type);
+  if (!valueEl) return null;
+  const id = 'dash-card-' + type + '-details';
+  let detail = document.getElementById(id);
+  if (!detail) {
+    const card = valueEl.closest('.hpp-card-dash');
+    detail = card ? card.querySelector('.zett-' + type + '-card-details, .hpp-premium-lite-details') : null;
+    if (!detail) {
+      detail = document.createElement('div');
+      const pctEl = document.getElementById('dash-card-' + type + '-pct');
+      if (pctEl && pctEl.parentElement) pctEl.insertAdjacentElement('afterend', detail);
+      else valueEl.insertAdjacentElement('afterend', detail);
+    }
+    detail.id = id;
+  }
+  detail.classList.add('zett-hpp-card-details', 'zett-' + type + '-card-details');
+  return detail;
+}
+
+function renderHPPCardDetails(type, metrics) {
+  const detail = ensureHPPCardDetailContainer(type);
+  if (!detail) return;
+  const money = function(value) {
+    const n = Math.round(Number(value) || 0);
+    if (typeof formatRupiah === 'function') return formatRupiah(n);
+    return 'Rp ' + n.toLocaleString('id-ID');
+  };
+  const rows = (metrics || [])
+    .filter(item => String(item.label || '').trim())
+    .map(item => '<div><span>' + item.label + '</span><strong>' + money(item.value) + '</strong></div>')
+    .join('');
+  detail.innerHTML = rows || '<div><span>Belum ada detail</span><strong>Rp 0</strong></div>';
+}
+
+function zettHPPDetailNumber_(value) {
+  if (typeof zettCleanNumber === 'function') return zettCleanNumber(value);
+  return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
+}
+
+function zettHPPActiveRow_() {
+  return typeof zettFindActiveHPPRow === 'function' ? (zettFindActiveHPPRow() || {}) : {};
+}
+
+function zettHPPDetailIsZero_() {
+  return typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_();
+}
+
+function zettGetPackingCardMetrics() {
+  const zero = zettHPPDetailIsZero_();
+  const row = zero ? {} : zettHPPActiveRow_();
+  const val = function(domId, keys) {
+    if (zero) return 0;
+    const domValue = zettHPPDetailNumber_(document.getElementById(domId)?.textContent || '');
+    if (domValue > 0) return domValue;
+    for (let i = 0; i < keys.length; i++) {
+      const value = zettHPPDetailNumber_(row[keys[i]]);
+      if (value > 0) return value;
+    }
+    return 0;
+  };
+  return [
+    { label: 'Plastik PP /Kg', value: val('dispPackingPPKg', ['PP Biaya/Kg (Rp)', 'Packing_PP_PerKg']) },
+    { label: 'Plastik HD /Kg', value: val('dispPackingHDKg', ['HD Biaya/Kg (Rp)', 'Packing_HD_PerKg']) },
+    { label: 'Plastik Jinjing /Kg', value: val('dispPackingJinjingKg', ['Jinjing Biaya/Kg (Rp)', 'Packing_Jinjing_PerKg']) },
+    { label: 'Solasi /Kg', value: val('dispPackingSolasiKg', ['Solasi Biaya/Kg (Rp)', 'Packing_Solasi_PerKg']) },
+    { label: 'Total Packing /Kg', value: val('dash-card-packing', ['Total Biaya Packing/Kg (Rp)', 'Total Biaya Packing', 'Packing Per Kg']) }
+  ];
+}
+
+function zettGetChemicalCardMetrics() {
+  const zero = zettHPPDetailIsZero_();
+  const row = zero ? {} : zettHPPActiveRow_();
+  const val = function(domId, keys) {
+    if (zero) return 0;
+    const domValue = zettHPPDetailNumber_(document.getElementById(domId)?.textContent || '');
+    if (domValue > 0) return domValue;
+    for (let i = 0; i < keys.length; i++) {
+      const value = zettHPPDetailNumber_(row[keys[i]]);
+      if (value > 0) return value;
+    }
+    return 0;
+  };
+  return [
+    { label: 'Deterjen /Load', value: val('dispDetCostLoad', ['Estimasi Deterjen Per Load']) },
+    { label: 'Softener /Load', value: val('dispSofCostLoad', ['Estimasi Softener Per Load']) },
+    { label: 'Pewangi /Load', value: val('dispParCostLoad', ['Estimasi Pewangi Per Load']) },
+    { label: 'Pelicin /Load', value: val('dispPelCostLoad', ['Estimasi Pelicin Setrika Per Load']) },
+    { label: 'Total Chemical /Load', value: zero ? 0 : (zettHPPDetailNumber_(window.__zettChemicalDashboardLoad) || zettHPPDetailNumber_(row['Chemical Cuci Per Load']) || val('displayBiayaBahanTotalKg', ['Chemical Cuci Per Kg', 'chemical_cost'])) }
+  ];
+}
+
+function zettGetAdminNotaCardMetrics() {
+  const zero = zettHPPDetailIsZero_();
+  const row = zero ? {} : zettHPPActiveRow_();
+  const val = function(domId, keys) {
+    if (zero) return 0;
+    const domValue = zettHPPDetailNumber_(document.getElementById(domId)?.textContent || '');
+    if (domValue > 0) return domValue;
+    for (let i = 0; i < keys.length; i++) {
+      const value = zettHPPDetailNumber_(row[keys[i]]);
+      if (value > 0) return value;
+    }
+    return 0;
+  };
+  const apps = val('dispNotaAppLoad', ['HPP Aplikasi Per Load', 'Transaksi Apps Per Load', 'Kasir Per Order']);
+  const nota = val('dispNotaCostTrx', ['HPP Nota Transaksi Per Load', 'Nota Transaksi Per Load', 'Nota Per Order']);
+  return [
+    { label: 'Transaksi Apps /Load', value: apps },
+    { label: 'Nota Transaksi /Load', value: nota },
+    { label: 'Total Admin/Nota /Load', value: val('dash-card-nota', ['Admin Nota Kasir Per Load', 'Admin/Nota Per Load', 'Admin Nota Kasir Per Order']) || apps + nota }
+  ];
+}
+
+function zettRenderAllHPPCardDetails() {
+  if (window.__zettHPPAllDetailsRendering) return;
+  window.__zettHPPAllDetailsRendering = true;
+  try {
+    if (typeof window.zettRenderGasLpgCard === 'function') window.zettRenderGasLpgCard();
+    if (typeof window.zettRenderElectricCard === 'function') window.zettRenderElectricCard();
+    if (typeof window.zettRenderWaterCard === 'function') window.zettRenderWaterCard();
+    renderHPPCardDetails('packing', zettGetPackingCardMetrics());
+    renderHPPCardDetails('bahan', zettGetChemicalCardMetrics());
+    renderHPPCardDetails('nota', zettGetAdminNotaCardMetrics());
+  } finally {
+    window.__zettHPPAllDetailsRendering = false;
+  }
+}
+
+window.ensureHPPCardDetailContainer = ensureHPPCardDetailContainer;
+window.renderHPPCardDetails = renderHPPCardDetails;
+window.zettGetPackingCardMetrics = zettGetPackingCardMetrics;
+window.zettGetChemicalCardMetrics = zettGetChemicalCardMetrics;
+window.zettGetAdminNotaCardMetrics = zettGetAdminNotaCardMetrics;
+window.zettRenderAllHPPCardDetails = zettRenderAllHPPCardDetails;
 function zettStepDebugLog(label, data) {
   if ((window.ZETT_DEBUG_GAS || window.ZETT_DEBUG_LISTRIK) && window.console && typeof window.console.log === 'function') {
     window.console.log('[HPP STEP] ' + label, data || {});
@@ -7336,7 +7529,6 @@ window.saveGasHPPData = function(event) {
       const c = zettGetGasUsageContext();
       const card = byId('hpp-card-gas-wrap') || byId('dash-card-gas')?.closest('.hpp-card-dash');
       const toggle = byId('toggleGasManualHPP');
-      const detail = byId('dash-card-gas-details');
       const valueEl = byId('dash-card-gas');
       const dashboardValue = zettGetGasDashboardValue();
       zettGasDebugLog('card render source', {
@@ -7357,11 +7549,11 @@ window.saveGasHPPData = function(event) {
         card.style.opacity = '';
         card.style.filter = '';
       }
-      if (detail) {
-        const metrics = getVisibleGasMetrics(c).filter(item => String(item.label || '').trim());
-        detail.innerHTML = c.gasActive
-          ? metrics.map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`).join('')
-          : '<div><span>Gas tidak dihitung</span><strong>Rp 0</strong></div>';
+      if (typeof window.renderHPPCardDetails === 'function') {
+        const metrics = c.gasActive
+          ? getVisibleGasMetrics(c)
+          : [{ label: 'Gas tidak dihitung', value: 0 }];
+        window.renderHPPCardDetails('gas', metrics);
       }
       if (valueEl) valueEl.textContent = rupiah(dashboardValue);
       if (typeof window.zettHPPSetStateValue === 'function') {
@@ -7677,23 +7869,10 @@ window.saveGasHPPData = function(event) {
   }
 
   function ensureElectricCardDetailContainer() {
-    const valueEl = byId('dash-card-listrik');
-    if (!valueEl) return null;
-
-    let detail = byId('dash-card-listrik-details');
-    if (detail) return detail;
-
-    detail = document.createElement('div');
-    detail.id = 'dash-card-listrik-details';
-    detail.className = 'zett-electric-card-details';
-
-    const pctEl = byId('dash-card-listrik-pct');
-    if (pctEl && pctEl.parentElement) {
-      pctEl.insertAdjacentElement('afterend', detail);
-    } else {
-      valueEl.insertAdjacentElement('afterend', detail);
+    if (typeof window.ensureHPPCardDetailContainer === 'function') {
+      return window.ensureHPPCardDetailContainer('listrik');
     }
-    return detail;
+    return byId('dash-card-listrik-details');
   }
 
   function zettRenderElectricCard() {
@@ -7724,14 +7903,9 @@ window.saveGasHPPData = function(event) {
         value
       });
       const valueEl = byId('dash-card-listrik');
-      const detail = ensureElectricCardDetailContainer();
       if (valueEl) valueEl.textContent = rupiah(value);
-      if (detail) {
-        detail.innerHTML = metrics
-          .filter(item => String(item.label || '').trim())
-          .map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`)
-          .join('');
-      }
+      if (typeof window.renderHPPCardDetails === 'function') window.renderHPPCardDetails('listrik', metrics);
+      const detail = ensureElectricCardDetailContainer();
       console.log('[HPP LISTRIK FINAL RENDER]', {
         outlet: outletName(),
         value,
@@ -8289,15 +8463,12 @@ window.saveGasHPPData = function(event) {
   }
 
   function zettRenderWaterCard() {
-    const detail = byId('dash-card-air-details');
     const valueEl = byId('dash-card-air');
     const shouldZero = typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_();
     const metrics = zettGetVisibleWaterMetrics().filter(item => String(item.label || '').trim());
     const value = shouldZero ? 0 : zettGetWaterDashboardValue();
     if (valueEl) valueEl.textContent = rupiah(value);
-    if (detail) {
-      detail.innerHTML = metrics.map(item => `<div><span>${item.label}</span><strong>${rupiah(item.value)}</strong></div>`).join('');
-    }
+    if (typeof window.renderHPPCardDetails === 'function') window.renderHPPCardDetails('air', metrics);
     if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('air', value);
   }
 
@@ -8779,6 +8950,11 @@ function zettRunHPPCalculationAfterSync() {
     function() { if (typeof calculateBahanBaku === 'function') calculateBahanBaku(); },
     function() { if (typeof toggleNotaInputs === 'function') toggleNotaInputs(); },
     function() { if (typeof calculateNota === 'function') calculateNota(); },
+    function() {
+      if (typeof window.zettRenderAllHPPCardDetails === 'function') {
+        window.requestAnimationFrame(function() { window.zettRenderAllHPPCardDetails(); });
+      }
+    },
     function() {
       if (
         typeof window.HPPStateMachine !== 'undefined' &&
@@ -10711,7 +10887,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
         const valueEl = byId('dash-card-' + item.key);
         const card = valueEl ? valueEl.closest('.hpp-card-dash') : null;
         const detail = card ? card.querySelector('.hpp-premium-lite-details') : null;
-        if (detail && item.key !== 'nota' && item.key !== 'listrik') {
+        if (detail && item.key !== 'nota' && item.key !== 'listrik' && item.key !== 'packing' && item.key !== 'bahan') {
           const nextDetailHtml = '<div><span>Biaya /Kg</span><strong>' + formatMoney(value) + '</strong></div>';
           if (detail.innerHTML !== nextDetailHtml) detail.innerHTML = nextDetailHtml;
         }
@@ -12105,11 +12281,17 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       if (card) card.__zettAdminNotaSignature = nextSignature;
       if (valueEl.textContent !== nextValue) valueEl.textContent = nextValue;
       if (card) card.classList.toggle('is-admin-nota-zero-state', data.source === 'zero');
-      if (detail) {
-        const nextDetail = [
-          '<div><span>Transaksi Apps /Load</span><strong>' + money(data.apps) + '</strong></div>',
-          '<div><span>Nota Transaksi /Load</span><strong>' + money(data.nota) + '</strong></div>'
-        ].join('');
+      const metrics = [
+        { label: 'Transaksi Apps /Load', value: data.apps },
+        { label: 'Nota Transaksi /Load', value: data.nota },
+        { label: 'Total Admin/Nota /Load', value: data.total }
+      ];
+      if (typeof window.renderHPPCardDetails === 'function') {
+        window.renderHPPCardDetails('nota', metrics);
+      } else if (detail) {
+        const nextDetail = metrics
+          .map(item => '<div><span>' + item.label + '</span><strong>' + money(item.value) + '</strong></div>')
+          .join('');
         if (detail.innerHTML !== nextDetail) detail.innerHTML = nextDetail;
       }
       const pctEl = byId('dash-card-nota-pct');
