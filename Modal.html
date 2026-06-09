@@ -7146,6 +7146,14 @@ function ensureHPPCardDetailContainer(type) {
     detail = card ? card.querySelector('.zett-' + type + '-card-details, .hpp-premium-lite-details') : null;
     if (!detail) {
       zettRemoveOldHPPDetailContainers_(type, card, null);
+      if (type === 'packing') {
+        let oldPacking = document.getElementById('dash-card-packing-details');
+        if (oldPacking) oldPacking.remove();
+      }
+      if (type === 'bahan') {
+        let oldChemical = document.getElementById('dash-card-bahan-details');
+        if (oldChemical) oldChemical.remove();
+      }
       detail = document.createElement('div');
       const pctEl = document.getElementById('dash-card-' + type + '-pct');
       if (!shouldAttachAfterValue && pctEl && pctEl.parentElement) pctEl.insertAdjacentElement('afterend', detail);
