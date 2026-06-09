@@ -12697,47 +12697,97 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 </style>
 
 <style id="zett-hpp-lower-card-detail-gap-hard-lock-20260609-final">
-  /* 1. MENGUNCI WRAPPER KONTEN: hanya Packing & Chemical agar sisa ruang kosong dibuang ke dasar card */
-  #view-hpp .hpp-card-dash[data-hpp-type="packing"] > div:last-child,
-  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] > div:last-child,
-  #view-hpp .hpp-card-dash:has(#dash-card-packing) > div:last-child,
-  #view-hpp .hpp-card-dash:has(#dash-card-bahan) > div:last-child {
+  /* Final lock: Packing & Chemical detail harus menempel ke nominal, sisa ruang turun ke bawah card. */
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"],
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"],
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"],
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] {
+    position: relative !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
-    height: 100% !important;
-    min-height: 0 !important;
+    overflow: hidden !important;
   }
 
-  /* 2. KOMPENSASI MARGIN: Memeluk teks nominal Packing & Chemical dengan presisi hyper-premium */
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] > div:not([class*="w-10"]):not([class*="w-12"]),
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] > div:not([class*="w-10"]):not([class*="w-12"]),
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] > div:not([class*="w-10"]):not([class*="w-12"]),
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] > div:not([class*="w-10"]):not([class*="w-12"]) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    margin-bottom: auto !important;
+    position: relative !important;
+    z-index: 3 !important;
+  }
+
   #view-hpp #dash-card-packing-details,
   #view-hpp #dash-card-bahan-details,
   #view-hpp .zett-packing-card-details,
   #view-hpp .zett-bahan-card-details {
+    position: static !important;
+    z-index: 3 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
     margin-top: 0 !important;
-    margin-bottom: auto !important;
+    margin-bottom: 0 !important;
     padding-top: 0 !important;
     flex: 0 0 auto !important;
     flex-grow: 0 !important;
     flex-shrink: 0 !important;
     align-self: stretch !important;
-    position: relative !important;
-    top: -42px !important;
     transform: none !important;
+    gap: 2px !important;
   }
 
   #view-hpp .hpp-card-dash[data-hpp-type="packing"] #dash-card-packing,
   #view-hpp .hpp-card-dash[data-hpp-type="bahan"] #dash-card-bahan,
-  #view-hpp .hpp-card-dash:has(#dash-card-packing) #dash-card-packing,
-  #view-hpp .hpp-card-dash:has(#dash-card-bahan) #dash-card-bahan {
-    margin-bottom: 0.38rem !important;
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] #dash-card-packing,
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] #dash-card-bahan {
+    margin-bottom: 6px !important;
+  }
+
+  #view-hpp #dash-card-packing-details > .hpp-card-row,
+  #view-hpp #dash-card-bahan-details > .hpp-card-row,
+  #view-hpp .zett-packing-card-details > .hpp-card-row,
+  #view-hpp .zett-bahan-card-details > .hpp-card-row {
+    min-height: 13px !important;
+    line-height: 1.12 !important;
+  }
+
+  #view-hpp #dash-card-packing-details .hpp-card-label,
+  #view-hpp #dash-card-packing-details .hpp-card-amount,
+  #view-hpp #dash-card-bahan-details .hpp-card-label,
+  #view-hpp #dash-card-bahan-details .hpp-card-amount,
+  #view-hpp .zett-packing-card-details .hpp-card-label,
+  #view-hpp .zett-packing-card-details .hpp-card-amount,
+  #view-hpp .zett-bahan-card-details .hpp-card-label,
+  #view-hpp .zett-bahan-card-details .hpp-card-amount {
+    font-size: 9.5px !important;
+    line-height: 1.12 !important;
   }
 
   #view-hpp .hpp-card-dash[data-hpp-type="packing"] .hpp-show-detail,
   #view-hpp .hpp-card-dash[data-hpp-type="bahan"] .hpp-show-detail,
-  #view-hpp .hpp-card-dash:has(#dash-card-packing) .hpp-show-detail,
-  #view-hpp .hpp-card-dash:has(#dash-card-bahan) .hpp-show-detail {
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] .hpp-show-detail,
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] .hpp-show-detail {
     margin-top: 0 !important;
     padding-top: 0 !important;
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp #dash-card-packing-details,
+    #view-hpp #dash-card-bahan-details,
+    #view-hpp .zett-packing-card-details,
+    #view-hpp .zett-bahan-card-details {
+      margin-top: 0 !important;
+    }
   }
 </style>
