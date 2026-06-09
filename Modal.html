@@ -7127,6 +7127,14 @@ function zettListrikDebugLog(label, data) {
     window.console.log('[HPP LISTRIK] ' + label, data || {});
   }
 }
+
+function zettRemoveOldHPPDetailContainers_(type, card, keep) {
+  if (!card || !['packing', 'bahan', 'nota'].includes(type)) return;
+  card.querySelectorAll('#dash-card-' + type + '-details, .zett-' + type + '-card-details, .hpp-premium-lite-details').forEach(function(node) {
+    if (node !== keep) node.remove();
+  });
+}
+
 function ensureHPPCardDetailContainer(type) {
   const valueEl = document.getElementById('dash-card-' + type);
   if (!valueEl) return null;
@@ -7137,6 +7145,7 @@ function ensureHPPCardDetailContainer(type) {
     const card = valueEl.closest('.hpp-card-dash');
     detail = card ? card.querySelector('.zett-' + type + '-card-details, .hpp-premium-lite-details') : null;
     if (!detail) {
+      zettRemoveOldHPPDetailContainers_(type, card, null);
       detail = document.createElement('div');
       const pctEl = document.getElementById('dash-card-' + type + '-pct');
       if (!shouldAttachAfterValue && pctEl && pctEl.parentElement) pctEl.insertAdjacentElement('afterend', detail);
@@ -7144,6 +7153,7 @@ function ensureHPPCardDetailContainer(type) {
     }
     detail.id = id;
   }
+  zettRemoveOldHPPDetailContainers_(type, valueEl.closest('.hpp-card-dash'), detail);
   detail.classList.add('zett-hpp-card-details', 'zett-' + type + '-card-details');
   if (shouldAttachAfterValue && detail.previousElementSibling !== valueEl) {
     valueEl.insertAdjacentElement('afterend', detail);
@@ -11324,6 +11334,7 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       const card = valueEl.closest('.hpp-card-dash');
       let detail = byId('dash-card-nota-details');
       if (!detail && card) {
+        if (typeof zettRemoveOldHPPDetailContainers_ === 'function') zettRemoveOldHPPDetailContainers_('nota', card, null);
         detail = document.createElement('div');
         detail.id = 'dash-card-nota-details';
         detail.className = 'hpp-premium-lite-details';
