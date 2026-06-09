@@ -4851,11 +4851,14 @@
   #view-hpp #dash-card-packing-details,
   #view-hpp #dash-card-bahan-details,
   #view-hpp #dash-card-nota-details {
-    margin-top: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    margin-top: 10px !important;
     padding: 0 !important;
     gap: 4px !important;
-    transform: translateY(-28px) !important;
-    position: relative !important;
+    position: static !important;
+    transform: none !important;
     background: transparent !important;
     border: 0 !important;
     box-shadow: none !important;
@@ -4880,6 +4883,8 @@
   #view-hpp #dash-card-packing-details span,
   #view-hpp #dash-card-bahan-details span,
   #view-hpp #dash-card-nota-details span {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     color: #475569 !important;
     font-size: 10.5px !important;
     line-height: 1.15 !important;
@@ -4892,6 +4897,7 @@
   #view-hpp #dash-card-packing-details strong,
   #view-hpp #dash-card-bahan-details strong,
   #view-hpp #dash-card-nota-details strong {
+    flex: 0 0 auto !important;
     color: #0F172A !important;
     font-size: 10.5px !important;
     line-height: 1.15 !important;
@@ -7129,6 +7135,35 @@ function ensureHPPCardDetailContainer(type) {
   return detail;
 }
 
+function zettDedupeMetricsByLabel(metrics) {
+  const seen = new Set();
+  return (metrics || []).filter(function(item) {
+    const key = String(item && item.label || '').trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function zettSyncHPPDetailGapFromElectric() {
+  const electricValue = document.getElementById('dash-card-listrik');
+  const electricDetail = document.getElementById('dash-card-listrik-details');
+  const firstElectricRow = electricDetail ? electricDetail.querySelector('div') : null;
+  if (!electricValue || !firstElectricRow) return;
+
+  const targetGap = Math.max(
+    6,
+    Math.round(firstElectricRow.getBoundingClientRect().top - electricValue.getBoundingClientRect().bottom)
+  );
+
+  ['packing', 'bahan', 'nota'].forEach(function(type) {
+    const detail = document.getElementById('dash-card-' + type + '-details');
+    if (!detail) return;
+    detail.style.transform = 'none';
+    detail.style.marginTop = targetGap + 'px';
+  });
+}
+
 function renderHPPCardDetails(type, metrics) {
   const detail = ensureHPPCardDetailContainer(type);
   if (!detail) return;
@@ -7137,11 +7172,18 @@ function renderHPPCardDetails(type, metrics) {
     if (typeof formatRupiah === 'function') return formatRupiah(n);
     return 'Rp ' + n.toLocaleString('id-ID');
   };
-  const rows = (metrics || [])
+  const cleanMetrics = type === 'nota' ? zettDedupeMetricsByLabel(metrics) : (metrics || []);
+  const rows = cleanMetrics
     .filter(item => String(item.label || '').trim())
     .map(item => '<div><span>' + item.label + '</span><strong>' + money(item.value) + '</strong></div>')
     .join('');
+  detail.innerHTML = '';
   detail.innerHTML = rows || '<div><span>Belum ada detail</span><strong>Rp 0</strong></div>';
+  if (['packing', 'bahan', 'nota'].includes(type)) {
+    requestAnimationFrame(function() {
+      zettSyncHPPDetailGapFromElectric();
+    });
+  }
 }
 
 function zettHPPDetailNumber_(value) {
