@@ -3345,20 +3345,28 @@
   #view-hpp .zett-packing-card-details,
   #view-hpp .zett-bahan-card-details,
   #view-hpp .zett-nota-card-details {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
     gap: 4px !important;
-    margin-top: 8px !important;
-    margin-bottom: -6px !important;
+    margin-top: 6px !important;
+    margin-bottom: 0 !important;
     padding: 0 !important;
+    position: static !important;
     background: transparent !important;
     border: 0 !important;
     box-shadow: none !important;
-    transform: translateY(-6px) !important;
+    transform: none !important;
   }
 
   #view-hpp .zett-packing-card-details > div,
   #view-hpp .zett-bahan-card-details > div,
   #view-hpp .zett-nota-card-details > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     gap: 10px !important;
+    width: 100% !important;
     min-height: 14px !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -3371,20 +3379,36 @@
   #view-hpp .zett-packing-card-details span,
   #view-hpp .zett-bahan-card-details span,
   #view-hpp .zett-nota-card-details span {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     color: #475569 !important;
     font-size: 10.5px !important;
     line-height: 1.15 !important;
     font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   #view-hpp .zett-packing-card-details strong,
   #view-hpp .zett-bahan-card-details strong,
   #view-hpp .zett-nota-card-details strong {
+    flex: 0 0 auto !important;
     margin-left: 0 !important;
     color: #0F172A !important;
     font-size: 10.5px !important;
     line-height: 1.15 !important;
     text-align: right !important;
+  }
+
+  #view-hpp .zett-bahan-card-details {
+    gap: 3px !important;
+  }
+
+  #view-hpp .zett-bahan-card-details span,
+  #view-hpp .zett-bahan-card-details strong {
+    font-size: 10px !important;
+    line-height: 1.1 !important;
   }
 </style>
 
@@ -7031,6 +7055,7 @@ function ensureHPPCardDetailContainer(type) {
   const valueEl = document.getElementById('dash-card-' + type);
   if (!valueEl) return null;
   const id = 'dash-card-' + type + '-details';
+  const shouldAttachAfterValue = ['packing', 'bahan', 'nota'].includes(type);
   let detail = document.getElementById(id);
   if (!detail) {
     const card = valueEl.closest('.hpp-card-dash');
@@ -7038,12 +7063,15 @@ function ensureHPPCardDetailContainer(type) {
     if (!detail) {
       detail = document.createElement('div');
       const pctEl = document.getElementById('dash-card-' + type + '-pct');
-      if (pctEl && pctEl.parentElement) pctEl.insertAdjacentElement('afterend', detail);
+      if (!shouldAttachAfterValue && pctEl && pctEl.parentElement) pctEl.insertAdjacentElement('afterend', detail);
       else valueEl.insertAdjacentElement('afterend', detail);
     }
     detail.id = id;
   }
   detail.classList.add('zett-hpp-card-details', 'zett-' + type + '-card-details');
+  if (shouldAttachAfterValue && detail.previousElementSibling !== valueEl) {
+    valueEl.insertAdjacentElement('afterend', detail);
+  }
   return detail;
 }
 
