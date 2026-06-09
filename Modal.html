@@ -7152,8 +7152,8 @@ function zettSyncHPPDetailGapFromElectric() {
   if (!electricValue || !firstElectricRow) return;
 
   const targetGap = Math.max(
-    6,
-    Math.round(firstElectricRow.getBoundingClientRect().top - electricValue.getBoundingClientRect().bottom)
+    2,
+    Math.round(firstElectricRow.getBoundingClientRect().top - electricValue.getBoundingClientRect().bottom) - 4
   );
 
   ['packing', 'bahan', 'nota'].forEach(function(type) {
@@ -7172,7 +7172,15 @@ function renderHPPCardDetails(type, metrics) {
     if (typeof formatRupiah === 'function') return formatRupiah(n);
     return 'Rp ' + n.toLocaleString('id-ID');
   };
-  const cleanMetrics = type === 'nota' ? zettDedupeMetricsByLabel(metrics) : (metrics || []);
+  const cleanMetrics = type === 'nota'
+    ? zettDedupeMetricsByLabel(metrics).filter(function(item) {
+      return [
+        'transaksi apps /load',
+        'nota transaksi /load',
+        'total admin/nota /load'
+      ].includes(String(item.label || '').trim().toLowerCase());
+    }).slice(0, 3)
+    : (metrics || []);
   const rows = cleanMetrics
     .filter(item => String(item.label || '').trim())
     .map(item => '<div><span>' + item.label + '</span><strong>' + money(item.value) + '</strong></div>')
