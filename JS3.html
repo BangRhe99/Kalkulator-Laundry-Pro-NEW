@@ -464,6 +464,9 @@
       '.exec-kpi-head{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--dash-muted);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;}',
       '.exec-icon{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;background:#eff6ff;color:#2563eb;font-size:18px;}',
       '.exec-kpi-value{font-size:clamp(24px,2vw,34px);font-weight:900;line-height:1.05;color:#0f172a;}',
+      '.exec-kpi-value.has-unit{display:flex;align-items:baseline;gap:clamp(4px,.45vw,7px);flex-wrap:nowrap;white-space:nowrap;letter-spacing:-.035em;}',
+      '.exec-kpi-main{flex:0 1 auto;min-width:0;}',
+      '.exec-kpi-unit{flex:0 0 auto;font-size:clamp(12px,.95vw,15px);font-weight:750;line-height:1;letter-spacing:-.015em;color:rgba(15,23,42,.72);white-space:nowrap;}',
       '.exec-caption{font-size:13px;color:var(--dash-muted);line-height:1.35;font-weight:650;}',
       '.exec-main-grid{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:18px;}',
       '.exec-bottom-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;}',
@@ -501,6 +504,7 @@
       '.exec-kpi-head{font-size:11px;letter-spacing:.075em;color:#64748b;}',
       '.exec-icon{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,#eff6ff,#f8fafc);color:#1d4ed8;border:1px solid rgba(37,99,235,.1);box-shadow:0 10px 22px rgba(37,99,235,.08);}',
       '.exec-kpi-value{font-size:clamp(23px,1.9vw,31px);line-height:1.12;letter-spacing:-.025em;overflow-wrap:anywhere;}',
+      '.exec-kpi-value.has-unit{font-size:clamp(23px,1.9vw,31px);overflow-wrap:normal;}',
       '.exec-caption{font-size:12.5px;color:#64748b;line-height:1.45;}',
       '.exec-main-grid,.exec-bottom-grid{gap:20px;}',
       '.exec-card{padding:clamp(18px,1.45vw,24px);min-width:0;}',
@@ -528,7 +532,7 @@
       '.exec-footer{padding:2px 4px;color:#64748b;}',
       '@media(max-width:1380px){.exec-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr));}.exec-main-grid{grid-template-columns:1.15fr 1fr;}.exec-health-card{grid-column:1/-1;}.exec-bottom-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}',
       '@media(max-width:920px){#view-dashboard .fin-dashboard{padding:18px;}.exec-kpi-grid,.exec-main-grid,.exec-bottom-grid{grid-template-columns:1fr;}.exec-health-card{grid-column:auto;}.exec-health-body{grid-template-columns:1fr;}.exec-gauge{margin:0 auto;}.exec-cost-layout{grid-template-columns:1fr;}.exec-donut{margin:0 auto;}}',
-      '@media(max-width:560px){#view-dashboard .fin-dashboard{padding:12px;}.exec-dashboard-shell{gap:14px;}.exec-card,.exec-kpi{border-radius:18px;padding:16px;}.exec-kpi{min-height:148px;}.exec-kpi-grid,.exec-main-grid,.exec-bottom-grid{gap:14px;}.exec-mini-grid{grid-template-columns:1fr;}.exec-row{align-items:flex-start;gap:10px;}.exec-row strong{max-width:48%;}.exec-card-title{gap:10px;}.exec-gauge,.exec-donut{width:min(168px,72vw);height:min(168px,72vw);}.exec-footer{flex-direction:column;align-items:flex-start;}}'
+      '@media(max-width:560px){#view-dashboard .fin-dashboard{padding:12px;}.exec-dashboard-shell{gap:14px;}.exec-card,.exec-kpi{border-radius:18px;padding:16px;}.exec-kpi{min-height:148px;}.exec-kpi-value.has-unit{font-size:clamp(22px,6vw,30px);gap:5px;}.exec-kpi-unit{font-size:clamp(11px,3.1vw,13px);}.exec-kpi-grid,.exec-main-grid,.exec-bottom-grid{gap:14px;}.exec-mini-grid{grid-template-columns:1fr;}.exec-row{align-items:flex-start;gap:10px;}.exec-row strong{max-width:48%;}.exec-card-title{gap:10px;}.exec-gauge,.exec-donut{width:min(168px,72vw);height:min(168px,72vw);}.exec-footer{flex-direction:column;align-items:flex-start;}}'
     ].join('');
     document.head.appendChild(style);
   }
@@ -549,9 +553,9 @@
 
     $('execKpiGrid').innerHTML = [
       kpiHtml('ph-heartbeat', 'Status Outlet', health.text, health.caption, health.tone),
-      kpiHtml('ph-stack', 'Total HPP Variabel', safeRupiahDashboard(data.variableTotal) + ' / Load', 'Biaya variabel per load', 'info'),
-      kpiHtml('ph-trend-up', 'Margin Kontribusi', safeRupiahDashboard(data.margin) + ' / Transaksi', 'Kontribusi setelah variabel', data.marginPct >= 35 ? 'good' : 'warn'),
-      kpiHtml('ph-target', 'Target BEP Harian', Math.round(data.dailyBep) + ' Load / Hari', 'Target minimal agar tidak rugi', bepTone),
+      kpiHtml('ph-stack', 'Total HPP Variabel', kpiUnitHtml(safeRupiahDashboard(data.variableTotal), '/ Load'), 'Biaya variabel per load', 'info'),
+      kpiHtml('ph-trend-up', 'Margin Kontribusi', kpiUnitHtml(safeRupiahDashboard(data.margin), '/ Transaksi'), 'Kontribusi setelah variabel', data.marginPct >= 35 ? 'good' : 'warn'),
+      kpiHtml('ph-target', 'Target BEP Harian', kpiUnitHtml(String(Math.round(data.dailyBep)), 'Load / Hari'), 'Target minimal agar tidak rugi', bepTone),
       kpiHtml('ph-sparkle', 'Estimasi Laba Bersih', safeRupiahDashboard(data.netProfit) + ' / Bulan', 'Estimasi laba bersih bulanan', 'good', true)
     ].join('');
 
@@ -591,7 +595,15 @@
   }
 
   function kpiHtml(icon, label, value, caption, tone, north) {
-    return '<article class="exec-kpi ' + (north ? 'is-north' : '') + '"><div class="exec-kpi-head"><span>' + escapeHtml(label) + '</span><span class="exec-icon"><i class="ph ' + icon + '"></i></span></div><div class="exec-kpi-value">' + escapeHtml(value) + '</div><div class="exec-caption">' + escapeHtml(caption) + '</div></article>';
+    var valueHtml = value && value.__html ? value.__html : escapeHtml(value);
+    var valueClass = value && value.__html ? 'exec-kpi-value has-unit' : 'exec-kpi-value';
+    return '<article class="exec-kpi ' + (north ? 'is-north' : '') + '"><div class="exec-kpi-head"><span>' + escapeHtml(label) + '</span><span class="exec-icon"><i class="ph ' + icon + '"></i></span></div><div class="' + valueClass + '">' + valueHtml + '</div><div class="exec-caption">' + escapeHtml(caption) + '</div></article>';
+  }
+
+  function kpiUnitHtml(main, unit) {
+    return {
+      __html: '<span class="exec-kpi-main">' + escapeHtml(main) + '</span><span class="exec-kpi-unit">' + escapeHtml(unit) + '</span>'
+    };
   }
 
   function compactMoney(value) {
