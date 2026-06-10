@@ -1,0 +1,455 @@
+<!-- JS2 HPP bridge extracted from JS2.html. Logic unchanged. -->
+
+<script>
+function resetFormHPP() {
+    safeSetSelect('inputGasKapasitas', '');
+    if(document.getElementById('inputGasHarga')) document.getElementById('inputGasHarga').value = '';
+    if(document.getElementById('inputGasJam')) document.getElementById('inputGasJam').value = '';
+    if(document.getElementById('inputGasPerLoadManual')) document.getElementById('inputGasPerLoadManual').value = '';
+    if(document.getElementById('inputGasSetrikaJam')) document.getElementById('inputGasSetrikaJam').value = '';
+    if(document.getElementById('inputGasSetrikaKg')) document.getElementById('inputGasSetrikaKg').value = '';
+    if(document.getElementById('inputGasMenit')) document.getElementById('inputGasMenit').value = '';
+
+    if(document.getElementById('inputTDL')) document.getElementById('inputTDL').value = '';
+    if(document.getElementById('inputListrikCuciWatt')) document.getElementById('inputListrikCuciWatt').value = '';
+    if(document.getElementById('inputListrikPengeringWatt')) document.getElementById('inputListrikPengeringWatt').value = '';
+    if(document.getElementById('inputListrikPompaWatt')) document.getElementById('inputListrikPompaWatt').value = '';
+    if(document.getElementById('inputListrikSetrikaWatt')) document.getElementById('inputListrikSetrikaWatt').value = '';
+    if(document.getElementById('toggleSetrikaListrik')) document.getElementById('toggleSetrikaListrik').checked = false;
+    
+    safeSetSelect('inputAirSumber', 'pdam');
+    if(document.getElementById('inputAirHargaM3')) document.getElementById('inputAirHargaM3').value = '6.000';
+    if(document.getElementById('inputAirHargaTangki')) document.getElementById('inputAirHargaTangki').value = '50.000';
+    if(document.getElementById('inputAirLiterTangki')) document.getElementById('inputAirLiterTangki').value = '1000';
+    if(document.getElementById('inputAirCuciLiter')) document.getElementById('inputAirCuciLiter').value = '50';
+    safeSetSelect('inputAirBoilerSumber', 'sama');
+    if(document.getElementById('inputAirHargaGalon')) document.getElementById('inputAirHargaGalon').value = '5.000';
+    if(document.getElementById('inputAirLiterGalon')) document.getElementById('inputAirLiterGalon').value = '19';
+    if(document.getElementById('inputAirBoilerLiter')) document.getElementById('inputAirBoilerLiter').value = '25';
+    if(document.getElementById('inputAirBoilerJam')) document.getElementById('inputAirBoilerJam').value = '4';
+    if(document.getElementById('inputAirBoilerKgJam')) document.getElementById('inputAirBoilerKgJam').value = '10';
+
+    if(document.getElementById('togglePackingPP')) document.getElementById('togglePackingPP').checked = true;
+    if(document.getElementById('inputPackingPPHarga')) document.getElementById('inputPackingPPHarga').value = '25.000';
+    if(document.getElementById('inputPackingPPIsi')) document.getElementById('inputPackingPPIsi').value = '100';
+    if(document.getElementById('inputPackingPPKg')) document.getElementById('inputPackingPPKg').value = '3';
+    if(document.getElementById('togglePackingHD')) document.getElementById('togglePackingHD').checked = true;
+    if(document.getElementById('inputPackingHDHarga')) document.getElementById('inputPackingHDHarga').value = '15.000';
+    if(document.getElementById('inputPackingHDIsi')) document.getElementById('inputPackingHDIsi').value = '50';
+    if(document.getElementById('inputPackingHDKg')) document.getElementById('inputPackingHDKg').value = '5';
+    if(document.getElementById('togglePackingJinjing')) document.getElementById('togglePackingJinjing').checked = false;
+    if(document.getElementById('inputPackingJinjingHarga')) document.getElementById('inputPackingJinjingHarga').value = '35.000';
+    if(document.getElementById('inputPackingJinjingIsi')) document.getElementById('inputPackingJinjingIsi').value = '100';
+    if(document.getElementById('inputPackingJinjingKg')) document.getElementById('inputPackingJinjingKg').value = '4';
+
+    if(document.getElementById('toggleBahanDet')) document.getElementById('toggleBahanDet').checked = true;
+    safeSetSelect('bahanDetType', 'cair');
+    if(document.getElementById('bahanDetHargaBulk')) document.getElementById('bahanDetHargaBulk').value = '100.000';
+    if(document.getElementById('bahanDetKapasitasBulk')) document.getElementById('bahanDetKapasitasBulk').value = '5';
+    if(document.getElementById('bahanDetPemakaian')) document.getElementById('bahanDetPemakaian').value = '10';
+    if(document.getElementById('toggleBahanSof')) document.getElementById('toggleBahanSof').checked = true;
+    safeSetSelect('bahanSofType', 'cair');
+    if(document.getElementById('bahanSofHargaBulk')) document.getElementById('bahanSofHargaBulk').value = '80.000';
+    if(document.getElementById('bahanSofKapasitasBulk')) document.getElementById('bahanSofKapasitasBulk').value = '5';
+    if(document.getElementById('bahanSofPemakaian')) document.getElementById('bahanSofPemakaian').value = '10';
+    if(document.getElementById('toggleBahanPar')) document.getElementById('toggleBahanPar').checked = true;
+    if(document.getElementById('bahanParHargaBulk')) document.getElementById('bahanParHargaBulk').value = '150.000';
+    if(document.getElementById('bahanParKapasitasBulk')) document.getElementById('bahanParKapasitasBulk').value = '5';
+    if(document.getElementById('bahanParPemakaian')) document.getElementById('bahanParPemakaian').value = '5';
+    if(document.getElementById('toggleBahanPel')) document.getElementById('toggleBahanPel').checked = true;
+    safeSetSelect('bahanPelType', 'cair');
+    if(document.getElementById('bahanPelHargaBulk')) document.getElementById('bahanPelHargaBulk').value = '50.000';
+    if(document.getElementById('bahanPelKapasitasBulk')) document.getElementById('bahanPelKapasitasBulk').value = '5';
+    if(document.getElementById('bahanPelPemakaian')) document.getElementById('bahanPelPemakaian').value = '5';
+
+    safeSetSelect('notaType', 'digital');
+    safeSetSelect('notaAppFeeType', 'Berlangganan Per Bulan');
+    if(document.getElementById('notaAppHargaBulan')) document.getElementById('notaAppHargaBulan').value = '';
+    if(document.getElementById('notaAppTrxBulan')) document.getElementById('notaAppTrxBulan').value = '';
+    if(document.getElementById('notaAppHargaTrx')) document.getElementById('notaAppHargaTrx').value = '';
+    if(document.getElementById('notaAppBiayaTransaksiTambahan')) document.getElementById('notaAppBiayaTransaksiTambahan').value = '';
+    if(document.getElementById('notaThermalHarga')) document.getElementById('notaThermalHarga').value = '';
+    if(document.getElementById('notaThermalHargaRoll')) document.getElementById('notaThermalHargaRoll').value = '';
+    if(document.getElementById('notaThermalTransaksiRoll')) document.getElementById('notaThermalTransaksiRoll').value = '';
+    if(document.getElementById('notaManualHarga')) document.getElementById('notaManualHarga').value = '';
+    if(document.getElementById('notaManualLembarTotal')) document.getElementById('notaManualLembarTotal').value = '';
+    if(document.getElementById('notaManualLembarTrx')) document.getElementById('notaManualLembarTrx').value = '';
+    if(document.getElementById('notaRataKg')) document.getElementById('notaRataKg').value = '';
+    
+    if(typeof StateMachine !== 'undefined') StateMachine.calculateTotal();
+}
+
+function populateFormHPP(namaCabang) {
+  const hppData = masterDataHPP.find(h => String(h.namaOutlet) === namaCabang);
+  
+  if (hppData) {
+    safeSetSelect('inputGasKapasitas', hppData['Kap Gas'] || '');
+    if(document.getElementById('inputGasHarga')) document.getElementById('inputGasHarga').value = hppData['Harga Gas'] || '';
+    if(document.getElementById('inputGasJam')) document.getElementById('inputGasJam').value = hppData['Jam Gas'] || '';
+    if(document.getElementById('inputGasPerLoadManual')) document.getElementById('inputGasPerLoadManual').value = hppData['Estimasi Load Gas'] || '';
+    if(document.getElementById('inputGasSetrikaJam')) document.getElementById('inputGasSetrikaJam').value = hppData['Setrika Per Jam'] || '';
+    if(document.getElementById('inputGasSetrikaKg')) document.getElementById('inputGasSetrikaKg').value = hppData['Setrika Per Kg'] || '';
+    if(document.getElementById('inputGasMenit')) document.getElementById('inputGasMenit').value = hppData['Menit Gas'] ? `${hppData['Menit Gas']} Menit` : '0 Menit';
+
+    if(document.getElementById('inputTDL')) document.getElementById('inputTDL').value = hppData['TDL'] || '';
+    if(document.getElementById('inputListrikCuciWatt')) document.getElementById('inputListrikCuciWatt').value = hppData['Watt Cuci'] || '';
+    if(document.getElementById('inputListrikPengeringWatt')) document.getElementById('inputListrikPengeringWatt').value = hppData['Watt Kering'] || '';
+    if(document.getElementById('inputListrikPompaWatt')) document.getElementById('inputListrikPompaWatt').value = hppData['Watt Pompa'] || '';
+    if(document.getElementById('inputListrikSetrikaWatt')) document.getElementById('inputListrikSetrikaWatt').value = hppData['Watt Setrika'] || '';
+    
+    const isSetrikaListrikActive = parseFloat(hppData['Watt Setrika']) > 0;
+    if(document.getElementById('toggleSetrikaListrik')) document.getElementById('toggleSetrikaListrik').checked = isSetrikaListrikActive;
+
+    safeSetSelect('inputAirSumber', hppData['Sumber Air'] || hppData['Air_Sumber'] || 'pdam');
+    if(document.getElementById('inputAirHargaM3')) document.getElementById('inputAirHargaM3').value = hppData['Harga Air'] || hppData['Air_HargaM3'] || '6.000';
+    if(document.getElementById('inputAirHargaTangki')) document.getElementById('inputAirHargaTangki').value = hppData['Harga Tangki'] || hppData['Air_HargaTangki'] || '50.000';
+    if(document.getElementById('inputAirLiterTangki')) document.getElementById('inputAirLiterTangki').value = hppData['Liter Tangki'] || hppData['Air_LiterTangki'] || '1000';
+    if(document.getElementById('inputAirCuciLiter')) document.getElementById('inputAirCuciLiter').value = hppData['Air Cuci'] || hppData['Air_CuciLiter'] || '50';
+    
+    safeSetSelect('inputAirBoilerSumber', hppData['Sumber Setrika'] || hppData['Air_BoilerSumber'] || 'sama');
+    if(document.getElementById('inputAirHargaGalon')) document.getElementById('inputAirHargaGalon').value = hppData['Galon Setrika'] || hppData['Air_HargaGalon'] || '5.000';
+    if(document.getElementById('inputAirLiterGalon')) document.getElementById('inputAirLiterGalon').value = hppData['Vol Setrika'] || hppData['Air_LiterGalon'] || '19';
+    if(document.getElementById('inputAirBoilerLiter')) document.getElementById('inputAirBoilerLiter').value = hppData['Liter Setrika'] || hppData['Air_BoilerLiter'] || '25';
+    if(document.getElementById('inputAirBoilerJam')) document.getElementById('inputAirBoilerJam').value = hppData['Jam Setrika'] || hppData['Air_BoilerJam'] || '4';
+    if(document.getElementById('inputAirBoilerKgJam')) document.getElementById('inputAirBoilerKgJam').value = hppData['Kg Setrika'] || hppData['Air_BoilerKgJam'] || '10';
+
+    if(document.getElementById('togglePackingPP')) document.getElementById('togglePackingPP').checked = (hppData['Packing_PP_Active'] !== 'false' && hppData['Packing_PP_Active'] !== false);
+    if(document.getElementById('inputPackingPPHarga')) document.getElementById('inputPackingPPHarga').value = hppData['Packing_PP_Harga'] || '25.000';
+    if(document.getElementById('inputPackingPPIsi')) document.getElementById('inputPackingPPIsi').value = hppData['Packing_PP_Isi'] || '100';
+    if(document.getElementById('inputPackingPPKg')) document.getElementById('inputPackingPPKg').value = hppData['Packing_PP_Kg'] || '3';
+    
+    if(document.getElementById('togglePackingHD')) document.getElementById('togglePackingHD').checked = (hppData['Packing_HD_Active'] !== 'false' && hppData['Packing_HD_Active'] !== false);
+    if(document.getElementById('inputPackingHDHarga')) document.getElementById('inputPackingHDHarga').value = hppData['Packing_HD_Harga'] || '15.000';
+    if(document.getElementById('inputPackingHDIsi')) document.getElementById('inputPackingHDIsi').value = hppData['Packing_HD_Isi'] || '50';
+    if(document.getElementById('inputPackingHDKg')) document.getElementById('inputPackingHDKg').value = hppData['Packing_HD_Kg'] || '5';
+    
+    if(document.getElementById('togglePackingJinjing')) document.getElementById('togglePackingJinjing').checked = (hppData['Packing_Jinjing_Active'] === 'true' || hppData['Packing_Jinjing_Active'] === true);
+    if(document.getElementById('inputPackingJinjingHarga')) document.getElementById('inputPackingJinjingHarga').value = hppData['Packing_Jinjing_Harga'] || '35.000';
+    if(document.getElementById('inputPackingJinjingIsi')) document.getElementById('inputPackingJinjingIsi').value = hppData['Packing_Jinjing_Isi'] || '100';
+    if(document.getElementById('inputPackingJinjingKg')) document.getElementById('inputPackingJinjingKg').value = hppData['Packing_Jinjing_Kg'] || '4';
+
+    if(document.getElementById('toggleBahanDet')) document.getElementById('toggleBahanDet').checked = (hppData['Chem_Det_Active'] !== 'false' && hppData['Chem_Det_Active'] !== false);
+    safeSetSelect('bahanDetType', hppData['Chem_Det_Type'] || 'cair');
+    if(document.getElementById('bahanDetHargaBulk')) document.getElementById('bahanDetHargaBulk').value = hppData['Chem_Det_Harga'] || '100.000';
+    if(document.getElementById('bahanDetKapasitasBulk')) document.getElementById('bahanDetKapasitasBulk').value = hppData['Chem_Det_Kapasitas'] || '5';
+    if(document.getElementById('bahanDetPemakaian')) document.getElementById('bahanDetPemakaian').value = hppData['Chem_Det_Pemakaian'] || '10';
+    
+    if(document.getElementById('toggleBahanSof')) document.getElementById('toggleBahanSof').checked = (hppData['Chem_Sof_Active'] !== 'false' && hppData['Chem_Sof_Active'] !== false);
+    safeSetSelect('bahanSofType', hppData['Chem_Sof_Type'] || 'cair');
+    if(document.getElementById('bahanSofHargaBulk')) document.getElementById('bahanSofHargaBulk').value = hppData['Chem_Sof_Harga'] || '80.000';
+    if(document.getElementById('bahanSofKapasitasBulk')) document.getElementById('bahanSofKapasitasBulk').value = hppData['Chem_Sof_Kapasitas'] || '5';
+    if(document.getElementById('bahanSofPemakaian')) document.getElementById('bahanSofPemakaian').value = hppData['Chem_Sof_Pemakaian'] || '10';
+    
+    if(document.getElementById('toggleBahanPar')) document.getElementById('toggleBahanPar').checked = (hppData['Chem_Par_Active'] !== 'false' && hppData['Chem_Par_Active'] !== false);
+    if(document.getElementById('bahanParHargaBulk')) document.getElementById('bahanParHargaBulk').value = hppData['Chem_Par_Harga'] || '150.000';
+    if(document.getElementById('bahanParKapasitasBulk')) document.getElementById('bahanParKapasitasBulk').value = hppData['Chem_Par_Kapasitas'] || '5';
+    if(document.getElementById('bahanParPemakaian')) document.getElementById('bahanParPemakaian').value = hppData['Chem_Par_Pemakaian'] || '5';
+    
+    if(document.getElementById('toggleBahanPel')) document.getElementById('toggleBahanPel').checked = (hppData['Chem_Pel_Active'] !== 'false' && hppData['Chem_Pel_Active'] !== false);
+    safeSetSelect('bahanPelType', hppData['Chem_Pel_Type'] || 'cair');
+    if(document.getElementById('bahanPelHargaBulk')) document.getElementById('bahanPelHargaBulk').value = hppData['Chem_Pel_Harga'] || '50.000';
+    if(document.getElementById('bahanPelKapasitasBulk')) document.getElementById('bahanPelKapasitasBulk').value = hppData['Chem_Pel_Kapasitas'] || '5';
+    if(document.getElementById('bahanPelPemakaian')) document.getElementById('bahanPelPemakaian').value = hppData['Chem_Pel_Pemakaian'] || '5';
+
+    safeSetSelect('notaType', hppData['Sistem Kasir Nota'] || hppData['Nota_Type'] || 'digital');
+    var notaFeeTypeLegacy = hppData['Metode Biaya Aplikasi'] || hppData['Nota_App_FeeType'] || 'Berlangganan Per Bulan';
+    if (typeof window.zettNormalizeNotaAppFeeType_ === 'function') notaFeeTypeLegacy = window.zettNormalizeNotaAppFeeType_(notaFeeTypeLegacy);
+    safeSetSelect('notaAppFeeType', notaFeeTypeLegacy);
+    if(document.getElementById('notaAppHargaBulan')) document.getElementById('notaAppHargaBulan').value = hppData['App Biaya Bulanan'] || hppData['Nota_App_HargaBulan'] || '';
+    if(document.getElementById('notaAppTrxBulan')) document.getElementById('notaAppTrxBulan').value = hppData['App Estimasi Trx Bulanan'] || hppData['Nota_App_TrxBulan'] || '';
+    if(document.getElementById('notaAppHargaTrx')) document.getElementById('notaAppHargaTrx').value = hppData['App Biaya Per Transaksi'] || hppData['Nota_App_HargaTrx'] || '';
+    if(document.getElementById('notaAppBiayaTransaksiTambahan')) document.getElementById('notaAppBiayaTransaksiTambahan').value = hppData['App Biaya Transaksi Tambahan'] || '';
+    if(document.getElementById('notaThermalHarga')) document.getElementById('notaThermalHarga').value = hppData['Thermal Biaya Per Transaksi'] || hppData['Nota_Thermal_Harga'] || '';
+    if(document.getElementById('notaThermalHargaRoll')) document.getElementById('notaThermalHargaRoll').value = hppData['Thermal Harga Per Roll'] || '';
+    if(document.getElementById('notaThermalTransaksiRoll')) document.getElementById('notaThermalTransaksiRoll').value = hppData['Thermal Transaksi Per Roll'] || '';
+    if(document.getElementById('notaManualHarga')) document.getElementById('notaManualHarga').value = hppData['Manual Harga Satuan Awal Nota'] || hppData['Nota_Manual_Harga'] || '';
+    if(document.getElementById('notaManualLembarTotal')) document.getElementById('notaManualLembarTotal').value = hppData['Manual Jumlah Lembar Nota'] || hppData['Nota_Manual_LembarTotal'] || '';
+    if(document.getElementById('notaManualLembarTrx')) document.getElementById('notaManualLembarTrx').value = hppData['Manual Ply Per Transaksi'] || hppData['Nota_Manual_LembarTrx'] || '';
+    if(document.getElementById('notaRataKg')) document.getElementById('notaRataKg').value = '';
+
+  } else {
+    resetFormHPP();
+  }
+
+  if(typeof toggleAirInputs === 'function') toggleAirInputs();
+  if(typeof toggleBahanActive === 'function') toggleBahanActive();
+  if(typeof toggleBahanInputs === 'function') toggleBahanInputs();
+  if(typeof toggleNotaInputs === 'function') toggleNotaInputs();
+
+  if(typeof calculateGas === 'function') calculateGas();
+  if(typeof calculateListrik === 'function') calculateListrik();
+  if(typeof calculateAir === 'function') calculateAir();
+  if(typeof calculatePacking === 'function') calculatePacking();
+  if(typeof calculateBahanBaku === 'function') calculateBahanBaku();
+  if(typeof calculateNota === 'function') calculateNota();
+  
+  if(typeof StateMachine !== 'undefined') StateMachine.calculateTotal();
+  if(typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(namaCabang);
+}
+
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('dropdownCabangResult');
+    const inputNama = document.getElementById('inputNama');
+    if (dropdown && inputNama && !inputNama.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+function zettSetHPPSelectionLoading(isLoading) {
+    const dashboard = document.getElementById('hpp-dashboard-view');
+    const formView = document.getElementById('hpp-form-view');
+    [dashboard, formView].forEach(function(el) {
+        if (!el) return;
+        el.classList.toggle('hpp-loading-lite', !!isLoading);
+        if (isLoading) el.setAttribute('aria-busy', 'true');
+        else el.removeAttribute('aria-busy');
+    });
+}
+
+function zettIsHPPPopulating() {
+    return (window.__zettHPPPopulateDepth || 0) > 0;
+}
+
+function zettWithHPPPopulationGuard(fn) {
+    window.__zettHPPPopulateDepth = (window.__zettHPPPopulateDepth || 0) + 1;
+    try {
+        return typeof fn === 'function' ? fn() : undefined;
+    } finally {
+        setTimeout(function() {
+            window.__zettHPPPopulateDepth = Math.max(0, (window.__zettHPPPopulateDepth || 1) - 1);
+        }, 80);
+    }
+}
+
+function zettRunHPPTaskQueue(token, tasks, onDone) {
+    const queue = Array.isArray(tasks) ? tasks.filter(function(task) { return typeof task === 'function'; }) : [];
+    let index = 0;
+    const startedAt = Date.now();
+
+    function finish() {
+        if (typeof onDone === 'function') {
+            try { onDone(); } catch (error) { console.error('HPP queue done error:', error); }
+        }
+    }
+
+    function runNext() {
+        if (token && window.__zettBranchSwitchToken && window.__zettBranchSwitchToken !== token) {
+            finish();
+            return;
+        }
+        if (Date.now() - startedAt > 15000) {
+            console.warn('HPP task queue stopped after timeout.');
+            finish();
+            return;
+        }
+        if (index >= queue.length) {
+            finish();
+            return;
+        }
+
+        const task = queue[index++];
+        requestAnimationFrame(function() {
+            setTimeout(function() {
+                try { task(); }
+                catch (error) {
+                    console.error('HPP async task error:', error);
+                    if (typeof showOmniToast === 'function') showOmniToast('Sebagian data Struktur Biaya gagal diproses. Coba pilih outlet lagi.', 'error');
+                }
+                runNext();
+            }, 0);
+        });
+    }
+
+    runNext();
+}
+
+window.zettSetHPPSelectionLoading = zettSetHPPSelectionLoading;
+window.zettIsHPPPopulating_ = zettIsHPPPopulating;
+window.zettWithHPPPopulationGuard_ = zettWithHPPPopulationGuard;
+window.zettRunHPPTaskQueue_ = zettRunHPPTaskQueue;
+
+if (!window.__zettHPPSelectListenerBound) {
+    window.__zettHPPSelectListenerBound = true;
+    document.addEventListener('change', function(e) {
+        if (!e.target || e.target.id !== 'inputNamaHPP') return;
+        if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+            console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+            return;
+        }
+        const outletName = String(e.target.value || '').trim();
+        const handledSwitch = window.__HPP_SAFE_SWITCH_LAST || {};
+        if (
+            window.__HPP_SAFE_SWITCH_ACTIVE === true ||
+            (
+                String(handledSwitch.outlet || '').trim() === outletName &&
+                Date.now() - Number(handledSwitch.at || 0) < 1000
+            )
+        ) {
+            return;
+        }
+        const switchToken = Date.now() + ':' + outletName;
+        window.__zettBranchSwitchToken = switchToken;
+        const cabang = masterDataCabang.find(c => String(c.namaOutlet || '').trim() === outletName);
+        zettSetHPPSelectionLoading(!!outletName);
+
+        if (!outletName) {
+            if (typeof resetHPPDashboardToZero === 'function') resetHPPDashboardToZero();
+            zettSetHPPSelectionLoading(false);
+        } else {
+            if (cabang) {
+                zettPatchOperationalProfileToLocalHPP(cabang);
+                const inputNama = document.getElementById('inputNama');
+                const inputKategori = document.getElementById('inputKategori');
+                if (inputNama) inputNama.value = cabang.namaOutlet;
+                if (inputKategori) inputKategori.value = cabang.kategori || 'Drop Off/Kiloan';
+                if (typeof updateNavName === 'function') updateNavName();
+            }
+            requestAnimationFrame(() => {
+                if (window.__zettBranchSwitchToken !== switchToken) return;
+                zettRunHPPTaskQueue(switchToken, [
+                    function() {
+                        if (typeof populateFormHPP === 'function') {
+                            zettWithHPPPopulationGuard(function() { populateFormHPP(outletName); });
+                        }
+                    },
+                    function() { if (typeof applyOperationalConfigToHPP === 'function') applyOperationalConfigToHPP(outletName); },
+                    function() { if (typeof window.zettRefreshActiveHPPRowFromServer === 'function') window.zettRefreshActiveHPPRowFromServer(outletName); }
+                ], function() {
+                    if (window.__zettBranchSwitchToken === switchToken) zettSetHPPSelectionLoading(false);
+                });
+            });
+        }
+
+        if (typeof toggleActionButtons === 'function') toggleActionButtons();
+        if (typeof checkHPPLock === 'function') checkHPPLock();
+    });
+}
+
+function checkHPPLock() {
+    const selectHPP = document.getElementById('inputNamaHPP');
+    const namaCabang = selectHPP ? selectHPP.value : '';
+    
+    const hppContents = document.querySelectorAll('#view-hpp .bento-card, #hpp-dashboard-view, #hpp-form-view');
+    hppContents.forEach(content => {
+        if (!namaCabang) {
+            content.style.pointerEvents = 'none';
+            content.style.opacity = '0.35';
+            content.style.filter = 'grayscale(1)';
+            content.style.transition = 'all 0.4s ease';
+        } else {
+            content.style.pointerEvents = 'auto';
+            content.style.opacity = '1';
+            content.style.filter = 'none';
+        }
+    });
+
+    const btnSimpan = document.getElementById('btnSimpanHPP');
+    const btnUpdate = document.getElementById('btnUpdateHPP');
+    
+    if (btnSimpan) {
+        if (!namaCabang) {
+            btnSimpan.style.opacity = '0.4';
+            btnSimpan.style.pointerEvents = 'none';
+        } else {
+            btnSimpan.style.opacity = '1';
+            btnSimpan.style.pointerEvents = 'auto';
+        }
+    }
+    
+    if (btnUpdate) {
+        if (!namaCabang) {
+            btnUpdate.style.opacity = '0.4';
+            btnUpdate.style.pointerEvents = 'none';
+        } else {
+            btnUpdate.style.opacity = '1';
+            btnUpdate.style.pointerEvents = 'auto';
+        }
+    }
+}
+
+function getOutletOperationalConfig(outletName) {
+    const name = String(outletName || '').trim();
+    const outlet = masterDataCabang.find(c => String(c.namaOutlet || '').trim().toLowerCase() === name.toLowerCase());
+    if (!outlet) return null;
+
+    const jenisSetrika = String(outlet.tipeSetrikaUtama || outlet.tipeSetrika || '').toLowerCase();
+    const tipePengering = String(outlet.tipeMesinPengering || '').toLowerCase();
+    const pakaiPengering = outlet.pakaiPengering !== false;
+    const usesIronElectric = jenisSetrika.includes('listrik');
+    const usesDryer = pakaiPengering;
+    const dryerUsesGas = usesDryer && (tipePengering.includes('konversi') || tipePengering.includes('gas'));
+
+    return {
+        namaOutlet: outlet.namaOutlet,
+        kategori: outlet.kategori || 'Drop Off/Kiloan',
+        pakaiPengering,
+        metodePengeringan: pakaiPengering ? 'mesin' : 'jemur',
+        jenisSetrika: outlet.tipeSetrikaUtama || outlet.tipeSetrika || 'uap',
+        usesGas: dryerUsesGas,
+        usesElectricity: true,
+        usesDryer,
+        usesIronElectric,
+        dryerUsesGas
+    };
+}
+
+function setHPPCardOperationalState(type, active, note) {
+    const valueEl = document.getElementById('dash-card-' + type);
+    const card = valueEl ? valueEl.closest('.hpp-card-dash') : null;
+    if (!card) return;
+
+    if (type === 'gas') {
+        card.style.pointerEvents = 'auto';
+        card.title = note || '';
+        return;
+    }
+
+    card.style.opacity = active ? '1' : '0.38';
+    card.style.filter = active ? 'none' : 'grayscale(1)';
+    card.style.pointerEvents = active ? 'auto' : 'none';
+    card.title = note || '';
+}
+
+function applyOperationalConfigToHPP(outletName) {
+    const config = getOutletOperationalConfig(outletName);
+    const dashboard = document.getElementById('hpp-dashboard-view');
+    if (!dashboard || !config) return;
+
+    const insight = document.getElementById('hpp-operational-insight');
+    if (insight) insight.remove();
+
+    setHPPCardOperationalState('gas', config.usesGas, 'Gas tidak relevan untuk konfigurasi outlet ini.');
+    setHPPCardOperationalState('listrik', true, 'Listrik tetap relevan untuk operasi outlet.');
+
+    const gasInputs = ['inputGasKapasitas', 'inputGasHarga', 'inputGasJam'];
+    gasInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = false;
+        el.style.opacity = '1';
+    });
+    if (typeof window.zettRenderGasLpgCard === 'function') window.zettRenderGasLpgCard();
+
+    const dryerWatt = document.getElementById('inputListrikPengeringWatt');
+    if (dryerWatt) {
+        dryerWatt.disabled = !config.usesDryer;
+        dryerWatt.style.opacity = config.usesDryer ? '1' : '0.45';
+    }
+
+    const ironToggle = document.getElementById('toggleSetrikaListrik');
+    if (ironToggle && config.usesIronElectric && !ironToggle.checked) {
+        ironToggle.checked = true;
+        if (typeof toggleSetrikaInputs === 'function') toggleSetrikaInputs();
+        if (typeof calculateListrik === 'function') calculateListrik();
+    }
+
+    const gasContext = typeof window.zettGetGasUsageContext === 'function' ? window.zettGetGasUsageContext() : null;
+    if (!config.usesGas && (!gasContext || !gasContext.gasActive) && typeof window.zettHPPSetStateValue === 'function') {
+        window.zettHPPSetStateValue('gas', 0);
+        if (typeof window.zettHPPUpdateDashboardFromState === 'function') window.zettHPPUpdateDashboardFromState('operational-config');
+    }
+}
+
+window.getOutletOperationalConfig = getOutletOperationalConfig;
+window.applyOperationalConfigToHPP = applyOperationalConfigToHPP;
+</script>
