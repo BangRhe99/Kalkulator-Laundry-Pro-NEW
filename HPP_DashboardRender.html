@@ -1,0 +1,995 @@
+<!-- HPP dashboard render bridges extracted from HPP_Core.html. Logic unchanged. -->
+
+<script id="hpp-desktop-tablet-premium-dashboard-patch-js">
+  /* [HPP DESKTOP/TABLET PREMIUM DASHBOARD PATCH]
+     UI-only bridge: menambah wrapper/label visual HPP tanpa mengubah kalkulasi,
+     backend, database, schema, atau handler onclick existing. */
+  (function hppDesktopTabletPremiumDashboardPatch() {
+    const TYPES = [
+      { key: 'gas', label: 'Gas LPG', color: '#ef4444', title: 'Analisa Biaya Gas' },
+      { key: 'listrik', label: 'Listrik', color: '#f59e0b', title: 'Analisa Biaya Listrik' },
+      { key: 'air', label: 'Air PDAM', color: '#2563eb', title: 'Analisa Biaya Air' },
+      { key: 'packing', label: 'Packing', color: '#7c3aed', title: 'Analisa Biaya Packing' },
+      { key: 'bahan', label: 'Chemical', color: '#14b8a6', title: 'Analisa Biaya Chemical' },
+      { key: 'nota', label: 'Admin/Nota', color: '#0891b2', title: 'Analisa Biaya Nota & Kasir' }
+    ];
+
+    const desktopQuery = window.matchMedia('(min-width: 769px)');
+    let updateTimer = null;
+    let originalDonutCenter = null;
+
+    function byId(id) {
+      return document.getElementById(id);
+    }
+
+    function parseCurrency(text) {
+      if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(text);
+      let raw = String(text || '').trim().replace(/[^\d.,-]/g, '');
+      if (!raw) return 0;
+      const hasComma = raw.includes(',');
+      const hasDot = raw.includes('.');
+      if (hasComma && hasDot) {
+        raw = raw.lastIndexOf(',') > raw.lastIndexOf('.')
+          ? raw.replace(/\./g, '').replace(',', '.')
+          : raw.replace(/,/g, '');
+      } else if (hasDot) {
+        const parts = raw.split('.');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw;
+      } else if (hasComma) {
+        const parts = raw.split(',');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw.replace(',', '.');
+      }
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function formatMoney(value) {
+      const n = Number(value) || 0;
+      if (typeof window.formatRupiah === 'function') {
+        try { return window.formatRupiah(n); } catch (error) {}
+      }
+      return 'Rp ' + n.toLocaleString('id-ID');
+    }
+
+    function getValues() {
+      const store =
+        (window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.hpp) ||
+        (typeof APP_STATE !== 'undefined' && APP_STATE.data && APP_STATE.data.hpp) ||
+        window.hppDataState ||
+        {};
+
+      const values = {};
+      TYPES.forEach(item => {
+        const domValue = byId('dash-card-' + item.key);
+        values[item.key] = Number(store[item.key]);
+        if (!Number.isFinite(values[item.key]) || values[item.key] < 0) {
+          values[item.key] = parseCurrency(domValue ? domValue.textContent : 0);
+        }
+        if (item.key === 'bahan' && window.__zettChemicalDashboardActive === false) values[item.key] = 0;
+      });
+      if (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_()) {
+        TYPES.forEach(item => { values[item.key] = 0; });
+      }
+      values.total = Number(store.total);
+      if (
+        !Number.isFinite(values.total) ||
+        values.total <= 0 ||
+        window.__zettChemicalDashboardActive === false ||
+        (typeof window.zettIsHPPOutletNotSelected_ === 'function' && window.zettIsHPPOutletNotSelected_())
+      ) {
+        values.total = TYPES.reduce((sum, item) => sum + (Number(values[item.key]) || 0), 0);
+      }
+      return values;
+    }
+
+    function ensureScaffold() {
+      const page = byId('view-hpp');
+      const dashboard = byId('hpp-dashboard-view');
+      if (!page || !dashboard) return;
+
+      page.classList.add('hpp-desktop-premium');
+
+      const hero = dashboard.firstElementChild;
+      if (hero) hero.classList.add('hpp-hero-dashboard');
+
+      const grid = dashboard.querySelector('.grid.grid-cols-2, .hpp-grid');
+      if (grid) grid.classList.add('hpp-grid');
+
+      const donut = byId('hpp-donut-chart');
+      const donutWrap = donut ? donut.closest('.hpp-donut-wrap') : null;
+      const compositionPanel = donutWrap ? donutWrap.parentElement : null;
+      if (compositionPanel) {
+        compositionPanel.classList.add('hpp-composition-panel');
+
+        let title = compositionPanel.querySelector('.hpp-composition-title');
+        if (!title) {
+          title = document.createElement('h3');
+          title.className = 'hpp-composition-title';
+          title.textContent = 'Komposisi Biaya Variabel';
+          compositionPanel.insertBefore(title, compositionPanel.firstChild);
+        }
+
+        let list = compositionPanel.querySelector('.hpp-composition-list');
+        if (!list) {
+          list = document.createElement('div');
+          list.className = 'hpp-composition-list';
+          compositionPanel.appendChild(list);
+        }
+
+        const center = compositionPanel.querySelector('.hpp-donut-center');
+        if (center && originalDonutCenter === null) originalDonutCenter = center.innerHTML;
+      }
+
+      TYPES.forEach(item => {
+        const valueEl = byId('dash-card-' + item.key);
+        const card = valueEl ? valueEl.closest('.hpp-card-dash') : null;
+        if (!card) return;
+
+        card.dataset.hppType = item.key;
+        card.classList.add('hpp-premium-card');
+        card.style.setProperty('--hpp-card-accent', item.color);
+
+        const icon = Array.from(card.children).find(child =>
+          child.classList && (child.classList.contains('w-10') || child.classList.contains('w-12'))
+        );
+        if (icon) icon.classList.add('hpp-cost-icon');
+
+        const label = card.querySelector('h3');
+        if (label) label.classList.add('hpp-cost-label');
+        if (valueEl) valueEl.classList.add('hpp-cost-value');
+
+        let detail = card.querySelector('.zett-gas-card-details, .zett-electric-card-details, .zett-water-card-details, .hpp-premium-lite-details');
+        if (!detail) {
+          detail = document.createElement('div');
+          detail.className = 'hpp-premium-lite-details';
+          valueEl.insertAdjacentElement('afterend', detail);
+        }
+        if (item.key === 'nota') detail.id = 'dash-card-nota-details';
+
+        let show = card.querySelector('.hpp-show-detail');
+        if (!show) {
+          show = document.createElement('button');
+          show.type = 'button';
+          show.className = 'hpp-show-detail';
+          show.textContent = 'Show Details';
+          show.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof window.openHPPForm === 'function') {
+              window.openHPPForm(item.key, item.title);
+            }
+          });
+          card.appendChild(show);
+        }
+      });
+    }
+
+    function setDesktopOnlyState() {
+      const isDesktop = desktopQuery.matches;
+      const panel = document.querySelector('#view-hpp .hpp-composition-panel');
+      const title = panel ? panel.querySelector('.hpp-composition-title') : null;
+      const list = panel ? panel.querySelector('.hpp-composition-list') : null;
+      const center = panel ? panel.querySelector('.hpp-donut-center') : null;
+
+      if (title) title.hidden = !isDesktop;
+      if (list) list.hidden = !isDesktop;
+
+      document.querySelectorAll('#view-hpp .hpp-show-detail, #view-hpp .hpp-premium-lite-details').forEach(el => {
+        el.hidden = !isDesktop;
+      });
+
+      if (center) {
+        if (isDesktop) {
+          const desktopCenterHtml = '<span class="hpp-donut-total-label">Total</span><span class="hpp-donut-total-value">100%</span>';
+          if (center.innerHTML !== desktopCenterHtml) center.innerHTML = desktopCenterHtml;
+        } else if (originalDonutCenter !== null) {
+          if (center.innerHTML !== originalDonutCenter) center.innerHTML = originalDonutCenter;
+        }
+      }
+    }
+
+    function updateComposition() {
+      const values = getValues();
+      const rawTotal = Number(values.total);
+      const total = Number.isFinite(rawTotal) ? Math.max(0, rawTotal) : 0;
+      const centerValue = document.querySelector('#view-hpp .hpp-donut-center .hpp-donut-total-value');
+      if (centerValue) {
+        const nextCenterValue = total > 0 ? '100%' : '0%';
+        if (centerValue.textContent !== nextCenterValue) centerValue.textContent = nextCenterValue;
+      }
+      const list = document.querySelector('#view-hpp .hpp-composition-list');
+      if (list) {
+        const nextListHtml = TYPES.map(item => {
+          const rawValue = Number(values[item.key]);
+          const value = Number.isFinite(rawValue) ? Math.max(0, rawValue) : 0;
+          const rawPct = total > 0 ? Math.round((value / total) * 100) : 0;
+          const pct = Number.isFinite(rawPct) ? Math.max(0, rawPct) : 0;
+          return [
+            '<div class="hpp-composition-row" data-hpp-type="' + item.key + '">',
+            '<span class="hpp-composition-dot"></span>',
+            '<span class="hpp-composition-name">' + item.label + '</span>',
+            '<span class="hpp-composition-amount">' + formatMoney(value) + '</span>',
+            '<span class="hpp-composition-pct">' + pct + '%</span>',
+            '</div>'
+          ].join('');
+        }).join('');
+        if (list.innerHTML !== nextListHtml) list.innerHTML = nextListHtml;
+      }
+
+      TYPES.forEach(item => {
+        const rawValue = Number(values[item.key]);
+        const value = Number.isFinite(rawValue) ? Math.max(0, rawValue) : 0;
+        const rawPct = total > 0 ? Math.round((value / total) * 100) : 0;
+        const pct = Number.isFinite(rawPct) ? Math.max(0, rawPct) : 0;
+        const pctEl = byId('dash-card-' + item.key + '-pct');
+        if (pctEl && pctEl.textContent !== pct + '%') pctEl.textContent = pct + '%';
+
+        const valueEl = byId('dash-card-' + item.key);
+        const card = valueEl ? valueEl.closest('.hpp-card-dash') : null;
+        const detail = card ? card.querySelector('.hpp-premium-lite-details') : null;
+        if (detail && item.key !== 'nota' && item.key !== 'listrik' && item.key !== 'packing' && item.key !== 'bahan') {
+          const nextDetailHtml = '<div class="hpp-card-row"><span class="hpp-card-label">Biaya /Kg</span><strong class="hpp-card-amount">' + formatMoney(value) + '</strong></div>';
+          if (detail.innerHTML !== nextDetailHtml) detail.innerHTML = nextDetailHtml;
+        }
+      });
+    }
+
+    function refreshPremiumUi() {
+      if (!isHppRefreshAllowed()) return;
+      try {
+        ensureScaffold();
+        setDesktopOnlyState();
+        updateComposition();
+      } catch (error) {
+        if (typeof window.zettHPPSafeError === 'function') window.zettHPPSafeError('[HPP_SAFE_REFRESH_ERROR]', error);
+      }
+    }
+
+    function isHppRefreshAllowed() {
+      const view = byId('view-hpp');
+      if (typeof window.zettIsActiveViewHPP_ === 'function') return window.zettIsActiveViewHPP_();
+      return !!(view && !view.classList.contains('hidden') && view.offsetParent !== null);
+    }
+
+    function scheduleRefresh() {
+      if (!isHppRefreshAllowed()) {
+        if (typeof window.zettHPPSafeDebug === 'function') window.zettHPPSafeDebug('[HPP_SAFE_SKIP_REFRESH_OUTSIDE_HPP]');
+        return;
+      }
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
+      const token = (window.__HPP_SAFE_REFRESH_TOKEN__ || 0) + 1;
+      window.__HPP_SAFE_REFRESH_TOKEN__ = token;
+      window.clearTimeout(updateTimer);
+      updateTimer = window.setTimeout(function() {
+        if (token !== window.__HPP_SAFE_REFRESH_TOKEN__) return;
+        if (window.__HPP_SAFE_REFRESH_LOCK__) return;
+        window.__HPP_SAFE_REFRESH_LOCK__ = true;
+        try { refreshPremiumUi(); }
+        finally { window.__HPP_SAFE_REFRESH_LOCK__ = false; }
+      }, 60);
+    }
+
+    function wrapDashboardUpdate() {
+      if (window.__hppDesktopPremiumDashboardPatchWrapped) return;
+      window.__hppDesktopPremiumDashboardPatchWrapped = true;
+
+      const originalZettUpdate = window.zettHPPUpdateDashboardFromState;
+      if (typeof originalZettUpdate === 'function') {
+        window.zettHPPUpdateDashboardFromState = function() {
+          try {
+            return originalZettUpdate.apply(this, arguments);
+          } catch (error) {
+            if (typeof window.zettHPPSafeError === 'function') window.zettHPPSafeError('[HPP_SAFE_CALCULATE_ERROR]', error);
+          } finally {
+            scheduleRefresh();
+          }
+        };
+      }
+
+      try {
+        if (typeof StateMachine !== 'undefined' && StateMachine.renderDashboard && !StateMachine.renderDashboard.__hppDesktopPremiumWrapped) {
+          const originalRender = StateMachine.renderDashboard.bind(StateMachine);
+          const wrappedRender = function() {
+            try {
+              return originalRender.apply(this, arguments);
+            } catch (error) {
+              if (typeof window.zettHPPSafeError === 'function') window.zettHPPSafeError('[HPP_SAFE_RENDER_DASHBOARD_ERROR]', error);
+            } finally {
+              scheduleRefresh();
+            }
+          };
+          wrappedRender.__hppDesktopPremiumWrapped = true;
+          StateMachine.renderDashboard = wrappedRender;
+        }
+      } catch (error) {}
+    }
+
+    function boot() {
+      if (window.__HPP_SAFE_DESKTOP_REFRESH_BOOTED__) return;
+      window.__HPP_SAFE_DESKTOP_REFRESH_BOOTED__ = true;
+      refreshPremiumUi();
+      wrapDashboardUpdate();
+      scheduleRefresh();
+      window.setTimeout(refreshPremiumUi, 350);
+      window.setTimeout(refreshPremiumUi, 1200);
+
+      const dashboard = byId('hpp-dashboard-view');
+      if (dashboard && window.MutationObserver) {
+        const observer = new MutationObserver(scheduleRefresh);
+        observer.observe(dashboard, { childList: true, subtree: true, characterData: true });
+      }
+    }
+
+    if (desktopQuery.addEventListener) desktopQuery.addEventListener('change', refreshPremiumUi);
+    else if (desktopQuery.addListener) desktopQuery.addListener(refreshPremiumUi);
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+    else boot();
+  })();
+</script>
+
+<script id="hpp-dashboard-premium-ui-patch-js-20260519">
+  // [HPP DASHBOARD PREMIUM UI PATCH - 2026-05-19]
+  // [HPP HERO CARD TYPOGRAPHY & PREMIUM POLISH PATCH - 2026-05-19]
+  (function hppDashboardPremiumUiPatch20260519() {
+    const PROCESS = [
+      {
+        key: 'cuci',
+        title: 'HPP Cuci',
+        icon: 'ph-washing-machine',
+        color: '#2563eb',
+        unit: '/Load',
+        details: [
+          { label: 'Listrik Pompa /Load', source: () => sourceValue(['dispListrikPompaLoad'], 'dash-card-listrik-details', ['Listrik Pompa /Load'], ['Listrik Pompa Per Load', 'Listrik Pompa /Load']) },
+          { label: 'Listrik Cuci /Load', source: () => sourceValue(['dispListrikCuciLoad'], 'dash-card-listrik-details', ['Listrik Cuci /Load'], ['Cuci Per Load', 'Listrik Cuci Per Load', 'Listrik Cuci /Load']) },
+          { label: 'Air Cuci /Load', source: () => sourceValue(['dispAirCuciLoad'], 'dash-card-air-details', ['Air Cuci /Load'], ['Air Per Load', 'Air Cuci Per Load', 'Air Cuci /Load']) },
+          { label: 'Transaksi Apps /Load', source: () => adminNotaBreakdown().apps },
+          { label: 'Nota Transaksi /Load', source: () => adminNotaBreakdown().nota }
+        ]
+      },
+      {
+        key: 'kering',
+        title: 'HPP Kering',
+        icon: 'ph-timer',
+        color: '#f97316',
+        unit: '/Load',
+        details: [
+          { label: 'Listrik Kering /Load', source: () => electricDryerLoadValue() },
+          { label: 'Gas Kering /Load', source: () => sourceValue(['displayEstimasiBiayaGas'], 'dash-card-gas-details', ['Gas Kering /Load'], ['Estimasi Biaya Gas', 'Gas Per Load', 'Gas Kering Per Load', 'Gas Kering /Load']) }
+        ]
+      },
+      {
+        key: 'setrika',
+        title: 'HPP Setrika',
+        icon: 'ph-iron',
+        color: '#7c3aed',
+        unit: '/Jam',
+        details: [
+          { label: 'Air Setrika /Jam', when: context => !context.isSelfService && context.usesSteamIron, source: () => sourceValue(['dispAirBoilerJam'], 'dash-card-air-details', ['Air Setrika /Jam'], ['Air Setrika Jam', 'Air Setrika Per Jam', 'Air Setrika /Jam']) },
+          { label: 'Gas Setrika /Jam', when: context => !context.isSelfService && context.usesSteamIron, source: () => sourceValue([], 'dash-card-gas-details', ['Gas Setrika /Jam'], ['Setrika Per Jam', 'Gas Setrika Per Jam', 'Gas Setrika /Jam']) },
+          { label: 'Air Setrika /Jam', when: context => !context.isSelfService && context.usesElectricIron, source: () => sourceValue(['dispAirBoilerJam'], 'dash-card-air-details', ['Air Setrika /Jam'], ['Air Setrika Jam', 'Air Setrika Per Jam', 'Air Setrika /Jam']) },
+          { label: 'Listrik Setrika /Jam', when: context => !context.isSelfService && context.usesElectricIron, source: () => sourceValue(['dispListrikSetrikaJam'], 'dash-card-listrik-details', ['Listrik Setrika /Jam'], ['Listrik Setrika Jam', 'Listrik Setrika Per Jam', 'Listrik Setrika /Jam']) }
+        ]
+      }
+    ];
+
+    let timer = null;
+
+    function byId(id) { return document.getElementById(id); }
+    window.ZETT_DEBUG_ADMIN_NOTA_ZERO = window.ZETT_DEBUG_ADMIN_NOTA_ZERO === true;
+
+    function debugAdminNotaZero(payload) {
+      if (!window.ZETT_DEBUG_ADMIN_NOTA_ZERO || !window.console) return;
+      console.log('[ADMIN_NOTA_ZERO]', payload || {});
+    }
+
+    function clean(value) {
+      if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+      let raw = String(value || '').trim().replace(/[^\d.,-]/g, '');
+      if (!raw) return 0;
+      const hasComma = raw.includes(',');
+      const hasDot = raw.includes('.');
+      if (hasComma && hasDot) {
+        raw = raw.lastIndexOf(',') > raw.lastIndexOf('.')
+          ? raw.replace(/\./g, '').replace(',', '.')
+          : raw.replace(/,/g, '');
+      } else if (hasDot) {
+        const parts = raw.split('.');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw;
+      } else if (hasComma) {
+        const parts = raw.split(',');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw.replace(',', '.');
+      }
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function money(value) {
+      const rounded = Math.round(clean(value));
+      if (typeof window.formatRupiah === 'function') {
+        try { return window.formatRupiah(rounded); } catch (error) {}
+      }
+      return 'Rp ' + rounded.toLocaleString('id-ID');
+    }
+
+    function readMoneyById(id) {
+      const el = byId(id);
+      return el ? clean(el.textContent || el.value) : 0;
+    }
+
+    function getActiveHPPOutletName() {
+      if (typeof window.zettGetActiveHPPOutletName_ === 'function') return window.zettGetActiveHPPOutletName_();
+      return String(byId('inputNamaHPP')?.value || '').trim();
+    }
+
+    function isAdminNotaOutletNotSelected() {
+      const outlet = getActiveHPPOutletName();
+      if (typeof window.zettIsHPPOutletNotSelected_ === 'function') return window.zettIsHPPOutletNotSelected_();
+      const text = String(outlet || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      return !text || text === '-' || text === 'pilih cabang' || text === 'pilih outlet' || text === 'pilih cabang laundry' || text === 'semua cabang';
+    }
+
+    function zettGetZeroAdminNotaMetrics_() {
+      return {
+        apps: 0,
+        nota: 0,
+        total: 0,
+        appPerLoad: 0,
+        notaPerLoad: 0,
+        totalAdminNota: 0,
+        percent: 0,
+        displayAppPerLoad: 'Rp 0',
+        displayNotaPerLoad: 'Rp 0',
+        displayTotal: 'Rp 0',
+        source: 'zero'
+      };
+    }
+    window.zettGetZeroAdminNotaMetrics_ = window.zettGetZeroAdminNotaMetrics_ || zettGetZeroAdminNotaMetrics_;
+
+    function setAdminNotaCardTransition(card, active) {
+      if (!card) return;
+      card.classList.toggle('is-admin-nota-transitioning', !!active);
+      if (active) {
+        window.clearTimeout(card.__zettAdminNotaTransitionTimer);
+        card.__zettAdminNotaTransitionTimer = window.setTimeout(function() {
+          card.classList.remove('is-admin-nota-transitioning');
+        }, 180);
+      }
+    }
+
+    function findDetailValue(containerId, labels) {
+      const container = byId(containerId);
+      if (!container) return 0;
+      const needles = labels.map(label => String(label).toLowerCase());
+      const rows = Array.from(container.querySelectorAll('div'));
+      for (const row of rows) {
+        const label = String(row.querySelector('span')?.textContent || '').toLowerCase();
+        if (needles.some(needle => label.includes(needle))) {
+          return clean(row.querySelector('strong')?.textContent || row.textContent);
+        }
+      }
+      return 0;
+    }
+
+    function getSelectedHPPRow() {
+      const selected = String(byId('inputNamaHPP')?.value || '').trim().toLowerCase();
+      if (typeof window.zettFindActiveHPPRow === 'function') {
+        const active = window.zettFindActiveHPPRow();
+        const activeName = String(active?.namaOutlet || active?.['Nama Outlet'] || '').trim().toLowerCase();
+        if (active && (!selected || activeName === selected)) return active;
+      }
+      if (!selected) return null;
+      const sources = [];
+      if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) sources.push(masterDataHPP);
+      if (Array.isArray(window.masterDataHPP)) sources.push(window.masterDataHPP);
+      if (window.APP_STATE?.data?.master?.hpp) sources.push(window.APP_STATE.data.master.hpp);
+      for (const rows of sources) {
+        const found = rows.find(row => String(row?.namaOutlet || row?.['Nama Outlet'] || '').trim().toLowerCase() === selected);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function readRowNumber(keys) {
+      const rows = [getSelectedHPPRow(), getSelectedOutletRow()].filter(Boolean);
+      for (const row of rows) {
+        for (const key of keys) {
+          const value = clean(row[key]);
+          if (value > 0) return value;
+        }
+      }
+      return 0;
+    }
+
+    function sourceValue(ids, detailContainerId, detailLabels, rowKeys) {
+      const values = [];
+      (ids || []).forEach(id => values.push(readMoneyById(id)));
+      if (detailContainerId && detailLabels) values.push(findDetailValue(detailContainerId, detailLabels));
+      if (rowKeys) values.push(readRowNumber(rowKeys));
+      const found = values.find(value => Number.isFinite(Number(value)) && Number(value) > 0);
+      return found || 0;
+    }
+
+    function electricDryerLoadValue() {
+      return sourceValue(
+        ['dispListrikPengeringLoad'],
+        'dash-card-listrik-details',
+        ['Listrik Kering /Load'],
+        ['Listrik Kering Per Load', 'Listrik Kering /Load', 'Kering Per Load', 'listrikKeringPerLoad', 'listrikKeringLoad', 'keringElectricPerLoad']
+      );
+    }
+
+    function adminNotaBreakdown() {
+      if (isAdminNotaOutletNotSelected()) {
+        const zero = zettGetZeroAdminNotaMetrics_();
+        debugAdminNotaZero({
+          outletAktif: getActiveHPPOutletName(),
+          isOutletNotSelected: true,
+          sourceData: zero.source,
+          appPerLoad: zero.appPerLoad,
+          notaPerLoad: zero.notaPerLoad
+        });
+        return zero;
+      }
+      const apps = sourceValue(
+        ['dispNotaAppLoad'],
+        '',
+        ['Transaksi Apps /Load', 'Kasir Per Order'],
+        ['HPP Aplikasi Per Load', 'Transaksi Apps Per Load', 'Transaksi Apps /Load', 'transaksiAppsPerLoad', 'Kasir Per Order', 'Nota_App_HargaTrx']
+      );
+      const nota = sourceValue(
+        ['dispNotaCostTrx'],
+        '',
+        ['Nota Transaksi /Load', 'Nota Per Order'],
+        ['HPP Nota Transaksi Per Load', 'Nota Transaksi Per Load', 'Nota Transaksi /Load', 'notaTransaksiPerLoad', 'Nota Per Order', 'Nota_Thermal_Harga']
+      );
+      const total = sourceValue(
+        [],
+        '',
+        [],
+        ['Admin Nota Kasir Per Load', 'Admin Nota Kasir Per Order', 'Admin/Nota Per Load', 'adminNotaPerLoad']
+      );
+      return {
+        apps,
+        nota,
+        total: total > 0 ? total : apps + nota,
+        appPerLoad: apps,
+        notaPerLoad: nota,
+        totalAdminNota: total > 0 ? total : apps + nota,
+        percent: 0,
+        displayAppPerLoad: money(apps),
+        displayNotaPerLoad: money(nota),
+        displayTotal: money(total > 0 ? total : apps + nota),
+        source: (apps > 0 || nota > 0 || total > 0) ? 'live/sheet' : 'empty'
+      };
+    }
+
+    function renderAdminNotaCard() {
+      const valueEl = byId('dash-card-nota');
+      if (!valueEl) return;
+      const card = valueEl.closest('.hpp-card-dash');
+      let detail = byId('dash-card-nota-details');
+      if (!detail && card) {
+        if (typeof zettRemoveOldHPPDetailContainers_ === 'function') zettRemoveOldHPPDetailContainers_('nota', card, null);
+        detail = document.createElement('div');
+        detail.id = 'dash-card-nota-details';
+        detail.className = 'hpp-premium-lite-details';
+        valueEl.insertAdjacentElement('afterend', detail);
+      }
+      if (detail) detail.innerHTML = '';
+      const data = adminNotaBreakdown();
+      const nextValue = money(data.total);
+      const previousSignature = card ? card.__zettAdminNotaSignature : '';
+      const nextSignature = [data.source, data.apps, data.nota, data.total].join('|');
+      if (card && previousSignature !== nextSignature) setAdminNotaCardTransition(card, true);
+      if (card) card.__zettAdminNotaSignature = nextSignature;
+      if (valueEl.textContent !== nextValue) valueEl.textContent = nextValue;
+      if (card) card.classList.toggle('is-admin-nota-zero-state', data.source === 'zero');
+      const metrics = [
+        { label: 'Transaksi Apps /Load', value: data.apps },
+        { label: 'Nota Transaksi /Load', value: data.nota },
+        { label: 'Total Admin/Nota /Load', value: data.total }
+      ];
+      if (typeof window.renderHPPCardDetails === 'function') {
+        window.renderHPPCardDetails('nota', metrics);
+      } else if (detail) {
+        const nextDetail = metrics
+          .map(item => '<div class="hpp-card-row"><span class="hpp-card-label">' + item.label + '</span><strong class="hpp-card-amount">' + money(item.value) + '</strong></div>')
+          .join('');
+        if (detail.innerHTML !== nextDetail) detail.innerHTML = nextDetail;
+      }
+      const pctEl = byId('dash-card-nota-pct');
+      if (pctEl && data.source === 'zero') pctEl.textContent = '0%';
+      if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('nota', data.total);
+      debugAdminNotaZero({
+        outletAktif: getActiveHPPOutletName(),
+        isOutletNotSelected: data.source === 'zero',
+        sourceData: data.source,
+        appPerLoad: data.apps,
+        notaPerLoad: data.nota
+      });
+    }
+
+    function resetAdminNotaCardIfNoOutlet() {
+      if (!isAdminNotaOutletNotSelected()) return false;
+      renderAdminNotaCard();
+      return true;
+    }
+    window.zettResetAdminNotaCardIfNoOutlet = resetAdminNotaCardIfNoOutlet;
+
+    // [HPP DASHBOARD REQUEST PATCH - 2026-05-19]
+    function getSelectedOutletRow() {
+      const selected = String(byId('inputNamaHPP')?.value || '').trim().toLowerCase();
+      if (!selected) return null;
+      const sources = [];
+      if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) sources.push(masterDataCabang);
+      if (Array.isArray(window.masterDataCabang)) sources.push(window.masterDataCabang);
+      if (window.APP_STATE?.data?.master?.cabang) sources.push(window.APP_STATE.data.master.cabang);
+      if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) sources.push(masterDataHPP);
+      if (Array.isArray(window.masterDataHPP)) sources.push(window.masterDataHPP);
+      if (window.APP_STATE?.data?.master?.hpp) sources.push(window.APP_STATE.data.master.hpp);
+      for (const rows of sources) {
+        const found = rows.find(row => String(row?.namaOutlet || row?.['Nama Outlet'] || '').trim().toLowerCase() === selected);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function isSelfServiceOutlet() {
+      const outlet = getSelectedOutletRow();
+      const category = String(outlet?.kategori || outlet?.kategoriLaundry || outlet?.['Kategori Laundry'] || '').toLowerCase();
+      return category.includes('self');
+    }
+
+    function getDashboardContext() {
+      const outlet = getSelectedOutletRow() || {};
+      const row = getSelectedHPPRow() || {};
+      const category = String(outlet.kategori || outlet.kategoriLaundry || outlet['Kategori Laundry'] || row['Kategori Laundry'] || byId('inputKategori')?.value || '').toLowerCase();
+      const setrika = String(outlet.tipeSetrikaUtama || outlet.tipeSetrika || row['Tipe Setrika'] || '').toLowerCase();
+      const isSelfService = category.includes('self');
+      const isHybrid = category.includes('hybrid');
+      const isDropOff = category.includes('drop') || category.includes('kiloan');
+      const usesElectricIron = !isSelfService && setrika.includes('listrik');
+      const usesSteamIron = !isSelfService && !usesElectricIron;
+      return {
+        isSelfService,
+        isHybrid,
+        isDropOff,
+        showKgEstimate: isDropOff || isHybrid,
+        usesElectricIron,
+        usesSteamIron,
+        capacities: {
+          cuci: Math.max(readRowNumber(['Kap Cuci', 'cuciKg']) || 1, 1),
+          kering: Math.max(readRowNumber(['Kap Kering', 'pengeringKg']) || 1, 1),
+          setrika: Math.max(readRowNumber(['Kap Setrika', 'setrikaKg', 'Kg Setrika']) || 1, 1)
+        }
+      };
+    }
+
+    // [HPP DASHBOARD OUTLET DATA RESTORE + CATEGORY BADGE FIX - 2026-05-19]
+    function processIconMarkup(item) {
+      if (item.key !== 'setrika') return '<i class="ph ' + item.icon + '"></i>';
+      return [
+        '<svg class="hpp-process-iron-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
+          '<path d="M5 14.5h11.8c1.9 0 3.4 1.5 3.4 3.4v1.1H4.2v-2.7c0-1 .8-1.8 1.8-1.8Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>',
+          '<path d="M7.2 14.5V8.8c0-1.7 1.4-3 3-3h3.1c2.4 0 4.6 1.4 5.5 3.6l2.2 5.1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+          '<path d="M10.1 8.8h3.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+          '<path d="M6.4 18.9h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+        '</svg>'
+      ].join('');
+    }
+
+    function ensureProcessCards() {
+      const dashboard = byId('hpp-dashboard-view');
+      const hero = dashboard ? dashboard.firstElementChild : null;
+      const heroText = hero ? hero.querySelector('.flex-1') : null;
+      if (!dashboard || !hero || !heroText) return;
+
+      hero.classList.add('hpp-hero-dashboard');
+      const title = heroText.querySelector('h2');
+      const subtitle = heroText.querySelector('p');
+      const total = byId('dash-hpp-total');
+      const totalRow = total ? total.closest('.flex') : null;
+
+      if (title) title.textContent = 'RINGKASAN BIAYA VARIABEL';
+      if (subtitle) subtitle.textContent = 'Ringkasan biaya variabel untuk menjaga margin tetap sehat';
+      if (totalRow) totalRow.classList.add('hpp-total-value-row');
+
+      let grid = heroText.querySelector('.hpp-process-grid');
+      if (!grid) {
+        grid = document.createElement('div');
+        grid.className = 'hpp-process-grid';
+        PROCESS.forEach(item => {
+          const card = document.createElement('article');
+          card.className = 'hpp-process-card';
+          card.dataset.hppProcess = item.key;
+          card.style.setProperty('--process-accent', item.color);
+          card.innerHTML = [
+            '<div class="hpp-process-head">',
+              '<span class="hpp-process-icon">' + processIconMarkup(item) + '</span>',
+              '<span class="hpp-process-title">' + item.title + '</span>',
+            '</div>',
+            '<div class="hpp-process-main">',
+              '<span class="hpp-process-value" data-process-value="' + item.key + '">Rp 0</span>',
+              '<span class="hpp-process-unit">' + item.unit + '</span>',
+            '</div>',
+            '<div class="hpp-process-estimate" data-process-estimate="' + item.key + '"></div>',
+            '<div class="hpp-process-detail" data-process-detail="' + item.key + '"></div>',
+            '<div class="hpp-process-foot">',
+              '<div class="hpp-process-bar"><span data-process-bar="' + item.key + '"></span></div>',
+              '<span class="hpp-process-pct" data-process-pct="' + item.key + '">0%</span>',
+            '</div>'
+          ].join('');
+          grid.appendChild(card);
+        });
+        heroText.appendChild(grid);
+      }
+
+    }
+
+    function updateProcessCards() {
+      renderAdminNotaCard();
+      const forceZero = !!window.__HPP_FORCE_ZERO_DASHBOARD;
+      const hasSelectedOutlet = !forceZero && !!String(byId('inputNamaHPP')?.value || '').trim();
+      const context = getDashboardContext();
+      const selfService = context.isSelfService;
+      const processValues = {};
+      const domWrites = [];
+      PROCESS.forEach(item => {
+        const detailRows = item.details
+          .filter(detail => !detail.when || detail.when(context))
+          .map(detail => ({
+            label: detail.label,
+            value: Math.max(0, Number(detail.source()) || 0)
+          }));
+        const total = !hasSelectedOutlet || (selfService && item.key === 'setrika')
+          ? 0
+          : detailRows.reduce((sum, row) => sum + row.value, 0);
+        processValues[item.key] = total;
+
+        const valueEl = document.querySelector('#view-hpp [data-process-value="' + item.key + '"]');
+        const estimateEl = document.querySelector('#view-hpp [data-process-estimate="' + item.key + '"]');
+        const detailEl = document.querySelector('#view-hpp [data-process-detail="' + item.key + '"]');
+        const nextValue = money(total);
+        if (valueEl && valueEl.textContent !== nextValue) {
+          domWrites.push(function() { valueEl.textContent = nextValue; });
+        }
+        if (estimateEl) {
+          const cap = context.capacities[item.key] || 1;
+          const showEstimate = hasSelectedOutlet && context.showKgEstimate && !(selfService && item.key === 'setrika');
+          const nextEstimate = showEstimate ? 'Estimasi ' + money(total / Math.max(cap, 1)) + ' /Kg' : '';
+          if (estimateEl.textContent !== nextEstimate) {
+            domWrites.push(function() { estimateEl.textContent = nextEstimate; });
+          }
+        }
+        if (detailEl) {
+          const nextDetailHtml = selfService && item.key === 'setrika'
+            ? ''
+            : detailRows
+              .map(row => '<div class="hpp-process-detail-row"><span>' + row.label + '</span><strong>' + money(hasSelectedOutlet ? row.value : 0) + '</strong></div>')
+              .join('');
+          if (detailEl.innerHTML !== nextDetailHtml) {
+            domWrites.push(function() { detailEl.innerHTML = nextDetailHtml; });
+          }
+        }
+      });
+
+      const grand = PROCESS.reduce((sum, item) => {
+        const rawValue = Number(processValues[item.key]);
+        return sum + (Number.isFinite(rawValue) ? Math.max(0, rawValue) : 0);
+      }, 0);
+      PROCESS.forEach(item => {
+        const rawValue = Number(processValues[item.key]);
+        const value = Number.isFinite(rawValue) ? Math.max(0, rawValue) : 0;
+        const rawPct = grand > 0 ? Math.round((value / grand) * 100) : 0;
+        const pct = Number.isFinite(rawPct) ? Math.max(0, rawPct) : 0;
+        const pctEl = document.querySelector('#view-hpp [data-process-pct="' + item.key + '"]');
+        const barEl = document.querySelector('#view-hpp [data-process-bar="' + item.key + '"]');
+        const nextPct = pct + '%';
+        if (pctEl && pctEl.textContent !== nextPct) {
+          domWrites.push(function() { pctEl.textContent = nextPct; });
+        }
+        if (barEl) {
+          domWrites.push(function() { barEl.style.setProperty('--process-width', pct + '%'); });
+        }
+      });
+      if (domWrites.length) {
+        window.requestAnimationFrame(function() {
+          domWrites.forEach(function(write) { write(); });
+        });
+      }
+    }
+
+    function refresh() {
+      if (!isHppProcessRefreshAllowed()) return;
+      try {
+        ensureProcessCards();
+        resetAdminNotaCardIfNoOutlet();
+        updateProcessCards();
+      } catch (error) {
+        if (typeof window.zettHPPSafeError === 'function') window.zettHPPSafeError('[HPP_SAFE_PROCESS_REFRESH_ERROR]', error);
+      }
+    }
+
+    window.zettRefreshHPPProcessCards = refresh;
+    window.zettResetHPPProcessCardsToZero = function() {
+      ensureProcessCards();
+      PROCESS.forEach(item => {
+        const valueEl = document.querySelector('#view-hpp [data-process-value="' + item.key + '"]');
+        const estimateEl = document.querySelector('#view-hpp [data-process-estimate="' + item.key + '"]');
+        const detailEl = document.querySelector('#view-hpp [data-process-detail="' + item.key + '"]');
+        const pctEl = document.querySelector('#view-hpp [data-process-pct="' + item.key + '"]');
+        const barEl = document.querySelector('#view-hpp [data-process-bar="' + item.key + '"]');
+        if (valueEl) valueEl.textContent = money(0);
+        if (estimateEl) estimateEl.textContent = '';
+        if (detailEl) detailEl.innerHTML = '';
+        if (pctEl) pctEl.textContent = '0%';
+        if (barEl) barEl.style.setProperty('--process-width', '0%');
+      });
+    };
+
+    function isHppProcessRefreshAllowed() {
+      const view = byId('view-hpp');
+      if (typeof window.zettIsActiveViewHPP_ === 'function') return window.zettIsActiveViewHPP_();
+      return !!(view && !view.classList.contains('hidden') && view.offsetParent !== null);
+    }
+
+    function scheduleRefresh() {
+      if (!isHppProcessRefreshAllowed()) {
+        if (typeof window.zettHPPSafeDebug === 'function') window.zettHPPSafeDebug('[HPP_SAFE_SKIP_PROCESS_REFRESH_OUTSIDE_HPP]');
+        return;
+      }
+      if (typeof window.zettIsHPPPopulating_ === 'function' && window.zettIsHPPPopulating_()) return;
+      const token = (window.__HPP_SAFE_PROCESS_REFRESH_TOKEN__ || 0) + 1;
+      window.__HPP_SAFE_PROCESS_REFRESH_TOKEN__ = token;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(function() {
+        if (token !== window.__HPP_SAFE_PROCESS_REFRESH_TOKEN__) return;
+        if (window.__HPP_SAFE_PROCESS_REFRESH_LOCK__) return;
+        window.__HPP_SAFE_PROCESS_REFRESH_LOCK__ = true;
+        try { refresh(); }
+        finally { window.__HPP_SAFE_PROCESS_REFRESH_LOCK__ = false; }
+      }, 90);
+    }
+
+    function wrap(name) {
+      const fn = window[name];
+      if (typeof fn !== 'function' || fn.__hppPremiumUiWrapped) return;
+      const wrapped = function() {
+        try {
+          return fn.apply(this, arguments);
+        } catch (error) {
+          if (typeof window.zettHPPSafeError === 'function') window.zettHPPSafeError('[HPP_SAFE_CALCULATE_ERROR:' + name + ']', error);
+        } finally {
+          scheduleRefresh();
+        }
+      };
+      wrapped.__hppPremiumUiWrapped = true;
+      window[name] = wrapped;
+    }
+
+    function boot() {
+      if (window.__HPP_SAFE_PROCESS_REFRESH_BOOTED__) return;
+      window.__HPP_SAFE_PROCESS_REFRESH_BOOTED__ = true;
+      ['calculateGas', 'calculateListrik', 'calculateAir', 'calculatePacking', 'calculateBahanBaku', 'calculateNota', 'zettHPPUpdateDashboardFromState'].forEach(wrap);
+      refresh();
+      window.setTimeout(refresh, 350);
+      window.setTimeout(refresh, 1200);
+
+      const dashboard = byId('hpp-dashboard-view');
+      if (dashboard && window.MutationObserver) {
+        const observer = new MutationObserver(scheduleRefresh);
+        observer.observe(dashboard, { childList: true, subtree: true, characterData: true });
+      }
+
+      document.addEventListener('change', event => {
+        if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+          console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+          return;
+        }
+        // Guard HPP: batasi scheduleRefresh ke halaman HPP agar tidak memicu freeze/render loop dari luar.
+        if (event.target && (event.target.id === 'inputNamaHPP' || event.target.closest('#view-hpp'))) scheduleRefresh();
+      });
+      document.addEventListener('input', event => {
+        if (event.target && event.target.closest('#view-hpp')) scheduleRefresh();
+      });
+      window.addEventListener('resize', scheduleRefresh, { passive: true });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+    else boot();
+  })();
+</script>
+
+<script id="zett-hpp-fix-ghost-detail-packing-bahan-script-20260609">
+(function () {
+  var applied = false;
+
+  function zettFixPackingChemicalGapFinal() {
+    if (applied) return;
+    applied = true;
+
+    ['packing', 'bahan'].forEach(function (type) {
+      var valueEl = document.getElementById('dash-card-' + type);
+      var detailEl = document.getElementById('dash-card-' + type + '-details');
+      if (!valueEl || !detailEl) return;
+
+      var card = valueEl.closest('.hpp-card-dash');
+      if (!card) return;
+
+      card.setAttribute('data-hpp-type', type);
+
+      card.querySelectorAll('.hpp-premium-lite-details').forEach(function (node) {
+        if (node !== detailEl) node.remove();
+      });
+
+      var showDetail = card.querySelector('.hpp-show-detail');
+      if (showDetail) showDetail.remove();
+
+      if (detailEl.previousElementSibling !== valueEl) {
+        valueEl.insertAdjacentElement('afterend', detailEl);
+      }
+
+      valueEl.style.setProperty('margin-bottom', '8px', 'important');
+      detailEl.style.setProperty('display', 'flex', 'important');
+      detailEl.style.setProperty('flex-direction', 'column', 'important');
+      detailEl.style.setProperty('margin-top', '8px', 'important');
+      detailEl.style.setProperty('padding-top', '0', 'important');
+      detailEl.style.setProperty('gap', '3px', 'important');
+      detailEl.style.setProperty('width', '100%', 'important');
+      detailEl.style.setProperty('align-self', 'stretch', 'important');
+      detailEl.style.setProperty('position', 'static', 'important');
+      detailEl.style.setProperty('transform', 'none', 'important');
+      detailEl.style.setProperty('flex', '0 0 auto', 'important');
+    });
+  }
+
+  var origSync = window.zettSyncHPPDetailGapFromElectric;
+  if (typeof origSync === 'function' && !origSync.__pbFixed) {
+    window.zettSyncHPPDetailGapFromElectric = function () {
+      var r = origSync.apply(this, arguments);
+      ['packing', 'bahan'].forEach(function (type) {
+        var d = document.getElementById('dash-card-' + type + '-details');
+        if (d) {
+          d.style.setProperty('margin-top', '8px', 'important');
+          d.style.setProperty('transform', 'none', 'important');
+        }
+      });
+      return r;
+    };
+    window.zettSyncHPPDetailGapFromElectric.__pbFixed = true;
+  }
+
+  var origRender = window.zettRenderAllHPPCardDetails;
+  if (typeof origRender === 'function' && !origRender.__pbFixed) {
+    window.zettRenderAllHPPCardDetails = function () {
+      var r = origRender.apply(this, arguments);
+      requestAnimationFrame(function () {
+        applied = false;
+        zettFixPackingChemicalGapFinal();
+      });
+      return r;
+    };
+    window.zettRenderAllHPPCardDetails.__pbFixed = true;
+  }
+
+  window.zettFixPackingChemicalGapFinal = zettFixPackingChemicalGapFinal;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      zettFixPackingChemicalGapFinal();
+      setTimeout(zettFixPackingChemicalGapFinal, 400);
+    }, { once: true });
+  } else {
+    zettFixPackingChemicalGapFinal();
+    setTimeout(zettFixPackingChemicalGapFinal, 400);
+  }
+
+  document.addEventListener('change', function (event) {
+    if (event.target && event.target.id === 'inputNamaHPP') {
+      applied = false;
+      setTimeout(zettFixPackingChemicalGapFinal, 150);
+    }
+  });
+})();
+</script>

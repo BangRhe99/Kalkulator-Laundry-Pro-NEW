@@ -1,0 +1,426 @@
+<!-- HPP visual and interaction bridges extracted from HPP_Core.html. Logic unchanged. -->
+
+<script id="zett-hpp-component-card-display-unit-20260609">
+  (function zettHPPComponentCardDisplayUnit20260609() {
+    const loadUnitCards = ['gas', 'listrik', 'air', 'nota'];
+
+    function byId(id) { return document.getElementById(id); }
+
+    function textOf(value) {
+      return String(value || '').trim();
+    }
+
+    function isSelfService() {
+      const selected = textOf(byId('inputNamaHPP')?.value).toLowerCase();
+      const row = typeof window.zettFindActiveHPPRow === 'function' ? (window.zettFindActiveHPPRow() || {}) : {};
+      const outlet = typeof window.zettFindActiveOutletRow === 'function' ? (window.zettFindActiveOutletRow() || {}) : {};
+      const sources = [
+        outlet.kategori,
+        outlet.kategoriLaundry,
+        outlet['Kategori Laundry'],
+        row.kategori,
+        row.kategoriLaundry,
+        row['Kategori Laundry'],
+        byId('inputKategori')?.value
+      ];
+
+      if (selected && Array.isArray(window.masterDataHPP)) {
+        const match = window.masterDataHPP.find(function(item) {
+          return textOf(item?.namaOutlet || item?.['Nama Outlet']).toLowerCase() === selected;
+        });
+        if (match) sources.push(match.kategoriLaundry, match.kategori, match['Kategori Laundry']);
+      }
+
+      return sources.some(function(value) {
+        return textOf(value).toLowerCase().includes('self');
+      });
+    }
+
+    function normalizeMoneyText(raw) {
+      return textOf(raw).replace(/\s*\/\s*(kg|load)\s*$/i, '');
+    }
+
+    function applyUnit() {
+      const page = byId('view-hpp');
+      const noOutlet = typeof window.zettIsHPPOutletNotSelected_ === 'function'
+        ? window.zettIsHPPOutletNotSelected_()
+        : !textOf(byId('inputNamaHPP')?.value);
+      const self = !noOutlet && isSelfService();
+      if (page) {
+        page.classList.toggle('hpp-no-outlet-components', !!noOutlet);
+        page.classList.toggle('hpp-self-service-components', !!self);
+      }
+
+      if (noOutlet) {
+        loadUnitCards.forEach(function(type) {
+          const el = byId('dash-card-' + type);
+          if (el) el.textContent = normalizeMoneyText(el.textContent);
+        });
+        return;
+      }
+
+      if (!self) return;
+
+      loadUnitCards.forEach(function(type) {
+        const el = byId('dash-card-' + type);
+        if (!el) return;
+        const money = normalizeMoneyText(el.textContent);
+        if (money) el.textContent = money;
+      });
+    }
+
+    function scheduleUnit() {
+      requestAnimationFrame(applyUnit);
+      setTimeout(applyUnit, 80);
+    }
+
+    function wrap(name) {
+      const original = window[name];
+      if (typeof original !== 'function' || original.__hppComponentUnitWrapped) return;
+      const wrapped = function() {
+        const result = original.apply(this, arguments);
+        scheduleUnit();
+        return result;
+      };
+      wrapped.__hppComponentUnitWrapped = true;
+      window[name] = wrapped;
+    }
+
+    function boot() {
+      ['zettHPPUpdateDashboardFromState', 'calculateGas', 'calculateListrik', 'calculateAir', 'calculateNota'].forEach(wrap);
+      scheduleUnit();
+      setTimeout(scheduleUnit, 450);
+      const outlet = byId('inputNamaHPP');
+      if (outlet && !outlet.__hppComponentUnitBound) {
+        outlet.__hppComponentUnitBound = true;
+        outlet.addEventListener('change', scheduleUnit);
+        outlet.addEventListener('input', scheduleUnit);
+      }
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+    else boot();
+  })();
+</script>
+
+<script id="zett-hpp-spatial-performance-bridge">
+  /**
+   * ======================================================================
+   * ZETTBOT HPP SPATIAL PERFORMANCE BRIDGE
+   * Native Vanilla JS, non-blocking, tidak mengubah backend/database.
+   * ====================================================================== */
+  (function zettHppSpatialPerformanceBridge() {
+    const ready = (fn) => {
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
+      else fn();
+    };
+
+    function markInteractiveCards() {
+      document.querySelectorAll('#view-hpp .hpp-card-dash').forEach((card) => {
+        if (!card.hasAttribute('tabindex')) card.setAttribute('tabindex', '0');
+        if (!card.hasAttribute('role')) card.setAttribute('role', 'button');
+        card.addEventListener('keydown', function(event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            card.click();
+          }
+        }, { passive: false });
+      });
+    }
+
+    function applyInitialSkeleton() {
+      const targets = ['dash-hpp-total', 'dash-card-gas', 'dash-card-listrik', 'dash-card-air', 'dash-card-packing', 'dash-card-bahan', 'dash-card-nota'];
+      targets.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el && /^Rp\s?0$/i.test(el.textContent.trim())) el.classList.add('hpp-skeleton-pulse');
+      });
+      window.setTimeout(() => {
+        targets.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.classList.remove('hpp-skeleton-pulse');
+        });
+      }, 650);
+    }
+
+    function singleViewEnter(target) {
+      if (!target) return;
+      target.classList.remove('hpp-view-enter-premium');
+      void target.offsetWidth;
+      target.classList.add('hpp-view-enter-premium');
+    }
+
+    function bridgeHppFormTransition() {
+      const originalOpen = window.openHPPForm;
+      if (typeof originalOpen === 'function' && !originalOpen.__zettSpatialWrapped) {
+        const wrapped = function(type, title) {
+          const result = originalOpen.apply(this, arguments);
+          window.requestAnimationFrame(() => {
+            singleViewEnter(document.getElementById('hpp-form-view'));
+            const activeTab = document.getElementById('tab-' + type);
+            singleViewEnter(activeTab);
+            const scroller = document.getElementById('mainViewScroller') || document.querySelector('.custom-scroll');
+            if (scroller && typeof scroller.scrollTo === 'function') scroller.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+          return result;
+        };
+        wrapped.__zettSpatialWrapped = true;
+        window.openHPPForm = wrapped;
+      }
+
+      const originalClose = window.closeHPPForm;
+      if (typeof originalClose === 'function' && !originalClose.__zettSpatialWrapped) {
+        const wrappedClose = function() {
+          const result = originalClose.apply(this, arguments);
+          window.requestAnimationFrame(() => singleViewEnter(document.getElementById('hpp-dashboard-view')));
+          return result;
+        };
+        wrappedClose.__zettSpatialWrapped = true;
+        window.closeHPPForm = wrappedClose;
+      }
+    }
+
+    function bridgeRenderDashboard() {
+      if (!window.StateMachine || typeof window.StateMachine.renderDashboard !== 'function' || window.StateMachine.renderDashboard.__zettSpatialWrapped) return;
+      const originalRender = window.StateMachine.renderDashboard.bind(window.StateMachine);
+      const wrappedRender = function() {
+        window.requestAnimationFrame(() => {
+          originalRender();
+          document.querySelectorAll('#view-hpp .hpp-skeleton-pulse').forEach(el => el.classList.remove('hpp-skeleton-pulse'));
+        });
+      };
+      wrappedRender.__zettSpatialWrapped = true;
+      window.StateMachine.renderDashboard = wrappedRender;
+    }
+
+    ready(() => {
+      markInteractiveCards();
+      applyInitialSkeleton();
+      bridgeHppFormTransition();
+      bridgeRenderDashboard();
+      singleViewEnter(document.getElementById('hpp-dashboard-view'));
+    });
+  })();
+</script>
+
+<script id="zett-hpp-umkm-compact-percent-bridge">
+  /**
+   * Menambah informasi kontribusi per komponen tanpa mengubah logic kalkulasi.
+   * Data tetap berasal dari APP_STATE.data.hpp yang sudah dipakai dashboard HPP.
+   */
+  (function zettHppUmkmCompactPercentBridge() {
+    const map = {
+      gas: 'dash-card-gas',
+      listrik: 'dash-card-listrik',
+      air: 'dash-card-air',
+      packing: 'dash-card-packing',
+      bahan: 'dash-card-bahan',
+      nota: 'dash-card-nota'
+    };
+
+    function ensurePercentNodes() {
+      Object.keys(map).forEach((key) => {
+        const valueEl = document.getElementById(map[key]);
+        if (!valueEl) return;
+        const id = map[key] + '-pct';
+        if (document.getElementById(id)) return;
+        const pct = document.createElement('p');
+        pct.id = id;
+        pct.className = 'hpp-card-percent';
+        pct.textContent = '0% dari HPP';
+        valueEl.insertAdjacentElement('afterend', pct);
+      });
+    }
+
+    function updatePercentNodes() {
+      ensurePercentNodes();
+      try {
+        if (typeof APP_STATE === 'undefined' || !APP_STATE.data || !APP_STATE.data.hpp) return;
+        const hpp = APP_STATE.data.hpp;
+        const total = Number(hpp.total || 0);
+        Object.keys(map).forEach((key) => {
+          const pctEl = document.getElementById(map[key] + '-pct');
+          if (!pctEl) return;
+          const value = Number(hpp[key] || 0);
+          const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+          pctEl.textContent = pct + '% dari HPP';
+        });
+      } catch (error) {
+        console.error('Gagal update persentase card HPP:', error);
+      }
+    }
+
+    function wrapRenderDashboard() {
+      try {
+        if (typeof StateMachine === 'undefined' || !StateMachine.renderDashboard || StateMachine.renderDashboard.__zettUmkmPctWrapped) return;
+        const originalRender = StateMachine.renderDashboard.bind(StateMachine);
+        const wrappedRender = function() {
+          const result = originalRender.apply(this, arguments);
+          window.requestAnimationFrame(updatePercentNodes);
+          return result;
+        };
+        wrappedRender.__zettUmkmPctWrapped = true;
+        StateMachine.renderDashboard = wrappedRender;
+      } catch (error) {
+        console.error('Gagal wrap render dashboard HPP:', error);
+      }
+    }
+
+    function boot() {
+      ensurePercentNodes();
+      updatePercentNodes();
+      wrapRenderDashboard();
+      window.setTimeout(updatePercentNodes, 450);
+      window.setTimeout(updatePercentNodes, 1200);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+    else boot();
+  })();
+</script>
+
+<script id="zett-hpp-mobile-premium-class-map-20260515">
+  (function zettHppMobilePremiumClassMap() {
+    function applyHppPremiumClasses() {
+      const page = document.getElementById('view-hpp');
+      const dashboard = document.getElementById('hpp-dashboard-view');
+      if (!page || !dashboard) return;
+
+      page.classList.add('hpp-page');
+      const grid = dashboard.querySelector('.grid.grid-cols-2');
+      if (grid) grid.classList.add('hpp-grid');
+
+      dashboard.querySelectorAll('.hpp-card-dash').forEach((card) => {
+        card.classList.add('hpp-cost-card');
+        const icon = Array.from(card.children).find((child) =>
+          child.classList && (child.classList.contains('w-10') || child.classList.contains('w-12'))
+        );
+        if (icon) icon.classList.add('hpp-cost-icon');
+        const label = card.querySelector('h3');
+        if (label) label.classList.add('hpp-cost-label');
+        const value = card.querySelector('[id^="dash-card-"]');
+        if (value) value.classList.add('hpp-cost-value');
+        const percent = card.querySelector('.hpp-card-percent');
+        if (percent) percent.classList.add('hpp-cost-percent');
+        card.querySelectorAll('.zett-gas-card-details > div, .zett-electric-card-details > div').forEach((pill) => {
+          pill.classList.add('hpp-cost-detail-pill');
+          const labelEl = pill.querySelector('span');
+          const valueEl = pill.querySelector('strong');
+          if (labelEl) labelEl.classList.add('hpp-cost-detail-label');
+          if (valueEl) valueEl.classList.add('hpp-cost-detail-value');
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', applyHppPremiumClasses);
+    document.addEventListener('hpp:dashboard-updated', applyHppPremiumClasses);
+    window.setTimeout(applyHppPremiumClasses, 400);
+  })();
+</script>
+
+<script id="zett-hpp-action-button-final-js">
+  (function zettHppActionButtonFinalPatch(){
+    function byId(id) { return document.getElementById(id); }
+
+    function forceShowHppButtons() {
+      const area = byId('actionAreaHPP');
+      const btnUpdate = byId('btnUpdateHPP');
+      const btnSimpan = byId('btnSimpanHPP');
+      if (!area || !btnSimpan) return;
+
+      const actions = btnSimpan.parentElement;
+      if (actions) actions.classList.add('zett-hpp-actions-final');
+
+      btnSimpan.classList.add('zett-force-show', 'zett-save-new-mode');
+      btnSimpan.classList.remove('hidden');
+      btnSimpan.style.display = 'flex';
+      const isGas = (window.zettGetActiveHPPType && window.zettGetActiveHPPType() === 'gas');
+      btnSimpan.innerHTML = isGas
+        ? '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru'
+        : '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru';
+      btnSimpan.onclick = function(event) {
+        event.preventDefault();
+        if (window.zettGetActiveHPPType && window.zettGetActiveHPPType() === 'gas' && typeof window.saveGasHPPData === 'function') {
+          return window.saveGasHPPData(event);
+        }
+        return window.zettSimpanHPPBaru(event);
+      };
+
+      if (btnUpdate) {
+        btnUpdate.classList.add('zett-update-mode');
+        btnUpdate.innerHTML = '<i class="ph ph-check-circle text-lg"></i> Perbarui Data HPP';
+        if (!btnUpdate.classList.contains('hidden')) {
+          btnUpdate.style.display = 'flex';
+        }
+      }
+    }
+
+    window.zettSimpanHPPBaru = function(event) {
+      if (event) event.preventDefault();
+
+      const btnUpdate = byId('btnUpdateHPP');
+      const btnSimpan = byId('btnSimpanHPP');
+      const updateWasHidden = !btnUpdate || btnUpdate.classList.contains('hidden');
+
+      /*
+       * simpanDataHPP() menentukan mode dari class hidden pada btnUpdateHPP.
+       * Untuk tombol "Simpan Data Baru", btnUpdateHPP disembunyikan sementara
+       * hanya selama pembacaan mode agar sistem lama tetap aman dan tidak perlu
+       * mengubah backend/database.
+       */
+      if (btnUpdate) {
+        btnUpdate.classList.add('hidden');
+        btnUpdate.style.display = 'none';
+      }
+
+      if (typeof window.simpanDataHPP === 'function') {
+        window.simpanDataHPP(event);
+      }
+
+      setTimeout(function(){
+        if (btnUpdate && !updateWasHidden) {
+          btnUpdate.classList.remove('hidden');
+          btnUpdate.style.display = 'flex';
+        }
+        if (btnSimpan) {
+          btnSimpan.classList.add('zett-force-show', 'zett-save-new-mode');
+          btnSimpan.classList.remove('hidden');
+          btnSimpan.style.display = 'flex';
+          btnSimpan.innerHTML = '<i class="ph ph-floppy-disk text-xl"></i> Simpan Data Baru';
+        }
+      }, 80);
+    };
+
+    const originalOpenHPPForm = window.openHPPForm;
+    if (typeof originalOpenHPPForm === 'function' && !originalOpenHPPForm.__zettActionButtonPatched) {
+      const patchedOpen = function(type, title) {
+        const result = originalOpenHPPForm.apply(this, arguments);
+        requestAnimationFrame(function(){
+          forceShowHppButtons();
+          setTimeout(forceShowHppButtons, 120);
+        });
+        return result;
+      };
+      patchedOpen.__zettActionButtonPatched = true;
+      window.openHPPForm = patchedOpen;
+    }
+
+    const originalToggleActionButtons = window.toggleActionButtons;
+    if (typeof originalToggleActionButtons === 'function' && !originalToggleActionButtons.__zettActionButtonPatched) {
+      const patchedToggle = function() {
+        const result = originalToggleActionButtons.apply(this, arguments);
+        requestAnimationFrame(forceShowHppButtons);
+        return result;
+      };
+      patchedToggle.__zettActionButtonPatched = true;
+      window.toggleActionButtons = patchedToggle;
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function(){
+        setTimeout(forceShowHppButtons, 250);
+      });
+    } else {
+      setTimeout(forceShowHppButtons, 250);
+    }
+  })();
+</script>
