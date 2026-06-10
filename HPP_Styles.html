@@ -7279,3 +7279,285 @@
         opacity 160ms cubic-bezier(.22, .61, .36, 1);
     }
   </style>
+
+<style id="zett-hpp-fixed-dashboard-viewport-20260610">
+  @media (min-width: 768px) {
+    #mainViewScroller:has(#view-hpp:not(.hidden)),
+    body:has(#view-hpp:not(.hidden)) {
+      overflow: hidden !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) {
+      --hpp-fixed-height: calc(100dvh - 92px);
+      display: grid !important;
+      grid-template-rows: minmax(0, 1fr) auto !important;
+      gap: 10px !important;
+      height: var(--hpp-fixed-height) !important;
+      min-height: var(--hpp-fixed-height) !important;
+      max-height: var(--hpp-fixed-height) !important;
+      width: 100% !important;
+      max-width: 1180px !important;
+      margin: 0 auto !important;
+      padding: 0 8px 10px !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view {
+      display: grid !important;
+      grid-template-rows: minmax(0, .88fr) minmax(0, 1.12fr) !important;
+      gap: 10px !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      max-height: 100% !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 auto !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view > .bg-white,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view > .bg-white\/95 {
+      min-height: 0 !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      padding: clamp(12px, 1.65vh, 18px) clamp(18px, 2.2vw, 30px) !important;
+      gap: clamp(12px, 1.7vw, 22px) !important;
+      border-radius: 22px !important;
+      overflow: hidden !important;
+      align-items: center !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-hero-dashboard .flex-1,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .bg-white > .flex-1,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .bg-white\/95 > .flex-1 {
+      min-height: 0 !important;
+      gap: clamp(6px, 1vh, 10px) !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view h2 {
+      font-size: clamp(10px, .78vw, 12px) !important;
+      line-height: 1.1 !important;
+      margin: 0 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #dash-hpp-total {
+      font-size: clamp(2rem, 7vh, 3.45rem) !important;
+      line-height: .9 !important;
+      letter-spacing: 0 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #dash-hpp-total + span {
+      font-size: clamp(.92rem, 2vh, 1.15rem) !important;
+      line-height: 1 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view p {
+      font-size: clamp(11px, .86vw, 13px) !important;
+      line-height: 1.35 !important;
+      padding-top: 0 !important;
+      margin-top: 0 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-donut-wrap {
+      width: clamp(132px, 20vh, 184px) !important;
+      height: clamp(132px, 20vh, 184px) !important;
+      flex: 0 0 auto !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-donut-center {
+      width: clamp(62px, 9vh, 82px) !important;
+      height: clamp(62px, 9vh, 82px) !important;
+      gap: 2px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-donut-center i {
+      font-size: clamp(1.3rem, 3.4vh, 2rem) !important;
+      margin-bottom: 0 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-composition-title {
+      margin-bottom: 6px !important;
+      font-size: clamp(11px, .86vw, 13px) !important;
+      line-height: 1.1 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-composition-list {
+      gap: 4px !important;
+      max-height: 100% !important;
+      overflow: hidden !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-composition-row {
+      min-height: 18px !important;
+      padding-block: 2px !important;
+      font-size: clamp(10px, .75vw, 12px) !important;
+      line-height: 1.1 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .grid,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-grid {
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+      grid-auto-rows: minmax(0, 1fr) !important;
+      align-items: stretch !important;
+      gap: clamp(8px, 1.25vh, 13px) !important;
+      min-height: 0 !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      margin: 0 !important;
+      overflow: hidden !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash {
+      min-height: 0 !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      padding: clamp(10px, 1.35vh, 14px) clamp(11px, 1.3vw, 16px) !important;
+      gap: clamp(4px, .72vh, 8px) !important;
+      border-radius: 18px !important;
+      overflow: hidden !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash > .w-10,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash > .w-12 {
+      width: clamp(30px, 4.2vh, 38px) !important;
+      height: clamp(30px, 4.2vh, 38px) !important;
+      min-width: clamp(30px, 4.2vh, 38px) !important;
+      border-radius: 12px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash > .w-10 i,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash > .w-12 i {
+      font-size: clamp(1rem, 2.6vh, 1.25rem) !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash h3,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-cost-label {
+      margin-bottom: clamp(3px, .62vh, 6px) !important;
+      min-height: 0 !important;
+      font-size: clamp(9px, .72vw, 11px) !important;
+      line-height: 1.12 !important;
+      letter-spacing: .12em !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) [id^="dash-card-"]:not([id$="-pct"]):not([id$="-details"]) {
+      font-size: clamp(17px, 2.8vh, 25px) !important;
+      line-height: 1 !important;
+      margin-bottom: clamp(3px, .72vh, 7px) !important;
+      letter-spacing: 0 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-breakdown,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-hpp-card-details,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-gas-card-details,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-electric-card-details,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-water-card-details,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-premium-lite-details {
+      gap: 2px !important;
+      margin-top: clamp(4px, .75vh, 8px) !important;
+      max-height: 58px !important;
+      overflow: hidden !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-row,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-hpp-card-details > div,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-premium-lite-details > div {
+      min-height: 13px !important;
+      line-height: 1.08 !important;
+      gap: 6px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-label,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-hpp-card-details span,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-premium-lite-details span {
+      font-size: clamp(9px, .72vw, 11px) !important;
+      line-height: 1.1 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-amount,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-hpp-card-details strong,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-premium-lite-details strong {
+      font-size: clamp(10px, .78vw, 12px) !important;
+      line-height: 1.12 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #actionAreaHPP {
+      min-height: 48px !important;
+      margin: 0 !important;
+      padding: 8px 0 0 !important;
+      border-top-width: 1px !important;
+      gap: 10px !important;
+      align-self: end !important;
+      flex-shrink: 0 !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #actionAreaHPP button {
+      min-height: 38px !important;
+      padding-block: 9px !important;
+      border-radius: 15px !important;
+      font-size: clamp(12px, .86vw, 14px) !important;
+      line-height: 1 !important;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1279px) {
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) {
+      --hpp-fixed-height: calc(100dvh - 86px);
+      max-width: 1040px !important;
+      padding-inline: 6px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view {
+      grid-template-rows: minmax(0, .82fr) minmax(0, 1.18fr) !important;
+      gap: 8px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-donut-wrap {
+      width: clamp(118px, 18vh, 152px) !important;
+      height: clamp(118px, 18vh, 152px) !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash {
+      padding: 9px 10px !important;
+    }
+  }
+
+  @media (min-width: 768px) and (max-height: 760px) {
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) {
+      --hpp-fixed-height: calc(100dvh - 78px);
+      gap: 7px !important;
+      padding-bottom: 6px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view {
+      grid-template-rows: minmax(0, .76fr) minmax(0, 1.24fr) !important;
+      gap: 7px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view > .bg-white,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view > .bg-white\/95 {
+      padding-block: 10px !important;
+      border-radius: 18px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-donut-wrap {
+      width: clamp(108px, 17vh, 138px) !important;
+      height: clamp(108px, 17vh, 138px) !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-breakdown,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-hpp-card-details,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-premium-lite-details {
+      max-height: 45px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #actionAreaHPP {
+      min-height: 42px !important;
+      padding-top: 6px !important;
+    }
+  }
+</style>
