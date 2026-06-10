@@ -1,0 +1,244 @@
+<!-- JS2 global StateMachine extracted from JS2.html. Logic unchanged. -->
+
+<script>
+const StateMachine = {
+  // LOCK SYSTEM
+  acquireLock: function(action) {
+    if (APP_STATE.locks[action]) {
+      console.warn(`[LOCKED] Action ${action} is currently running. Request blocked.`);
+      return false;
+    }
+    APP_STATE.locks[action] = true;
+    return true;
+  },
+
+  releaseLock: function(action) {
+    APP_STATE.locks[action] = false;
+  },
+
+  invalidateClientCache: function() {
+    localStorage.removeItem(APP_STATE.cache.key);
+    hasLoadedInitialData = false;
+    APP_STATE.data.master = null;
+  },
+
+  updateMetric: function(key, value) {
+    if (!this.acquireLock('calcHPP')) return;
+    APP_STATE.data.hpp[key] = value;
+    this.calculateTotal();
+    this.releaseLock('calcHPP');
+  },
+  
+  calculateTotal: function() {
+    const clean = value => {
+      if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+      const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''));
+      return Number.isFinite(number) ? number : 0;
+    };
+    const gas = Math.max(0, clean(APP_STATE.data.hpp.gas));
+    let listrik = Math.max(0, clean(APP_STATE.data.hpp.listrik));
+    if (!listrik && typeof window.zettGetActiveElectricDashboardValueFromRow === 'function') {
+      listrik = window.zettGetActiveElectricDashboardValueFromRow();
+    }
+    const air = Math.max(0, clean(APP_STATE.data.hpp.air));
+    const packing = Math.max(0, clean(APP_STATE.data.hpp.packing));
+    const bahan = Math.max(0, clean(APP_STATE.data.hpp.bahan));
+    const nota = Math.max(0, clean(APP_STATE.data.hpp.nota));
+    Object.assign(APP_STATE.data.hpp, { gas, listrik, air, packing, bahan, nota });
+    APP_STATE.data.hpp.total = gas + listrik + air + packing + bahan + nota;
+    window.requestAnimationFrame(() => { this.renderDashboard(); });
+  },
+  
+  renderDashboard: function() {
+    console.log('[HPP_TRACE_10_BEFORE_RENDER_DASHBOARD]');
+    if (!window.__HPP_RENDER_LOOP_ZEROING__) {
+      window.__HPP_RENDER_COUNTER__ = window.__HPP_RENDER_COUNTER__ || 0;
+      window.__HPP_RENDER_COUNTER__ += 1;
+      console.log('[HPP_RENDER_COUNTER]', window.__HPP_RENDER_COUNTER__);
+    }
+    if (!window.__HPP_RENDER_LOOP_ZEROING__ && window.__HPP_RENDER_COUNTER__ > 20) {
+      console.error('[HPP_RENDER_LOOP_DETECTED]', {
+        selectedOutlet: document.getElementById('inputNamaHPP')?.value || '',
+        counter: window.__HPP_RENDER_COUNTER__
+      });
+      if (typeof window.renderHPPZeroState === 'function') {
+        window.renderHPPZeroState(document.getElementById('inputNamaHPP')?.value || '', { skipRenderLoopCounter: true });
+      }
+      return;
+    }
+    const clean = value => {
+      if (typeof window.zettCleanNumber === 'function') return window.zettCleanNumber(value);
+      const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''));
+      return Number.isFinite(number) ? number : 0;
+    };
+    const gas = Math.max(0, clean(APP_STATE.data.hpp.gas));
+    let listrik = Math.max(0, clean(APP_STATE.data.hpp.listrik));
+    const air = Math.max(0, clean(APP_STATE.data.hpp.air));
+    const packing = Math.max(0, clean(APP_STATE.data.hpp.packing));
+    const bahan = Math.max(0, clean(APP_STATE.data.hpp.bahan));
+    const nota = Math.max(0, clean(APP_STATE.data.hpp.nota));
+    if (!listrik && typeof window.zettGetActiveElectricDashboardValueFromRow === 'function') {
+      listrik = window.zettGetActiveElectricDashboardValueFromRow();
+    }
+    const t = gas + listrik + air + packing + bahan + nota;
+    Object.assign(APP_STATE.data.hpp, { gas, listrik, air, packing, bahan, nota, total: t });
+    
+    const totalEl = document.getElementById('dash-hpp-total');
+    if(totalEl && typeof formatRupiah === 'function') {
+      totalEl.innerText = formatRupiah(t);
+      if(document.getElementById('dash-card-gas')) document.getElementById('dash-card-gas').innerText = formatRupiah(gas);
+      if(document.getElementById('dash-card-listrik')) document.getElementById('dash-card-listrik').innerText = formatRupiah(listrik);
+      if(document.getElementById('dash-card-air')) document.getElementById('dash-card-air').innerText = formatRupiah(air);
+      if(document.getElementById('dash-card-packing')) document.getElementById('dash-card-packing').innerText = formatRupiah(packing);
+      if(document.getElementById('dash-card-bahan')) document.getElementById('dash-card-bahan').innerText = formatRupiah(bahan);
+      if(document.getElementById('dash-card-nota')) document.getElementById('dash-card-nota').innerText = formatRupiah(nota);
+      
+      // Update percentages for balok
+      const updatePct = (id, value) => {
+        const el = document.getElementById(id);
+        const pct = t > 0 ? (value / t) * 100 : 0;
+        if(el) el.innerText = Number.isFinite(pct) ? Math.round(pct) + '%' : '0%';
+      };
+      updatePct('dash-card-gas-pct', gas);
+      updatePct('dash-card-listrik-pct', listrik);
+      updatePct('dash-card-air-pct', air);
+      updatePct('dash-card-packing-pct', packing);
+      updatePct('dash-card-bahan-pct', bahan);
+      updatePct('dash-card-nota-pct', nota);
+    }
+    
+    const donut = document.getElementById('hpp-donut-chart');
+    const labelsContainer = document.getElementById('hpp-donut-labels');
+
+    if (donut && t > 0) {
+      console.log('[HPP_TRACE_11_BEFORE_UPDATE_DONUT]');
+      let pctGas = (gas / t) * 100; let pctListrik = (listrik / t) * 100; let pctAir = (air / t) * 100;
+      let pctPacking = (packing / t) * 100; let pctBahan = (bahan / t) * 100; let pctNota = (nota / t) * 100;
+      let cGas = pctGas; let cListrik = cGas + pctListrik; let cAir = cListrik + pctAir;
+      let cPacking = cAir + pctPacking; let cBahan = cPacking + pctBahan;
+
+      if (![pctGas, pctListrik, pctAir, pctPacking, pctBahan, pctNota, cGas, cListrik, cAir, cPacking, cBahan].every(Number.isFinite)) {
+        donut.style.setProperty('--p-gas', `0%`); donut.style.setProperty('--p-listrik', `0%`);
+        donut.style.setProperty('--p-air', `0%`); donut.style.setProperty('--p-packing', `0%`); donut.style.setProperty('--p-bahan', `0%`);
+        if (labelsContainer) labelsContainer.innerHTML = '';
+        return;
+      }
+
+      donut.style.setProperty('--p-gas', `${cGas}%`); donut.style.setProperty('--p-listrik', `${cListrik}%`);
+      donut.style.setProperty('--p-air', `${cAir}%`); donut.style.setProperty('--p-packing', `${cPacking}%`);
+      donut.style.setProperty('--p-bahan', `${cBahan}%`);
+
+      if (labelsContainer) {
+          labelsContainer.innerHTML = '';
+          let currentAnglePct = 0;
+          const slices = [pctGas, pctListrik, pctAir, pctPacking, pctBahan, pctNota];
+          slices.forEach(slicePct => {
+              if (slicePct >= 4) { 
+                  let midPct = currentAnglePct + (slicePct / 2); let angleDeg = (midPct * 3.6) - 90;
+                  let rad = angleDeg * Math.PI / 180; let r = 98; 
+                  let x = 120 + r * Math.cos(rad); let y = 120 + r * Math.sin(rad);
+                  let label = document.createElement('div');
+                  label.className = 'absolute text-[11px] font-black text-white tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-20';
+                  label.style.left = x + 'px'; label.style.top = y + 'px'; label.style.transform = 'translate(-50%, -50%)';
+                  label.innerText = Math.round(slicePct) + '%';
+                  labelsContainer.appendChild(label);
+              }
+              currentAnglePct += slicePct;
+          });
+      }
+    } else if (donut) {
+      donut.style.setProperty('--p-gas', `0%`); donut.style.setProperty('--p-listrik', `0%`);
+      donut.style.setProperty('--p-air', `0%`); donut.style.setProperty('--p-packing', `0%`); donut.style.setProperty('--p-bahan', `0%`);
+      if (labelsContainer) labelsContainer.innerHTML = '';
+    }
+  },
+
+  // Toggle expandable balok details
+  toggleHPPBalok: function(type) {
+    const detailEl = document.getElementById('hpp-balok-' + type);
+    if (!detailEl) return;
+    
+    const isHidden = detailEl.classList.contains('hidden');
+    if (isHidden) {
+      detailEl.classList.remove('hidden');
+      detailEl.style.maxHeight = '0px';
+      detailEl.style.opacity = '0';
+      // Trigger reflow
+      detailEl.offsetHeight;
+      detailEl.style.maxHeight = detailEl.scrollHeight + 'px';
+      detailEl.style.opacity = '1';
+    } else {
+      detailEl.style.maxHeight = '0px';
+      detailEl.style.opacity = '0';
+      setTimeout(() => {
+        detailEl.classList.add('hidden');
+      }, 300);
+    }
+  }
+};
+
+window.StateMachine = StateMachine;
+
+function resetHPPDashboardToZero() {
+  const zeroText = (typeof formatRupiah === 'function') ? formatRupiah(0) : 'Rp 0';
+  const valueIds = [
+    'dash-hpp-total',
+    'dash-card-gas',
+    'dash-card-listrik',
+    'dash-card-air',
+    'dash-card-packing',
+    'dash-card-bahan',
+    'dash-card-nota'
+  ];
+  const pctIds = [
+    'dash-card-gas-pct',
+    'dash-card-listrik-pct',
+    'dash-card-air-pct',
+    'dash-card-packing-pct',
+    'dash-card-bahan-pct',
+    'dash-card-nota-pct'
+  ];
+
+  valueIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = zeroText;
+  });
+
+  pctIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = '0%';
+  });
+
+  const donut = document.getElementById('hpp-donut-chart');
+  if (donut) {
+    donut.style.setProperty('--p-gas', '0%');
+    donut.style.setProperty('--p-listrik', '0%');
+    donut.style.setProperty('--p-air', '0%');
+    donut.style.setProperty('--p-packing', '0%');
+    donut.style.setProperty('--p-bahan', '0%');
+  }
+
+  const labelsContainer = document.getElementById('hpp-donut-labels');
+  if (labelsContainer) labelsContainer.innerHTML = '';
+
+  ['gas', 'listrik', 'air', 'packing', 'bahan', 'nota'].forEach(type => setHPPCardOperationalState(type, true, ''));
+  const insight = document.getElementById('hpp-operational-insight');
+  if (insight) insight.remove();
+
+  if (typeof APP_STATE !== 'undefined' && APP_STATE && APP_STATE.data) {
+    APP_STATE.data.hpp = {
+      gas: 0,
+      listrik: 0,
+      air: 0,
+      packing: 0,
+      bahan: 0,
+      nota: 0,
+      total: 0
+    };
+  }
+
+  if (typeof checkHPPLock === 'function') checkHPPLock();
+}
+
+window.resetHPPDashboardToZero = resetHPPDashboardToZero;
+</script>

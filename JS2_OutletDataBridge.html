@@ -1,0 +1,238 @@
+<!-- JS2 outlet data bridge extracted from JS2.html. Logic unchanged. -->
+
+<script>
+// Fungsi Core Render UI yang ditarik dari fungsi Asynchronous
+function applyCabangUIData() {
+    const tableArea = document.getElementById('tableDaftarOutlet');
+    const selectV1 = document.getElementById('v1-global-outlet');
+    const selectHPP = document.getElementById('inputNamaHPP');
+    const escapeHtml = (str) => String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+    if(selectV1) {
+        const curV1 = selectV1.value;
+        selectV1.innerHTML = '<option value="">-- Pilih Outlet --</option>' + masterDataCabang
+            .map(c => `<option value="${escapeHtml(c.namaOutlet)}">${escapeHtml(c.namaOutlet)}</option>`)
+            .join('');
+        if(curV1) selectV1.value = curV1;
+        else if(masterDataCabang.length > 0) selectV1.value = masterDataCabang[0].namaOutlet;
+    }
+
+    if(selectHPP) {
+        const curHPP = selectHPP.value;
+        selectHPP.innerHTML = '<option value="">Pilih Cabang...</option>' + masterDataCabang
+            .map(c => `<option value="${escapeHtml(c.namaOutlet)}">${escapeHtml(c.namaOutlet)}</option>`)
+            .join('');
+        
+        const isValidHPP = curHPP && masterDataCabang.some(c => String(c.namaOutlet) === String(curHPP));
+        window.__HPP_PROGRAMMATIC_UPDATE__ = true;
+        selectHPP.value = isValidHPP ? curHPP : '';
+        window.__HPP_PROGRAMMATIC_UPDATE__ = false;
+        
+        if (selectHPP.value && typeof populateFormHPP === 'function') {
+            if (typeof window.zettWithHPPPopulationGuard_ === 'function') {
+                window.zettWithHPPPopulationGuard_(function() { populateFormHPP(selectHPP.value); });
+            } else {
+                populateFormHPP(selectHPP.value);
+            }
+        } else if (typeof resetHPPDashboardToZero === 'function') {
+            resetHPPDashboardToZero();
+        }
+        if (typeof window.updateHeaderKategoriLaundryInfo === 'function') {
+            window.updateHeaderKategoriLaundryInfo();
+        }
+    }
+
+    if(!tableArea) return;
+
+    if(masterDataCabang.length === 0) {
+        tableArea.innerHTML = `
+            <div class="p-12 text-center text-slate-400 bg-slate-50 rounded-[1.5rem] border border-slate-200 border-dashed">
+                <i class="ph ph-storefront text-6xl mb-4 opacity-50"></i>
+                <p class="font-extrabold text-xl text-slate-600 mb-1">Belum ada Data Outlet</p>
+                <p class="text-sm font-medium">Silakan mulai dengan menekan tombol Tambah Outlet di atas.</p>
+            </div>`;
+        return;
+    }
+
+    let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-4">';
+    masterDataCabang.forEach(c => {
+        const kategoriLabel = c.kategori || 'Drop Off';
+        const safeNama = String(c.namaOutlet).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const jamOpsLabel = formatJamOperasional(c.jamBuka) + ' - ' + formatJamOperasional(c.jamTutup);
+        const durasiLabel = formatDurasiOperasional(c.jamBuka, c.jamTutup, c.durasiOperasional);
+        const capacityRows = getOutletCapacityBreakdown(c);
+        const capacityHtml = capacityRows.map(item => {
+            const valueText = item.disabled ? (item.note || '-') : (item.display || ((Number(item.value) || 0).toLocaleString('id-ID') + ' ' + item.unit));
+            const rowClass = item.disabled ? 'bg-orange-50/70 border-orange-100/70 text-orange-600' : 'bg-emerald-50/80 border-emerald-100/60 text-emerald-600';
+            return `
+                <div class="flex justify-between items-center ${rowClass} px-3 py-2.5 rounded-xl border">
+                    <span class="text-[11px] font-bold flex items-center gap-1.5"><i class="ph ph-gauge text-sm"></i> ${escapeHtml(item.label)}</span>
+                    <span class="text-xs font-black text-right">${escapeHtml(valueText)}</span>
+                </div>`;
+        }).join('');
+
+        let topBorderClass = 'border-t-4 border-t-slate-300';
+        let iconClass = 'bg-blue-50/80 text-blue-500 border-blue-100';
+        let badgeClass = 'bg-slate-100 text-slate-400 border-slate-200 shadow-sm';
+        
+        const labelLower = kategoriLabel.toLowerCase();
+        
+        if (labelLower.includes('self service')) {
+            topBorderClass = 'border-t-[4px] border-t-indigo-500';
+            iconClass = 'bg-indigo-50/80 text-indigo-500 border-indigo-100';
+            badgeClass = 'bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]';
+        } else if (labelLower.includes('drop off') || labelLower.includes('kiloan')) {
+            topBorderClass = 'border-t-[4px] border-t-emerald-500';
+            iconClass = 'bg-emerald-50/80 text-emerald-500 border-emerald-100';
+            badgeClass = 'bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]';
+        } else if (labelLower.includes('hybrid')) {
+            topBorderClass = 'border-t-[4px] border-t-purple-500';
+            iconClass = 'bg-purple-50/80 text-purple-500 border-purple-100';
+            badgeClass = 'bg-purple-50 text-purple-600 border border-purple-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]';
+        } else {
+            topBorderClass = 'border-t-[4px] border-t-blue-500';
+            iconClass = 'bg-blue-50/80 text-blue-500 border-blue-100';
+            badgeClass = 'bg-blue-50 text-blue-600 border border-blue-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]';
+        }
+
+        html += `
+        <div class="kapasitas-outlet-card bg-white border-b border-l border-r border-slate-200 ${topBorderClass} rounded-[1.5rem] p-5 shadow-sm hover:shadow-md transition-all cursor-pointer relative flex flex-col group overflow-hidden" onclick="pilihCabang('${safeNama}', this);">
+            <div class="flex justify-between items-start mb-5">
+                <div class="w-12 h-12 ${iconClass} rounded-xl flex items-center justify-center border shrink-0 group-hover:scale-105 transition-transform">
+                    <svg class="laundry-outlet-icon w-7 h-7" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                      <path d="M14 28H50" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                      <path d="M18 28L23 16H41L46 28" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                      <path d="M18 28V50H46V28" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                      <path d="M13 50H51" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                      <path d="M22 50V36C22 33.8 23.8 32 26 32H30C32.2 32 34 33.8 34 36V50" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                      <rect x="37" y="34" width="9" height="12" rx="2" stroke="currentColor" stroke-width="3"/>
+                      <circle cx="41.5" cy="40" r="2.5" stroke="currentColor" stroke-width="2.5"/>
+                      <path d="M20 28C20 33 16 33 14 28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                      <path d="M30 28C30 33 24 33 24 28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                      <path d="M40 28C40 33 34 33 34 28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                      <path d="M50 28C48 33 44 33 44 28" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="${badgeClass} text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
+                    ${kategoriLabel}
+                </div>
+            </div>
+            <h4 class="font-extrabold text-slate-800 text-[1.15rem] tracking-tight mb-5">${escapeHtml(c.namaOutlet)}</h4>
+            <div class="mt-auto space-y-2">
+                <div class="flex justify-between items-center bg-slate-50/80 px-3 py-2.5 rounded-xl border border-slate-100">
+                    <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5"><i class="ph ph-clock text-sm"></i> Jam Ops</span>
+                    <span class="text-xs font-black text-slate-700">${jamOpsLabel}</span>
+                </div>
+                <div class="flex justify-between items-center bg-slate-50/80 px-3 py-2.5 rounded-xl border border-slate-100">
+                    <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5"><i class="ph ph-hourglass text-sm"></i> Durasi Ops</span>
+                    <span class="text-xs font-black text-slate-700 text-right">${durasiLabel}</span>
+                </div>
+                ${capacityHtml}
+            </div>
+        </div>`;
+    });
+    html += '</div>';
+    
+    tableArea.innerHTML = html;
+    
+    checkHPPLock();
+    toggleActionButtons();
+    
+    if (typeof renderSingleOutletDashboard === 'function') renderSingleOutletDashboard();
+}
+
+async function loadDaftarCabang(forceFresh = false) {
+    // 1. Render UI INSTAN (0ms) dari Memori FastBoot
+    if(!hasLoadedInitialData) {
+        hydrateCabangFromCache();
+    }
+
+    if(hasLoadedInitialData) {
+        applyCabangUIData();
+    } else {
+        const tableArea = document.getElementById('tableDaftarOutlet');
+        if(tableArea) tableArea.innerHTML = `
+          <div class="p-10 text-center text-slate-500 font-bold bg-slate-50/80 rounded-[1.5rem] border border-slate-100">
+            <i class="ph ph-spinner-gap animate-spin text-4xl mb-4 text-emerald-500 mx-auto"></i>
+            <br>Memuat data outlet...
+          </div>`;
+    }
+
+    // 2. STALE-WHILE-REVALIDATE (Bg Sync Tanpa Memblokir Layar)
+    const revalidateLock = 'profilOutletRevalidate';
+    if (!StateMachine.acquireLock(revalidateLock)) {
+        if(hasLoadedInitialData) applyCabangUIData();
+        return;
+    }
+
+    try {
+        window.zettOutletState.loading = true;
+        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
+        let needsFetch = true;
+        if (cachedStr) {
+            const parsed = JSON.parse(cachedStr);
+            if (!forceFresh && Date.now() < parsed.expiry) {
+                needsFetch = false;
+                if(!hasLoadedInitialData && hydrateCabangFromCache()) {
+                    applyCabangUIData();
+                }
+            }
+        }
+
+        if (needsFetch) {
+            const data = await new Promise((resolve, reject) => {
+                const runner = google.script.run
+                    .withSuccessHandler(resolve)
+                    .withFailureHandler(reject);
+
+                if (typeof google.script.run.getProfilOperasionalPayload === 'function') {
+                    runner.getProfilOperasionalPayload(forceFresh === true);
+                } else {
+                    runner.getZettBotInitialPayload(forceFresh === true);
+                }
+            });
+            
+            if(data && data.status === 'success') {
+                masterDataCabang = Array.isArray(data.kapasitas) ? data.kapasitas.map(normalizeKapasitasRow) : [];
+                if (Array.isArray(data.hpp)) masterDataHPP = data.hpp;
+                window.masterDataHPP = masterDataHPP;
+                if (Array.isArray(data.transactions)) dashboardRawData = data.transactions;
+                persistCabangToClientCache();
+                if (typeof window.zettCommitPayload === 'function' && APP_STATE.data.master) window.zettCommitPayload(APP_STATE.data.master);
+                applyCabangUIData(); 
+            } else {
+                const tableArea = document.getElementById('tableDaftarOutlet');
+                if(tableArea && !hasLoadedInitialData) {
+                    tableArea.innerHTML = `
+                      <div class="p-10 text-center text-slate-500 bg-slate-50 rounded-[1.5rem] border border-slate-200 border-dashed">
+                        <i class="ph ph-warning-circle text-5xl mb-3 text-amber-500"></i>
+                        <p class="font-extrabold text-slate-700 mb-1">Data outlet belum bisa dimuat</p>
+                        <p class="text-sm font-semibold">Coba buka ulang halaman Profil Operasional.</p>
+                      </div>`;
+                }
+            }
+        }
+    } catch(e) {
+        console.error("SWR Sync Error:", e);
+        const tableArea = document.getElementById('tableDaftarOutlet');
+        if(tableArea && !hasLoadedInitialData) {
+            tableArea.innerHTML = `
+              <div class="p-10 text-center text-slate-500 bg-slate-50 rounded-[1.5rem] border border-slate-200 border-dashed">
+                <i class="ph ph-cloud-warning text-5xl mb-3 text-rose-500"></i>
+                <p class="font-extrabold text-slate-700 mb-1">Gagal memuat data outlet</p>
+                <p class="text-sm font-semibold">Periksa koneksi lalu coba lagi.</p>
+              </div>`;
+        }
+    } finally {
+        window.zettOutletState.loading = false;
+        StateMachine.releaseLock(revalidateLock);
+    }
+}
+
+window.zettLoadDaftarCabangProfil = loadDaftarCabang;
+</script>
