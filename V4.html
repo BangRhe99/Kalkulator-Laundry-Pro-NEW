@@ -2149,7 +2149,7 @@
       </div>
 
       <section class="bep-fixed-visual-section" aria-label="Visualisasi Biaya Tetap Bulanan">
-        <div class="bep-fixed-visual-panel">
+        <div class="bep-fixed-visual-panel bep-fixed-bars-panel">
           <div class="bep-fixed-visual-head">
             <div>
               <div class="bep-fixed-visual-title">Biaya Tetap Bulanan</div>
@@ -3578,6 +3578,176 @@ function safeProsesSimpanBEP() {
       height: min(176px, 58vw) !important;
     }
   }
+  /* =========================================================
+   PATCH FINAL — BEP BIAYA TETAP BULANAN ONLY
+   Target khusus: card kiri "Biaya Tetap Bulanan"
+   Tidak menyentuh card Komposisi Biaya / Donut
+   ========================================================= */
+
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel {
+  overflow: hidden !important;
+  padding: clamp(18px, 1.35vw, 22px) !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 96% 4%, rgba(37, 99, 235, .075), transparent 15rem),
+    linear-gradient(145deg, rgba(255, 255, 255, .98), rgba(248, 251, 255, .94)) !important;
+  box-shadow:
+    0 14px 38px rgba(15, 23, 42, .055),
+    inset 0 1px 0 rgba(255, 255, 255, .96) !important;
+}
+
+/* Header card kiri */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-visual-head {
+  margin-bottom: clamp(18px, 1.4vw, 24px) !important;
+  align-items: flex-start !important;
+}
+
+/* Judul: Biaya Tetap Bulanan */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-visual-title {
+  color: #0B1220 !important;
+  font-size: clamp(28px, 2.5vw, 36px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.1 !important;
+}
+
+/* Subjudul */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-visual-subtitle {
+  color: rgba(71, 85, 105, .92) !important;
+  font-size: clamp(12.6px, .86vw, 13.5px) !important;
+  font-weight: 720 !important;
+  letter-spacing: -0.012em !important;
+  line-height: 1.32 !important;
+  margin-top: 5px !important;
+}
+
+/* Badge total kanan atas */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-visual-total {
+  padding: 16px 28px !important;
+  border-radius: 999px !important;
+  color: #2563EB !important;
+  font-size: clamp(20px, 1.8vw, 26px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  border: 1px solid rgba(37, 99, 235, .20) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(239,246,255,.92)) !important;
+  box-shadow:
+    0 8px 20px rgba(37, 99, 235, .10),
+    inset 0 1px 0 rgba(255, 255, 255, .92) !important;
+}
+
+/* Area daftar bar */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-list {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: clamp(16px, 1.16vw, 21px) !important;
+  padding-block: clamp(6px, .7vw, 10px) !important;
+}
+
+/* Struktur setiap bar */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-row {
+  display: grid !important;
+  grid-template-columns: minmax(118px, 150px) minmax(0, 1fr) minmax(108px, max-content) !important;
+  align-items: center !important;
+  gap: clamp(13px, 1vw, 18px) !important;
+  min-height: clamp(38px, 3vw, 46px) !important;
+}
+
+/* Label kiri: Sewa Tempat, Gaji Tim, dst */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-label {
+  color: #000000 !important; 
+  font-size: clamp(15px, 1.25vw, 18px) !important; 
+  font-weight: 700 !important; 
+  letter-spacing: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* Nominal kanan */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-value {
+  color: #0B1220 !important;
+  font-size: clamp(13px, .92vw, 14.5px) !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.026em !important;
+  line-height: 1.14 !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* Batang grafik: dibuat besar, tebal, tapi tetap premium */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-track {
+  height: clamp(30px, 2.45vw, 38px) !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(226, 232, 240, .86) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,250,252,.96)),
+    linear-gradient(90deg, #EEF2F7, #F8FAFC) !important;
+  box-shadow:
+    inset 0 1px 2px rgba(15, 23, 42, .075),
+    inset 0 -1px 0 rgba(255, 255, 255, .98),
+    0 10px 24px rgba(15, 23, 42, .045) !important;
+}
+
+/* Isi batang */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-fill {
+  display: block !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  border-radius: 999px !important;
+  position: relative !important;
+  box-shadow:
+    0 12px 26px var(--bep-fixed-chart-glow, rgba(37, 99, 235, .18)),
+    inset 0 1px 0 rgba(255, 255, 255, .46),
+    inset 0 -1px 0 rgba(15, 23, 42, .08) !important;
+}
+
+/* Highlight lembut agar batang tidak terlihat flat */
+#view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-fill::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 12px !important;
+  right: 12px !important;
+  top: 7px !important;
+  height: 32% !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, rgba(255,255,255,.32), rgba(255,255,255,.08)) !important;
+  pointer-events: none !important;
+}
+
+/* Responsive mobile */
+@media (max-width: 768px) {
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel {
+    padding: 16px !important;
+    border-radius: 20px !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-list {
+    gap: 14px !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-row {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px 10px !important;
+    min-height: auto !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-track {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    height: clamp(26px, 6.6vw, 32px) !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-label,
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel.bep-fixed-bars-panel .bep-fixed-bar-value {
+    font-size: clamp(13px, 3.35vw, 14px) !important;
+  }
+}
 </style>
 
 <script id="zett-bep-fast-layout-order-20260610">
