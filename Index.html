@@ -734,7 +734,11 @@
       <?!= HtmlService.createHtmlOutputFromFile('V3').getContent(); ?>
       <?!= HtmlService.createHtmlOutputFromFile('V4').getContent(); ?>
       <?!= HtmlService.createHtmlOutputFromFile('V5').getContent(); ?>
+
+      <?!= include('HPP_Styles'); ?>
       <?!= HtmlService.createHtmlOutputFromFile('Modal').getContent(); ?>
+      <?!= include('HPP_Core'); ?>
+
       <?!= include('HPP_Gas'); ?>
       <?!= include('HPP_Electric'); ?>
       <?!= include('HPP_Water'); ?>
