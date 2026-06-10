@@ -219,6 +219,7 @@
           view.classList.toggle('hpp-data-loading', isActive);
           view.setAttribute('aria-busy', String(isActive));
         }
+        window.hppIsOutletSwitching = isActive;
         if (dashboard) dashboard.classList.toggle('hpp-loading-soft', isActive);
         if (select) select.setAttribute('aria-busy', String(isActive));
       }

@@ -7110,46 +7110,63 @@
   #view-hpp #hpp-dashboard-view > .grid,
   #view-hpp .hpp-grid {
     transition:
-      opacity 180ms cubic-bezier(.22, .61, .36, 1),
-      transform 180ms cubic-bezier(.22, .61, .36, 1) !important;
-    will-change: opacity, transform;
+      opacity 140ms cubic-bezier(.22, .61, .36, 1) !important;
+    will-change: opacity;
   }
 
   #view-hpp .hpp-card-dash {
     transition:
-      transform 180ms cubic-bezier(.22, .61, .36, 1),
-      box-shadow 180ms cubic-bezier(.22, .61, .36, 1),
-      border-color 180ms cubic-bezier(.22, .61, .36, 1),
-      opacity 180ms cubic-bezier(.22, .61, .36, 1) !important;
-    will-change: transform, opacity;
+      box-shadow 140ms cubic-bezier(.22, .61, .36, 1),
+      border-color 140ms cubic-bezier(.22, .61, .36, 1),
+      opacity 140ms cubic-bezier(.22, .61, .36, 1) !important;
+    backface-visibility: hidden;
+    contain: layout paint;
+    will-change: opacity;
   }
 
   #view-hpp .hpp-card-percent,
   #view-hpp .hpp-cost-percent,
   #view-hpp .hpp-percent-badge,
   #view-hpp .hpp-share-badge,
-  #view-hpp .cost-percent-badge {
-    width: 56px !important;
-    min-width: 56px !important;
-    max-width: 56px !important;
-    height: 38px !important;
-    min-height: 38px !important;
+  #view-hpp .cost-percent-badge,
+  #view-hpp .percent-pill,
+  #view-hpp [data-hpp-percent-badge] {
+    width: 52px !important;
+    min-width: 52px !important;
+    max-width: 52px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
     padding: 0 !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    flex: 0 0 56px !important;
+    flex: 0 0 52px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     border-radius: 999px !important;
     box-sizing: border-box !important;
+    font-size: clamp(17px, 1.18vw, 20px) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.04em !important;
     font-variant-numeric: tabular-nums !important;
     line-height: 1 !important;
+    transform: none !important;
     transition:
-      opacity 160ms cubic-bezier(.22, .61, .36, 1),
-      transform 160ms cubic-bezier(.22, .61, .36, 1),
-      box-shadow 160ms cubic-bezier(.22, .61, .36, 1) !important;
-    will-change: opacity, transform;
+      opacity 140ms cubic-bezier(.22, .61, .36, 1),
+      box-shadow 140ms cubic-bezier(.22, .61, .36, 1) !important;
+    will-change: opacity;
+  }
+
+  #view-hpp #hpp-dashboard-view > .grid .hpp-card-dash,
+  #view-hpp .hpp-grid .hpp-card-dash,
+  #view-hpp .hpp-cost-card,
+  #view-hpp .hpp-structure-card,
+  #view-hpp [data-hpp-cost-card] {
+    min-height: 188px !important;
+    overflow: hidden !important;
+    backface-visibility: hidden;
+    contain: layout paint;
   }
 
   #view-hpp.hpp-is-switching #hpp-dashboard-view > .grid,
@@ -7158,8 +7175,8 @@
   #view-hpp.hpp-is-switching .hpp-grid,
   #view-hpp.hpp-is-rendering .hpp-grid,
   #view-hpp.hpp-data-loading .hpp-grid {
-    opacity: .78 !important;
-    transform: translateY(3px) !important;
+    opacity: .86 !important;
+    transform: none !important;
     filter: none !important;
     pointer-events: none !important;
   }
@@ -7167,7 +7184,35 @@
   #view-hpp.hpp-is-switching .hpp-card-dash,
   #view-hpp.hpp-is-rendering .hpp-card-dash,
   #view-hpp.hpp-data-loading .hpp-card-dash {
-    transform: translateY(3px) !important;
+    transform: none !important;
+  }
+
+  #view-hpp.hpp-is-switching .hpp-cost-card,
+  #view-hpp.hpp-is-rendering .hpp-cost-card,
+  #view-hpp.hpp-data-loading .hpp-cost-card,
+  #view-hpp.hpp-is-switching .hpp-structure-card,
+  #view-hpp.hpp-is-rendering .hpp-structure-card,
+  #view-hpp.hpp-data-loading .hpp-structure-card,
+  #view-hpp.hpp-is-switching [data-hpp-cost-card],
+  #view-hpp.hpp-is-rendering [data-hpp-cost-card],
+  #view-hpp.hpp-data-loading [data-hpp-cost-card] {
+    transform: none !important;
+  }
+
+  #view-hpp #hpp-donut-labels > .hpp-donut-slice-label {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    color: #0f172a !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    border: 1px solid rgba(203, 213, 225, 0.92) !important;
+    border-radius: 999px;
+    padding: 3px 7px;
+    font-size: 10px !important;
+    line-height: 1;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+    pointer-events: none;
   }
 
   #view-hpp.hpp-is-switching #hpp-dashboard-view,
@@ -7184,6 +7229,33 @@
       transition: none !important;
       transform: none !important;
       filter: none !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp #hpp-dashboard-view > .grid .hpp-card-dash,
+    #view-hpp .hpp-grid .hpp-card-dash,
+    #view-hpp .hpp-cost-card,
+    #view-hpp .hpp-structure-card,
+    #view-hpp [data-hpp-cost-card] {
+      min-height: 132px !important;
+    }
+
+    #view-hpp .hpp-card-percent,
+    #view-hpp .hpp-cost-percent,
+    #view-hpp .hpp-percent-badge,
+    #view-hpp .hpp-share-badge,
+    #view-hpp .cost-percent-badge,
+    #view-hpp .percent-pill,
+    #view-hpp [data-hpp-percent-badge] {
+      width: 46px !important;
+      min-width: 46px !important;
+      max-width: 46px !important;
+      height: 28px !important;
+      min-height: 28px !important;
+      max-height: 28px !important;
+      flex-basis: 46px !important;
+      font-size: 14px !important;
     }
   }
 </style>

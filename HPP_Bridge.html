@@ -226,9 +226,19 @@
         const pct = document.createElement('p');
         pct.id = id;
         pct.className = 'hpp-card-percent';
-        pct.textContent = '0% dari HPP';
+        pct.textContent = '0%';
         valueEl.insertAdjacentElement('afterend', pct);
       });
+    }
+
+    function setPercentTextInstant(el, value) {
+      if (!el) return;
+      if (el._hppPercentRaf) {
+        cancelAnimationFrame(el._hppPercentRaf);
+        el._hppPercentRaf = null;
+      }
+      const clean = Number.isFinite(Number(value)) ? Math.round(Number(value)) : 0;
+      el.textContent = clean + '%';
     }
 
     function updatePercentNodes() {
@@ -242,7 +252,7 @@
           if (!pctEl) return;
           const value = Number(hpp[key] || 0);
           const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-          pctEl.textContent = pct + '% dari HPP';
+          setPercentTextInstant(pctEl, pct);
         });
       } catch (error) {
         console.error('Gagal update persentase card HPP:', error);

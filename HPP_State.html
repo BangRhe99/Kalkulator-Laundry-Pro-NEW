@@ -575,6 +575,55 @@
       return pctEl;
     }
 
+    function setHppPercentTextInstant(el, value) {
+      if (!el) return;
+      if (el._hppPercentRaf) {
+        cancelAnimationFrame(el._hppPercentRaf);
+        el._hppPercentRaf = null;
+      }
+      const clean = Number.isFinite(Number(value)) ? Math.round(Number(value)) : 0;
+      el.textContent = clean + '%';
+    }
+
+    function setDonutCenterPercent(total) {
+      const center = document.querySelector('#view-hpp .hpp-donut-center');
+      if (!center) return;
+      let centerValue = center.querySelector('.hpp-donut-total-value');
+      if (!centerValue) {
+        centerValue = document.createElement('span');
+        centerValue.className = 'hpp-donut-total-value';
+        center.appendChild(centerValue);
+      }
+      if (!centerValue) return;
+      centerValue.textContent = total > 0 ? '100%' : '0%';
+    }
+
+    function renderDonutSliceLabels(percentages) {
+      const labelsContainer = byId('hpp-donut-labels');
+      if (!labelsContainer) return;
+      const slices = Array.isArray(percentages) ? percentages : [];
+      const nextHtml = slices.reduce(function(parts, slicePct, index) {
+        const pct = Number.isFinite(Number(slicePct)) ? Number(slicePct) : 0;
+        if (pct < 4) return parts;
+        const previous = slices.slice(0, index).reduce(function(sum, value) {
+          return sum + (Number.isFinite(Number(value)) ? Number(value) : 0);
+        }, 0);
+        const midPct = previous + (pct / 2);
+        const angleDeg = (midPct * 3.6) - 90;
+        const rad = angleDeg * Math.PI / 180;
+        const r = 98;
+        const x = 120 + r * Math.cos(rad);
+        const y = 120 + r * Math.sin(rad);
+        parts.push(
+          '<div class="hpp-donut-slice-label" style="left:' + x + 'px;top:' + y + 'px;">' +
+          Math.round(pct) + '%' +
+          '</div>'
+        );
+        return parts;
+      }, []).join('');
+      if (labelsContainer.innerHTML !== nextHtml) labelsContainer.innerHTML = nextHtml;
+    }
+
     function updateDonut(total, values) {
       try {
       const donut = byId('hpp-donut-chart');
@@ -591,6 +640,7 @@
 
       if (total <= 0) {
         console.warn('[HPP_DONUT_SKIP_INVALID_TOTAL]', { total: total, safeTotal: total });
+        if (window.hppIsOutletSwitching) return;
         donut.style.setProperty('--p-gas', '0%');
         donut.style.setProperty('--p-listrik', '0%');
         donut.style.setProperty('--p-air', '0%');
@@ -598,6 +648,7 @@
         donut.style.setProperty('--p-bahan', '0%');
         const labelsContainer = byId('hpp-donut-labels');
         if (labelsContainer) labelsContainer.innerHTML = '';
+        setDonutCenterPercent(0);
         return;
       }
 
@@ -623,6 +674,12 @@
       donut.style.setProperty('--p-air', cAir + '%');
       donut.style.setProperty('--p-packing', cPacking + '%');
       donut.style.setProperty('--p-bahan', cBahan + '%');
+      setDonutCenterPercent(total);
+      renderDonutSliceLabels([pctGas, pctListrik, pctAir, pctPacking, pctBahan, Math.max(0, 100 - cBahan)]);
+      window.requestAnimationFrame(function() {
+        setDonutCenterPercent(total);
+        renderDonutSliceLabels([pctGas, pctListrik, pctAir, pctPacking, pctBahan, Math.max(0, 100 - cBahan)]);
+      });
       } catch (error) {
         hppSafeError('[HPP_SAFE_DONUT_ERROR]', error);
       }
@@ -690,8 +747,7 @@
         const pctEl = ensurePercentNode(type);
         if (pctEl) {
           const pctValue = total > 0 ? (values[type] / total) * 100 : 0;
-          const pct = Number.isFinite(pctValue) ? pctValue.toFixed(1) : '0.0';
-          pctEl.textContent = pct + '%';
+          setHppPercentTextInstant(pctEl, pctValue);
         }
       });
 
