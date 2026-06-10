@@ -1,0 +1,254 @@
+<script id="hpp-chemical-module">
+  if (typeof window.toggleBahanActive !== 'function') {
+    window.toggleBahanActive = function() {};
+  }
+
+  if (typeof window.toggleBahanInputs !== 'function') {
+    window.toggleBahanInputs = function() {};
+  }
+
+  if (typeof window.calculateBahanBaku !== 'function') {
+    window.calculateBahanBaku = function() {};
+  }
+
+  (function zettChemicalCardUi20260520() {
+    function byId(id) { return document.getElementById(id); }
+    function clean(value) {
+      if (typeof zettCleanNumber === 'function') return zettCleanNumber(value);
+      let raw = String(value || '').trim().replace(/[^\d.,-]/g, '');
+      if (!raw) return 0;
+      const hasComma = raw.includes(',');
+      const hasDot = raw.includes('.');
+      if (hasComma && hasDot) {
+        raw = raw.lastIndexOf(',') > raw.lastIndexOf('.')
+          ? raw.replace(/\./g, '').replace(',', '.')
+          : raw.replace(/,/g, '');
+      } else if (hasDot) {
+        const parts = raw.split('.');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw;
+      } else if (hasComma) {
+        const parts = raw.split(',');
+        raw = parts.length > 1 && parts.slice(1).every(part => part.length === 3) ? parts.join('') : raw.replace(',', '.');
+      }
+      return Number(raw) || 0;
+    }
+    function money(value) {
+      const n = Number.isFinite(Number(value)) ? Number(value) : 0;
+      if (typeof formatRupiah === 'function') return formatRupiah(Math.round(n));
+      return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    }
+    function row() {
+      if (typeof zettFindActiveHPPRow === 'function') return zettFindActiveHPPRow() || {};
+      return {};
+    }
+    function outlet() {
+      const name = String(byId('inputNamaHPP')?.value || '').trim().toLowerCase();
+      const lists = [];
+      if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) lists.push(masterDataCabang);
+      if (window.APP_STATE?.data?.master?.cabang) lists.push(window.APP_STATE.data.master.cabang);
+      for (const items of lists) {
+        const found = items.find(item => String(item?.namaOutlet || item?.['Nama Outlet'] || '').trim().toLowerCase() === name);
+        if (found) return found;
+      }
+      return {};
+    }
+    function kapCuci() {
+      const o = outlet();
+      const r = row();
+      return Math.max(clean(o.cuciKg || o.kapCuci || r['Kap Cuci']) || 1, 1);
+    }
+    const items = [
+      { key: 'Det', toggle: 'toggleBahanDet', wrap: 'wrapDetMain', type: 'bahanDetType', harga: 'bahanDetHargaBulk', isi: 'bahanDetKapasitasBulk', pakai: 'bahanDetPemakaian', hargaLtr: 'dispDetHargaBesar', hargaMl: 'dispDetHargaKecil', sachetHarga: 'bahanDetHargaSachet', sachetIsi: 'bahanDetKapasitasSachet', load: 'dispDetCostLoad', kg: 'dispDetCostKg', rgb: '16,185,129', color: '#047857' },
+      { key: 'Sof', toggle: 'toggleBahanSof', wrap: 'wrapSofMain', type: 'bahanSofType', harga: 'bahanSofHargaBulk', isi: 'bahanSofKapasitasBulk', pakai: 'bahanSofPemakaian', hargaLtr: 'dispSofHargaBesar', hargaMl: 'dispSofHargaKecil', sachetHarga: 'bahanSofHargaSachet', sachetIsi: 'bahanSofKapasitasSachet', load: 'dispSofCostLoad', kg: 'dispSofCostKg', rgb: '99,102,241', color: '#4338ca' },
+      { key: 'Par', toggle: 'toggleBahanPar', wrap: 'wrapParMain', harga: 'bahanParHargaBulk', isi: 'bahanParKapasitasBulk', pakai: 'bahanParPemakaian', hargaLtr: 'dispParHargaBesar', hargaMl: 'dispParHargaKecil', load: 'dispParCostLoad', kg: 'dispParCostKg', rgb: '245,158,11', color: '#b45309' },
+      { key: 'Pel', toggle: 'toggleBahanPel', wrap: 'wrapPelMain', type: 'bahanPelType', harga: 'bahanPelHargaBulk', isi: 'bahanPelKapasitasBulk', pakai: 'bahanPelPemakaian', hargaLtr: 'dispPelHargaBesar', hargaMl: 'dispPelHargaKecil', sachetHarga: 'bahanPelHargaSachet', sachetIsi: 'bahanPelKapasitasSachet', load: 'dispPelCostLoad', kg: 'dispPelCostKg', rgb: '168,85,247', color: '#7e22ce' }
+    ];
+
+    function cardFor(config) {
+      return byId(config.wrap)?.closest('.bento-col-6');
+    }
+    function outputFor(config) {
+      return byId(config.kg)?.closest('.zett-chemical-output');
+    }
+    function isActive(config) {
+      const toggle = byId(config.toggle);
+      return !toggle || !!toggle.checked;
+    }
+    function rowHasSavedChemicalData() {
+      const sourceRow = row();
+      const keys = [
+        'Chem_Det_Harga', 'Chem_Det_Kapasitas', 'Chem_Det_Pemakaian',
+        'Chem_Sof_Harga', 'Chem_Sof_Kapasitas', 'Chem_Sof_Pemakaian',
+        'Chem_Par_Harga', 'Chem_Par_Kapasitas', 'Chem_Par_Pemakaian',
+        'Chem_Pel_Harga', 'Chem_Pel_Kapasitas', 'Chem_Pel_Pemakaian',
+        'Harga Total Deterjen', 'Kap Deterjen Liter', 'Pemakaian Deterjen Per Kg Ml',
+        'Harga Total Softener', 'Kap Softener Liter', 'Pemakaian Softener Per Kg Ml',
+        'Harga Total Pewangi', 'Kap Pewangi Liter', 'Pemakaian Pewangi Per Kg Ml',
+        'Harga Total Pelicin Setrika', 'Kap Pelicin Setrika Liter', 'Pemakaian Pelicin Setrika Per Kg Ml',
+        'chemical_cost', 'Chemical Cuci Per Kg', 'Chemical Cuci Per Load'
+      ];
+      return keys.some(function(key) {
+        return sourceRow[key] !== undefined &&
+          sourceRow[key] !== null &&
+          sourceRow[key] !== '' &&
+          clean(sourceRow[key]) > 0;
+      });
+    }
+    function isChemicalInputInteraction() {
+      const active = document.activeElement;
+      return !!(active && items.some(function(config) {
+        return [
+          config.toggle, config.type, config.harga, config.isi, config.pakai,
+          config.sachetHarga, config.sachetIsi
+        ].includes(active.id);
+      }));
+    }
+    function itemLoad(config) {
+      if (!isActive(config)) return 0;
+      const type = String(byId(config.type)?.value || '').toLowerCase();
+      if (type === 'sachet') {
+        const harga = clean(byId(config.sachetHarga)?.value);
+        const isi = Math.max(clean(byId(config.sachetIsi)?.value) || 1, 1);
+        setText(config.hargaLtr, 0);
+        setText(config.hargaMl, 0);
+        return harga / isi;
+      }
+      const harga = clean(byId(config.harga)?.value);
+      const isi = Math.max(clean(byId(config.isi)?.value) || 1, 1);
+      const pakai = clean(byId(config.pakai)?.value);
+      const hargaLtr = isi > 0 ? harga / isi : 0;
+      const hargaMl = hargaLtr / 1000;
+      setText(config.hargaLtr, hargaLtr);
+      setText(config.hargaMl, hargaMl);
+      return kapCuci() * pakai * hargaMl;
+    }
+    function setText(id, value) {
+      const el = byId(id);
+      if (el) el.value = money(value);
+    }
+    function formatMoneyInputs() {
+      ['bahanDetHargaBulk', 'bahanSofHargaBulk', 'bahanParHargaBulk', 'bahanPelHargaBulk'].forEach(function(id) {
+        const el = byId(id);
+        if (el && el.value) {
+          const value = clean(el.value);
+          el.value = value ? Math.round(value).toLocaleString('id-ID') : '';
+        }
+      });
+    }
+    function applyState(config) {
+      const active = isActive(config);
+      const card = cardFor(config);
+      const wrap = byId(config.wrap);
+      const output = outputFor(config);
+      const title = card?.querySelector('h4');
+      if (card) {
+        card.style.background = active ? 'rgba(' + config.rgb + ',0.035)' : '#f8fafc';
+        card.style.borderColor = active ? 'rgba(' + config.rgb + ',0.45)' : 'rgba(148,163,184,0.35)';
+      }
+      if (wrap) {
+        wrap.style.opacity = active ? '1' : '0.52';
+        wrap.style.filter = active ? 'none' : 'grayscale(0.35)';
+      }
+      if (title) title.style.color = active ? config.color : '#94a3b8';
+      if (output) {
+        output.style.background = active ? 'rgba(' + config.rgb + ',0.07)' : 'rgba(148,163,184,0.08)';
+        output.style.borderColor = active ? 'rgba(' + config.rgb + ',0.35)' : 'rgba(148,163,184,0.28)';
+        output.style.color = active ? config.color : '#64748b';
+      }
+    }
+
+    window.toggleBahanActive = function() {
+      items.forEach(applyState);
+    };
+    window.toggleBahanInputs = function() {
+      [['bahanDetType', 'wrapDetBulk', 'wrapDetSachet'], ['bahanSofType', 'wrapSofBulk', 'wrapSofSachet'], ['bahanPelType', 'wrapPelBulk', 'wrapPelSachet']].forEach(function(parts) {
+        const type = String(byId(parts[0])?.value || '').toLowerCase();
+        const sachet = type === 'sachet';
+        const bulkEl = byId(parts[1]);
+        const sachetEl = byId(parts[2]);
+        if (bulkEl) {
+          bulkEl.classList.toggle('hidden', sachet);
+          bulkEl.style.display = sachet ? 'none' : 'flex';
+        }
+        if (sachetEl) {
+          sachetEl.classList.toggle('hidden', !sachet);
+          sachetEl.style.display = sachet ? 'flex' : 'none';
+        }
+      });
+      window.toggleBahanActive();
+    };
+    window.calculateBahanBaku = function() {
+      formatMoneyInputs();
+      const hasSavedChemical = rowHasSavedChemicalData();
+      const allowDefaultInputCalculation = hasSavedChemical ||
+        window.__zettChemicalUserDirty === true ||
+        isChemicalInputInteraction();
+      if (!allowDefaultInputCalculation) {
+        items.forEach(function(config) {
+          const loadEl = byId(config.load);
+          const kgEl = byId(config.kg);
+          if (loadEl) loadEl.textContent = money(0);
+          if (kgEl) kgEl.textContent = money(0);
+          applyState(config);
+        });
+        const totalEl = byId('displayBiayaBahanTotalKg');
+        if (totalEl) totalEl.textContent = money(0);
+        window.__zettChemicalDashboardActive = false;
+        window.__zettChemicalDashboardLoad = 0;
+        window.__zettChemicalDashboardKg = 0;
+        if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('bahan', 0);
+        if (typeof window.zettRenderAllHPPCardDetails === 'function') {
+          requestAnimationFrame(function() { window.zettRenderAllHPPCardDetails(); });
+        }
+        return { totalLoad: 0, totalKg: 0, active: false };
+      }
+      const cap = kapCuci();
+      let totalLoad = 0;
+      let totalKg = 0;
+      let hasActiveChemical = false;
+      items.forEach(function(config) {
+        const active = isActive(config);
+        const load = itemLoad(config);
+        const kg = cap > 0 ? load / cap : 0;
+        const loadEl = byId(config.load);
+        const kgEl = byId(config.kg);
+        if (loadEl) loadEl.textContent = money(load);
+        if (kgEl) kgEl.textContent = money(kg);
+        if (active) hasActiveChemical = true;
+        totalLoad += load;
+        totalKg += kg;
+        applyState(config);
+      });
+      if (!hasActiveChemical) {
+        totalLoad = 0;
+        totalKg = 0;
+      }
+      const totalEl = byId('displayBiayaBahanTotalKg');
+      if (totalEl) totalEl.textContent = money(totalKg);
+      window.__zettChemicalDashboardActive = hasActiveChemical;
+      window.__zettChemicalDashboardLoad = totalLoad;
+      window.__zettChemicalDashboardKg = totalKg;
+      if (typeof window.zettHPPSetStateValue === 'function') window.zettHPPSetStateValue('bahan', totalKg);
+      if (typeof window.zettRenderAllHPPCardDetails === 'function') {
+        requestAnimationFrame(function() { window.zettRenderAllHPPCardDetails(); });
+      }
+      return { totalLoad, totalKg, active: hasActiveChemical };
+    };
+    document.addEventListener('DOMContentLoaded', function() {
+      items.forEach(function(config) {
+        [
+          config.toggle, config.type, config.harga, config.isi, config.pakai,
+          config.sachetHarga, config.sachetIsi
+        ].forEach(function(id) {
+          const el = byId(id);
+          if (!el || el.__zettChemicalDirtyBound) return;
+          el.__zettChemicalDirtyBound = true;
+          el.addEventListener('input', function() { window.__zettChemicalUserDirty = true; });
+          el.addEventListener('change', function() { window.__zettChemicalUserDirty = true; });
+        });
+      });
+      window.toggleBahanInputs();
+      window.calculateBahanBaku();
+    });
+  })();
+</script>
