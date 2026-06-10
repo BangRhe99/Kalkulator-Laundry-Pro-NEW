@@ -10,6 +10,8 @@
       var activeFetches = {};
       var allowPopulate = false;
       var hppTransitionRenderTimer = null;
+      var hppOutletSwitchTimer = null;
+      var hppOutletSwitchToken = window.hppOutletSwitchToken || 0;
 
       var isSwitchingHPPOutlet = false;
       var latestHPPOutletRequestId = window.latestHPPOutletRequestId || 0;
@@ -205,6 +207,50 @@
       function norm(value) { return String(value || '').replace(/\u00A0/g, ' ').trim().toLowerCase().replace(/\s+/g, ' '); }
       function normalizeOutletNameHPP(value) { return norm(value); }
       function currentOutlet() { return String(byId('inputNamaHPP')?.value || '').trim(); }
+      function setHppSwitchingState(active, token) {
+        var view = byId('view-hpp');
+        var dashboard = byId('hpp-dashboard-view');
+        var select = byId('inputNamaHPP');
+        var isActive = !!active;
+        if (token && token !== window.hppOutletSwitchToken) return;
+        if (view) {
+          view.classList.toggle('hpp-is-switching', isActive);
+          view.classList.toggle('hpp-is-rendering', isActive);
+          view.classList.toggle('hpp-data-loading', isActive);
+          view.setAttribute('aria-busy', String(isActive));
+        }
+        if (dashboard) dashboard.classList.toggle('hpp-loading-soft', isActive);
+        if (select) select.setAttribute('aria-busy', String(isActive));
+      }
+      function beginHppOutletSwitchTransition() {
+        hppOutletSwitchToken += 1;
+        window.hppOutletSwitchToken = hppOutletSwitchToken;
+        setHppSwitchingState(true, hppOutletSwitchToken);
+        return hppOutletSwitchToken;
+      }
+      function finishHppOutletSwitchTransition(token) {
+        var activeToken = token || window.hppOutletSwitchToken;
+        window.requestAnimationFrame(function() {
+          window.requestAnimationFrame(function() {
+            if (activeToken !== window.hppOutletSwitchToken) return;
+            setHppSwitchingState(false, activeToken);
+          });
+        });
+      }
+      function scheduleSmoothHppOutletChange(outlet) {
+        var selected = String(outlet || '').trim();
+        var token = beginHppOutletSwitchTransition();
+        window.clearTimeout(hppOutletSwitchTimer);
+        hppOutletSwitchTimer = window.setTimeout(function() {
+          if (token !== window.hppOutletSwitchToken) return;
+          try {
+            window.handleGlobalOutletChange(selected);
+          } catch (error) {
+            hppDebugError('[HPP_SMOOTH_OUTLET_CHANGE_FAILED]', error);
+            finishHppOutletSwitchTransition(token);
+          }
+        }, 120);
+      }
       function isOnHPPPage() {
         var hppView = byId('view-hpp');
         var bepView = byId('view-bep');
@@ -505,6 +551,7 @@
           if (domWrites.length) {
             domWrites.forEach(function(write) { write(); });
           }
+          finishHppOutletSwitchTransition(window.hppOutletSwitchToken);
         });
       }
       function destroyLegacyHPPChartIfAny() {
@@ -534,6 +581,7 @@
         }
         hideBranchLoaderAfterPaint();
         setSoftLoading(false);
+        finishHppOutletSwitchTransition(window.hppOutletSwitchToken);
         endAcaTrace();
       }
       window.renderHPPZeroState = renderHPPZeroState;
@@ -667,6 +715,7 @@
         if (activeFetches[normalized] && !force) {
           window.setTimeout(function() {
             if (requestId === window.hppRenderRequestId && norm(currentOutlet()) === normalized) hideBranchLoaderAfterPaint();
+            if (requestId === window.hppRenderRequestId && norm(currentOutlet()) === normalized) finishHppOutletSwitchTransition(window.hppOutletSwitchToken);
           }, 900);
           return;
         }
@@ -714,6 +763,7 @@
           renderValues({ gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0 }, 'hpp-initial-zero', '', window.hppRenderRequestId);
         }
         hideBranchLoaderAfterPaint();
+        finishHppOutletSwitchTransition(window.hppOutletSwitchToken);
       }
       function switchOutlet(outlet, options) {
         var config = options || {};
@@ -880,7 +930,7 @@
         try {
           currentStep = 'before switchOutlet';
           var normOutlet = normalizeOutletNameHPP(outlet);
-          if (outlet) showBranchLoader();
+          if (outlet) setHppSwitchingState(true, window.hppOutletSwitchToken);
           window.__HPP_FORCE_ZERO_DASHBOARD = false;
           window.__HPP_GSHEET_SYNC_LOCKED = false;
           removeAntiLoaderStyle();
@@ -963,7 +1013,7 @@
             return;
           }
           event.stopImmediatePropagation();
-          window.handleGlobalOutletChange(event.target.value);
+          scheduleSmoothHppOutletChange(event.target.value);
         }, true);
       }
 

@@ -7105,6 +7105,63 @@
   }
 </style>
 
+<style id="zett-hpp-outlet-switch-transition-20260610">
+  #view-hpp #hpp-dashboard-view,
+  #view-hpp #hpp-dashboard-view > .grid,
+  #view-hpp .hpp-grid {
+    transition:
+      opacity 280ms cubic-bezier(.22, .61, .36, 1),
+      transform 280ms cubic-bezier(.22, .61, .36, 1),
+      filter 280ms cubic-bezier(.22, .61, .36, 1) !important;
+    will-change: opacity, transform, filter;
+  }
+
+  #view-hpp .hpp-card-dash {
+    transition:
+      transform 280ms cubic-bezier(.22, .61, .36, 1),
+      box-shadow 280ms cubic-bezier(.22, .61, .36, 1),
+      border-color 280ms cubic-bezier(.22, .61, .36, 1),
+      opacity 280ms cubic-bezier(.22, .61, .36, 1),
+      filter 280ms cubic-bezier(.22, .61, .36, 1) !important;
+    will-change: transform, opacity, filter;
+  }
+
+  #view-hpp.hpp-is-switching #hpp-dashboard-view > .grid,
+  #view-hpp.hpp-is-rendering #hpp-dashboard-view > .grid,
+  #view-hpp.hpp-data-loading #hpp-dashboard-view > .grid,
+  #view-hpp.hpp-is-switching .hpp-grid,
+  #view-hpp.hpp-is-rendering .hpp-grid,
+  #view-hpp.hpp-data-loading .hpp-grid {
+    opacity: .66 !important;
+    transform: translateY(6px) scale(.995) !important;
+    filter: blur(.7px) saturate(.98) !important;
+    pointer-events: none !important;
+  }
+
+  #view-hpp.hpp-is-switching .hpp-card-dash,
+  #view-hpp.hpp-is-rendering .hpp-card-dash,
+  #view-hpp.hpp-data-loading .hpp-card-dash {
+    transform: translateY(3px) !important;
+  }
+
+  #view-hpp.hpp-is-switching #hpp-dashboard-view,
+  #view-hpp.hpp-is-rendering #hpp-dashboard-view,
+  #view-hpp.hpp-data-loading #hpp-dashboard-view {
+    cursor: progress;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #view-hpp #hpp-dashboard-view,
+    #view-hpp #hpp-dashboard-view > .grid,
+    #view-hpp .hpp-grid,
+    #view-hpp .hpp-card-dash {
+      transition: none !important;
+      transform: none !important;
+      filter: none !important;
+    }
+  }
+</style>
+
 <style id="hpp-dashboard-fast-switch-style-20260518">
     /* [HPP DASHBOARD FAST SWITCH PATCH - 2026-05-18] */
     #view-hpp #hpp-dashboard-view.hpp-loading-soft {
