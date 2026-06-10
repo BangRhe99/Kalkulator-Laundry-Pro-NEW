@@ -2636,6 +2636,7 @@
 (function zettBepHppServiceSummaryPatch20260524() {
   var renderTimer = null;
   var loadingTimer = null;
+  var renderLock = false;
   var lastSignature = '';
   var dryOnlyDefault = true;
   var liveCostSyncing = false;
@@ -3097,10 +3098,18 @@
     window.clearTimeout(renderTimer);
     if (loading) renderCards({ loading: true });
     renderTimer = window.setTimeout(function() {
-      renderCards();
-      if (typeof window.renderBEPTopKPIOnly === 'function') window.renderBEPTopKPIOnly();
-      if (typeof window.calculateAll === 'function') window.calculateAll();
-    }, Number.isFinite(delay) ? delay : 80);
+      if (renderLock) return;
+      renderLock = true;
+      window.requestAnimationFrame(function() {
+        try {
+          renderCards();
+          if (typeof window.renderBEPTopKPIOnly === 'function') window.renderBEPTopKPIOnly();
+          if (typeof window.calculateAll === 'function') window.calculateAll();
+        } finally {
+          renderLock = false;
+        }
+      });
+    }, Number.isFinite(delay) ? delay : 100);
   }
 
   window.zettGetBepHppServiceSummary_ = getSummary;
@@ -3134,9 +3143,8 @@
         return;
       }
       lastSignature = '';
-      scheduleRender(0, true);
       window.clearTimeout(loadingTimer);
-      loadingTimer = window.setTimeout(function() { scheduleRender(0, false); }, 180);
+      scheduleRender(100, true);
     }
     if (event.target.id === 'bepReference' || event.target.id === 'inputKategori') scheduleRender(0, false);
   });
@@ -3352,4 +3360,79 @@ function safeProsesSimpanBEP() {
     prosesSimpanBEP();
   }
 }
+</script>
+
+<style id="zett-bep-fast-layout-polish-20260610">
+  #view-bep .bep-fixed-cost-premium .zett-bep-visual-chart-card {
+    margin-top: clamp(14px, 1.6vw, 20px) !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+  }
+
+  #view-bep .bep-fixed-cost-premium .zett-bep-visual-chart-card .relative {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-section {
+    margin-top: clamp(14px, 1.6vw, 20px) !important;
+  }
+
+  #view-bep.bep-is-loading.bep-soft-refresh .bep-fixed-cost-premium .zett-bep-visual-chart-card,
+  #view-bep.bep-is-loading.bep-soft-refresh .bep-fixed-cost-premium .bep-fixed-visual-section {
+    opacity: .72;
+  }
+
+  @media (max-width: 768px) {
+    #view-bep .bep-fixed-cost-premium .zett-bep-visual-chart-card {
+      padding: 16px !important;
+      border-radius: 20px !important;
+    }
+
+    #view-bep .bep-fixed-cost-premium .zett-bep-visual-chart-card .relative {
+      height: min(22rem, 72vw) !important;
+    }
+  }
+</style>
+
+<script id="zett-bep-fast-layout-order-20260610">
+(function zettBepFastLayoutOrder20260610() {
+  function byId(id) { return document.getElementById(id); }
+
+  function placeBepVisualChart() {
+    var view = byId('view-bep');
+    if (!view) return;
+
+    var chart = byId('bepChart');
+    var kpiGrid = view.querySelector('.bep-fixed-cost-premium .bep-fixed-cost-grid');
+    var fixedVisual = view.querySelector('.bep-fixed-cost-premium .bep-fixed-visual-section');
+    if (!chart || !kpiGrid || !fixedVisual) return;
+
+    var chartCard = chart.closest('.bg-white\\/80') || chart.closest('[class*="bg-white"]');
+    if (!chartCard || chartCard.classList.contains('zett-bep-visual-chart-card')) {
+      if (chartCard && fixedVisual.previousElementSibling !== chartCard) {
+        fixedVisual.parentNode.insertBefore(chartCard, fixedVisual);
+      }
+      return;
+    }
+
+    chartCard.classList.add('zett-bep-visual-chart-card');
+    fixedVisual.parentNode.insertBefore(chartCard, fixedVisual);
+  }
+
+  window.zettBepPlaceVisualChart = placeBepVisualChart;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', placeBepVisualChart, { once: true });
+  } else {
+    placeBepVisualChart();
+  }
+
+  window.addEventListener('zett:bep-layout-refresh', placeBepVisualChart);
+  setTimeout(placeBepVisualChart, 120);
+  setTimeout(placeBepVisualChart, 600);
+})();
 </script>

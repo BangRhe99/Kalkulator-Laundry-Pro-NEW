@@ -3013,7 +3013,7 @@
 
     var cached = getCachedBEPOutlet(outlet);
     var cacheFresh = cached && (Date.now() - cached.updatedAt < BEP_CACHE_TTL_MS);
-    if (cached && !config.force) {
+    if (cached) {
       renderBEPDashboardFast(cached.data, outlet);
       if (isAcaLaundryOutlet(outlet)) {
         bepSafeLog('[BEP_ACA_BACKGROUND_REFRESH_DISABLED]', {
@@ -3023,7 +3023,7 @@
         setOutletState('Data BEP aktif: ' + outlet, 'ready');
         return;
       }
-      if (cacheFresh) return;
+      if (cacheFresh && !config.force) return;
       setBEPLoadingState(false, true);
       setOutletState('Data BEP aktif: ' + outlet, 'ready');
     } else {
@@ -3122,7 +3122,7 @@
     }
     var now = Date.now();
     var signature = bepCacheKey(outlet) + '|bep';
-    if (signature === bepLastLoadSignature && now - bepLastLoadAt < 300) {
+    if (signature === bepLastLoadSignature && now - bepLastLoadAt < 900) {
       bepSafeLog('[BEP_DUPLICATE_LOAD_BLOCKED]', { targetOutlet: outlet });
       return;
     }
@@ -3137,7 +3137,7 @@
       loadBEPDashboardByOutlet(outlet, config);
       return;
     }
-    var delay = typeof config.delay === 'number' ? config.delay : 0;
+    var delay = typeof config.delay === 'number' ? config.delay : 100;
     bepLoadTimer = window.setTimeout(function() {
       if (!zettIsActiveViewBEP_()) {
         bepSafeLog('[BEP_SKIP_NON_ACTIVE_VIEW]', { fn: 'zettLoadBEPFixedCost.timer', targetOutlet: outlet });
