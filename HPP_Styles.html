@@ -7054,3 +7054,20 @@
     }
   }
 </style>
+
+<style id="hpp-dashboard-fast-switch-style-20260518">
+    /* [HPP DASHBOARD FAST SWITCH PATCH - 2026-05-18] */
+    #view-hpp #hpp-dashboard-view.hpp-loading-soft {
+      opacity: 0.92 !important;
+      pointer-events: none !important;
+      transition: opacity 160ms ease, filter 160ms ease;
+      filter: saturate(0.98);
+    }
+
+    #view-hpp #hpp-dashboard-view.hpp-loading-soft .hpp-card-dash,
+    #view-hpp #hpp-dashboard-view.hpp-loading-soft .hpp-hero-dashboard,
+    #view-hpp #hpp-dashboard-view.hpp-loading-soft > .bg-white,
+    #view-hpp #hpp-dashboard-view.hpp-loading-soft > .bg-white\/95 {
+      transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+    }
+  </style>
