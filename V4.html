@@ -3363,7 +3363,12 @@ function safeProsesSimpanBEP() {
 </script>
 
 <style id="zett-bep-fast-layout-polish-20260610">
+  #view-bep .bep-fixed-cost-premium .bep-fixed-cost-grid {
+    order: 1 !important;
+  }
+
   #view-bep .bep-fixed-cost-premium .zett-bep-visual-chart-card {
+    order: 2 !important;
     margin-top: clamp(14px, 1.6vw, 20px) !important;
     margin-bottom: 0 !important;
     width: 100% !important;
@@ -3378,7 +3383,17 @@ function safeProsesSimpanBEP() {
   }
 
   #view-bep .bep-fixed-cost-premium .bep-fixed-visual-section {
+    order: 3 !important;
     margin-top: clamp(14px, 1.6vw, 20px) !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-summary-grid {
+    order: 4 !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-grid,
+  #view-bep .bep-fixed-cost-premium #bepFixedDetailPanel {
+    order: 5 !important;
   }
 
   #view-bep.bep-is-loading.bep-soft-refresh .bep-fixed-cost-premium .zett-bep-visual-chart-card,
