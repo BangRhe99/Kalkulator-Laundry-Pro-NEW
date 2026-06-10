@@ -3086,6 +3086,41 @@
     if (input) input.value = String(Math.round(value));
     return value;
   }
+  function runBepLightRecalc(sourceMix) {
+    if (!isBepPageActive()) return;
+
+    var mix = sourceMix || window.zettBepSalesMix;
+
+    if (typeof window.renderBEPTopKPIOnly === 'function') {
+      try {
+        window.renderBEPTopKPIOnly(mix);
+      } catch (error) {
+        hppDebug('[BEP_LIGHT_KPI_ERROR]', error);
+      }
+    }
+
+    if (typeof window.updateBEPProfitSimulationOnly === 'function') {
+      try {
+        window.updateBEPProfitSimulationOnly();
+      } catch (error) {
+        hppDebug('[BEP_LIGHT_PROFIT_ERROR]', error);
+      }
+    }
+
+    var allowHeavyCalculate =
+      window.__BEP_ALLOW_GLOBAL_CALCULATE__ === true &&
+      window.__BEP_SERVER_RENDER_PHASE__ !== true &&
+      window.__BEP_RENDER_LOCK__ !== true &&
+      window.__BEP_OUTLET_CHANGE_LOCK__ !== true;
+
+    if (allowHeavyCalculate && typeof window.calculateAll === 'function') {
+      try {
+        window.calculateAll();
+      } catch (error) {
+        hppDebug('[BEP_HEAVY_CALCULATE_BLOCKED_ERROR]', error);
+      }
+    }
+  }
   function scheduleRender(delay, loading) {
     if (isHppPageActive()) {
       hppDebug('[HPP_SKIP_NON_HPP_PAGE]', 'skip BEP HPP service render while HPP page is active');
@@ -3103,8 +3138,7 @@
       window.requestAnimationFrame(function() {
         try {
           renderCards();
-          if (typeof window.renderBEPTopKPIOnly === 'function') window.renderBEPTopKPIOnly();
-          if (typeof window.calculateAll === 'function') window.calculateAll();
+          runBepLightRecalc(window.zettBepSalesMix);
         } finally {
           renderLock = false;
         }
@@ -3160,8 +3194,7 @@
         }
         setServiceInputState(serviceKey, field, nextValue, selectedOutlet());
         updateServiceMargin(serviceKey);
-        if (typeof window.renderBEPTopKPIOnly === 'function') window.renderBEPTopKPIOnly();
-        if (typeof window.calculateAll === 'function') window.calculateAll();
+        runBepLightRecalc(window.zettBepSalesMix);
       }
       return;
     }
@@ -3286,7 +3319,7 @@
   window.safeCalculateAll = function() {
     syncHiddenToReference();
     if (typeof oldSafeCalculateAll === 'function') return oldSafeCalculateAll.apply(this, arguments);
-    if (typeof window.calculateAll === 'function') window.calculateAll();
+    runBepLightRecalc(window.zettBepSalesMix);
   };
   function observeLiveCostNodes() {
     if (observeLiveCostNodes.done || typeof MutationObserver !== 'function') return;
@@ -3309,8 +3342,7 @@
       window.clearTimeout(renderTimer);
       renderTimer = window.setTimeout(function() {
         renderCards();
-        if (typeof window.renderBEPTopKPIOnly === 'function') window.renderBEPTopKPIOnly();
-        if (typeof window.calculateAll === 'function') window.calculateAll();
+        runBepLightRecalc(window.zettBepSalesMix);
         window.setTimeout(function() { liveCostSyncing = false; }, 80);
       }, 0);
     });
@@ -3338,6 +3370,32 @@ function safeFormatAndCalculate(inputEl) {
 }
 
 function safeCalculateAll() {
+  var bepView = document.getElementById('view-bep');
+  var isBepActive = !!(
+    bepView &&
+    !bepView.classList.contains('hidden') &&
+    (
+      (document.body && document.body.classList && document.body.classList.contains('bep-active')) ||
+      bepView.offsetParent !== null
+    )
+  );
+
+  if (isBepActive) {
+    if (typeof window.renderBEPTopKPIOnly === 'function') {
+      try {
+        window.renderBEPTopKPIOnly(window.zettBepSalesMix);
+      } catch (error) {}
+    }
+
+    if (typeof window.updateBEPProfitSimulationOnly === 'function') {
+      try {
+        window.updateBEPProfitSimulationOnly();
+      } catch (error) {}
+    }
+
+    return;
+  }
+
   if (typeof calculateAll === 'function') {
     calculateAll();
   }

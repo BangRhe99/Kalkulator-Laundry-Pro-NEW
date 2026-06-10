@@ -2080,6 +2080,30 @@
       }
     }
   }
+  function hasUsableBEPFixedData(data) {
+    data = data || {};
+
+    var total = parseSafe(data.totalFixedCostBulanan || data['Total Fixed Cost Bulanan']);
+    var rent = parseSafe(
+      data.biayaSewaBulanan ||
+      data['Biaya Sewa Bulanan'] ||
+      data.biayaSewaTahunan ||
+      data['Biaya Sewa Tahunan']
+    );
+    var salary = parseSafe(data.totalGajiBulanan || data['Total Gaji Bulanan']);
+    var machine = parseSafe(data.totalBiayaMesinBulanan || data['Total Biaya Mesin Bulanan']);
+    var internet = parseSafe(data.biayaInternetBulanan || data['Biaya Internet Bulanan']);
+    var other = parseSafe(data.totalLainLainBulanan || data['Total Lain Lain Bulanan']);
+
+    var salaryRows = Array.isArray(data.detailGaji) ? data.detailGaji.length : 0;
+    var machineRows = Array.isArray(data.detailMesin) ? data.detailMesin.length : 0;
+    var otherRows = Array.isArray(data.detailLainLain) ? data.detailLainLain.length : 0;
+
+    return (total + rent + salary + machine + internet + other) > 0 ||
+      salaryRows > 0 ||
+      machineRows > 0 ||
+      otherRows > 0;
+  }
   function invalidateBEPCache(outlet) {
     var key = bepCacheKey(outlet || selectedOutlet());
     if (key && window.bepOutletCache[key]) delete window.bepOutletCache[key];
@@ -2962,10 +2986,14 @@
         targetOutlet: outlet,
         key: key
       });
-      delete bepActiveFetches[key];
-      setBEPLoadingState(false, false);
-      window.__BEP_RENDER_LOCK__ = false;
-      window.__BEP_OUTLET_CHANGE_LOCK__ = false;
+      if (typeof window.zettReleaseBEPLocks === 'function') {
+        window.zettReleaseBEPLocks('watchdog-timeout:' + outlet);
+      } else {
+        delete bepActiveFetches[key];
+        setBEPLoadingState(false, false);
+        window.__BEP_RENDER_LOCK__ = false;
+        window.__BEP_OUTLET_CHANGE_LOCK__ = false;
+      }
       try {
         showBEPFixedToast('Data BEP terlalu lama dimuat. Silakan pilih outlet kembali atau refresh halaman.', 'error');
       } catch (error) {}
@@ -3014,18 +3042,19 @@
     var cached = getCachedBEPOutlet(outlet);
     var cacheFresh = cached && (Date.now() - cached.updatedAt < BEP_CACHE_TTL_MS);
     if (cached) {
+      var usableCache = hasUsableBEPFixedData(cached.data);
       renderBEPDashboardFast(cached.data, outlet);
-      if (isAcaLaundryOutlet(outlet)) {
-        bepSafeLog('[BEP_ACA_BACKGROUND_REFRESH_DISABLED]', {
+      if (isAcaLaundryOutlet(outlet) && !config.force && cacheFresh && usableCache) {
+        bepSafeLog('[BEP_ACA_CACHE_USED_FRESH]', {
           targetOutlet: outlet
         });
         setBEPLoadingState(false, false);
         setOutletState('Data BEP aktif: ' + outlet, 'ready');
         return;
       }
-      if (cacheFresh && !config.force) return;
+      if (cacheFresh && !config.force && usableCache) return;
       setBEPLoadingState(false, true);
-      setOutletState('Data BEP aktif: ' + outlet, 'ready');
+      setOutletState('Memperbarui data BEP: ' + outlet, 'loading');
     } else {
       emptyState(outlet);
       renderAll({ skipTopKPI: true });
