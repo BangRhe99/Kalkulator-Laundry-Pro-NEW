@@ -1,0 +1,112 @@
+<!-- App outlet bridge extracted from Index.html. Logic unchanged. -->
+
+<script>
+function handleGlobalOutletChange(value) {
+      if (window.__HPP_PROGRAMMATIC_UPDATE__) {
+        console.warn('[STAGE_5_LOOP_PREVENTED] Programmatic update diabaikan.');
+        return;
+      }
+      const outlet = String(value || '').trim();
+      const onBepPage = typeof isOnBEPPage === 'function' && isOnBEPPage();
+      const onHppPage = typeof isOnHPPPage === 'function' && isOnHPPPage();
+      if (onBepPage) {
+        console.warn('[BEP_OUTLET_CHANGE_FORCE_ROUTE_HANDLE_GLOBAL]', {
+          outlet: outlet,
+          onBepPage: onBepPage,
+          onHppPage: onHppPage
+        });
+        if (window.__BEP_OUTLET_CHANGE_LOCK__) {
+          console.warn('[BEP_DUPLICATE_OUTLET_CHANGE_BLOCKED]', outlet);
+          return;
+        }
+        window.__BEP_OUTLET_CHANGE_LOCK__ = true;
+        try {
+          try {
+            window.__HPP_OUTLET_SWITCH_LOCK__ = false;
+            window.__HPP_OUTLET_LOCK__ = false;
+            window.__HPP_SAFE_SWITCH_ACTIVE = false;
+            window.__HPP_ATOMIC_RENDER_LOCK = false;
+          } catch (error) {}
+          try {
+            if (typeof window.clearHPPOutletLoaders === 'function') {
+              window.clearHPPOutletLoaders();
+            }
+          } catch (error) {}
+          try {
+            if (typeof window.clearHPPOutletLoadersBrutal === 'function') {
+              window.clearHPPOutletLoadersBrutal();
+            }
+          } catch (error) {}
+          try {
+            if (typeof window.updateHeaderKategoriLaundryInfo === 'function') {
+              window.updateHeaderKategoriLaundryInfo();
+            }
+          } catch (error) {}
+          if (typeof window.zettLoadBEPFixedCost === 'function') {
+            window.zettLoadBEPFixedCost(outlet, { force: true, delay: 0 });
+          }
+        } finally {
+          window.setTimeout(function() {
+            window.__BEP_OUTLET_CHANGE_LOCK__ = false;
+          }, 300);
+        }
+        return;
+      }
+
+      console.log('Outlet changed:', value);
+      window.__HPP_FORCE_ZERO_DASHBOARD = false;
+      updateHeaderKategoriLaundryInfo();
+
+      const hppView = document.getElementById('view-hpp');
+      const hppDashboard = document.getElementById('hpp-dashboard-view');
+      const hppForm = document.getElementById('hpp-form-view');
+
+      if (hppView && !hppView.classList.contains('hidden')) {
+        if (hppDashboard) {
+          hppDashboard.classList.remove('hidden');
+          hppDashboard.style.display = 'grid';
+          hppDashboard.style.visibility = 'visible';
+          hppDashboard.style.opacity = '1';
+          hppDashboard.style.pointerEvents = 'auto';
+          hppDashboard.style.filter = 'none';
+        }
+
+        if (hppForm) {
+          hppForm.classList.add('hidden');
+          hppForm.style.display = 'none';
+        }
+
+        document.querySelectorAll('#view-hpp .tab-content')
+          .forEach(tab => {
+            tab.classList.add('hidden');
+            tab.style.display = 'none';
+          });
+      }
+
+      if (typeof populateFormHPP === 'function') {
+        populateFormHPP(value);
+      }
+
+      if (typeof window.zettRefreshActiveHPPRowFromServer === 'function') {
+        window.zettRefreshActiveHPPRowFromServer(value);
+      }
+
+      window.__HPP_GSHEET_SYNC_LOCKED = false;
+      console.log('HPP sync reset because outlet changed');
+
+      if (typeof zettRetrySyncHPPFromGSheet === 'function') {
+        zettRetrySyncHPPFromGSheet();
+      } else if (typeof zettSyncHPPFromGSheet === 'function') {
+        zettSyncHPPFromGSheet();
+      }
+
+      if (typeof window.zettLoadBEPFixedCost === 'function') {
+        if (document.body && document.body.classList && document.body.classList.contains('bep-active')) {
+          window.zettLoadBEPFixedCost(value);
+        } else {
+          console.warn('[HPP_ISOLATION_SKIP_BEP_LOAD]', value);
+        }
+      }
+
+    }
+</script>

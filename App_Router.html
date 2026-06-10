@@ -1,0 +1,150 @@
+<!-- App router extracted from Index.html. Logic unchanged. -->
+
+<script>
+function switchMainTab(tabName) {
+      setActiveMenu(tabName);
+      document.body.classList.toggle('hpp-mobile-active', tabName === 'hpp');
+      document.body.classList.toggle('bep-active', tabName === 'bep');
+      if (window.innerWidth < 768) {
+        closeSidebarMobile();
+      }
+
+      document.querySelectorAll('.main-view').forEach(view => {
+        view.classList.add('hidden');
+      });
+
+      const target = document.getElementById('view-' + tabName);
+
+      if (target) {
+        target.classList.remove('hidden');
+      }
+
+      if (tabName === 'kapasitas') {
+
+        const kapasitasDashboard =
+          document.getElementById('kapasitas-dashboard');
+        const kapasitasForm =
+          document.getElementById('kapasitas-form-container');
+
+        if (target) {
+          target.classList.remove('hidden');
+          target.style.display = 'block';
+          target.style.visibility = 'visible';
+          target.style.opacity = '1';
+        }
+
+        if (kapasitasDashboard) {
+          kapasitasDashboard.classList.remove('hidden');
+          kapasitasDashboard.style.display = 'block';
+          kapasitasDashboard.style.visibility = 'visible';
+          kapasitasDashboard.style.opacity = '1';
+        }
+
+        if (kapasitasForm) {
+          kapasitasForm.classList.add('hidden');
+          kapasitasForm.style.display = 'none';
+        }
+
+        if (typeof applyCabangUIData === 'function') {
+          try { applyCabangUIData(); } catch (error) { console.error('applyCabangUIData error:', error); }
+        }
+
+        const hasCabangState =
+          (Array.isArray(window.masterDataCabang) && window.masterDataCabang.length > 0) ||
+          (window.APP_STATE && window.APP_STATE.data && window.APP_STATE.data.master &&
+            Array.isArray(window.APP_STATE.data.master.kapasitas) &&
+            window.APP_STATE.data.master.kapasitas.length > 0);
+
+        if (!hasCabangState && typeof window.zettLoadDaftarCabangProfil === 'function') {
+          try { window.zettLoadDaftarCabangProfil(); } catch (error) { console.error('zettLoadDaftarCabangProfil error:', error); }
+        } else if (!hasCabangState && typeof loadDaftarCabang === 'function') {
+          try { loadDaftarCabang(); } catch (error) { console.error('loadDaftarCabang error:', error); }
+        }
+
+      }
+
+      if (tabName === 'hpp') {
+
+        const hppDashboard =
+          document.getElementById('hpp-dashboard-view');
+        const hppForm =
+          document.getElementById('hpp-form-view');
+        const selectedHPPOutlet =
+          String(document.getElementById('inputNamaHPP')?.value || '').trim();
+        const isFirstHPPOpen = !window.__HPP_FIRST_OPEN_ZERO_DONE;
+
+        if (target) {
+          target.classList.remove('hidden');
+          target.style.display = 'block';
+          target.style.visibility = 'visible';
+          target.style.opacity = '1';
+        }
+
+        if (hppDashboard) {
+          hppDashboard.classList.remove('hidden');
+          hppDashboard.style.display = 'grid';
+          hppDashboard.style.visibility = 'visible';
+          hppDashboard.style.opacity = '1';
+          hppDashboard.style.pointerEvents = 'auto';
+          hppDashboard.style.filter = 'none';
+        }
+
+        if (hppForm) {
+          hppForm.classList.add('hidden');
+          hppForm.style.display = 'none';
+        }
+
+        if (
+          isFirstHPPOpen &&
+          !selectedHPPOutlet &&
+          typeof resetHPPDashboardToZero === 'function'
+        ) {
+          window.__HPP_FORCE_ZERO_DASHBOARD = true;
+          resetHPPDashboardToZero();
+          if (typeof window.zettResetHPPProcessCardsToZero === 'function') {
+            window.zettResetHPPProcessCardsToZero();
+          }
+          window.__HPP_FIRST_OPEN_ZERO_DONE = true;
+        } else {
+          window.__HPP_FORCE_ZERO_DASHBOARD = false;
+        }
+        if (isFirstHPPOpen) window.__HPP_FIRST_OPEN_ZERO_DONE = true;
+
+        if (!isFirstHPPOpen && (
+          window.StateMachine &&
+          typeof window.StateMachine.calculateTotal === 'function'
+        )) {
+          window.StateMachine.calculateTotal();
+        } else if (
+          !isFirstHPPOpen &&
+          window.HPPStateMachine &&
+          typeof window.HPPStateMachine.calculateTotal === 'function'
+        ) {
+          window.HPPStateMachine.calculateTotal();
+        }
+
+        if (!isFirstHPPOpen && selectedHPPOutlet && typeof window.zettEnsureHPPDashboardLoaded === 'function') {
+          window.zettEnsureHPPDashboardLoaded();
+        }
+
+      }
+
+      const titleMap = {
+        dashboard: 'Dashboard Eksekutif',
+        kapasitas: 'Profil Operasional',
+        hpp: 'Struktur Biaya (HPP)',
+        harga: 'Katalog Layanan',
+        bep: 'Target Titik Impas (BEP)',
+        roi: 'Proyeksi ROI'
+      };
+
+      const headerTitle = document.getElementById('headerTitle');
+
+      if (headerTitle) {
+        headerTitle.innerText = titleMap[tabName] || 'Dashboard';
+      }
+
+      updateHeaderKategoriLaundryInfo();
+
+    }
+</script>
