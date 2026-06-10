@@ -3396,6 +3396,158 @@ function safeProsesSimpanBEP() {
     order: 5 !important;
   }
 
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-panel {
+    overflow: hidden !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-title {
+    font-size: clamp(14.5px, .98vw, 16.5px) !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.018em !important;
+    line-height: 1.2 !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-subtitle {
+    font-size: clamp(11.5px, .78vw, 12.5px) !important;
+    font-weight: 650 !important;
+    letter-spacing: -0.006em !important;
+    line-height: 1.38 !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-visual-total {
+    padding: 7px 10px !important;
+    border-radius: 999px !important;
+    font-size: clamp(11.5px, .82vw, 13px) !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.018em !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-bar-list {
+    gap: clamp(9px, .78vw, 12px) !important;
+    min-width: 0 !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-bar-row {
+    grid-template-columns: minmax(92px, 132px) minmax(0, 1fr) minmax(88px, max-content) !important;
+    align-items: center !important;
+    gap: clamp(10px, .86vw, 16px) !important;
+    min-width: 0 !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-bar-label {
+    color: rgba(15, 23, 42, .78) !important;
+    font-size: clamp(12.5px, .88vw, 14px) !important;
+    font-weight: 780 !important;
+    letter-spacing: -0.012em !important;
+    line-height: 1.28 !important;
+    min-width: 0 !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-bar-value {
+    color: #0F172A !important;
+    font-size: clamp(12.5px, .88vw, 14px) !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.018em !important;
+    line-height: 1.2 !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-bar-track {
+    height: clamp(10px, .82vw, 13px) !important;
+    border-radius: 999px !important;
+    background: linear-gradient(180deg, #EEF2F7, #F8FAFC) !important;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, .08), inset 0 -1px 0 rgba(255, 255, 255, .9) !important;
+    overflow: hidden !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-bar-fill {
+    border-radius: 999px !important;
+    box-shadow: 0 5px 12px var(--bep-fixed-chart-glow, rgba(37, 99, 235, .14)), inset 0 1px 0 rgba(255, 255, 255, .38) !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-donut-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: clamp(14px, 1.25vw, 20px) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-donut {
+    width: clamp(148px, 12.5vw, 184px) !important;
+    height: clamp(148px, 12.5vw, 184px) !important;
+    flex: 0 0 auto !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-donut-center {
+    gap: 3px !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-donut-center span {
+    font-size: clamp(9.5px, .68vw, 11px) !important;
+    font-weight: 850 !important;
+    letter-spacing: .045em !important;
+    line-height: 1.05 !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-donut-center strong {
+    font-size: clamp(20px, 1.55vw, 26px) !important;
+    font-weight: 950 !important;
+    letter-spacing: -0.035em !important;
+    line-height: 1 !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-legend {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: clamp(8px, .72vw, 11px) !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-legend-row {
+    display: grid !important;
+    grid-template-columns: 10px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+    background: rgba(248, 250, 252, .72) !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-legend-dot {
+    width: 9px !important;
+    height: 9px !important;
+    border-radius: 999px !important;
+    background: var(--bep-fixed-chart-color) !important;
+    box-shadow: 0 0 0 4px var(--bep-fixed-chart-soft, rgba(37, 99, 235, .1)) !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-legend-name {
+    color: rgba(15, 23, 42, .78) !important;
+    font-size: clamp(12.5px, .88vw, 14px) !important;
+    font-weight: 780 !important;
+    letter-spacing: -0.012em !important;
+    line-height: 1.25 !important;
+    min-width: 0 !important;
+  }
+
+  #view-bep .bep-fixed-cost-premium .bep-fixed-legend-percent {
+    color: #0F172A !important;
+    font-size: clamp(12.5px, .88vw, 14px) !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.018em !important;
+    line-height: 1.2 !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
   #view-bep.bep-is-loading.bep-soft-refresh .bep-fixed-cost-premium .zett-bep-visual-chart-card,
   #view-bep.bep-is-loading.bep-soft-refresh .bep-fixed-cost-premium .bep-fixed-visual-section {
     opacity: .72;
@@ -3409,6 +3561,21 @@ function safeProsesSimpanBEP() {
 
     #view-bep .bep-fixed-cost-premium .zett-bep-visual-chart-card .relative {
       height: min(22rem, 72vw) !important;
+    }
+
+    #view-bep .bep-fixed-cost-premium .bep-fixed-bar-row {
+      grid-template-columns: minmax(0, 1fr) auto !important;
+      gap: 7px 10px !important;
+    }
+
+    #view-bep .bep-fixed-cost-premium .bep-fixed-bar-track {
+      grid-column: 1 / -1 !important;
+      grid-row: 2 !important;
+    }
+
+    #view-bep .bep-fixed-cost-premium .bep-fixed-donut {
+      width: min(176px, 58vw) !important;
+      height: min(176px, 58vw) !important;
     }
   }
 </style>
