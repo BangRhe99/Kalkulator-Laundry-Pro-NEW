@@ -1,0 +1,80 @@
+<!-- JS2 state/cache extracted from JS2.html. Logic unchanged. -->
+
+<script>
+const APP_STATE = {
+  data: {
+    master: null,
+    hpp: { gas: 0, listrik: 0, air: 0, packing: 0, bahan: 0, nota: 0, total: 0 }
+  },
+  cache: {
+    key: 'ZETT_MASTER_CACHE_V5',
+    ttl: 300000 // 5 Menit TTL
+  },
+  locks: {}
+};
+
+window.APP_STATE = APP_STATE;
+
+let masterDataCabang = [];
+let dashboardRawData = [];
+let masterDataHPP = []; 
+let hasLoadedInitialData = false;
+window.zettOutletState = window.zettOutletState || {
+    loaded: false,
+    loading: false,
+    lastSync: 0,
+    lastRenderKey: ''
+};
+
+function hydrateCabangFromCache() {
+    try {
+        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
+        if(!cachedStr) return false;
+
+        const parsed = JSON.parse(cachedStr);
+        const res = parsed && parsed.data;
+        if(!res || res.status !== 'success') return false;
+
+        masterDataCabang = Array.isArray(res.kapasitas) ? res.kapasitas.map(normalizeKapasitasRow) : [];
+        masterDataHPP = Array.isArray(res.hpp) ? res.hpp : [];
+        window.masterDataHPP = masterDataHPP;
+        dashboardRawData = Array.isArray(res.transactions) ? res.transactions : [];
+        hasLoadedInitialData = true;
+        APP_STATE.data.master = res;
+        window.zettOutletState.loaded = masterDataCabang.length > 0;
+        window.zettOutletState.lastSync = parsed.expiry ? parsed.expiry - APP_STATE.cache.ttl : Date.now();
+        return true;
+    } catch(e) {
+        console.error("Cache hydrate Error:", e);
+        return false;
+    }
+}
+
+function persistCabangToClientCache() {
+    try {
+        const cachedStr = localStorage.getItem(APP_STATE.cache.key);
+        const cached = cachedStr ? JSON.parse(cachedStr) : {};
+        const cachedData = cached && cached.data && cached.data.status === 'success' ? cached.data : {};
+        const data = {
+            ...cachedData,
+            ...(APP_STATE.data.master && APP_STATE.data.master.status === 'success' ? APP_STATE.data.master : {}),
+            status: 'success',
+            kapasitas: masterDataCabang,
+            hpp: Array.isArray(masterDataHPP) ? masterDataHPP : [],
+            transactions: Array.isArray(dashboardRawData) ? dashboardRawData : []
+        };
+
+        APP_STATE.data.master = data;
+        localStorage.setItem(APP_STATE.cache.key, JSON.stringify({ data: data, expiry: Date.now() + APP_STATE.cache.ttl }));
+        hasLoadedInitialData = true;
+        window.zettOutletState.loaded = true;
+        window.zettOutletState.lastSync = Date.now();
+    } catch (e) {
+        console.warn('Gagal memperbarui cache outlet lokal:', e);
+    }
+}
+
+// =========================================================================
+// [BangRhe REVISI: 0ms SYNCHRONOUS BOOTSTRAPPER (SWR PATTERN)]
+// =========================================================================
+</script>

@@ -1,0 +1,139 @@
+<!-- JS2 UI feedback utilities extracted from JS2.html. Logic unchanged. -->
+
+<script>
+const runServer = (serverFunction, ...args) => {
+  return new Promise((resolve, reject) => {
+    google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler((err) => reject(new Error(err.message || "Koneksi Google Cloud Terputus / Time Out")))
+      [serverFunction](...args);
+  });
+};
+
+function showOmniToast(message, type = 'success') {
+  let toast = document.getElementById('omni-toast');
+  if(!toast) { toast = document.createElement('div'); toast.id = 'omni-toast'; document.body.appendChild(toast); }
+  if (window.__omniToastTimer) clearTimeout(window.__omniToastTimer);
+  if (window.__omniToastRemoveTimer) clearTimeout(window.__omniToastRemoveTimer);
+  const isMobile = window.innerWidth < 768;
+  const bgColor = type === 'success' ? 'bg-[#0f172a]' : (type === 'warning' ? 'bg-amber-500' : 'bg-[#ef4444]');
+  const icon = type === 'success' ? 'ph-check-circle text-emerald-400' : (type === 'warning' ? 'ph-warning text-white' : 'ph-warning-circle text-white');
+  
+  toast.className = `fixed z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-[1.25rem] shadow-[0_20px_40px_rgba(0,0,0,0.2)] transition-all duration-500 transform-gpu ${bgColor} text-white font-bold text-sm backdrop-blur-xl border border-white/10`;
+  toast.innerHTML = `<i class="ph ${icon} text-2xl drop-shadow-md"></i> <span class="tracking-wide">${message}</span>`;
+  
+  if(isMobile) { toast.style.top = '1.5rem'; toast.style.left = '50%'; toast.style.transform = 'translate(-50%, -100px)'; } 
+  else { toast.style.bottom = '2rem'; toast.style.right = '2rem'; toast.style.transform = 'translate(100px, 0)'; }
+  
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = isMobile ? 'translate(-50%, 0)' : 'translate(0, 0)';
+  });
+
+  window.__omniToastTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = isMobile ? 'translate(-50%, -50px)' : 'translate(100px, 0)';
+    window.__omniToastRemoveTimer = setTimeout(() => {
+      if (toast && toast.parentNode) toast.remove();
+      window.__omniToastTimer = null;
+      window.__omniToastRemoveTimer = null;
+    }, 350);
+  }, 3500);
+}
+
+function showOmniConfirm(title, message) {
+  return new Promise((resolve) => {
+    const existing = document.getElementById('omni-confirm-overlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div'); overlay.id = 'omni-confirm-overlay';
+    overlay.className = 'fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md opacity-0 transition-opacity duration-300';
+    const box = document.createElement('div');
+    box.className = 'bg-white/95 backdrop-blur-xl border border-slate-200/80 p-8 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] max-w-sm w-full transform scale-95 opacity-0 transition-all duration-300 flex flex-col items-center text-center';
+    
+    box.innerHTML = `
+        <div class="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-5 border-[6px] border-rose-100/50 shadow-inner relative"><div class="absolute inset-0 bg-rose-400 opacity-20 rounded-full animate-ping"></div><i class="ph ph-trash text-4xl text-rose-500 drop-shadow-sm"></i></div>
+        <h3 class="text-xl font-black text-slate-800 tracking-tight mb-2">${title}</h3><p class="text-sm font-medium text-slate-500 leading-relaxed mb-8">${message}</p>
+        <div class="flex gap-3 w-full"><button id="omni-btn-cancel" class="flex-1 py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-[1.25rem] transition-colors active:scale-95">Batal</button><button id="omni-btn-confirm" class="flex-1 py-3.5 px-4 bg-rose-500 hover:bg-rose-600 text-white font-black rounded-[1.25rem] shadow-[0_8px_20px_rgba(244,63,94,0.3)] transition-all transform hover:-translate-y-1 active:scale-95">Ya, Hapus</button></div>
+    `;
+    overlay.appendChild(box); document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => { overlay.classList.remove('opacity-0'); box.classList.remove('scale-95', 'opacity-0'); });
+
+    const close = (result) => {
+        overlay.classList.add('opacity-0'); box.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => overlay.remove(), 300); resolve(result);
+    };
+
+    document.getElementById('omni-btn-cancel').onclick = () => close(false);
+    document.getElementById('omni-btn-confirm').onclick = () => close(true);
+  });
+}
+
+// [PROFIL OPERASIONAL - INPUT OUTLET BARU] Premium validation alert tanpa browser alert().
+function showOutletValidationAlert(errors) {
+  const items = Array.isArray(errors) ? errors.filter(Boolean) : [];
+  if (items.length === 0) return;
+
+  const escapeHtml = (str) => String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+  const existing = document.getElementById('outlet-validation-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'outlet-validation-overlay';
+  overlay.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/55 backdrop-blur-md opacity-0 transition-opacity duration-300';
+
+  const box = document.createElement('div');
+  box.className = 'w-full max-w-md rounded-[2rem] border border-white/70 bg-white/95 p-6 shadow-[0_28px_80px_rgba(15,23,42,0.28)] backdrop-blur-xl transform scale-95 translate-y-3 opacity-0 transition-all duration-300';
+
+  box.innerHTML = `
+    <div class="flex items-start gap-4">
+      <div class="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 ring-1 ring-amber-100">
+        <span class="absolute inset-0 rounded-2xl bg-amber-300/30 animate-ping"></span>
+        <i class="ph ph-warning-circle relative text-3xl"></i>
+      </div>
+      <div class="min-w-0">
+        <h3 class="text-lg font-black tracking-tight text-slate-900">Data Outlet Belum Lengkap</h3>
+        <p class="mt-1 text-sm font-semibold leading-relaxed text-slate-500">Mohon lengkapi data berikut sebelum menyimpan outlet baru.</p>
+      </div>
+    </div>
+    <div class="mt-5 max-h-[42vh] overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+      <ul class="space-y-2">
+        ${items.map(item => `
+          <li class="flex items-start gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-bold leading-snug text-slate-700 shadow-sm ring-1 ring-slate-100">
+            <i class="ph ph-dot-outline mt-0.5 text-lg text-amber-500"></i>
+            <span>${escapeHtml(item)}</span>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+    <button type="button" id="outlet-validation-close" class="mt-5 w-full rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-black text-white shadow-[0_14px_28px_rgba(15,23,42,0.22)] transition-all hover:-translate-y-0.5 hover:bg-slate-800 active:scale-[0.98]">
+      Lengkapi Data
+    </button>
+  `;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.classList.remove('opacity-0');
+    box.classList.remove('scale-95', 'translate-y-3', 'opacity-0');
+  });
+
+  const close = () => {
+    overlay.classList.add('opacity-0');
+    box.classList.add('scale-95', 'translate-y-3', 'opacity-0');
+    setTimeout(() => overlay.remove(), 280);
+  };
+
+  document.getElementById('outlet-validation-close').onclick = close;
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) close();
+  });
+}
+</script>

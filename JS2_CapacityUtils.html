@@ -1,0 +1,264 @@
+<!-- JS2 capacity utilities extracted from JS2.html. Logic unchanged. -->
+
+<script>
+function normalizeKapasitasRow(item) {
+    const row = item ? {...item} : {};
+    const pick = (...keys) => {
+        for (const key of keys) {
+            if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
+        }
+        return '';
+    };
+
+    row.namaOutlet = pick('namaOutlet', 'namaLaundry', 'Nama Outlet', 'Nama Cabang/Outlet') || 'Unknown';
+    row.kategori = pick('kategori', 'kategoriLaundry', 'Kategori Laundry') || 'Drop Off/Kiloan';
+    const mingguTutupRaw = pick('mingguTutup', 'tutupMinggu', 'Tutup Hari Minggu');
+    const mingguTutupText = String(mingguTutupRaw || '').trim().toLowerCase();
+    row.mingguTutup = (mingguTutupRaw === true || mingguTutupText === 'true' || mingguTutupText === 'ya' || mingguTutupText.includes('tutup')) ? 'Ya (Tutup)' : 'Tidak';
+    row.targetOkupansiCuci = pick('targetOkupansiCuci', 'okupansiCuci', 'Target Okupansi Cuci') || '100';
+    row.targetOkupansiKering = pick('targetOkupansiKering', 'okupansiKering', 'Target Okupansi Kering') || '100';
+    row.targetOkupansiSetrika = pick('targetOkupansiSetrika', 'okupansiSetrika', 'Target Okupansi Setrika') || '100';
+    row.cuciUnit = pick('cuciUnit', 'mesinCuci', 'Mesin Cuci') || 0;
+    row.pengeringUnit = pick('pengeringUnit', 'mesinPengering', 'Mesin Pengering') || 0;
+    row.setrikaUnit = pick('setrikaUnit', 'alatSetrika', 'Alat Setrika') || 0;
+    row.cuciKg = pick('cuciKg', 'kapCuci', 'Kap Cuci') || 0;
+    row.pengeringKg = pick('pengeringKg', 'kapKering', 'Kap Kering') || 0;
+    row.setrikaKg = pick('setrikaKg', 'kapSetrika', 'Kap Setrika') || 0;
+    row.cuciDurasi = pick('cuciDurasi', 'durasiCuci', 'Durasi Cuci') || 0;
+    row.pengeringDurasi = pick('pengeringDurasi', 'durasiKering', 'Durasi Kering') || 0;
+    row.setrikaDurasi = pick('setrikaDurasi', 'durasiSetrika', 'Durasi Setrika') || 0;
+    row.tipeSetrikaUtama = pick('tipeSetrikaUtama', 'tipeSetrika', 'Tipe Setrika') || 'uap';
+    const pakaiPengeringRaw = pick('pakaiPengering', 'Pakai Pengering');
+    const metodePengeringanRaw = String(pick('metodePengeringan', 'Metode Pengeringan') || '').trim().toLowerCase();
+    const dryerText = String(pakaiPengeringRaw || '').trim().toLowerCase();
+    row.pakaiPengering = !(pakaiPengeringRaw === false || dryerText === 'false' || dryerText === 'tidak' || dryerText === '0' || metodePengeringanRaw === 'jemur');
+    row.metodePengeringan = row.pakaiPengering ? (metodePengeringanRaw || 'mesin') : 'jemur';
+    row.jamBuka = pick('jamBuka', 'Jam Buka');
+    row.jamTutup = pick('jamTutup', 'Jam Tutup');
+    row.durasiOperasional = pick('durasiOperasional', 'Durasi Operasional');
+    return row;
+}
+
+window.normalizeKapasitasRow = normalizeKapasitasRow;
+
+function zettPatchOperationalProfileToLocalHPP(outlet) {
+    if (!outlet) return;
+    const row = normalizeKapasitasRow(outlet);
+    const name = String(row.namaOutlet || '').trim();
+    if (!name) return;
+    const normalized = name.toLowerCase();
+    const patch = {
+        namaOutlet: name,
+        'Nama Outlet': name,
+        'Kategori Laundry': row.kategori,
+        'Mesin Cuci': row.cuciUnit,
+        'Kap Cuci': row.cuciKg,
+        'Durasi Cuci': row.cuciDurasi,
+        'Mesin Pengering': row.pakaiPengering ? row.pengeringUnit : 0,
+        'Kap Kering': row.pakaiPengering ? row.pengeringKg : 0,
+        'Durasi Kering': row.pakaiPengering ? row.pengeringDurasi : 0,
+        'Alat Setrika': row.setrikaUnit,
+        'Kap Setrika': row.setrikaKg,
+        'Durasi Setrika': row.setrikaDurasi,
+        'Tipe Setrika': row.tipeSetrikaUtama || row.tipeSetrika || 'uap',
+        'Pakai Pengering': row.pakaiPengering ? 'Ya' : 'Tidak',
+        'Metode Pengeringan': row.pakaiPengering ? 'mesin' : 'jemur'
+    };
+    if (!Array.isArray(masterDataHPP)) masterDataHPP = [];
+    const idx = masterDataHPP.findIndex(h => String(h.namaOutlet || h['Nama Outlet'] || '').trim().toLowerCase() === normalized);
+    masterDataHPP[idx >= 0 ? idx : masterDataHPP.length] = Object.assign({}, idx >= 0 ? masterDataHPP[idx] : {}, patch);
+    window.masterDataHPP = masterDataHPP;
+    if (typeof window.zettPatchActiveHPPRow === 'function' && document.getElementById('inputNamaHPP')?.value === name) {
+        window.zettPatchActiveHPPRow(patch);
+    }
+}
+
+window.zettPatchOperationalProfileToLocalHPP = zettPatchOperationalProfileToLocalHPP;
+
+function formatJamOperasional(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '--:--';
+
+    const cleaned = raw.replace(/\./g, ':');
+    const parts = cleaned.split(':');
+    let hour = 0;
+    let minute = 0;
+
+    if (parts.length === 1) {
+        hour = parseInt(parts[0], 10);
+        minute = 0;
+    } else {
+        hour = parseInt(parts[0], 10);
+        minute = parseInt(parts[1] || '0', 10);
+    }
+
+    if (isNaN(hour) || isNaN(minute)) return raw || '--:--';
+    hour = Math.max(0, Math.min(23, hour));
+    minute = Math.max(0, Math.min(59, minute));
+    return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+}
+
+function hitungDurasiMenit(jamBuka, jamTutup) {
+    const buka = formatJamOperasional(jamBuka);
+    const tutup = formatJamOperasional(jamTutup);
+    if (!/^\d{2}:\d{2}$/.test(buka) || !/^\d{2}:\d{2}$/.test(tutup)) return 0;
+
+    const bParts = buka.split(':');
+    const tParts = tutup.split(':');
+    const b = (parseInt(bParts[0], 10) * 60) + parseInt(bParts[1], 10);
+    let t = (parseInt(tParts[0], 10) * 60) + parseInt(tParts[1], 10);
+    if (t < b) t += 24 * 60;
+    return Math.max(0, t - b);
+}
+
+function formatDurasiOperasional(jamBuka, jamTutup, fallbackDurasi) {
+    const totalMenit = hitungDurasiMenit(jamBuka, jamTutup);
+    if (!totalMenit) return fallbackDurasi || '-';
+
+    const jam = Math.floor(totalMenit / 60);
+    const menit = totalMenit % 60;
+    let label = '';
+    if (jam > 0) label += jam + ' Jam';
+    if (menit > 0) label += (label ? ' ' : '') + menit + ' Menit';
+    if (!label) label = '0 Menit';
+    return label + ' (' + totalMenit.toLocaleString('id-ID') + ' menit)';
+}
+
+function formatAngkaID(value) {
+    const num = Number(value || 0);
+    return (Number.isFinite(num) ? Math.round(num) : 0).toLocaleString('id-ID');
+}
+
+function formatHybridCapacity(loadValue, kgValue) {
+    return `${formatAngkaID(loadValue)} Load (${formatAngkaID(kgValue)} Kg)/Bln`;
+}
+
+function formatKgID(value) {
+    const num = Number(value || 0);
+    return `${(Number.isFinite(num) ? num : 0).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Kg`;
+}
+
+function ensureHybridCapacityRow(anchorId, rowId, labelText) {
+    const anchorValue = document.getElementById(anchorId);
+    if (!anchorValue) return null;
+
+    const anchorRow = anchorValue.parentElement;
+    if (!anchorRow || !anchorRow.parentNode) return null;
+
+    let row = document.getElementById(rowId);
+    if (row && row.dataset.zettHybridCapacityRow !== 'true') {
+        row.remove();
+        row = null;
+    }
+
+    if (!row) {
+        row = document.createElement('div');
+        row.id = rowId;
+        row.dataset.zettHybridCapacityRow = 'true';
+        row.style.cssText = 'display: flex; justify-content: space-between; border-bottom: 1px dashed var(--omni-border); padding-bottom: 0.2rem;';
+        row.innerHTML = `
+            <span id="${rowId}Label" style="font-size: 0.7rem; font-weight: 700; color: var(--omni-navy-light);">${labelText}</span>
+            <span id="${rowId}Value" style="font-weight: 800; color: var(--omni-navy);">0</span>
+        `;
+
+        anchorRow.parentNode.insertBefore(row, anchorRow);
+    }
+
+    row.style.display = 'flex';
+    return row.querySelector('#' + rowId + 'Value') || row.querySelector('[id$="Value"]') || row.lastElementChild;
+}
+
+function updateHybridCapacityExtraRows(isHybrid, data) {
+    const rows = [
+        ['dispCuciKgMinggu', 'hybridCuciLoadMingguRow', 'Load/Minggu:', data.cuci.loadMinggu],
+        ['dispCuciKgBulan', 'hybridCuciLoadBulanRow', 'Load/Bulan:', data.cuci.loadBulan],
+        ['dispKeringKgMinggu', 'hybridKeringLoadMingguRow', 'Load/Minggu:', data.kering.loadMinggu],
+        ['dispKeringKgBulan', 'hybridKeringLoadBulanRow', 'Load/Bulan:', data.kering.loadBulan]
+    ];
+
+    rows.forEach(([anchorId, rowId, label, value]) => {
+        const existing = document.getElementById(rowId);
+        if (!isHybrid) {
+            if (existing) existing.style.display = 'none';
+            return;
+        }
+
+        const valueEl = ensureHybridCapacityRow(anchorId, rowId, label);
+        if (valueEl) valueEl.innerText = formatAngkaID(value);
+    });
+}
+
+function updateHybridLoadHariRows(isHybrid) {
+    [
+        ['dispCuciLoadHari', 'Load/Hari:', 'Siklus/Hari:'],
+        ['dispKeringLoadHari', 'Load/Hari:', 'Siklus/Hari:']
+    ].forEach(([valueId, hybridLabel, defaultLabel]) => {
+        const valueEl = document.getElementById(valueId);
+        const row = valueEl ? valueEl.parentElement : null;
+        const label = row ? (row.querySelector('[id^="lbl"]') || row.firstElementChild) : null;
+        if (label) label.innerText = isHybrid ? hybridLabel : defaultLabel;
+    });
+}
+
+function getOutletCapacityBreakdown(outlet) {
+    const c = normalizeKapasitasRow(outlet);
+    const kategori = String(c.kategori || '').toLowerCase();
+    const isSelfService = kategori.includes('self service');
+    const isHybrid = kategori.includes('hybrid');
+    const hariPerBulan = c.mingguTutup === 'Ya (Tutup)' ? 26 : 30;
+    const operasionalMenit = hitungDurasiMenit(c.jamBuka, c.jamTutup);
+    const parseNum = (value, fallback = 0) => {
+        const n = parseFloat(String(value || '').replace(/[^0-9.-]/g, ''));
+        return isNaN(n) ? fallback : n;
+    };
+    const calc = (unit, durasi, kg, okupansi, preferLoad) => {
+        const u = parseNum(unit);
+        const d = parseNum(durasi);
+        const k = parseNum(kg);
+        const ok = parseNum(okupansi, 100) / 100;
+        if (u <= 0 || d <= 0 || operasionalMenit <= 0) return 0;
+        const siklusPerMesin = Math.floor(operasionalMenit / d);
+        const loadHari = Math.floor(siklusPerMesin * u * ok);
+        if (preferLoad) return loadHari * hariPerBulan;
+        return (siklusPerMesin * u * k * ok) * hariPerBulan;
+    };
+    const calcPair = (unit, durasi, kg, okupansi) => {
+        const u = parseNum(unit);
+        const d = parseNum(durasi);
+        const k = parseNum(kg);
+        const ok = parseNum(okupansi, 100) / 100;
+        if (u <= 0 || d <= 0 || operasionalMenit <= 0) return { load: 0, kg: 0 };
+        const siklusPerMesin = Math.floor(operasionalMenit / d);
+        const loadHari = Math.floor(siklusPerMesin * u * ok);
+        return {
+            load: loadHari * hariPerBulan,
+            kg: (siklusPerMesin * u * k * ok) * hariPerBulan
+        };
+    };
+
+    const preferLoad = isSelfService;
+    const hybridUnit = isHybrid ? 'Kg/Bln / Load/Bln' : (preferLoad ? 'Load/Bln' : 'Kg/Bln');
+    const setrikaType = String(c.tipeSetrikaUtama || '').toLowerCase().includes('listrik') ? 'Kap S.Listrik' : 'Kap S.Uap';
+
+    const cuciVal = calc(c.cuciUnit, c.cuciDurasi, c.cuciKg, c.targetOkupansiCuci, preferLoad);
+    const keringVal = c.pakaiPengering === false ? 0 : calc(c.pengeringUnit, c.pengeringDurasi, c.pengeringKg, c.targetOkupansiKering, preferLoad);
+    const cuciHybrid = isHybrid ? calcPair(c.cuciUnit, c.cuciDurasi, c.cuciKg, c.targetOkupansiCuci) : null;
+    const keringHybrid = isHybrid && c.pakaiPengering !== false ? calcPair(c.pengeringUnit, c.pengeringDurasi, c.pengeringKg, c.targetOkupansiKering) : null;
+    const setrikaVal = calc(c.setrikaUnit, c.setrikaDurasi, c.setrikaKg, c.targetOkupansiSetrika, false);
+
+    const result = [
+        { label: 'Kap Cuci', value: cuciVal, unit: hybridUnit, display: cuciHybrid ? formatHybridCapacity(cuciHybrid.load, cuciHybrid.kg) : null },
+        { label: 'Kap Kering', value: keringVal, unit: hybridUnit, display: keringHybrid ? formatHybridCapacity(keringHybrid.load, keringHybrid.kg) : null, disabled: c.pakaiPengering === false, note: c.pakaiPengering === false ? 'Jemur' : '' }
+    ];
+
+    if (!isSelfService) {
+        result.push({ label: isHybrid ? (setrikaType === 'Kap S.Listrik' ? 'Kap S.Listrik' : 'Kap S.Uap') : setrikaType, value: setrikaVal, unit: 'Kg/Bln' });
+    }
+
+    return result;
+}
+
+(function zettBotFastBoot() {
+    hydrateCabangFromCache();
+})();
+</script>
