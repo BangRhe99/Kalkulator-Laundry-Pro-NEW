@@ -117,13 +117,14 @@
 </div>
 
       <!-- Card: Nota -->
-      <div onclick="openHPPForm('nota', 'Analisa Biaya Nota & Kasir')" class="hpp-card-dash animate-fade-in bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
+      <div data-hpp-type="nota" onclick="openHPPForm('nota', 'Analisa Biaya Nota & Kasir')" class="hpp-card-dash hpp-admin-nota-card animate-fade-in bg-white border border-slate-200/80 rounded-[1.15rem] md:rounded-[1.3rem] p-3.5 sm:p-4 md:p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] hover:shadow-[0_12px_22px_rgba(15,23,42,0.12)] flex flex-col items-center text-center gap-2.5 md:gap-3 group transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.98]">
         <div class="w-10 h-10 md:w-11 md:h-11 bg-slate-50 rounded-[0.9rem] flex items-center justify-center text-slate-500 transition-transform duration-200 group-hover:scale-105">
           <i class="ph ph-receipt text-2xl drop-shadow-sm"></i>
         </div>
-        <div>
+        <div class="w-full">
           <h3 class="text-slate-500 font-extrabold text-[10px] uppercase tracking-[0.16em] mb-1">Admin/Nota</h3>
           <p class="text-[1.02rem] sm:text-xl md:text-2xl font-black text-slate-600 tracking-tight tabular-nums [font-feature-settings:'tnum'] " id="dash-card-nota">Rp 0</p>
+          <div id="dash-card-nota-details" class="hpp-card-breakdown zett-hpp-card-details zett-nota-card-details hpp-premium-lite-details"></div>
         </div>
       </div>
 
