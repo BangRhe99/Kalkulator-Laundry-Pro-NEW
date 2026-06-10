@@ -12213,7 +12213,6 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 </style>
 
 <style id="hpp-dashboard-spacing-final-20260521">
-  /* Final HPP dashboard spacing only: keep cards in natural top-to-bottom flow. */
   @media (min-width: 768px) {
     body #view-hpp {
       min-height: 0 !important;
@@ -12221,11 +12220,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       max-height: none !important;
       margin-top: -0.75rem !important;
       padding-top: 0 !important;
-      padding-bottom: 24px !important;
+      padding-bottom: 16px !important;
       overflow-y: visible !important;
-      align-content: start !important;
-      justify-content: start !important;
-      place-content: start !important;
       flex: 0 0 auto !important;
       flex-grow: 0 !important;
       transform: none !important;
@@ -12238,14 +12234,8 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
       width: 100% !important;
       max-width: 1400px !important;
       display: block !important;
-      align-content: start !important;
-      justify-content: start !important;
-      place-content: start !important;
-      margin-top: 0 !important;
-      margin-bottom: 0 !important;
-      padding-top: 0 !important;
-      padding-left: 0 !important;
-      padding-right: 0 !important;
+      margin: 0 !important;
+      padding: clamp(16px, 1.6vw, 22px) !important;
       padding-bottom: 0 !important;
       flex: 0 0 auto !important;
       flex-grow: 0 !important;
@@ -12258,108 +12248,42 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
 
     body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard,
     body #view-hpp #hpp-dashboard-view > .bg-white,
-    body #view-hpp #hpp-dashboard-view > .bg-white\/95,
-    body #view-hpp .hpp-summary,
-    body #view-hpp .hpp-summary-grid,
-    body #view-hpp .hpp-dashboard-summary,
-    body #view-hpp .hpp-variable-summary {
+    body #view-hpp #hpp-dashboard-view > .bg-white\/95 {
       margin-top: 0 !important;
-      margin-bottom: 16px !important;
+      margin-bottom: 14px !important;
     }
 
     body #view-hpp .hpp-grid,
     body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
       display: grid !important;
       grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-      grid-template-rows: auto auto !important;
       grid-auto-rows: auto !important;
-      gap: 16px !important;
-      row-gap: 16px !important;
-      column-gap: 16px !important;
-      align-items: stretch !important;
-      align-content: start !important;
-      justify-content: center !important;
-      place-content: start center !important;
+      gap: 14px !important;
       min-height: 0 !important;
       height: auto !important;
       max-height: none !important;
-      margin-top: 0 !important;
-      margin-bottom: 0 !important;
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
       flex: 0 0 auto !important;
       flex-grow: 0 !important;
-      transform: none !important;
     }
 
     body #view-hpp .hpp-card-dash {
-      margin-top: 0 !important;
-      margin-bottom: 0 !important;
+      margin: 0 !important;
       transform: none !important;
     }
 
     body #view-hpp #actionAreaHPP {
       position: relative !important;
       inset: auto !important;
-      top: auto !important;
-      right: auto !important;
-      bottom: auto !important;
-      left: auto !important;
       min-height: 0 !important;
       height: auto !important;
-      max-height: none !important;
-      margin-top: 28px !important;
+      margin-top: 14px !important;
       margin-bottom: 0 !important;
-      padding-top: 0 !important;
       padding-bottom: 0 !important;
       transform: none !important;
       flex: 0 0 auto !important;
       flex-grow: 0 !important;
-    }
-  }
-
-  @media (min-width: 1440px) {
-    body #view-hpp #hpp-dashboard-view {
-      padding-top: 0 !important;
-    }
-
-    body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard,
-    body #view-hpp #hpp-dashboard-view > .bg-white,
-    body #view-hpp #hpp-dashboard-view > .bg-white\/95,
-    body #view-hpp .hpp-summary,
-    body #view-hpp .hpp-summary-grid,
-    body #view-hpp .hpp-dashboard-summary,
-    body #view-hpp .hpp-variable-summary {
-      margin-bottom: 16px !important;
-    }
-
-    body #view-hpp .hpp-grid,
-    body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      grid-auto-rows: auto !important;
-      gap: 16px !important;
-      margin-bottom: 0 !important;
-    }
-  }
-
-  @media (min-width: 1200px) and (max-width: 1365px) {
-    body #view-hpp .hpp-grid,
-    body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      grid-auto-rows: auto !important;
-      gap: 16px !important;
-      margin-bottom: 0 !important;
-    }
-  }
-
-  @media (min-width: 768px) and (max-width: 1199px) {
-    body #view-hpp .hpp-grid,
-    body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
-      grid-auto-rows: auto !important;
-      gap: 16px !important;
-      margin-bottom: 0 !important;
-    }
-
-    body #view-hpp #actionAreaHPP {
-      margin-top: 26px !important;
     }
   }
 
@@ -12367,43 +12291,27 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     body #view-hpp {
       margin-top: -0.35rem !important;
       padding-top: 0 !important;
+      padding-bottom: 12px !important;
     }
 
     body #view-hpp #hpp-dashboard-view {
       width: 100% !important;
       max-width: 100% !important;
-      padding-top: 0 !important;
-      padding-left: 0 !important;
-      padding-right: 0 !important;
+      padding: 0 !important;
     }
 
     body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard,
     body #view-hpp #hpp-dashboard-view > .bg-white,
     body #view-hpp #hpp-dashboard-view > .bg-white\/95 {
-      margin-bottom: 16px !important;
+      margin-bottom: 12px !important;
     }
 
-    body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard + .grid,
-    body #view-hpp #hpp-dashboard-view > .bg-white + .grid,
-    body #view-hpp #hpp-dashboard-view > .bg-white\/95 + .grid {
-      margin-top: 0 !important;
-      gap: 16px !important;
+    body #view-hpp #hpp-dashboard-view .grid.grid-cols-2 {
+      gap: 12px !important;
     }
-  }
 
-  body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard {
-    margin-bottom: 14px !important;
-  }
-
-  body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard + .bg-white,
-  body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard + .bg-white\/95,
-  body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard + .grid {
-    margin-top: 0 !important;
-  }
-
-  @media (max-width: 767px) {
-    body #view-hpp #hpp-dashboard-view > .hpp-hero-dashboard {
-      margin-bottom: 16px !important;
+    body #view-hpp #actionAreaHPP {
+      margin-top: 12px !important;
     }
   }
 </style>
@@ -12858,12 +12766,10 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
   }
 </style>
 <style id="zett-hpp-fix-ghost-detail-packing-bahan-20260609">
-  /* Patch final khusus Packing & Chemical — mematikan ghost spacer .hpp-premium-lite-details */
-
-  #view-hpp .hpp-card-dash[data-hpp-type="packing"] .hpp-premium-lite-details[hidden],
-  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] .hpp-premium-lite-details[hidden],
-  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] .hpp-premium-lite-details[hidden],
-  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] .hpp-premium-lite-details[hidden] {
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] .hpp-premium-lite-details,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] .hpp-premium-lite-details,
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] .hpp-premium-lite-details,
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] .hpp-premium-lite-details {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -12875,15 +12781,12 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     flex: 0 0 0 !important;
   }
 
-  #view-hpp #dash-card-packing,
-  #view-hpp #dash-card-bahan {
-    margin-bottom: 8px !important;
-  }
-
   #view-hpp #dash-card-packing-details,
   #view-hpp #dash-card-bahan-details {
     display: flex !important;
     flex-direction: column !important;
+    height: auto !important;
+    min-height: 0 !important;
     margin-top: 8px !important;
     padding-top: 0 !important;
     gap: 3px !important;
@@ -12893,100 +12796,129 @@ function zettRetrySyncHPPFromGSheet(maxRetry = 12, intervalMs = 500) {
     transform: none !important;
     flex: 0 0 auto !important;
   }
+
+  #view-hpp #dash-card-packing,
+  #view-hpp #dash-card-bahan {
+    margin-bottom: 8px !important;
+    flex: 0 0 auto !important;
+  }
+
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] > div.w-full,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] > div.w-full {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] .hpp-show-detail,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] .hpp-show-detail,
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('packing'"] .hpp-show-detail,
+  #view-hpp .hpp-card-dash[onclick*="openHPPForm('bahan'"] .hpp-show-detail {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp #dash-card-packing-details,
+    #view-hpp #dash-card-bahan-details {
+      margin-top: 8px !important;
+      gap: 2px !important;
+    }
+  }
 </style>
 
 <script id="zett-hpp-fix-ghost-detail-packing-bahan-script-20260609">
-  (function () {
-    function zettFixPackingChemicalGapFinal() {
+(function () {
+  var applied = false;
+
+  function zettFixPackingChemicalGapFinal() {
+    if (applied) return;
+    applied = true;
+
+    ['packing', 'bahan'].forEach(function (type) {
+      var valueEl = document.getElementById('dash-card-' + type);
+      var detailEl = document.getElementById('dash-card-' + type + '-details');
+      if (!valueEl || !detailEl) return;
+
+      var card = valueEl.closest('.hpp-card-dash');
+      if (!card) return;
+
+      card.setAttribute('data-hpp-type', type);
+
+      card.querySelectorAll('.hpp-premium-lite-details').forEach(function (node) {
+        if (node !== detailEl) node.remove();
+      });
+
+      var showDetail = card.querySelector('.hpp-show-detail');
+      if (showDetail) showDetail.remove();
+
+      if (detailEl.previousElementSibling !== valueEl) {
+        valueEl.insertAdjacentElement('afterend', detailEl);
+      }
+
+      valueEl.style.setProperty('margin-bottom', '8px', 'important');
+      detailEl.style.setProperty('display', 'flex', 'important');
+      detailEl.style.setProperty('flex-direction', 'column', 'important');
+      detailEl.style.setProperty('margin-top', '8px', 'important');
+      detailEl.style.setProperty('padding-top', '0', 'important');
+      detailEl.style.setProperty('gap', '3px', 'important');
+      detailEl.style.setProperty('width', '100%', 'important');
+      detailEl.style.setProperty('align-self', 'stretch', 'important');
+      detailEl.style.setProperty('position', 'static', 'important');
+      detailEl.style.setProperty('transform', 'none', 'important');
+      detailEl.style.setProperty('flex', '0 0 auto', 'important');
+    });
+  }
+
+  var origSync = window.zettSyncHPPDetailGapFromElectric;
+  if (typeof origSync === 'function' && !origSync.__pbFixed) {
+    window.zettSyncHPPDetailGapFromElectric = function () {
+      var r = origSync.apply(this, arguments);
       ['packing', 'bahan'].forEach(function (type) {
-        var valueEl = document.getElementById('dash-card-' + type);
-        var detailEl = document.getElementById('dash-card-' + type + '-details');
-
-        if (!valueEl || !detailEl) return;
-
-        var card = valueEl.closest('.hpp-card-dash');
-        if (!card) return;
-
-        card.setAttribute('data-hpp-type', type);
-
-        /*
-          Penyebab dari Inspect:
-          Ada elemen .hpp-premium-lite-details hidden yang tetap dipaksa display:flex oleh CSS lama.
-          Ini membuat jarak nominal ke detail tetap jauh.
-          Maka elemen ghost ini kita hapus khusus di card Packing & Chemical.
-        */
-        card.querySelectorAll('.hpp-premium-lite-details').forEach(function (node) {
-          if (node !== detailEl) {
-            node.remove();
-          }
-        });
-
-        /* Pastikan detail list benar-benar langsung di bawah nominal */
-        if (detailEl.previousElementSibling !== valueEl) {
-          valueEl.insertAdjacentElement('afterend', detailEl);
-        }
-
-        valueEl.style.setProperty('margin-bottom', '8px', 'important');
-
-        detailEl.classList.add(
-          'hpp-card-breakdown',
-          'zett-hpp-card-details',
-          type === 'packing' ? 'zett-packing-card-details' : 'zett-bahan-card-details'
-        );
-
-        detailEl.style.setProperty('display', 'flex', 'important');
-        detailEl.style.setProperty('flex-direction', 'column', 'important');
-        detailEl.style.setProperty('margin-top', '8px', 'important');
-        detailEl.style.setProperty('padding-top', '0', 'important');
-        detailEl.style.setProperty('gap', '3px', 'important');
-        detailEl.style.setProperty('width', '100%', 'important');
-        detailEl.style.setProperty('align-self', 'stretch', 'important');
-        detailEl.style.setProperty('position', 'static', 'important');
-        detailEl.style.setProperty('transform', 'none', 'important');
-        detailEl.style.setProperty('flex', '0 0 auto', 'important');
-
-        var showDetail = card.querySelector('.hpp-show-detail');
-        if (showDetail) {
-          showDetail.remove();
+        var d = document.getElementById('dash-card-' + type + '-details');
+        if (d) {
+          d.style.setProperty('margin-top', '8px', 'important');
+          d.style.setProperty('transform', 'none', 'important');
         }
       });
-    }
+      return r;
+    };
+    window.zettSyncHPPDetailGapFromElectric.__pbFixed = true;
+  }
 
-    window.zettFixPackingChemicalGapFinal = zettFixPackingChemicalGapFinal;
+  var origRender = window.zettRenderAllHPPCardDetails;
+  if (typeof origRender === 'function' && !origRender.__pbFixed) {
+    window.zettRenderAllHPPCardDetails = function () {
+      var r = origRender.apply(this, arguments);
+      requestAnimationFrame(function () {
+        applied = false;
+        zettFixPackingChemicalGapFinal();
+      });
+      return r;
+    };
+    window.zettRenderAllHPPCardDetails.__pbFixed = true;
+  }
 
-    function scheduleFix() {
-      clearTimeout(window.__zettFixPackingChemicalGapTimer);
-      window.__zettFixPackingChemicalGapTimer = setTimeout(zettFixPackingChemicalGapFinal, 80);
-    }
+  window.zettFixPackingChemicalGapFinal = zettFixPackingChemicalGapFinal;
 
+  if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       zettFixPackingChemicalGapFinal();
-      setTimeout(zettFixPackingChemicalGapFinal, 200);
-      setTimeout(zettFixPackingChemicalGapFinal, 600);
-      setTimeout(zettFixPackingChemicalGapFinal, 1200);
+      setTimeout(zettFixPackingChemicalGapFinal, 400);
+    }, { once: true });
+  } else {
+    zettFixPackingChemicalGapFinal();
+    setTimeout(zettFixPackingChemicalGapFinal, 400);
+  }
 
-      var view = document.getElementById('view-hpp');
-      if (view) {
-        var observer = new MutationObserver(scheduleFix);
-        observer.observe(view, {
-          childList: true,
-          subtree: true
-        });
-      }
-    });
-
-    document.addEventListener('change', function (event) {
-      if (event.target && event.target.id === 'inputNamaHPP') {
-        setTimeout(zettFixPackingChemicalGapFinal, 100);
-        setTimeout(zettFixPackingChemicalGapFinal, 400);
-        setTimeout(zettFixPackingChemicalGapFinal, 900);
-      }
-    });
-
-    document.addEventListener('click', function (event) {
-      if (event.target && event.target.closest && event.target.closest('#view-hpp')) {
-        setTimeout(zettFixPackingChemicalGapFinal, 120);
-      }
-    });
-  })();
+  document.addEventListener('change', function (event) {
+    if (event.target && event.target.id === 'inputNamaHPP') {
+      applied = false;
+      setTimeout(zettFixPackingChemicalGapFinal, 150);
+    }
+  });
+})();
 </script>
