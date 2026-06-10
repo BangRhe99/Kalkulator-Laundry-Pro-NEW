@@ -1,0 +1,63 @@
+<!-- Global app UI bridge extracted from Index.html. Logic unchanged. -->
+
+<script id="hyper-premium-fintech-ui-bridge-2026">
+    // =========================================================
+    // [HYPER PREMIUM FINTECH UI PATCH - 2026]
+    // Scope: UI interaction only, no data mutation
+    // =========================================================
+    (function initHyperPremiumFintechUIPatch() {
+      function markActiveView() {
+        document.querySelectorAll('.main-view').forEach(function(view) {
+          var isActive = !view.classList.contains('hidden');
+          view.classList.toggle('hp-view-active', isActive);
+          if (isActive) view.setAttribute('data-hp-active-view', 'true');
+          else view.removeAttribute('data-hp-active-view');
+        });
+      }
+
+      function wireTapFeedback() {
+        document.addEventListener('pointerdown', function(event) {
+          var target = event.target.closest('button, .nav-btn, .fin-card, .bento-card, .hpp-card-dash, .kapasitas-outlet-card');
+          if (!target || target.disabled) return;
+          target.classList.add('hp-is-pressing');
+        }, { passive: true });
+
+        document.addEventListener('pointerup', function() {
+          document.querySelectorAll('.hp-is-pressing').forEach(function(el) {
+            el.classList.remove('hp-is-pressing');
+          });
+        }, { passive: true });
+
+        document.addEventListener('pointercancel', function() {
+          document.querySelectorAll('.hp-is-pressing').forEach(function(el) {
+            el.classList.remove('hp-is-pressing');
+          });
+        }, { passive: true });
+      }
+
+      function boot() {
+        markActiveView();
+        wireTapFeedback();
+
+        var scroller = document.getElementById('mainViewScroller');
+        if (scroller && 'ResizeObserver' in window) {
+          new ResizeObserver(function() {
+            scroller.style.setProperty('--hp-scroll-height', scroller.scrollHeight + 'px');
+          }).observe(scroller);
+        }
+
+        if ('MutationObserver' in window) {
+          var observer = new MutationObserver(markActiveView);
+          document.querySelectorAll('.main-view').forEach(function(view) {
+            observer.observe(view, { attributes: true, attributeFilter: ['class', 'style'] });
+          });
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot, { once: true });
+      } else {
+        boot();
+      }
+    })();
+  </script>
