@@ -3413,14 +3413,14 @@ function safeProsesSimpanBEP() {
 
     var chartCard = chart.closest('.bg-white\\/80') || chart.closest('[class*="bg-white"]');
     if (!chartCard || chartCard.classList.contains('zett-bep-visual-chart-card')) {
-      if (chartCard && fixedVisual.previousElementSibling !== chartCard) {
-        fixedVisual.parentNode.insertBefore(chartCard, fixedVisual);
+      if (chartCard && kpiGrid.nextElementSibling !== chartCard) {
+        kpiGrid.parentNode.insertBefore(chartCard, kpiGrid.nextElementSibling);
       }
       return;
     }
 
     chartCard.classList.add('zett-bep-visual-chart-card');
-    fixedVisual.parentNode.insertBefore(chartCard, fixedVisual);
+    kpiGrid.parentNode.insertBefore(chartCard, kpiGrid.nextElementSibling);
   }
 
   window.zettBepPlaceVisualChart = placeBepVisualChart;
