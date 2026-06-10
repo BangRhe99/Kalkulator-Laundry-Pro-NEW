@@ -757,152 +757,21 @@
   <!-- =========================================================
        JS MODULES
   ========================================================= -->
-
-  <script>
-    (function() {
-      let loadingDepth = 0;
-      const defaultLoadingText = 'Loading...';
-
-      function getLoadingOverlay() {
-        return document.getElementById('globalLoadingOverlay');
-      }
-
-      function setLoadingText(message) {
-        const text = document.getElementById('globalLoadingText');
-        if (!text) return;
-        text.textContent = typeof message === 'string' && message.trim() ? message : defaultLoadingText;
-      }
-
-      window.showLoading = function(message) {
-        loadingDepth += 1;
-        const overlay = getLoadingOverlay();
-        if (!overlay) return;
-
-        setLoadingText(message);
-        overlay.classList.add('is-active');
-        overlay.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('global-loading-active');
-      };
-
-      window.hideLoading = function(force) {
-        loadingDepth = force === true ? 0 : Math.max(loadingDepth - 1, 0);
-        if (loadingDepth > 0) return;
-
-        const overlay = getLoadingOverlay();
-        if (!overlay) return;
-
-        overlay.classList.remove('is-active');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('global-loading-active');
-        setLoadingText(defaultLoadingText);
-      };
-
-      window.zettShowLoading = window.zettShowLoading || window.showLoading;
-      window.zettHideLoading = window.zettHideLoading || window.hideLoading;
-      window.withLoading = window.withLoading || function(task, message) {
-        window.showLoading(message);
-        return Promise.resolve(typeof task === 'function' ? task() : task).finally(function() {
-          window.hideLoading();
-        });
-      };
-    })();
-  </script>
+  <?!= include('App_Loading'); ?>
 
   <?!= HtmlService.createHtmlOutputFromFile('JS1').getContent(); ?>
   <?!= HtmlService.createHtmlOutputFromFile('JS2').getContent(); ?>
   <?!= HtmlService.createHtmlOutputFromFile('JS3').getContent(); ?>
   <?!= HtmlService.createHtmlOutputFromFile('JS5').getContent(); ?>
 
+  <?!= include('App_Navigation'); ?>
+  <?!= include('App_Header'); ?>
+
   <!-- =========================================================
        CORE ENGINE
   ========================================================= -->
 
   <script>
-
-    const SIDEBAR_CLOSE_MS = 220;
-
-    function openSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('sidebarOverlay');
-      if (!sidebar || !overlay) return;
-
-      overlay.classList.remove('hidden');
-      sidebar.classList.remove('-translate-x-full');
-      document.body.classList.add('sidebar-mobile-open');
-
-      requestAnimationFrame(() => {
-        overlay.classList.add('sidebar-overlay-active');
-      });
-    }
-
-    function closeSidebarMobile() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('sidebarOverlay');
-      if (!sidebar || !overlay) return;
-
-      sidebar.classList.add('-translate-x-full');
-      overlay.classList.remove('sidebar-overlay-active');
-      document.body.classList.remove('sidebar-mobile-open');
-
-      window.clearTimeout(window.__sidebarOverlayCloseTimer);
-      window.__sidebarOverlayCloseTimer = window.setTimeout(() => {
-        if (sidebar.classList.contains('-translate-x-full')) {
-          overlay.classList.add('hidden');
-        }
-      }, SIDEBAR_CLOSE_MS);
-    }
-
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      if (!sidebar) return;
-
-      if (sidebar.classList.contains('-translate-x-full')) {
-        openSidebar();
-      } else {
-        closeSidebarMobile();
-      }
-    }
-
-    function setActiveMenu(tabName) {
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-
-        btn.classList.remove(
-          'bg-gradient-to-r',
-          'from-blue-600',
-          'to-indigo-600',
-          'shadow-lg',
-          'shadow-indigo-900/30',
-          'text-white',
-          'font-bold'
-        );
-
-        btn.classList.add(
-          'text-slate-400',
-          'hover:bg-white/5',
-          'hover:text-slate-100',
-          'font-semibold'
-        );
-
-      });
-
-      const activeNav = document.getElementById('nav-' + tabName);
-
-      if (activeNav) {
-
-        activeNav.classList.add(
-          'bg-gradient-to-r',
-          'from-blue-600',
-          'to-indigo-600',
-          'shadow-lg',
-          'shadow-indigo-900/30',
-          'text-white',
-          'font-bold'
-        );
-
-        activeNav.classList.remove('text-slate-400');
-
-      }
-    }
 
     function switchMainTab(tabName) {
       setActiveMenu(tabName);
@@ -1050,58 +919,6 @@
       updateHeaderKategoriLaundryInfo();
 
     }
-
-    function updateHeaderKategoriLaundryInfo() {
-
-      const badge = document.getElementById('headerKategoriLaundryInfo');
-      const select = document.getElementById('inputNamaHPP');
-      if (!badge || !select) return;
-
-      const outletName = String(select.value || '').trim().toLowerCase();
-      const rows = [];
-      if (typeof masterDataCabang !== 'undefined' && Array.isArray(masterDataCabang)) rows.push(...masterDataCabang);
-      if (Array.isArray(window.masterDataCabang)) rows.push(...window.masterDataCabang);
-      if (typeof masterDataHPP !== 'undefined' && Array.isArray(masterDataHPP)) rows.push(...masterDataHPP);
-      if (Array.isArray(window.masterDataHPP)) rows.push(...window.masterDataHPP);
-      if (
-        window.APP_STATE &&
-        window.APP_STATE.data &&
-        window.APP_STATE.data.master &&
-        Array.isArray(window.APP_STATE.data.master.cabang)
-      ) {
-        rows.push(...window.APP_STATE.data.master.cabang);
-      }
-      if (
-        window.APP_STATE &&
-        window.APP_STATE.data &&
-        window.APP_STATE.data.master &&
-        Array.isArray(window.APP_STATE.data.master.hpp)
-      ) {
-        rows.push(...window.APP_STATE.data.master.hpp);
-      }
-
-      const outlet = rows.find(item => String(item?.namaOutlet || item?.['Nama Outlet'] || '').trim().toLowerCase() === outletName);
-      const kategoriRaw = String(outlet?.kategori || outlet?.kategoriLaundry || outlet?.['Kategori Laundry'] || '').trim();
-      const kategoriLower = kategoriRaw.toLowerCase();
-      const kategori = kategoriLower.includes('self')
-        ? 'Self Service'
-        : (kategoriLower.includes('hybrid')
-          ? 'Hybrid'
-          : ((kategoriLower.includes('drop') || kategoriLower.includes('kilo')) ? 'Drop Off / Kiloan' : kategoriRaw));
-
-      if (!outletName || !kategori) {
-        badge.classList.add('hidden');
-        badge.textContent = '';
-        return;
-      }
-
-      badge.textContent = kategori;
-      badge.classList.remove('hidden');
-
-    }
-
-    // [HPP DASHBOARD OUTLET DATA RESTORE + CATEGORY BADGE FIX - 2026-05-19]
-    window.updateHeaderKategoriLaundryInfo = updateHeaderKategoriLaundryInfo;
 
     function handleGlobalOutletChange(value) {
       if (window.__HPP_PROGRAMMATIC_UPDATE__) {

@@ -1,0 +1,88 @@
+<!-- App navigation helpers extracted from Index.html. Logic unchanged. -->
+
+<script>
+    const SIDEBAR_CLOSE_MS = 220;
+
+    function openSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (!sidebar || !overlay) return;
+
+      overlay.classList.remove('hidden');
+      sidebar.classList.remove('-translate-x-full');
+      document.body.classList.add('sidebar-mobile-open');
+
+      requestAnimationFrame(() => {
+        overlay.classList.add('sidebar-overlay-active');
+      });
+    }
+
+    function closeSidebarMobile() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (!sidebar || !overlay) return;
+
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.remove('sidebar-overlay-active');
+      document.body.classList.remove('sidebar-mobile-open');
+
+      window.clearTimeout(window.__sidebarOverlayCloseTimer);
+      window.__sidebarOverlayCloseTimer = window.setTimeout(() => {
+        if (sidebar.classList.contains('-translate-x-full')) {
+          overlay.classList.add('hidden');
+        }
+      }, SIDEBAR_CLOSE_MS);
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar) return;
+
+      if (sidebar.classList.contains('-translate-x-full')) {
+        openSidebar();
+      } else {
+        closeSidebarMobile();
+      }
+    }
+
+    function setActiveMenu(tabName) {
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+
+        btn.classList.remove(
+          'bg-gradient-to-r',
+          'from-blue-600',
+          'to-indigo-600',
+          'shadow-lg',
+          'shadow-indigo-900/30',
+          'text-white',
+          'font-bold'
+        );
+
+        btn.classList.add(
+          'text-slate-400',
+          'hover:bg-white/5',
+          'hover:text-slate-100',
+          'font-semibold'
+        );
+
+      });
+
+      const activeNav = document.getElementById('nav-' + tabName);
+
+      if (activeNav) {
+
+        activeNav.classList.add(
+          'bg-gradient-to-r',
+          'from-blue-600',
+          'to-indigo-600',
+          'shadow-lg',
+          'shadow-indigo-900/30',
+          'text-white',
+          'font-bold'
+        );
+
+        activeNav.classList.remove('text-slate-400');
+
+      }
+    }
+</script>
