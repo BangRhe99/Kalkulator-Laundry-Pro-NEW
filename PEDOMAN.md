@@ -1,6 +1,6 @@
 # PEDOMAN ENGINEERING KALKULATOR LAUNDRY PRO
 
-Dokumen ini menjadi panduan teknis untuk menjaga aplikasi tetap stabil, cepat, mudah dikembangkan, dan mudah dianalisis saat terjadi bug.
+Dokumen ini adalah protokol kerja utama untuk engineer, Codex, atau AI agent saat memperbaiki dan mengembangkan aplikasi **Kalkulator Laundry Pro**.
 
 Tujuan utama:
 
@@ -8,4 +8,4 @@ Tujuan utama:
 - menjaga integritas database dan sinkronisasi spreadsheet,
 - menjaga performa aplikasi agar tetap cepat,
 - memudahkan debugging tanpa membaca seluruh project,
-- mempert
+- membuat pondasi aplikasi kuat untuk penggunaan banyak
