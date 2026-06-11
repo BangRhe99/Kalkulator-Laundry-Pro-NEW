@@ -9,6 +9,9 @@
 const SHEET_ID = '1i_4Ik6hiFYRU0mi0gAB8nzgbE3G6TG3nCT1lkhcqBU0';
 
 function include(filename) {
+  if (filename === 'HPP_Styles') {
+    return HtmlService.createTemplateFromFile(filename).evaluate().getContent();
+  }
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
