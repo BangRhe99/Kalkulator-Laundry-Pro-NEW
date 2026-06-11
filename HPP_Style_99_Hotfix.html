@@ -477,3 +477,164 @@ LAST SPLIT: 2026-06-11
     }
   }
 </style>
+
+<style id="zett-hpp-fast-scope-full-frame-layout-20260611">
+  /* FAST SCOPE: HPP dashboard first screen full-frame layout only. */
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: calc(100dvh - 86px) !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 86px) !important;
+    margin-top: 0 !important;
+    padding: clamp(6px, 0.8vh, 12px) clamp(8px, 1vw, 16px) !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-rows: minmax(134px, 0.54fr) minmax(0, 1fr) !important;
+    gap: clamp(8px, 1vh, 12px) !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .bg-white,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .bg-white\/95,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-hero-dashboard {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: clamp(12px, 1.35vh, 18px) clamp(14px, 1.4vw, 22px) !important;
+    gap: clamp(10px, 1.15vw, 16px) !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .grid,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-grid {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-auto-rows: minmax(154px, 1fr) !important;
+    gap: clamp(8px, 1vw, 14px) !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash {
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 154px !important;
+    max-height: none !important;
+    padding: clamp(10px, 1vw, 14px) var(--hpp-stage2-pad-x) !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash > .w-full,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash > div:not([class*="w-10"]):not([class*="w-12"]) {
+    height: 100% !important;
+    min-height: 0 !important;
+    grid-template-rows: var(--hpp-stage2-icon) minmax(0, 1fr) !important;
+    row-gap: clamp(3px, 0.45vh, 6px) !important;
+    align-content: start !important;
+  }
+
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-gas-card-details,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-electric-card-details,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-water-card-details,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #dash-card-packing-details,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #dash-card-bahan-details,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #dash-card-nota-details,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-premium-lite-details {
+    align-self: start !important;
+    margin: 0 !important;
+    padding-top: 0 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    gap: clamp(2px, 0.35vh, 5px) !important;
+  }
+
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-electric-card-details {
+    overflow: visible !important;
+  }
+
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-hpp-card-details > div,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-gas-card-details > div,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-electric-card-details > div,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .zett-water-card-details > div,
+  #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-premium-lite-details > div {
+    min-height: 13px !important;
+    line-height: 1.12 !important;
+  }
+
+  @media (min-width: 768px) and (max-width: 1180px) {
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) {
+      height: calc(100dvh - 80px) !important;
+      max-height: calc(100dvh - 80px) !important;
+      padding-inline: 8px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view {
+      grid-template-rows: minmax(124px, 0.5fr) minmax(0, 1fr) !important;
+      gap: 8px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .grid,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-grid {
+      grid-auto-rows: minmax(148px, 1fr) !important;
+      gap: 8px !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash {
+      min-height: 148px !important;
+      padding-block: 9px !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) {
+      height: auto !important;
+      max-height: none !important;
+      padding: 10px !important;
+      overflow-x: hidden !important;
+      overflow-y: visible !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view {
+      height: auto !important;
+      max-height: none !important;
+      display: grid !important;
+      grid-template-rows: auto auto !important;
+      gap: 10px !important;
+      overflow: visible !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .grid,
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+      grid-auto-rows: auto !important;
+      overflow: visible !important;
+    }
+
+    #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash {
+      height: auto !important;
+      min-height: 146px !important;
+      overflow: hidden !important;
+    }
+  }
+</style>
