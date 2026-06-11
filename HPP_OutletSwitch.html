@@ -213,6 +213,7 @@
         var select = byId('inputNamaHPP');
         var isActive = !!active;
         if (token && token !== window.hppOutletSwitchToken) return;
+        if (isActive && !isStrukturBiayaActive()) return;
         if (view) {
           view.classList.toggle('hpp-is-switching', isActive);
           view.classList.toggle('hpp-is-rendering', isActive);
@@ -220,13 +221,43 @@
           view.setAttribute('aria-busy', String(isActive));
         }
         window.hppIsOutletSwitching = isActive;
-        if (dashboard) dashboard.classList.toggle('hpp-loading-soft', isActive);
+        if (dashboard) {
+          dashboard.classList.toggle('hpp-loading-soft', isActive);
+          dashboard.classList.toggle('is-switching', isActive);
+          dashboard.classList.toggle('is-ready', !isActive);
+        }
         if (select) select.setAttribute('aria-busy', String(isActive));
       }
+      function isStrukturBiayaActive() {
+        var view = byId('view-hpp');
+        return !!(
+          view &&
+          !view.classList.contains('hidden') &&
+          view.offsetParent !== null &&
+          (!document.body || !document.body.classList || !document.body.classList.contains('bep-active'))
+        );
+      }
+      function zettStartStrukturBiayaSwitching() {
+        if (!isStrukturBiayaActive()) return;
+        var token = window.hppOutletSwitchToken || 0;
+        setHppSwitchingState(true, token);
+      }
+      function zettFinishStrukturBiayaSwitching() {
+        var token = window.hppOutletSwitchToken || 0;
+        window.requestAnimationFrame(function() {
+          window.requestAnimationFrame(function() {
+            if (token && token !== window.hppOutletSwitchToken) return;
+            setHppSwitchingState(false, token);
+          });
+        });
+      }
+      window.isStrukturBiayaActive = isStrukturBiayaActive;
+      window.zettStartStrukturBiayaSwitching = zettStartStrukturBiayaSwitching;
+      window.zettFinishStrukturBiayaSwitching = zettFinishStrukturBiayaSwitching;
       function beginHppOutletSwitchTransition() {
         hppOutletSwitchToken += 1;
         window.hppOutletSwitchToken = hppOutletSwitchToken;
-        setHppSwitchingState(true, hppOutletSwitchToken);
+        zettStartStrukturBiayaSwitching();
         return hppOutletSwitchToken;
       }
       function finishHppOutletSwitchTransition(token) {
@@ -234,7 +265,7 @@
         window.requestAnimationFrame(function() {
           window.requestAnimationFrame(function() {
             if (activeToken !== window.hppOutletSwitchToken) return;
-            setHppSwitchingState(false, activeToken);
+            zettFinishStrukturBiayaSwitching();
           });
         });
       }
