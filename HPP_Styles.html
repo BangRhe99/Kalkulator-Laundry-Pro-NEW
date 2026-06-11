@@ -7058,6 +7058,7 @@
 
 
 
+
 <style id="zett-hpp-one-frame-dashboard-precision-final-20260610">
   @media (min-width: 768px) {
     #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) {
@@ -8701,6 +8702,291 @@
     #view-hpp #dash-card-bahan-details,
     #view-hpp #dash-card-nota-details {
       gap: 4px !important;
+    }
+  }
+</style>
+
+<style id="zett-hpp-fast-scope-card-alignment-stage2-20260611">
+  /* FAST SCOPE STAGE 2: Struktur Biaya card header alignment only. */
+  #view-hpp .hpp-card-dash {
+    --hpp-stage2-icon: clamp(34px, 3.8vw, 42px);
+    --hpp-stage2-pad-x: clamp(11px, 1.2vw, 16px);
+    --hpp-stage2-gap: clamp(8px, 0.9vw, 12px);
+    --hpp-stage2-left: calc(var(--hpp-stage2-icon) + var(--hpp-stage2-gap));
+    --hpp-stage2-pct-space: clamp(54px, 5.4vw, 72px);
+    min-height: clamp(164px, 19vh, 206px) !important;
+    padding: clamp(11px, 1.15vw, 16px) var(--hpp-stage2-pad-x) clamp(10px, 1vh, 14px) !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp .hpp-card-dash > .w-10,
+  #view-hpp .hpp-card-dash > .w-12,
+  #view-hpp .hpp-card-dash > .hpp-cost-icon {
+    position: absolute !important;
+    top: clamp(11px, 1.15vw, 16px) !important;
+    left: var(--hpp-stage2-pad-x) !important;
+    width: var(--hpp-stage2-icon) !important;
+    height: var(--hpp-stage2-icon) !important;
+    min-width: var(--hpp-stage2-icon) !important;
+    border-radius: 13px !important;
+  }
+
+  #view-hpp .hpp-card-dash > .w-full,
+  #view-hpp .hpp-card-dash > div:not([class*="w-10"]):not([class*="w-12"]) {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: var(--hpp-stage2-left) minmax(0, 1fr) minmax(68px, max-content) var(--hpp-stage2-pct-space) !important;
+    grid-template-rows: var(--hpp-stage2-icon) minmax(0, 1fr) auto !important;
+    column-gap: var(--hpp-stage2-gap) !important;
+    row-gap: clamp(6px, 0.8vh, 9px) !important;
+    align-items: center !important;
+  }
+
+  #view-hpp .hpp-card-dash h3,
+  #view-hpp .hpp-cost-label,
+  #view-hpp #hpp-card-gas-wrap > .w-full > .flex {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    color: #0F172A !important;
+    font-size: clamp(11px, 0.78vw, 13px) !important;
+    line-height: 1.12 !important;
+    font-weight: 850 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #view-hpp #hpp-card-gas-wrap > .w-full > .flex h3 {
+    margin: 0 !important;
+    min-height: 0 !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+  }
+
+  #view-hpp .hpp-card-dash [id^="dash-card-"]:not([id$="-pct"]):not([id$="-details"]),
+  #view-hpp .hpp-cost-value {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    width: auto !important;
+    max-width: min(34vw, 138px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #061A40 !important;
+    font-size: clamp(15px, 1.25vw, 22px) !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+    letter-spacing: 0 !important;
+    font-variant-numeric: tabular-nums !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #view-hpp .hpp-card-percent,
+  #view-hpp .hpp-cost-percent,
+  #view-hpp .hpp-percent-badge,
+  #view-hpp .hpp-share-badge,
+  #view-hpp [data-hpp-percent-badge] {
+    top: clamp(12px, 1.15vw, 16px) !important;
+    right: var(--hpp-stage2-pad-x) !important;
+    min-width: clamp(46px, 4.5vw, 62px) !important;
+    height: clamp(28px, 3.3vh, 34px) !important;
+    font-size: clamp(14px, 1.05vw, 20px) !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+    letter-spacing: 0 !important;
+  }
+
+  #view-hpp .hpp-card-dash[data-hpp-type="gas"],
+  #view-hpp .hpp-composition-row[data-hpp-type="gas"] {
+    --hpp-card-accent: #EF4444 !important;
+    --accent: #EF4444 !important;
+    --accent-soft: rgba(239, 68, 68, 0.12) !important;
+  }
+
+  #view-hpp .hpp-card-dash[data-hpp-type="gas"] .hpp-card-percent,
+  #view-hpp .hpp-card-dash[data-hpp-type="gas"] .hpp-cost-percent,
+  #view-hpp .hpp-card-dash[data-hpp-type="gas"] [data-hpp-percent-badge],
+  #view-hpp #dash-card-gas-pct {
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #EF4444 !important;
+    border-color: rgba(239, 68, 68, 0.22) !important;
+  }
+
+  #view-hpp .hpp-composition-row[data-hpp-type="gas"] .hpp-composition-dot,
+  #view-hpp .hpp-hero-dashboard .hpp-composition-row[data-hpp-type="gas"] .hpp-composition-dot {
+    background: #EF4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+  }
+
+  #view-hpp .zett-gas-card-details,
+  #view-hpp .zett-electric-card-details,
+  #view-hpp .zett-water-card-details,
+  #view-hpp #dash-card-packing-details,
+  #view-hpp #dash-card-bahan-details,
+  #view-hpp #dash-card-nota-details,
+  #view-hpp .hpp-premium-lite-details {
+    grid-column: 2 / 5 !important;
+    grid-row: 2 !important;
+    align-self: start !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: clamp(4px, 0.7vh, 8px) 0 0 0 !important;
+    display: grid !important;
+    align-content: start !important;
+    gap: clamp(3px, 0.45vh, 6px) !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp #dash-card-packing-details,
+  #view-hpp #dash-card-bahan-details,
+  #view-hpp #dash-card-nota-details,
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] .hpp-premium-lite-details,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] .hpp-premium-lite-details,
+  #view-hpp .hpp-card-dash[data-hpp-type="nota"] .hpp-premium-lite-details {
+    padding-top: 0 !important;
+  }
+
+  #view-hpp .zett-electric-card-details {
+    gap: 3px !important;
+    max-height: none !important;
+  }
+
+  #view-hpp .zett-gas-card-details > div,
+  #view-hpp .zett-electric-card-details > div,
+  #view-hpp .zett-water-card-details > div,
+  #view-hpp #dash-card-packing-details > div,
+  #view-hpp #dash-card-bahan-details > div,
+  #view-hpp #dash-card-nota-details > div,
+  #view-hpp .hpp-premium-lite-details > div {
+    min-height: 14px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: clamp(9.5px, 0.68vw, 11.5px) !important;
+    line-height: 1.16 !important;
+    font-weight: 650 !important;
+    color: rgba(51, 65, 85, 0.74) !important;
+    white-space: nowrap !important;
+  }
+
+  #view-hpp .zett-gas-card-details span,
+  #view-hpp .zett-electric-card-details span,
+  #view-hpp .zett-water-card-details span,
+  #view-hpp #dash-card-packing-details span,
+  #view-hpp #dash-card-bahan-details span,
+  #view-hpp #dash-card-nota-details span {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #view-hpp .hpp-show-detail {
+    grid-column: 2 / 5 !important;
+    grid-row: 3 !important;
+    justify-self: end !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    font-size: clamp(10px, 0.7vw, 12px) !important;
+    line-height: 1 !important;
+  }
+
+  #view-hpp #hpp-card-listrik-wrap,
+  #view-hpp .hpp-card-dash[data-hpp-type="listrik"] {
+    min-height: clamp(182px, 21vh, 224px) !important;
+  }
+
+  #view-hpp .hpp-process-card {
+    min-height: clamp(132px, 16.5vh, 178px) !important;
+    padding: clamp(10px, 1vw, 16px) !important;
+    gap: clamp(5px, 0.75vh, 9px) !important;
+  }
+
+  #view-hpp .hpp-process-title {
+    font-size: clamp(11px, 0.74vw, 13px) !important;
+    line-height: 1.14 !important;
+    letter-spacing: 0 !important;
+  }
+
+  #view-hpp .hpp-process-value {
+    font-size: clamp(18px, 1.42vw, 25px) !important;
+    line-height: 1.02 !important;
+    letter-spacing: 0 !important;
+  }
+
+  #view-hpp .hpp-process-detail-row,
+  #view-hpp .hpp-process-unit,
+  #view-hpp .hpp-process-pct {
+    font-size: clamp(9.5px, 0.66vw, 11.5px) !important;
+    line-height: 1.18 !important;
+    letter-spacing: 0 !important;
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp .hpp-card-dash {
+      --hpp-stage2-icon: 32px;
+      --hpp-stage2-pad-x: 10px;
+      --hpp-stage2-gap: 8px;
+      --hpp-stage2-pct-space: 48px;
+      min-height: 148px !important;
+      padding: 10px !important;
+    }
+
+    #view-hpp .hpp-card-dash > .w-full,
+    #view-hpp .hpp-card-dash > div:not([class*="w-10"]):not([class*="w-12"]) {
+      grid-template-columns: var(--hpp-stage2-left) minmax(0, 1fr) minmax(58px, max-content) var(--hpp-stage2-pct-space) !important;
+      grid-template-rows: var(--hpp-stage2-icon) minmax(0, 1fr) auto !important;
+    }
+
+    #view-hpp .hpp-card-dash h3,
+    #view-hpp .hpp-cost-label,
+    #view-hpp #hpp-card-gas-wrap > .w-full > .flex {
+      font-size: 10.5px !important;
+    }
+
+    #view-hpp .hpp-card-dash [id^="dash-card-"]:not([id$="-pct"]):not([id$="-details"]),
+    #view-hpp .hpp-cost-value {
+      max-width: 72px !important;
+      font-size: 14px !important;
+    }
+
+    #view-hpp .hpp-card-percent,
+    #view-hpp .hpp-cost-percent,
+    #view-hpp .hpp-percent-badge,
+    #view-hpp .hpp-share-badge,
+    #view-hpp [data-hpp-percent-badge] {
+      min-width: 42px !important;
+      height: 26px !important;
+      font-size: 13px !important;
+    }
+
+    #view-hpp .zett-gas-card-details > div,
+    #view-hpp .zett-electric-card-details > div,
+    #view-hpp .zett-water-card-details > div,
+    #view-hpp #dash-card-packing-details > div,
+    #view-hpp #dash-card-bahan-details > div,
+    #view-hpp #dash-card-nota-details > div,
+    #view-hpp .hpp-premium-lite-details > div {
+      font-size: 9.5px !important;
+      line-height: 1.12 !important;
     }
   }
 </style>
