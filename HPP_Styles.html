@@ -7057,6 +7057,7 @@
 
 
 
+
 <style id="zett-hpp-one-frame-dashboard-precision-final-20260610">
   @media (min-width: 768px) {
     #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) {
@@ -8520,6 +8521,186 @@
       transition: none !important;
       transform: none !important;
       filter: none !important;
+    }
+  }
+</style>
+
+<style id="zett-hpp-fast-scope-card-alignment-20260611">
+  /* FAST SCOPE: Struktur Biaya only. Visual alignment patch, no formula/data changes. */
+  #view-hpp .hpp-card-dash[data-hpp-type="gas"],
+  #view-hpp .hpp-composition-row[data-hpp-type="gas"] {
+    --hpp-card-accent: #EF4444;
+    --accent: #EF4444;
+    --accent-soft: rgba(239, 68, 68, 0.12);
+  }
+
+  #view-hpp .hpp-composition-row[data-hpp-type="gas"] .hpp-composition-dot {
+    background: #EF4444 !important;
+  }
+
+  #view-hpp .hpp-card-dash[data-hpp-type="gas"] .hpp-card-percent,
+  #view-hpp .hpp-card-dash[data-hpp-type="gas"] .hpp-cost-percent,
+  #view-hpp .hpp-card-dash[data-hpp-type="gas"] [data-hpp-percent-badge],
+  #view-hpp #dash-card-gas-pct {
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #EF4444 !important;
+    border-color: rgba(239, 68, 68, 0.2) !important;
+  }
+
+  #view-hpp .hpp-card-dash {
+    --hpp-card-icon-size: clamp(36px, 4.2vw, 44px);
+    --hpp-card-side-pad: clamp(12px, 1.4vw, 18px);
+    --hpp-card-row-left: calc(var(--hpp-card-side-pad) + var(--hpp-card-icon-size) + clamp(10px, 1vw, 14px));
+    --hpp-card-row-right: clamp(60px, 6vw, 78px);
+  }
+
+  #view-hpp .hpp-card-dash > .w-10,
+  #view-hpp .hpp-card-dash > .w-12,
+  #view-hpp .hpp-cost-icon {
+    width: var(--hpp-card-icon-size) !important;
+    height: var(--hpp-card-icon-size) !important;
+    min-width: var(--hpp-card-icon-size) !important;
+    top: var(--hpp-card-side-pad) !important;
+    left: var(--hpp-card-side-pad) !important;
+    border-radius: 14px !important;
+  }
+
+  #view-hpp .hpp-card-dash > .w-full,
+  #view-hpp .hpp-card-dash > div:not([class*="w-10"]):not([class*="w-12"]) {
+    min-width: 0 !important;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-rows: auto auto minmax(0, 1fr) auto !important;
+    align-content: stretch !important;
+  }
+
+  #view-hpp .hpp-card-dash h3,
+  #view-hpp .hpp-cost-label,
+  #view-hpp #hpp-card-gas-wrap > .w-full > .flex,
+  #view-hpp #hpp-card-gas-wrap > .w-full > .flex h3 {
+    margin: 0 var(--hpp-card-row-right) clamp(7px, 0.9vh, 10px) var(--hpp-card-row-left) !important;
+    min-height: var(--hpp-card-icon-size) !important;
+    display: flex !important;
+    align-items: center !important;
+    color: #0F172A !important;
+    font-size: clamp(12px, 0.84vw, 14px) !important;
+    line-height: 1.18 !important;
+    font-weight: 850 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    text-align: left !important;
+  }
+
+  #view-hpp #hpp-card-gas-wrap > .w-full > .flex h3 {
+    margin: 0 !important;
+    min-height: 0 !important;
+  }
+
+  #view-hpp .hpp-card-dash [id^="dash-card-"]:not([id$="-pct"]):not([id$="-details"]),
+  #view-hpp .hpp-cost-value {
+    margin-left: var(--hpp-card-row-left) !important;
+    margin-right: var(--hpp-card-row-right) !important;
+    max-width: calc(100% - var(--hpp-card-row-left) - var(--hpp-card-row-right)) !important;
+    color: #061A40 !important;
+    font-size: clamp(18px, 1.6vw, 27px) !important;
+    line-height: 1.04 !important;
+    font-weight: 900 !important;
+    letter-spacing: 0 !important;
+    font-variant-numeric: tabular-nums !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #view-hpp #dash-card-packing-details,
+  #view-hpp #dash-card-bahan-details,
+  #view-hpp #dash-card-nota-details,
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] .hpp-premium-lite-details,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] .hpp-premium-lite-details,
+  #view-hpp .hpp-card-dash[data-hpp-type="nota"] .hpp-premium-lite-details {
+    margin: clamp(8px, 1vh, 12px) 0 0 var(--hpp-card-row-left) !important;
+    width: calc(100% - var(--hpp-card-row-left)) !important;
+    max-width: calc(100% - var(--hpp-card-row-left)) !important;
+    display: grid !important;
+    align-content: start !important;
+    gap: clamp(5px, 0.8vh, 8px) !important;
+    text-align: left !important;
+  }
+
+  #view-hpp #dash-card-packing-details > div,
+  #view-hpp #dash-card-bahan-details > div,
+  #view-hpp #dash-card-nota-details > div,
+  #view-hpp .hpp-card-dash[data-hpp-type="packing"] .hpp-premium-lite-details > div,
+  #view-hpp .hpp-card-dash[data-hpp-type="bahan"] .hpp-premium-lite-details > div,
+  #view-hpp .hpp-card-dash[data-hpp-type="nota"] .hpp-premium-lite-details > div {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 16px !important;
+    color: rgba(51, 65, 85, 0.72) !important;
+    font-size: clamp(10.5px, 0.76vw, 12.5px) !important;
+    line-height: 1.25 !important;
+    font-weight: 650 !important;
+    white-space: nowrap !important;
+  }
+
+  #view-hpp .hpp-process-card {
+    min-height: clamp(142px, 18vh, 190px) !important;
+    padding: clamp(12px, 1.2vw, 18px) !important;
+    gap: clamp(6px, 0.9vh, 10px) !important;
+  }
+
+  #view-hpp .hpp-process-title {
+    font-size: clamp(12px, 0.82vw, 14px) !important;
+    line-height: 1.18 !important;
+    letter-spacing: 0 !important;
+    font-weight: 850 !important;
+  }
+
+  #view-hpp .hpp-process-value {
+    font-size: clamp(19px, 1.55vw, 28px) !important;
+    line-height: 1.04 !important;
+    letter-spacing: 0 !important;
+    font-weight: 900 !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+
+  #view-hpp .hpp-process-detail-row,
+  #view-hpp .hpp-process-unit,
+  #view-hpp .hpp-process-pct {
+    font-size: clamp(10.5px, 0.72vw, 12.5px) !important;
+    line-height: 1.24 !important;
+    letter-spacing: 0 !important;
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp .hpp-card-dash {
+      --hpp-card-icon-size: 36px;
+      --hpp-card-side-pad: 12px;
+      --hpp-card-row-right: 54px;
+      min-height: 136px !important;
+      padding: 12px !important;
+    }
+
+    #view-hpp .hpp-card-dash h3,
+    #view-hpp .hpp-cost-label,
+    #view-hpp #hpp-card-gas-wrap > .w-full > .flex {
+      font-size: 12px !important;
+      line-height: 1.16 !important;
+      margin-bottom: 6px !important;
+    }
+
+    #view-hpp .hpp-card-dash [id^="dash-card-"]:not([id$="-pct"]):not([id$="-details"]),
+    #view-hpp .hpp-cost-value {
+      font-size: 18px !important;
+    }
+
+    #view-hpp #dash-card-packing-details,
+    #view-hpp #dash-card-bahan-details,
+    #view-hpp #dash-card-nota-details {
+      gap: 4px !important;
     }
   }
 </style>
