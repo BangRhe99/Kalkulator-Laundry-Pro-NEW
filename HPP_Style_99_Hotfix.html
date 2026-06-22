@@ -478,6 +478,156 @@ LAST SPLIT: 2026-06-11
   }
 </style>
 
+<style id="zett-hpp-responsive-laptop-layout-20260622">
+  /* FAST SCOPE: HPP responsive laptop/desktop layout only. No data or calculation changes. */
+  #mainViewScroller:has(#view-hpp:not(.hidden)) {
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: clamp(10px, 1.2vw, 18px) clamp(8px, 1vw, 16px) 28px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+  }
+
+  #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) > #hpp-dashboard-view {
+    width: 100% !important;
+    max-width: 1180px !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-rows: auto auto !important;
+    gap: clamp(14px, 1.35vw, 20px) !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) .hpp-hero-dashboard,
+  #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .bg-white,
+  #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .bg-white\/95 {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr) !important;
+    align-items: stretch !important;
+    gap: clamp(14px, 1.4vw, 20px) !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp:not(.hpp-branch-required) .hpp-process-grid {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+    gap: clamp(10px, 1vw, 14px) !important;
+  }
+
+  #view-hpp:not(.hpp-branch-required) .hpp-process-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .grid,
+  #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) .hpp-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: none !important;
+    grid-auto-rows: minmax(170px, auto) !important;
+    gap: clamp(12px, 1.2vw, 18px) !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 170px !important;
+    max-height: none !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  body #view-hpp #actionAreaHPP {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: 1180px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: clamp(18px, 2vw, 28px) auto 0 !important;
+    padding: clamp(14px, 1.5vw, 20px) clamp(4px, 0.8vw, 12px) 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  body #view-hpp #actionAreaHPP > div,
+  body #view-hpp #actionAreaHPP button {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  @media (max-width: 1280px) {
+    #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) .hpp-hero-dashboard,
+    #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .bg-white,
+    #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .bg-white\/95 {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .grid,
+    #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) .hpp-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) {
+      padding: 10px 4px 22px !important;
+    }
+
+    #view-hpp:not(.hpp-branch-required) .hpp-process-grid,
+    #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) #hpp-dashboard-view > .grid,
+    #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) .hpp-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    body #view-hpp #actionAreaHPP {
+      align-items: stretch !important;
+      padding-inline: 0 !important;
+    }
+  }
+</style>
+
 <style id="zett-hpp-fast-scope-full-frame-layout-20260611">
   /* FAST SCOPE: HPP dashboard first screen full-frame layout only. */
   #view-hpp:has(> #hpp-dashboard-view:not(.hidden)) {
