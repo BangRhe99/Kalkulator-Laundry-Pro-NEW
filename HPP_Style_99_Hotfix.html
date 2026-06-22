@@ -562,8 +562,8 @@ LAST SPLIT: 2026-06-11
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     grid-template-rows: none !important;
-    grid-auto-rows: auto !important;
-    align-items: start !important;
+    grid-auto-rows: minmax(156px, auto) !important;
+    align-items: stretch !important;
     column-gap: clamp(12px, 1.2vw, 18px) !important;
     row-gap: clamp(10px, 1vw, 14px) !important;
     box-sizing: border-box !important;
@@ -573,7 +573,7 @@ LAST SPLIT: 2026-06-11
   #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash {
     width: 100% !important;
     min-width: 0 !important;
-    height: auto !important;
+    height: 100% !important;
     min-height: 156px !important;
     max-height: none !important;
     padding: 12px var(--hpp-stage2-pad-x) !important;
@@ -584,10 +584,15 @@ LAST SPLIT: 2026-06-11
 
   #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash > .w-full,
   #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) .hpp-card-dash > div:not([class*="w-10"]):not([class*="w-12"]) {
-    height: auto !important;
+    height: 100% !important;
     min-height: 0 !important;
-    grid-template-rows: var(--hpp-stage2-icon) auto auto !important;
+    grid-template-rows: var(--hpp-stage2-icon) minmax(0, 1fr) auto !important;
     align-content: start !important;
+  }
+
+  #view-hpp:not(.hpp-branch-required):has(> #hpp-dashboard-view:not(.hidden)) .hpp-show-detail {
+    align-self: end !important;
+    justify-self: end !important;
   }
 
   body #view-hpp #actionAreaHPP {
