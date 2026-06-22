@@ -1,6 +1,57 @@
 <!-- App router extracted from Index.html. Logic unchanged. -->
 
 <script>
+function hasValidSelectedBranch() {
+      const select = document.getElementById('inputNamaHPP');
+      if (!select) return false;
+
+      const value = String(select.value || '').trim();
+      if (!value) return false;
+
+      return Array.from(select.options || []).some(option =>
+        String(option.value || '').trim() === value && !option.disabled
+      );
+    }
+
+    function syncBranchRequiredState() {
+      const hasBranch = hasValidSelectedBranch();
+      const hppView = document.getElementById('view-hpp');
+      const emptyState = document.getElementById('hpp-branch-required-state');
+      const btnSimpan = document.getElementById('btnSimpanHPP');
+      const btnUpdate = document.getElementById('btnUpdateHPP');
+
+      if (hppView) hppView.classList.toggle('hpp-branch-required', !hasBranch);
+      if (emptyState) {
+        emptyState.classList.toggle('hidden', hasBranch);
+        emptyState.style.display = hasBranch ? 'none' : 'grid';
+      }
+
+      [btnSimpan, btnUpdate].forEach(button => {
+        if (!button) return;
+        button.disabled = !hasBranch;
+        button.setAttribute('aria-disabled', String(!hasBranch));
+      });
+
+      return hasBranch;
+    }
+
+    window.hasValidSelectedBranch = hasValidSelectedBranch;
+    window.syncBranchRequiredState = syncBranchRequiredState;
+
+    document.addEventListener('change', function(event) {
+      if (!event.target || event.target.id !== 'inputNamaHPP') return;
+      syncBranchRequiredState();
+
+      const dashboard = document.getElementById('view-dashboard');
+      if (
+        dashboard &&
+        !dashboard.classList.contains('hidden') &&
+        typeof window.renderSingleOutletDashboard === 'function'
+      ) {
+        window.renderSingleOutletDashboard();
+      }
+    });
+
 function switchMainTab(tabName) {
       setActiveMenu(tabName);
       document.body.classList.toggle('hpp-mobile-active', tabName === 'hpp');
@@ -126,6 +177,8 @@ function switchMainTab(tabName) {
         if (!isFirstHPPOpen && selectedHPPOutlet && typeof window.zettEnsureHPPDashboardLoaded === 'function') {
           window.zettEnsureHPPDashboardLoaded();
         }
+
+        syncBranchRequiredState();
 
       }
 

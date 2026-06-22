@@ -200,12 +200,9 @@
   }
 
   function getSelectedOutletName() {
-    var v1 = $('v1-global-outlet');
     var global = $('inputNamaHPP');
-    if (v1 && v1.value) return v1.value;
     if (global && global.value) return global.value;
-    var outlets = getOutlets();
-    return outlets.length ? outlets[0].namaOutlet : '';
+    return '';
   }
 
   function syncSelectors(selectedName) {
@@ -226,14 +223,13 @@
     selectIds.forEach(function (id) {
       var el = $(id);
       if (!el) return;
-      var current = id === 'inputNamaHPP' ? (el.value || '') : (selectedName || el.value || '');
+      var current = id === 'inputNamaHPP' ? (el.value || '') : (selectedName || '');
       el.innerHTML = html;
       if (current) {
         if (id === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = true;
         el.value = current;
         if (id === 'inputNamaHPP') window.__HPP_PROGRAMMATIC_UPDATE__ = false;
       }
-      if (id !== 'inputNamaHPP' && !el.value && outlets.length > 0) el.value = outlets[0].namaOutlet;
       if (id === 'inputNamaHPP' && !el.value && typeof resetHPPDashboardToZero === 'function') resetHPPDashboardToZero();
     });
   }
@@ -489,6 +485,13 @@
       '.exec-badge.good{background:#dcfce7;color:#15803d}.exec-badge.warn{background:#fef3c7;color:#b45309}.exec-badge.risk{background:#fee2e2;color:#b91c1c}',
       '.exec-roi-highlight{margin-top:12px;padding:14px;border-radius:18px;background:#eff6ff;border:1px solid #bfdbfe;}.exec-roi-highlight strong{font-size:28px;font-weight:950;color:#1d4ed8;}',
       '.exec-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#64748b;font-size:12px;font-weight:700;padding:4px 2px 0;}',
+      '.exec-branch-required{min-height:min(620px,72vh);display:grid;place-items:center;padding:clamp(22px,5vw,64px);}',
+      '.exec-branch-required-card{width:min(680px,100%);padding:clamp(28px,5vw,48px);text-align:center;background:linear-gradient(145deg,#fff,#f8fbff);border:1px solid rgba(37,99,235,.13);border-radius:28px;box-shadow:0 26px 70px rgba(15,23,42,.09);}',
+      '.exec-branch-required-icon{width:68px;height:68px;margin:0 auto 20px;display:grid;place-items:center;border-radius:22px;background:linear-gradient(135deg,#eff6ff,#ecfdf5);color:#2563eb;font-size:30px;box-shadow:inset 0 0 0 1px rgba(37,99,235,.1);}',
+      '.exec-branch-required-card h2{margin:0;color:#0f172a;font-size:clamp(24px,3vw,34px);font-weight:950;letter-spacing:-.035em;}',
+      '.exec-branch-required-card p{max-width:540px;margin:14px auto 24px;color:#64748b;font-size:clamp(13px,1.2vw,15px);font-weight:650;line-height:1.65;}',
+      '.exec-branch-required-cta{display:inline-flex;align-items:center;gap:9px;padding:11px 16px;border:1px solid #bfdbfe;border-radius:14px;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;}',
+      '.exec-branch-required-cta:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(37,99,235,.12);}',
       '@media(max-width:1280px){.exec-kpi-grid{grid-template-columns:repeat(3,1fr)}.exec-main-grid{grid-template-columns:1fr 1fr}.exec-health-card{grid-column:1/-1}.exec-bottom-grid{grid-template-columns:repeat(2,1fr)}}',
       '@media(max-width:760px){#view-dashboard .fin-dashboard{padding:14px}.exec-kpi-grid,.exec-main-grid,.exec-bottom-grid{grid-template-columns:1fr}.exec-health-body,.exec-cost-layout{grid-template-columns:1fr}.exec-gauge,.exec-donut{margin:0 auto}.exec-mini-grid{grid-template-columns:1fr}.exec-footer{align-items:flex-start;flex-direction:column}}',
       '#view-dashboard{background:linear-gradient(180deg,#f8fbff 0%,#eef6ff 48%,#f8fafc 100%)!important;overflow-x:hidden;}',
@@ -640,8 +643,21 @@
   }
 
   function renderEmptyDashboard(message) {
+    if (!getSelectedOutletName()) {
+      renderBranchRequiredDashboard();
+      dashLog('[DASH_RENDER_DONE]', { empty: true, branchRequired: true });
+      return;
+    }
     renderExecutiveDashboard(getDashboardSummary(getSelectedOutletName()));
     dashLog('[DASH_RENDER_DONE]', { empty: true, message: message || 'Data belum tersedia' });
+  }
+
+  function renderBranchRequiredDashboard() {
+    ensureExecutiveDashboardStyle();
+    var root = $('v1-vanilla-dashboard');
+    if (!root) return;
+    root.setAttribute('data-exec-dashboard-ready', '0');
+    root.innerHTML = '<section class="exec-branch-required"><div class="exec-branch-required-card" role="status"><div class="exec-branch-required-icon"><i class="ph ph-storefront"></i></div><h2>Pilih Cabang Terlebih Dahulu</h2><p>Data HPP, BEP, dan proyeksi operasional akan tampil setelah cabang dipilih. Silakan pilih cabang di kanan atas untuk mulai melihat data.</p><button type="button" class="exec-branch-required-cta" onclick="document.getElementById(\'inputNamaHPP\')?.focus()"><i class="ph ph-caret-up"></i> Pilih Cabang...</button></div></section>';
   }
 
   window.renderSingleOutletDashboard = function () {

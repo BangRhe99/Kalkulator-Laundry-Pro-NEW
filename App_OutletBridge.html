@@ -56,6 +56,9 @@ function handleGlobalOutletChange(value) {
       console.log('Outlet changed:', value);
       window.__HPP_FORCE_ZERO_DASHBOARD = false;
       updateHeaderKategoriLaundryInfo();
+      if (typeof window.syncBranchRequiredState === 'function') {
+        window.syncBranchRequiredState();
+      }
 
       const hppView = document.getElementById('view-hpp');
       const hppDashboard = document.getElementById('hpp-dashboard-view');
